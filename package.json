@@ -13,14 +13,18 @@
     "check": "astro check",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "node -e \"console.log('No tests yet (phase 7 adds Playwright + axe).')\""
+    "test": "playwright test",
+    "test:lighthouse": "node tests/lighthouse.mjs"
   },
   "dependencies": {
     "astro": "^7.3.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.63.0",
     "eslint": "^10.12.0",
     "eslint-plugin-astro": "^1.7.0",
     "globals": "^17.13.0",
