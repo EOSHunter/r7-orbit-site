@@ -1,0 +1,42 @@
+---
+// Up to three cards by shared tags (relatedPosts in lib/content).
+import PostCard from './PostCard.astro';
+import { postUrl } from '../lib/content';
+import type { CollectionName } from '../lib/content';
+import type { SitePost } from '../lib/content-queries';
+import type { CardData, Kind } from '../lib/cards';
+
+interface Props {
+  posts: SitePost[];
+}
+
+const { posts } = Astro.props;
+const KIND: Record<CollectionName, Kind> = { news: 'news', blog: 'blog', vlogs: 'vlog', projects: 'project', repos: 'repo' };
+
+// Reading time and covers are left off: related cards are a pointer, not a preview.
+function toCard(p: SitePost): CardData {
+  const base = { href: postUrl(p), title: p.data.title, summary: p.data.summary, date: p.data.date, tags: p.data.tags };
+  const kind = KIND[p.collection];
+  if (kind === 'news' || kind === 'blog') return { ...base, kind };
+  if (kind === 'vlog') return { ...base, kind, duration: (p.data as unknown as { duration: string }).duration };
+  if (kind === 'project') return { ...base, kind, status: (p.data as unknown as { status: 'idea' }).status };
+  return { ...base, kind, repo: (p.data as unknown as { repo: string }).repo };
+}
+const cards = posts.map(toCard);
+---
+
+{cards.length > 0 && (
+  <section class="section ruled related" aria-labelledby="related-h">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Related</p>
+          <h2 class="section-title" id="related-h">Keep reading</h2>
+        </div>
+      </div>
+      <div class="grid-cards">
+        {cards.map((card) => <PostCard post={card} />)}
+      </div>
+    </div>
+  </section>
+)}

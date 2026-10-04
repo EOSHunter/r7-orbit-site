@@ -406,3 +406,56 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox-caption { margin: 0; padding: var(--s-3) var(--s-4) 0; font-size: var(--fs-sm); color: var(--text-2); }
 .lightbox-caption:empty { display: none; }
 .lightbox-prev .ico { transform: rotate(180deg); }
+
+/* ---------------------------------------------------------------------------- Blog post and news item (ArticlePage) */
+.how-made { margin: 0; font-size: var(--fs-sm); color: var(--text-3); }
+.how-made strong { font-weight: var(--fw-medium); color: var(--text-2); }
+
+.post-main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); align-content: start; }
+.post-nav-wrap { padding-block: var(--s-7) var(--s-8); }
+.post-nav-wrap:empty { display: none; }
+
+.toc-inline { border: var(--bw) solid var(--line); border-radius: var(--r-md); background: var(--surface-1); }
+.toc-inline summary { padding: var(--s-3) var(--s-4); cursor: pointer; font: var(--fs-2xs) var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-2); }
+.toc-inline nav { padding: 0 var(--s-4) var(--s-3); }
+.toc-inline ol { list-style: none; margin: 0; padding: 0; }
+.toc-inline ol ol { padding-left: var(--s-4); }
+.toc-inline a { display: block; padding: var(--s-2) 0; font-size: var(--fs-sm); color: var(--text-2); }
+@media (min-width: 1200px) { .toc-inline { display: none; } }
+
+.source-box { display: grid; gap: var(--s-2); padding: var(--s-5); background: var(--surface-1); border: var(--bw) solid var(--line); border-left: var(--bw-accent, 2px) solid var(--brass); border-radius: var(--r-md); }
+.source-box .eyebrow, .source-box p { margin: 0; }
+.source-link a { display: inline-flex; align-items: center; gap: var(--s-2); font-weight: var(--fw-medium); }
+.source-take { font: var(--fw-regular) var(--fs-xl)/var(--lh-snug) var(--font-display); font-style: italic; color: var(--text); }
+.source-take span { font: var(--fs-2xs) var(--font-ui); font-style: normal; letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--brass-bright); margin-right: var(--s-2); }
+
+.series { display: grid; gap: var(--s-3); padding: var(--s-5); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md); }
+.series p { margin: 0; }
+.series-name { font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); }
+.series ol { margin: 0; padding-left: var(--s-5); color: var(--text-3); font-size: var(--fs-sm); }
+.series li { padding-block: var(--s-1); }
+.series li a { color: var(--text-2); }
+.series [aria-current='page'] { color: var(--brass-bright); }
+.series-steps { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.series-steps:empty { display: none; }
+
+/* Print: the article alone, on paper. System colour keywords so the dark theme never prints ivory on white. */
+@media print {
+  .site-header, .site-footer, .skip-link, .breadcrumb, .toc, .toc-inline, .share, .series-steps, .band, .post-nav-wrap,
+  .related, .byline .tags, .codeblock-bar button, .heading-anchor, .media-ph { display: none !important; }
+  *, *::before, *::after { color: CanvasText !important; background: transparent !important; box-shadow: none !important; text-shadow: none !important; }
+  html { color-scheme: light !important; }
+  html, body { background: Canvas !important; }
+  .container { max-width: none; padding-inline: 0; }
+  .post-layout { display: block; padding: 0; }
+  .post-head h1, .post-head .t-lead { max-width: none; }
+  .prose { max-width: none; font-size: 11pt; }
+  .prose a { text-decoration: underline; }
+  .prose a[href^='http']::after { content: ' (' attr(href) ')'; font: 9pt var(--font-mono); overflow-wrap: anywhere; }
+  .prose a.heading-anchor::after { content: none; }
+  .codeblock, .prose pre, .prose figure, .prose blockquote, .callout, .source-box, .series { break-inside: avoid; }
+  .prose pre, pre.code { white-space: pre-wrap; overflow: visible; overflow-wrap: anywhere; border: var(--bw) solid CanvasText; }
+  .prose h2, .prose h3, .prose h4 { break-after: avoid; }
+  .prose img { max-width: 100%; break-inside: avoid; }
+  .post-hero { margin-bottom: var(--s-5); }
+}
