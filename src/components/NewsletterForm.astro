@@ -1,0 +1,103 @@
+---
+import { site } from '../data/site';
+
+interface Props {
+  /** Unique per page: used for the input and message ids. */
+  id?: string;
+}
+
+const { id = 'newsletter' } = Astro.props;
+const endpoint = site.newsletter.formAction;
+const mock = !endpoint;
+---
+
+<!-- Where this goes is one setting: newsletter.formAction in src/data/site.json (empty = mock, see src/lib/newsletter.ts). -->
+<form
+  class="newsletter-form"
+  data-subscribe
+  data-endpoint={endpoint}
+  novalidate
+  method={mock ? undefined : 'post'}
+  action={mock ? undefined : endpoint}
+>
+  <div class="field">
+    <label for={`${id}-email`}>Email address</label>
+    <div class="subscribe-row">
+      <input
+        class="input"
+        id={`${id}-email`}
+        name="email"
+        type="email"
+        required
+        autocomplete="email"
+        placeholder="you@example.com"
+        aria-describedby={`${id}-help ${id}-status`}
+      />
+      <!-- The mock needs JavaScript, so its button stays off until the script runs. -->
+      <button class="btn solid" type="submit" disabled={mock}>
+        Subscribe
+      </button>
+    </div>
+    <p class="hint" id={`${id}-help`}>
+      One email when something new is worth reading. Unsubscribe any time.
+    </p>
+    <p class="hint" id={`${id}-status`} role="status" aria-live="polite" data-status></p>
+    {mock && (
+      <noscript>
+        <p class="hint">
+          This sample form needs JavaScript. Until the newsletter is connected, you can follow along by{' '}
+          <a href={site.links.rss}>RSS</a>.
+        </p>
+      </noscript>
+    )}
+  </div>
+</form>
+
+<script>
+  import { MESSAGES, subscribe } from '../lib/newsletter';
+
+  document.querySelectorAll<HTMLFormElement>('form[data-subscribe]').forEach((form) => {
+    const input = form.querySelector<HTMLInputElement>('input[type="email"]');
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const status = form.querySelector<HTMLElement>('[data-status]');
+    if (!input || !button || !status) return;
+    const endpoint = form.dataset.endpoint ?? '';
+    const label = button.textContent ?? 'Subscribe';
+
+    const say = (text: string, tone: 'ok' | 'error' | '') => {
+      status.textContent = text;
+      status.className = tone ? `hint ${tone}` : 'hint';
+    };
+
+    button.disabled = false;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (form.getAttribute('aria-busy') === 'true') return;
+      form.setAttribute('aria-busy', 'true');
+      button.disabled = true;
+      button.textContent = 'Subscribing…';
+      say('', '');
+      const result = await subscribe(endpoint, new FormData(form));
+      form.removeAttribute('aria-busy');
+      button.disabled = false;
+      button.textContent = label;
+      if (result.ok) {
+        input.removeAttribute('aria-invalid');
+        say(endpoint ? MESSAGES.ok : MESSAGES.okMock, 'ok');
+        form.reset();
+        return;
+      }
+      input.setAttribute('aria-invalid', 'true');
+      say(MESSAGES[result.reason], 'error');
+      input.focus();
+    });
+
+    input.addEventListener('input', () => {
+      if (input.getAttribute('aria-invalid')) {
+        input.removeAttribute('aria-invalid');
+        say('', '');
+      }
+    });
+  });
+</script>
