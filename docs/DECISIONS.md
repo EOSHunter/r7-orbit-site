@@ -65,3 +65,4 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 - Static site; content as files in the repo; no database.
 - Fonts are self-hosted; no external requests for fonts, icons or scripts.
 - Dates in the UI: `Oct 3, 2026`. Read time: `8 min`.
+- Search (2026-10-03): Pagefind, a dev dependency. `npm run build` runs `astro build && pagefind`; `pagefind.yml` indexes only `{news,blog,vlogs,projects,repos}/*/index.html`, inside `<main>`. Output is `dist/pagefind/` (not committed). The dialog (`/` or the header button) is mounted in `BaseLayout`; `/search/` is the same panel inline and the no-JS fallback (noindex). The index only exists after a build, so under `npm run dev` the dialog says so: use `npm run build && npm run preview` to try search. The kind on each result is read from the URL's first segment.

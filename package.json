@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pagefind",
     "preview": "astro preview",
     "check": "astro check",
     "lint": "eslint .",
@@ -33,6 +33,7 @@
     "eslint": "^10.12.0",
     "eslint-plugin-astro": "^1.7.0",
     "globals": "^17.13.0",
+    "pagefind": "^1.5.2",
     "prettier": "^3.9.9",
     "prettier-plugin-astro": "^1.1.0",
     "sanitize-html": "^2.18.0",

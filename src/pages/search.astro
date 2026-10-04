@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Search from '../components/Search.astro';
+import { navItems } from '../data/nav';
+
+const kinds = navItems.filter((item) => ['News', 'Blog', 'Vlogs', 'Projects', 'Repos'].includes(item.label));
+---
+
+<BaseLayout title="Search" description="Search every post, video, project and repo on this site." noindex>
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">Search</p>
+      <h1>
+        Find a <em>post</em>
+      </h1>
+    </header>
+    <Search page />
+    <noscript>
+      <p class="search-note">Search needs JavaScript. Without it, browse by kind:</p>
+    </noscript>
+    <ul class="search-kinds" aria-label="Browse by kind">
+      {kinds.map((item) => (
+        <li>
+          <a class="chip" href={item.href}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>

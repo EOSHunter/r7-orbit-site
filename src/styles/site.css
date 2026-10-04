@@ -487,3 +487,28 @@ html:not(.js) .repo-head [data-copy] { display: none; }
 /* Vlog page (src/pages/vlogs/[slug].astro) */
 .facts .links { display: grid; gap: var(--s-3); }
 .facts .links .btn { justify-content: space-between; }
+
+/* ===== search (Pagefind; src/components/Search.astro, src/scripts/search.js) ===== */
+.search-dialog { width: min(calc(100vw - var(--s-5)), 40rem); max-height: calc(100dvh - var(--s-7)); margin: var(--s-6) auto auto; padding: 0; overflow: auto; color: var(--text); background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-float); }
+.search-dialog::backdrop { background: var(--scrim-strong); }
+body:has(.search-dialog[open]) { overflow: hidden; }
+.search-panel-inner { display: grid; gap: var(--s-4); padding: var(--s-4); }
+.search-panel.page .search-panel-inner { padding: 0; max-width: 40rem; }
+.search-dialog .search-form, .search-panel .search-form { display: flex; align-items: center; gap: var(--s-3); }
+.search-dialog .search, .search-panel .search { flex: 1 1 auto; }
+.search-status { margin: 0; }
+.search-results { list-style: none; display: grid; gap: var(--s-3); margin: 0; padding: 0; }
+.search-results:empty { display: none; }
+.search-result .card-body { gap: var(--s-2); padding: var(--s-4); }
+.search-result .card-text { -webkit-line-clamp: 2; line-clamp: 2; }
+.search-result:focus-visible { border-color: var(--line-brass); }
+.search-result mark { background: var(--brass-wash-1); color: var(--brass-bright); border-radius: var(--r-xs); }
+.search-keys { margin: 0; }
+.search-dialog .search-keys { display: none; }
+@media (hover: hover) and (min-width: 900px) { .search-dialog .search-keys { display: block; } }
+.search-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-6) 0 var(--s-8); padding: 0; }
+.search-kinds .chip { min-height: 28px; padding-inline: var(--s-3); }
+.search-note { margin: var(--s-4) 0 0; color: var(--text-2); }
+html:not(.js) .search-panel.page { display: none; }
+html.js .search-kinds { display: none; }
+/* End of search styles */
