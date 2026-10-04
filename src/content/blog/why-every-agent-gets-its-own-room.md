@@ -1,6 +1,6 @@
 ---
 # SAMPLE CONTENT
-title: Why every agent gets its own *room*
+title: "Sample: why every agent gets its own *room*"
 date: 2026-09-28
 summary: Running several AI agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.
 tags: [ai-agents, git]

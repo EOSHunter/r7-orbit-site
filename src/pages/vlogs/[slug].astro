@@ -2,6 +2,7 @@
 import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
+import PreviewBadge from '../../components/PreviewBadge.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
 import PostCard from '../../components/PostCard.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
@@ -110,6 +111,7 @@ const breadcrumbs = JSON.stringify({
     <header class="post-head">
       <p class="eyebrow">
         <span class="kind"><Icon name="vlog" />Vlog</span>
+        <PreviewBadge post={post} />
       </p>
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
       <ul class="meta-row" aria-label="Video details">

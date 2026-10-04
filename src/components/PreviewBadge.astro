@@ -1,0 +1,13 @@
+---
+// Dev server only: marks a draft or scheduled post. Production builds never contain unpublished posts, so it never renders there.
+import { previewLabel, type Post } from '../lib/content';
+
+interface Props {
+  post?: Pick<Post, 'collection' | 'id' | 'data'>;
+  label?: string;
+}
+
+const { post, label = post && previewLabel(post as Post) } = Astro.props;
+---
+
+{import.meta.env.DEV && label && <span class="chip mono preview-badge">{label}</span>}

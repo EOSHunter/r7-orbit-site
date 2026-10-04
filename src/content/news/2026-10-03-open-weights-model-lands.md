@@ -1,11 +1,11 @@
 ---
 # SAMPLE CONTENT: every example in this folder is placeholder text. Replace it with real posts.
-title: A new open-weights model lands, and the benchmarks *argue back*
+title: "Sample: a new open-weights model lands, and the benchmarks *argue back*"
 date: 2026-10-03
 summary: What changed, what didn't, and which claims deserve a second look before you rebuild anything around it.
 tags: [open-weights, evals]
 sourceUrl: https://example.com/the-announcement
-sourceName: Example Lab
+sourceName: Example Lab (sample)
 take: Promising for local use, but I'd wait for independent evals before moving a real workload.
 ---
 

@@ -1,5 +1,7 @@
 # Page templates
 
+> **Frozen kit reference.** These pages still carry the original Ivory (light) theme toggle and its inline script. The real site is dark only and has neither (see `docs/DECISIONS.md`); do not port them.
+
 Static HTML for every page type of the R7 Orbit site, built only from `../design-system/` (tokens and components) plus a small `site.css` and `site.js`. They are the visual reference to port into a real framework (Astro, Eleventy, Next, anything), not the final site. All text is **sample content**.
 
 Open them through a static server (the fonts need `http://`):

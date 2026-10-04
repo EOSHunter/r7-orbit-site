@@ -43,16 +43,15 @@ const { image, alt = '' } = Astro.props;
 <style is:global>
   .article-hero { position: relative; isolation: isolate; margin-bottom: var(--s-7); background: var(--bg); overflow: hidden; }
   .article-hero-img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
-  /* Dark in both themes. The text on top is always ivory, so the scrim never follows the theme. The base of the
-     gradient is near-solid, so the byline (the lowest, smallest text) always sits on a dark ground. */
+  /* A dark veil over any image. The base of the gradient is near-solid, so the byline (the lowest, smallest text)
+     always sits on a dark ground. */
   .article-hero-shade {
     position: absolute; inset: 0; z-index: -1;
     background:
       linear-gradient(to bottom, rgb(9 9 10 / 0.55) 0%, rgb(9 9 10 / 0.72) 45%, rgb(9 9 10 / 0.92) 100%);
   }
-  /* The same ivory and brass as the dark theme, so the light theme does not turn this text dark on a dark image. */
+  /* Text over a photo: the supporting text and brass are lifted a step, so they keep 4.5:1 where the image is bright. */
   .article-hero-body {
-    --text: #ece6d8;
     --text-2: #d3cdbf;
     --text-3: #bdb8ab;
     --line: rgb(236 228 210 / 0.16);

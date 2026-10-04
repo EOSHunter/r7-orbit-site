@@ -7,6 +7,8 @@ import {
   filterPublished,
   isPublished,
   postUrl,
+  previewLabel,
+  publishState,
   postsWithTag,
   readTime,
   relatedPosts,
@@ -49,6 +51,20 @@ describe('publishing rules', () => {
     const posts = [post('a', '2030-01-01'), post('b', '2026-01-01', { draft: true })];
     expect(filterPublished(posts, { now: NOW, includeUnpublished: true })).toHaveLength(2);
     expect(filterPublished(posts, { now: NOW })).toHaveLength(0);
+  });
+});
+
+describe('publish state and preview label', () => {
+  it('names the state; draft wins over scheduled', () => {
+    expect(publishState(post('a', '2026-01-01'), NOW)).toBe('published');
+    expect(publishState(post('a', '2026-10-03'), NOW)).toBe('published');
+    expect(publishState(post('a', '2026-10-04'), NOW)).toBe('scheduled');
+    expect(publishState(post('a', '2026-10-04', { draft: true }), NOW)).toBe('draft');
+  });
+  it('labels unpublished posts for the dev badge', () => {
+    expect(previewLabel(post('a', '2026-01-01'), NOW)).toBeUndefined();
+    expect(previewLabel(post('a', '2026-01-01', { draft: true }), NOW)).toBe('Draft');
+    expect(previewLabel(post('a', '2026-12-25'), NOW)).toBe('Scheduled for Dec 25, 2026');
   });
 });
 
