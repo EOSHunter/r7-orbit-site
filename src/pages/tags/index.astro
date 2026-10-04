@@ -1,0 +1,67 @@
+---
+import SubscribeBand from '../../components/SubscribeBand.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { tagCounts } from '../../lib/content';
+import { getAllPosts } from '../../lib/content-queries';
+
+const posts = await getAllPosts();
+const counts = tagCounts(posts);
+// A tag page exists once a tag has two posts; a tag used once is listed but not linked.
+const linked = counts.filter((t) => t.count >= 2);
+const single = counts.filter((t) => t.count < 2);
+---
+
+<BaseLayout
+  title="Tags"
+  description="Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together."
+  noindex={counts.length === 0}
+>
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">Tags</p>
+      <h1>Browse by <em>topic</em></h1>
+      <p class="t-lead">
+        Every tag in use, with the number of posts that carry it. A tag gets its own page once two posts share it.
+      </p>
+    </header>
+
+    {counts.length === 0 ? (
+      <div class="empty">
+        <h2>No tags yet.</h2>
+        <p>Tags appear here once a post uses one.</p>
+      </div>
+    ) : (
+      <>
+        {linked.length > 0 && (
+          <section class="block" aria-labelledby="tags-h">
+            <h2 class="visually-hidden" id="tags-h">Tags with a page</h2>
+            <ul class="tag-index">
+              {linked.map(({ tag, count }) => (
+                <li>
+                  <a class="chip mono" href={`/tags/${tag}/`}>
+                    {tag}
+                    <span class="count">{count}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {single.length > 0 && (
+          <section class="block" aria-labelledby="single-h">
+            <h2 class="eyebrow" id="single-h">Used once</h2>
+            <ul class="tag-index">
+              {single.map(({ tag }) => (
+                <li>
+                  <span class="chip mono">{tag}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </>
+    )}
+  </div>
+  <div class="archive-end"></div>
+  <SubscribeBand />
+</BaseLayout>

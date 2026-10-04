@@ -1,0 +1,295 @@
+---
+// The toolbar, card grid, empty state and pagination of an archive. With JavaScript off it is the current page of cards and real
+// pagination links. With it on, the toolbar appears; the first filter loads the cards of the other pages from the two <template>s
+// (nothing is fetched), and tag / search / sort / kind state is kept in the URL query.
+import Icon from './Icon.astro';
+import Pagination from './Pagination.astro';
+import PostCard from './PostCard.astro';
+import type { CardData, Kind } from '../lib/cards';
+import { KIND_LABEL } from '../lib/cards';
+import { countLabel, pageUrl } from '../lib/listing';
+
+interface Props {
+  /** Every card in this listing, newest first. */
+  cards: CardData[];
+  /** The cards of the current page (a slice of `cards`) and where that slice starts. */
+  start: number;
+  size: number;
+  page: number;
+  pages: number;
+  /** The first page's path, ending in a slash. */
+  base: string;
+  /** Tags used by these cards, most used first. */
+  tags: string[];
+  /** Offer a kind filter (the mixed /latest/ archive). */
+  kinds?: Kind[];
+  noun: string;
+  nounOne: string;
+  /** Said when there is nothing at all in this listing. */
+  empty: string;
+  /** Label for the search field and the results heading, e.g. "posts". */
+  what: string;
+}
+
+const { cards, start, size, page, pages, base, tags, kinds = [], noun, nounOne, empty, what } = Astro.props;
+const shown = cards.slice(start, start + size);
+const before = cards.slice(0, start);
+const after = cards.slice(start + size);
+const total = cards.length;
+---
+
+{total === 0 ? (
+  <div class="empty">
+    <h2>{empty}</h2>
+    <p>Check back soon, or subscribe below and I will send an email when something is posted.</p>
+  </div>
+) : (
+  <div
+    data-archive
+    data-total={total}
+    data-noun={noun}
+    data-noun-one={nounOne}
+    data-base={pageUrl(base, 1)}
+  >
+    <div class="toolbar" role="group" aria-label={`Filter and sort ${what}`}>
+      <div class="toolbar-row">
+        <form class="search" role="search" aria-label={`Search ${what}`}>
+          <Icon name="search" />
+          <label class="visually-hidden" for="archive-search">Search {what}</label>
+          <input
+            class="input"
+            id="archive-search"
+            type="search"
+            name="q"
+            placeholder={`Search ${what}`}
+            autocomplete="off"
+            data-search
+          />
+        </form>
+        <div class="seg" role="group" aria-label="Sort" data-sort>
+          <button class="on" type="button" data-value="newest" aria-pressed="true">Newest</button>
+          <button type="button" data-value="oldest" aria-pressed="false">Oldest</button>
+        </div>
+      </div>
+      {kinds.length > 1 && (
+        <div class="toolbar-row">
+          <span class="eyebrow" id="kinds-label">Kind</span>
+          <div class="seg" role="group" aria-labelledby="kinds-label" data-filter="kind">
+            <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
+            {kinds.map((k) => (
+              <button type="button" data-value={k} aria-pressed="false">
+                {KIND_LABEL[k]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {tags.length > 0 && (
+        <div class="toolbar-row">
+          <span class="eyebrow" id="tags-label">Tags</span>
+          <div class="tag-list" role="group" aria-labelledby="tags-label" data-tags-filter>
+            {tags.map((tag) => (
+              <button type="button" class="chip" data-tag={tag} aria-pressed="false">
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <p class="t-meta toolbar-count" data-count aria-live="polite">{countLabel(total, nounOne, noun)}</p>
+    </div>
+
+    <h2 class="visually-hidden">{what[0]?.toUpperCase()}{what.slice(1)}</h2>
+    <div class="grid-cards" data-items>
+      {shown.map((post) => <PostCard post={{ ...post, filterable: true }} />)}
+    </div>
+    <template data-before>
+      {before.map((post) => <PostCard post={{ ...post, filterable: true }} />)}
+    </template>
+    <template data-after>
+      {after.map((post) => <PostCard post={{ ...post, filterable: true }} />)}
+    </template>
+
+    <div class="empty" data-empty hidden>
+      <h2>Nothing matches that.</h2>
+      <p>Try fewer words, or clear the filters.</p>
+      <button class="btn" type="button" data-clear>Clear filters</button>
+    </div>
+
+    <Pagination {base} {page} {pages} />
+  </div>
+)}
+
+<script>
+  type Sort = 'newest' | 'oldest';
+  interface Meta {
+    index: number;
+    kind: string;
+    tags: string[];
+    hay: string;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-archive]');
+  const grid = root?.querySelector<HTMLElement>('[data-items]');
+
+  if (root && grid) {
+    const noun = root.dataset.noun ?? 'posts';
+    const nounOne = root.dataset.nounOne ?? 'post';
+    const total = Number(root.dataset.total) || 0;
+    const search = root.querySelector<HTMLInputElement>('[data-search]');
+    const sortBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-sort] button')];
+    const kindBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-filter="kind"] button')];
+    const tagBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-tags-filter] button')];
+    const count = root.querySelector<HTMLElement>('[data-count]');
+    const empty = root.querySelector<HTMLElement>('[data-empty]');
+    const hideWhenFiltered = [...root.querySelectorAll<HTMLElement>('[data-hide-filtered]')];
+
+    const meta = new WeakMap<HTMLElement, Meta>();
+    const onThisPage = new Set<HTMLElement>();
+    let items: HTMLElement[] = [];
+    let expanded = false;
+    let orderedBy: Sort = 'newest';
+    const state = { q: '', tags: [] as string[], sort: 'newest' as Sort, kind: 'all' };
+
+    function index(): void {
+      items = [...grid!.querySelectorAll<HTMLElement>('[data-item]')];
+      items.forEach((el, i) => {
+        const tags = (el.dataset.tags ?? '').toLowerCase().split(/\s+/).filter(Boolean);
+        meta.set(el, {
+          index: i,
+          kind: el.dataset.kind ?? '',
+          tags,
+          hay: `${el.dataset.title ?? ''} ${el.dataset.text ?? ''} ${tags.join(' ')}`.toLowerCase(),
+        });
+      });
+    }
+    grid.querySelectorAll<HTMLElement>('[data-item]').forEach((el) => onThisPage.add(el));
+    index();
+
+    // The cards of the other pages are inert in <template>s until a filter needs them.
+    function expand(): void {
+      if (expanded) return;
+      const before = root!.querySelector<HTMLTemplateElement>('template[data-before]');
+      const after = root!.querySelector<HTMLTemplateElement>('template[data-after]');
+      if (before) grid!.prepend(before.content.cloneNode(true));
+      if (after) grid!.append(after.content.cloneNode(true));
+      expanded = true;
+      index();
+    }
+
+    function press(buttons: HTMLButtonElement[], isOn: (b: HTMLButtonElement) => boolean): void {
+      for (const b of buttons) {
+        const on = isOn(b);
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      }
+    }
+
+    function writeUrl(): void {
+      const params = new URLSearchParams();
+      if (state.q.trim()) params.set('q', state.q.trim());
+      if (state.tags.length) params.set('tag', state.tags.join(','));
+      if (state.sort !== 'newest') params.set('sort', state.sort);
+      if (state.kind !== 'all') params.set('kind', state.kind);
+      const query = params.toString();
+      try {
+        history.replaceState(null, '', location.pathname + (query ? `?${query}` : '') + location.hash);
+      } catch {
+        /* a sandboxed frame: the filters still work, they just are not shareable */
+      }
+    }
+
+    function render(): void {
+      const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+      const filtered = words.length > 0 || state.tags.length > 0 || state.sort !== 'newest' || state.kind !== 'all';
+      if (filtered) expand();
+
+      if (orderedBy !== state.sort) {
+        const dir = state.sort === 'oldest' ? -1 : 1;
+        [...items]
+          .sort((a, b) => dir * ((meta.get(a)?.index ?? 0) - (meta.get(b)?.index ?? 0)))
+          .forEach((el) => grid!.appendChild(el));
+        orderedBy = state.sort;
+      }
+
+      let shown = 0;
+      for (const el of items) {
+        const m = meta.get(el);
+        const match =
+          !!m &&
+          (state.kind === 'all' || m.kind === state.kind) &&
+          state.tags.every((t) => m.tags.includes(t)) &&
+          words.every((w) => m.hay.includes(w));
+        const visible = filtered ? match : onThisPage.has(el);
+        el.hidden = !visible;
+        if (visible) shown++;
+      }
+
+      if (count) {
+        count.textContent =
+          filtered && shown !== total
+            ? `${shown} of ${total} ${noun}`
+            : `${total} ${total === 1 ? nounOne : noun}`;
+      }
+      if (empty) empty.hidden = shown !== 0;
+      for (const el of hideWhenFiltered) el.hidden = filtered;
+
+      press(sortBtns, (b) => (b.dataset.value ?? 'newest') === state.sort);
+      press(kindBtns, (b) => (b.dataset.value ?? 'all') === state.kind);
+      press(tagBtns, (b) => state.tags.includes((b.dataset.tag ?? '').toLowerCase()));
+      writeUrl();
+    }
+
+    search?.addEventListener('input', () => {
+      state.q = search.value;
+      render();
+    });
+    search?.closest('form')?.addEventListener('submit', (e) => e.preventDefault());
+
+    root.querySelector('[data-sort]')?.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest('button');
+      if (!b) return;
+      state.sort = b.dataset.value === 'oldest' ? 'oldest' : 'newest';
+      render();
+    });
+    root.querySelector('[data-filter="kind"]')?.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest('button');
+      if (!b) return;
+      state.kind = b.dataset.value ?? 'all';
+      render();
+    });
+    root.querySelector('[data-tags-filter]')?.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest('button');
+      const tag = b?.dataset.tag?.toLowerCase();
+      if (!tag) return;
+      state.tags = state.tags.includes(tag) ? state.tags.filter((t) => t !== tag) : [...state.tags, tag];
+      render();
+    });
+    root.querySelectorAll('[data-clear]').forEach((b) =>
+      b.addEventListener('click', () => {
+        state.q = '';
+        state.tags = [];
+        state.sort = 'newest';
+        state.kind = 'all';
+        if (search) search.value = '';
+        render();
+        search?.focus();
+      }),
+    );
+
+    // Start from the address: ?tag=evals,git&q=worktree&sort=oldest&kind=blog
+    const params = new URLSearchParams(location.search);
+    state.q = params.get('q') ?? '';
+    if (search) search.value = state.q;
+    const known = new Set(tagBtns.map((b) => (b.dataset.tag ?? '').toLowerCase()));
+    state.tags = (params.get('tag') ?? '')
+      .toLowerCase()
+      .split(',')
+      .filter((t) => known.has(t));
+    state.sort = params.get('sort') === 'oldest' ? 'oldest' : 'newest';
+    const kind = params.get('kind') ?? 'all';
+    state.kind = kindBtns.some((b) => b.dataset.value === kind) ? kind : 'all';
+    if (location.hash === '#search') search?.focus();
+    render();
+  }
+</script>

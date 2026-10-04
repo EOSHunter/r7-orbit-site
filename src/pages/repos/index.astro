@@ -1,0 +1,9 @@
+---
+import ArchivePage from '../../components/ArchivePage.astro';
+import { getPosts } from '../../lib/content-queries';
+import { pageCount } from '../../lib/listing';
+
+const posts = await getPosts('repos');
+---
+
+<ArchivePage collection="repos" {posts} page={1} pages={pageCount(posts.length)} />

@@ -1,0 +1,16 @@
+---
+import ArchivePage from '../../../components/ArchivePage.astro';
+import { getPosts } from '../../../lib/content-queries';
+import { pageCount } from '../../../lib/listing';
+
+export async function getStaticPaths() {
+  const posts = await getPosts('news');
+  const pages = pageCount(posts.length);
+  return Array.from({ length: pages - 1 }, (_, i) => ({ params: { page: String(i + 2) }, props: { posts, pages } }));
+}
+
+const { posts, pages } = Astro.props;
+const page = Number(Astro.params.page);
+---
+
+<ArchivePage collection="news" {posts} {page} {pages} />
