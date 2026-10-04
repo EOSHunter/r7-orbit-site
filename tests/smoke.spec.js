@@ -41,7 +41,9 @@ for (const route of routes) {
         }));
         expect(overflow.doc, 'no horizontal scroll').toBeLessThanOrEqual(overflow.view);
 
-        expect(problems, 'console / network problems').toEqual([]);
+        // The browser logs the 404 document itself as a console error; asset 404s are still caught by watchPage.
+        const real = route.status === 404 ? problems.filter((m) => !m.startsWith('console error: Failed to load resource')) : problems;
+        expect(real, 'console / network problems').toEqual([]);
       });
     }
   }

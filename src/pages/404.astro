@@ -51,6 +51,8 @@ import Icon from '../components/Icon.astro';
     </div>
   </section>
   <script>
-    import '../scripts/orbit.js';
+    // A query makes this its own copy, so Astro inlines it in the page instead of fetching a shared chunk after the script that imports it.
+    // @ts-expect-error the query suffix has no type declaration
+    import '../scripts/orbit.js?lost';
   </script>
 </BaseLayout>

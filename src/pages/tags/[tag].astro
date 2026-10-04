@@ -5,6 +5,8 @@ import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { postsWithTag, tagsWithPages } from '../../lib/content';
 import { getAllPosts } from '../../lib/content-queries';
+import { breadcrumbLd, collectionPageLd, jsonLdString } from '../../lib/seo';
+import { site } from '../../data/site';
 import { KINDS, countLabel } from '../../lib/listing';
 import { toCards } from '../../lib/post-cards';
 
@@ -16,6 +18,11 @@ export async function getStaticPaths() {
 const { tag } = Astro.params;
 const { posts } = Astro.props;
 const cards = await toCards(posts);
+const description = `${countLabel(posts.length, 'post', 'posts')} tagged ${tag}: news, writing, videos, projects and repos, newest first.`;
+const ld = [
+  collectionPageLd(site, { path: `/tags/${tag}/`, name: `Posts tagged ${tag}`, description }),
+  breadcrumbLd(site, [{ name: 'Tags', path: '/tags/' }, { name: String(tag) }]),
+];
 
 // Grouped by kind, kinds in the site's order, newest first inside each group.
 const groups = KINDS.map((info) => ({
@@ -26,8 +33,9 @@ const groups = KINDS.map((info) => ({
 
 <BaseLayout
   title={`Posts tagged ${tag}`}
-  description={`${countLabel(posts.length, 'post', 'posts')} tagged ${tag}: news, writing, videos, projects and repos, newest first.`}
+  {description}
 >
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(ld)} />
   <div class="container wide">
     <header class="page-head">
       <p class="eyebrow brass">
