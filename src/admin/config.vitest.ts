@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import {
+  CMS_AUTH_URL,
+  CMS_BRANCH,
+  CMS_REPO,
   FEATURED_MEDIA_FOLDER,
   FEATURED_PUBLIC_FOLDER,
   MEDIA_FOLDER,
@@ -82,12 +85,26 @@ describe('admin config', () => {
   it('signs in through the OAuth proxy and uses pull requests when deployed; edits files directly when local', () => {
     const live = buildConfig({ ...env, local: false, authUrl: 'https://auth.example.com' });
     expect(live.publish_mode).toBe('editorial_workflow');
-    expect(live.backend).toMatchObject({ name: 'github', repo: 'owner/name', base_url: 'https://auth.example.com' });
+    expect(live.backend).toMatchObject({
+      name: 'github',
+      repo: 'owner/name',
+      base_url: 'https://auth.example.com',
+      auth_endpoint: 'auth',
+      open_authoring: false,
+    });
     expect(live.local_backend).toBe(false);
 
     const local = buildConfig({ ...env, local: true });
     expect(local.local_backend).toBe(true);
     expect(local.publish_mode).toBeUndefined();
+  });
+
+  it('has live sign-in settings that Decap accepts: owner/name, main, an https origin with no trailing slash', () => {
+    expect(CMS_REPO).toMatch(/^[\w.-]+\/[\w.-]+$/);
+    expect(CMS_BRANCH).toBe('main');
+    // Decap compares the popup's origin with base_url exactly, so a path or trailing slash would break the login.
+    expect(new URL(CMS_AUTH_URL).origin).toBe(CMS_AUTH_URL);
+    expect(CMS_AUTH_URL.startsWith('https://')).toBe(true);
   });
 
   it('is the only source of config: no /admin/config.yml is fetched', () => {

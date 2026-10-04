@@ -1,0 +1,18 @@
+# The R7 Orbit CMS sign-in Worker. Deploy it from this folder with `npx wrangler deploy` (see README.md).
+name = "r7-orbit-cms-auth"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Served only from its own domain, not from <name>.<account>.workers.dev, so there is one address to register with GitHub.
+# `custom_domain = true` makes `wrangler deploy` create the DNS record and certificate (the zone must be on this account).
+workers_dev = false
+routes = [{ pattern = "cms-auth.r7orbit.io", custom_domain = true }]
+
+[vars]
+# Sites allowed to sign in through this Worker: the hostname the admin runs on, comma separated. `*.example.com` allows
+# subdomains. Not a secret.
+ALLOWED_DOMAINS = "r7orbit.io"
+
+# Secrets, set once with `npx wrangler secret put <NAME>`; never write them here:
+#   GITHUB_CLIENT_ID
+#   GITHUB_CLIENT_SECRET

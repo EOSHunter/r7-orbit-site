@@ -5,13 +5,26 @@
 import type { CmsCollection, CmsConfig, CmsField } from 'decap-cms-core';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 
+// ---- Where the live admin signs in (edit here; the Cloudflare steps are in docs/DEPLOY_CLOUDFLARE.md) -----------------------
+
+/** The GitHub repository the posts are committed to, `owner/name`. Taken from `git remote get-url origin`. */
+export const CMS_REPO = 'EOSHunter/r7-orbit-site';
+/** The branch posts are published to. Cloudflare Pages deploys it as the production site. */
+export const CMS_BRANCH = 'main';
+/**
+ * The address of the OAuth Worker in workers/cms-auth/ that signs the author in to GitHub (it serves /auth and
+ * /callback). No trailing slash. A PLACEHOLDER until that Worker is deployed there: change it if it lives elsewhere.
+ * A build can override it with PUBLIC_CMS_AUTH_URL (and PUBLIC_CMS_REPO / PUBLIC_CMS_BRANCH for the other two).
+ */
+export const CMS_AUTH_URL = 'https://cms-auth.r7orbit.io';
+
 export interface AdminEnv {
   /** `npm run dev`: edit the files on disk through the local proxy (`npm run cms`), no sign-in. */
   local: boolean;
   /** `owner/name` of the GitHub repository the posts are committed to. */
   repo: string;
   branch: string;
-  /** Base URL of the OAuth proxy that signs the author in to GitHub (see README "Admin"). Unused when `local`. */
+  /** Base URL of the OAuth Worker that signs the author in to GitHub (see CMS_AUTH_URL). Unused when `local`. */
   authUrl?: string;
 }
 
@@ -550,9 +563,18 @@ export const collections: CmsCollection[] = [
 
 export function buildConfig(env: AdminEnv): CmsConfig {
   return {
+    // GitHub, signed in through the OAuth Worker (base_url + /auth, workers/cms-auth/). Open authoring is off: only people
+    // with write access to the repository can edit, and the token the Worker returns is the author's own.
     backend: env.local
       ? { name: 'github', repo: env.repo, branch: env.branch }
-      : { name: 'github', repo: env.repo, branch: env.branch, base_url: env.authUrl, auth_endpoint: 'auth' },
+      : {
+          name: 'github',
+          repo: env.repo,
+          branch: env.branch,
+          base_url: env.authUrl,
+          auth_endpoint: 'auth',
+          open_authoring: false,
+        },
     // `local_backend` talks to `npm run cms` (decap-server) and falls back to the backend above if it is not running.
     local_backend: env.local,
     // Each post becomes a pull request, so CI builds it (and checks the schema) before it can reach the live site.

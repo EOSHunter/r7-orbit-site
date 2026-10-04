@@ -70,7 +70,7 @@ Validate with Google's Rich Results Test and the Schema.org validator.
 ```
 User-agent: *
 Allow: /
-Sitemap: https://example.com/sitemap-index.xml
+Sitemap: https://r7orbit.io/sitemap-index.xml
 ```
 
 `/sitemap-index.xml` lists every page except drafts, search and `noindex` pages, with `lastmod` from `updated` or `date`. Submit it in Google Search Console and Bing Webmaster Tools after launch.

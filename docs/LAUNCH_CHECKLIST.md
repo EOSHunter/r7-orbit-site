@@ -18,7 +18,7 @@ After deleting, the home page, archives and `tests/routes.js` reference these sl
 
 ## `src/data/site.json` placeholders
 
-- `url`: `https://example.com`. Set the real domain (also affects canonical URLs, feeds, sitemap, `robots.txt`).
+- ~~`url`~~: done, `https://r7orbit.io` (it sets the canonical URLs, feeds, sitemap and `robots.txt`).
 - `author.name`: "Your Name".
 - `author.bio`: "Two or three sentences, in the first person."
 - `author.photo`: `null`.
@@ -31,8 +31,9 @@ Also review `/about/` and `/privacy/` copy once the above is known.
 
 ## Manual steps owed by the author
 
-1. **Domain.** Choose and buy it, point DNS at the host, set `url` in `site.json`, and record the decision in `docs/DECISIONS.md`.
-2. **Decap CMS auth (`/admin`).** Set the real GitHub `repo` and `branch` in `src/admin/config.ts` settings, create a GitHub OAuth app (or use the host's auth proxy), and configure its callback URL for the final domain. Keep secrets in host environment variables, never in git. Test a login and a draft-to-publish round trip. See README "Admin".
+1. **Domain.** ~~Choose and buy it, set `url` in `site.json`~~: done (`r7orbit.io`, DNS on Cloudflare). Still to do: add it to the Pages project and redirect `www`, and record the decision in `docs/DECISIONS.md` (`docs/DEPLOY_CLOUDFLARE.md` steps 1-2).
+2. **Decap CMS auth (`/admin`).** Done in the repository: the GitHub backend, `repo` / `branch`, the sign-in Worker (`workers/cms-auth/`), `public/_headers` and the scheduled-deploy workflow. Still to do by hand, in order, following `docs/DEPLOY_CLOUDFLARE.md`: connect the repository to Cloudflare Pages (steps 1), create the GitHub OAuth App (3), deploy the Worker and set `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` with `wrangler secret put` (4-5), test a login and a save-to-publish round trip (6), and add the Deploy Hook and the `CF_DEPLOY_HOOK_URL` secret (7). Secrets go in Cloudflare and GitHub, never in git.
 3. **Newsletter provider.** `provider` is `buttondown` but no account is connected. Create the account, put its form URL in `newsletter.formAction`, and test a signup. Until then the form shows a "sample only" message.
 4. **Analytics.** None is installed. Add one only if you choose to (`docs/DECISIONS.md`).
-5. **Final pass.** Run `npm run build`, `npm test`, `npm run test:lighthouse`, and check the feed, sitemap and share images (`docs/SEO_AND_SHARING.md`) on the live domain.
+5. **Cloudflare Pages settings.** Build command `npm run build`, output `dist`, production branch `main`, `NODE_VERSION=22` (`docs/DEPLOY_CLOUDFLARE.md` step 1). Check `curl -I https://r7orbit.io/admin/` shows `x-robots-tag: noindex` and a `content-security-policy`.
+6. **Final pass.** Run `npm run build`, `npm test`, `npm run test:lighthouse`, and check the feed, sitemap and share images (`docs/SEO_AND_SHARING.md`) on the live domain.

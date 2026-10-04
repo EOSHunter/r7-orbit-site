@@ -1,6 +1,40 @@
-# Cloudflare Pages / Netlify response headers.
+# Cloudflare Pages response headers (docs/DEPLOY_CLOUDFLARE.md). Rules are cumulative: a path that matches several blocks
+# gets all of their headers, and a header set by two blocks is sent with both values joined. So a header that differs for
+# /admin/ (the Content-Security-Policy) is set only in the /admin/* block, and nothing here is set twice.
+#
+# No Content-Security-Policy on the public pages: Astro inlines its small scripts, so a policy that works would have to
+# allow 'unsafe-inline' scripts, which makes it decoration. The site makes no third-party requests anyway (CLAUDE.md).
+# No Cross-Origin-Opener-Policy anywhere: the GitHub sign-in popup talks back to /admin/ through window.opener, and
+# `same-origin` would cut that link and break the login.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Built assets have a content hash in the file name, so they never change under the same URL.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Self-hosted fonts keep their names, so a month, not forever.
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
 # The admin is never indexed (it is also noindex in its HTML, disallowed in robots.txt and left out of the sitemap).
+#
+# Its Content-Security-Policy is what protects the GitHub token the editor keeps in the browser:
+#   script-src 'self'    only the bundled editor runs (Decap is bundled by Astro, nothing comes from a CDN). It also needs
+#                        'unsafe-eval': Decap checks its config with Ajv, which builds validators with new Function(). No
+#                        inline scripts are allowed, and connect-src below stops anything from sending the token elsewhere
+#   style-src 'unsafe-inline'  Decap writes its styles at run time (emotion), and so does the live preview
+#   img-src              the author's avatar and images read from the repository come from GitHub or from blob: URLs
+#   connect-src          the GitHub API, which is the editor's backend
+#   frame-ancestors      nobody may embed the editor
+# The sign-in popup (workers/cms-auth/) is a window of its own, so it needs no entry here. If the editor ever needs
+# another address (a different backend, an image host), add it here or the browser blocks it and the console says so.
+# tests/headers.spec.js loads /admin/ with this policy applied and fails on any violation.
 /admin/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
-  Referrer-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'

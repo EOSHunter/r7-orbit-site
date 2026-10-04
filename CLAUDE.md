@@ -12,9 +12,11 @@ Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must s
 
 ```
 CLAUDE.md                     this file
-docs/                         ARTICLE_COMPONENTS (MDX article component library), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), ARTICLE_COMPONENTS (MDX article component library), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
+.github/workflows/scheduled-deploy.yml   daily Cloudflare Pages Deploy Hook (publishes future-dated posts); needs secret CF_DEPLOY_HOOK_URL
+workers/cms-auth/             Cloudflare Worker: GitHub OAuth for /admin (deployed with wrangler; outside the Astro build, lint, check and tests)
 src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, SubscribeBand, NewsletterForm, Icon + IconSprite, MediaPlaceholder, StatusMark,
@@ -41,10 +43,10 @@ src/
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play)
 tests/                        routes.js (every route, one list), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
-                              admin (noindex, out of robots/sitemap/feeds), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
+                              admin (noindex, out of robots/sitemap/feeds), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
-public/                       served as-is: fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
+public/                       served as-is: _headers + _redirects (Cloudflare Pages), fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
 brand/                        the full brand kit (logos, social images, source/ HTML for the text images); only the web essentials are copied to public/
 templates/                    static HTML for every page type: the visual reference to port (not built)
 content-examples/             the original examples (phase 3 copied the posts to src/content/)
