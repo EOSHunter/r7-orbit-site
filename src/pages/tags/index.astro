@@ -3,19 +3,28 @@ import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { tagCounts } from '../../lib/content';
 import { getAllPosts } from '../../lib/content-queries';
+import { breadcrumbLd, collectionPageLd, jsonLdString } from '../../lib/seo';
+import { site } from '../../data/site';
 
 const posts = await getAllPosts();
 const counts = tagCounts(posts);
 // A tag page exists once a tag has two posts; a tag used once is listed but not linked.
 const linked = counts.filter((t) => t.count >= 2);
 const single = counts.filter((t) => t.count < 2);
+const description =
+  'Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.';
+const ld = [
+  collectionPageLd(site, { path: '/tags/', name: 'Tags', description }),
+  breadcrumbLd(site, [{ name: 'Tags' }]),
+];
 ---
 
 <BaseLayout
   title="Tags"
-  description="Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together."
+  {description}
   noindex={counts.length === 0}
 >
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(ld)} />
   <div class="container wide">
     <header class="page-head">
       <p class="eyebrow brass">Tags</p>

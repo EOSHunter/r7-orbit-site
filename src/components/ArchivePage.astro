@@ -11,6 +11,7 @@ import type { Kind } from '../lib/cards';
 import { PAGE_SIZE, kindInfo, pageUrl } from '../lib/listing';
 import { toCards } from '../lib/post-cards';
 import { site } from '../data/site';
+import { breadcrumbLd, collectionPageLd, jsonLdString } from '../lib/seo';
 import { titleParts } from '../lib/text';
 
 interface Props {
@@ -37,6 +38,10 @@ const kinds: Kind[] = collection
   : (['news', 'blog', 'vlog', 'project', 'repo'] as const).filter((k) => cards.some((c) => c.kind === k));
 const tags = tagCounts(posts).map((t) => t.tag);
 const first = (page - 1) * PAGE_SIZE;
+const ld = [
+  collectionPageLd(site, { path: pageUrl(base, page), name: label, description }),
+  breadcrumbLd(site, [{ name: label, path: base }, ...(page > 1 ? [{ name: `Page ${page}` }] : [])]),
+];
 ---
 
 <BaseLayout
@@ -45,6 +50,7 @@ const first = (page - 1) * PAGE_SIZE;
   current={info?.label}
   noindex={posts.length === 0}
 >
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(ld)} />
   {page > 1 && <link slot="head" rel="prev" href={pageUrl(base, page - 1)} />}
   {page < pages && <link slot="head" rel="next" href={pageUrl(base, page + 1)} />}
 

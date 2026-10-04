@@ -64,13 +64,13 @@ const views = [
         <figure class="sg-frame" data-sg-frame="dark">
           <figcaption class="eyebrow">Obsidian (dark)</figcaption>
           <div class="sg-scroll">
-            <iframe title="Components in the Obsidian theme" src="/styleguide/specimen/?theme=dark"></iframe>
+            <iframe title="Components in the Obsidian theme" data-src="/styleguide/specimen/?theme=dark"></iframe>
           </div>
         </figure>
         <figure class="sg-frame" data-sg-frame="light">
           <figcaption class="eyebrow">Ivory (light)</figcaption>
           <div class="sg-scroll">
-            <iframe title="Components in the Ivory theme" src="/styleguide/specimen/?theme=light"></iframe>
+            <iframe title="Components in the Ivory theme" data-src="/styleguide/specimen/?theme=light"></iframe>
           </div>
         </figure>
       </div>
@@ -114,6 +114,12 @@ const views = [
 <script>
   const root = document.querySelector('[data-styleguide]');
   if (root) {
+    // The frames are whole pages (fonts, CSS, script each): start them a moment after this page has settled, so they do not compete with it.
+    window.addEventListener('load', () =>
+      setTimeout(() => {
+        root.querySelectorAll<HTMLIFrameElement>('iframe[data-src]').forEach((f) => (f.src = f.dataset.src ?? ''));
+      }, 1500),
+    );
     const frames = root.querySelectorAll<HTMLElement>('[data-sg-frame]');
     const press = (group: Element, value: string) => {
       group.querySelectorAll('button').forEach((b) => {

@@ -65,3 +65,9 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 - Static site; content as files in the repo; no database.
 - Fonts are self-hosted; no external requests for fonts, icons or scripts.
 - Dates in the UI: `Oct 3, 2026`. Read time: `8 min`.
+- Fonts, phase 7 (2026-10-03, for the Lighthouse budgets; owner may revisit):
+  - Cormorant 500 is served by the 400 file (`font-weight: 400 500` on one `@font-face`), so section titles render at 400. One font request fewer on every page, which is what keeps LCP under 2.0 s in the mobile simulation.
+  - Metric-matched fallback faces (`Cormorant Fallback`, `Inter Fallback`) sit in the font stacks, so the swap to the web fonts does not reflow headings (it caused CLS up to 0.18).
+  - The Cormorant 400 italic is preloaded along with Inter and Cormorant 400 (every page has an italic-brass phrase in its headline).
+- Lighthouse CI serves `dist/` with gzip (`tests/serve-dist.mjs`) because `astro preview` does not compress; production hosts do. The CLS assertion allows 0.005 (measured max 0.0011, sub-pixel font-swap shifts); the budget is still "0" in `PROJECT_BRIEF.md`.
+- Links inside running text are underlined, and text fields get the standard focus ring (WCAG 1.4.1, 2.4.7); both are in `site.css`.

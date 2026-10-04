@@ -6,13 +6,17 @@
   marked "web". Change a value here and everything that uses it follows.
 */
 
-@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/cormorant-garamond-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/cormorant-garamond-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400 500; font-display: swap; src: url('/fonts/cormorant-garamond-latin-400-normal.woff2') format('woff2'); }
+/* web: weight 500 is served by the 400 file (one request fewer on every page; the difference is slight at display sizes). */
 @font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/cormorant-garamond-latin-600-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 400; font-display: swap; src: url('/fonts/cormorant-garamond-latin-400-italic.woff2') format('woff2'); }
 @font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 500; font-display: swap; src: url('/fonts/cormorant-garamond-latin-500-italic.woff2') format('woff2'); }
 @font-face { font-family: 'Inter Variable'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations'); }
 @font-face { font-family: 'JetBrains Mono Variable'; font-style: normal; font-weight: 100 800; font-display: swap; src: url('/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations'); }
+/* web: metric-matched fallbacks, so the swap to the web fonts does not reflow headings (CLS). Values from average glyph width and vertical metrics. */
+@font-face { font-family: 'Cormorant Fallback'; font-style: normal; src: local('Times New Roman'), local('Times'); size-adjust: 97.4%; ascent-override: 94.9%; descent-override: 29.5%; line-gap-override: 0%; }
+@font-face { font-family: 'Cormorant Fallback'; font-style: italic; src: local('Times New Roman Italic'), local('Times-Italic'), local('Times Italic'); size-adjust: 87.5%; ascent-override: 105.6%; descent-override: 32.8%; line-gap-override: 0%; }
+@font-face { font-family: 'Inter Fallback'; src: local('Arial'), local('Helvetica'); size-adjust: 107.6%; ascent-override: 90%; descent-override: 22.4%; line-gap-override: 0%; }
 
 :root {
   /* ------------------------------------------------------------------------------------------------ Colour: surfaces */
@@ -72,8 +76,8 @@
   --st-done-wash: rgb(143 165 138 / 0.07);
 
   /* ------------------------------------------------------------------------------------------------------ Typography */
-  --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
-  --font-ui: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Cormorant Garamond', 'Cormorant Fallback', 'Times New Roman', serif;
+  --font-ui: 'Inter Variable', 'Inter Fallback', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', Consolas, monospace;
 
   /* Sizes. The app is dense (13px base); a website reads at 17px. Each has a job. */

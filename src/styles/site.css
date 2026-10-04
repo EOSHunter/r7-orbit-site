@@ -10,6 +10,10 @@
 
 /* --------------------------------------------------------------------------------------------------------- Base */
 [hidden] { display: none !important; }
+/* Links inside running text are told apart by more than colour (WCAG 1.4.1). */
+.callout a, .t-meta a, .t-lead a, p > a:not([class]) { text-decoration: underline; text-underline-offset: 0.2em; }
+/* Text fields keep the system's focus ring: a faint border change alone is not a visible focus indicator (WCAG 2.4.7). */
+.input:focus-visible, .textarea:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 /* Without script the filter controls would do nothing, so they are not shown. Lists still read top to bottom; pagination is real links. */
 html:not(.js) [data-filter], html:not(.js) [data-sort], html:not(.js) .toolbar, html:not(.js) [data-count], html:not(.js) .feed-count { display: none; }
