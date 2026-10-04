@@ -13,14 +13,20 @@
     "check": "astro check",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "node --test \"src/**/*.test.ts\""
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:e2e": "playwright test",
+    "test:lighthouse": "node tests/lighthouse.mjs"
   },
   "dependencies": {
     "astro": "^7.3.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.5",
     "@types/sanitize-html": "^2.16.2",
     "eslint": "^10.12.0",
