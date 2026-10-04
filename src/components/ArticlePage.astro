@@ -4,6 +4,7 @@ import type { ImageMetadata } from 'astro';
 import ArticleHero from './ArticleHero.astro';
 import ArticleJsonLd from './ArticleJsonLd.astro';
 import Icon from './Icon.astro';
+import PreviewBadge from './PreviewBadge.astro';
 import PrevNext from './PrevNext.astro';
 import RelatedPosts from './RelatedPosts.astro';
 import SeriesNav from './SeriesNav.astro';
@@ -107,6 +108,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
     <header class="post-head">
       <p class="eyebrow">
         <span class="kind"><Icon name={kind} />{label}</span>
+        <PreviewBadge post={post} />
         <span class="sep" aria-hidden="true">&middot;</span>
         <span>{minutes} min read</span>
       </p>

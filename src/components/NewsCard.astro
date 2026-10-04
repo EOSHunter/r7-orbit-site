@@ -2,6 +2,7 @@
 import CardFoot from './CardFoot.astro';
 import CardMedia from './CardMedia.astro';
 import Icon from './Icon.astro';
+import PreviewBadge from './PreviewBadge.astro';
 import { cardAttrs } from './cardAttrs';
 import type { NewsCardData } from '../lib/cards';
 import { plainTitle } from '../lib/text';
@@ -20,6 +21,7 @@ const { post } = Astro.props;
       <Icon name="news" />
       News
     </span>
+    {post.preview && <PreviewBadge label={post.preview} />}
     <h3 class="card-title">{plainTitle(post.title)}</h3>
     <p class="card-text">{post.summary}</p>
     <CardFoot date={post.date} minutes={post.readTime} />

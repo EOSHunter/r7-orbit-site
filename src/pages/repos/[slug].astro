@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
+import PreviewBadge from '../../components/PreviewBadge.astro';
 import PostCard from '../../components/PostCard.astro';
 import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
 import ReadmeBlock from '../../components/ReadmeBlock.astro';
@@ -77,6 +78,7 @@ const path = `/repos/${post.id}/`;
     <header class="repo-head">
       <p class="eyebrow">
         <span class="kind"><Icon name="repo" />Repo</span>
+        <PreviewBadge post={post} />
       </p>
       <h1 class="repo-name"><span class="owner">{owner}/</span><wbr />{name}</h1>
       <p class="t-lead">{data.summary}</p>

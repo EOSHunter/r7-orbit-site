@@ -3,6 +3,7 @@ import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Gallery from '../../components/Gallery.astro';
 import Icon from '../../components/Icon.astro';
+import PreviewBadge from '../../components/PreviewBadge.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
 import PostCard from '../../components/PostCard.astro';
 import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
@@ -86,6 +87,7 @@ const path = `/projects/${post.id}/`;
     <header class="project-head">
       <p class="eyebrow">
         <span class="kind"><Icon name="project" />Project</span>
+        <PreviewBadge post={post} />
       </p>
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
       <p class="t-lead">{data.summary}</p>
