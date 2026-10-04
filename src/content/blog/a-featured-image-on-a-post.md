@@ -1,6 +1,6 @@
 ---
 # SAMPLE CONTENT
-title: A featured image behind the *headline*
+title: "Sample: a featured image behind the *headline*"
 date: 2026-09-30
 summary: A short sample post that shows the optional hero image, which sits behind the breadcrumbs and title, under a dark gradient.
 tags: [site-notes]
