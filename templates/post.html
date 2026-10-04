@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why every agent gets its own room | R7 Orbit</title>
+<meta name="description" content="Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.">
+<!-- TODO: replace example.com with the real domain (canonical, og:url and og:image must be absolute URLs on a live site) -->
+<link rel="canonical" href="https://example.com/blog/why-every-agent-gets-its-own-room/">
+<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="rss.xml">
+
+<meta property="og:site_name" content="R7 Orbit">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Why every agent gets its own room | R7 Orbit">
+<meta property="og:description" content="Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.">
+<meta property="og:url" content="https://example.com/blog/why-every-agent-gets-its-own-room/">
+<meta property="og:image" content="../brand/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Why every agent gets its own room | R7 Orbit">
+<meta name="twitter:description" content="Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.">
+<meta name="twitter:image" content="../brand/og-default.png">
+
+<meta name="theme-color" content="#09090a">
+<link rel="icon" href="../brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../brand/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="../brand/apple-touch-icon.png">
+<link rel="manifest" href="../brand/site.webmanifest">
+
+<script>
+  /* Apply the saved theme before first paint so there is no flash. Dark is the default. */
+  (function () { var r = document.documentElement; r.classList.add('js'); try { if (localStorage.getItem('r7-theme') === 'light') r.setAttribute('data-theme', 'light'); } catch (e) {} })();
+</script>
+<link rel="stylesheet" href="../design-system/tokens.css">
+<link rel="stylesheet" href="../design-system/components.css">
+<link rel="stylesheet" href="./site.css">
+<script src="./site.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why every agent gets its own room",
+  "description": "Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.",
+  "datePublished": "2026-09-28",
+  "dateModified": "2026-10-01",
+  "image": [
+    "https://example.com/images/why-every-agent-gets-its-own-room.png"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "Your Name",
+    "url": "https://example.com/about/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "R7 Orbit",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://example.com/brand/icon-512.png"
+    }
+  },
+  "mainEntityOfPage": "https://example.com/blog/why-every-agent-gets-its-own-room/",
+  "keywords": "agents, git",
+  "timeRequired": "PT8M"
+}
+</script>
+</head>
+<body>
+
+<!-- Icons: 16x16 viewBox, 1.5 stroke, round caps and joins, currentColor. Shown at 15px with class="ico". Shared partial: same on every page. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-news" viewBox="0 0 16 16"><path d="M2.5 3.5h8v9h-7a1 1 0 0 1-1-1v-8Z"/><path d="M10.5 6h3v5.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 6h4M4.5 8.5h4M4.5 10.5h2.5"/></symbol>
+  <symbol id="i-blog" viewBox="0 0 16 16"><path d="M10.8 2.7 13.3 5.2 6 12.5l-3.2.7.7-3.2 7.3-7.3Z"/><path d="M9.5 4l2.5 2.5"/></symbol>
+  <symbol id="i-vlog" viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M6.8 6.2v3.6L10 8 6.8 6.2Z"/></symbol>
+  <symbol id="i-project" viewBox="0 0 16 16"><path d="M8 2 13.5 5v6L8 14 2.5 11V5L8 2Z"/><path d="M2.7 5.1 8 8l5.3-2.9M8 8v5.8"/></symbol>
+  <symbol id="i-repo" viewBox="0 0 16 16"><circle cx="4.5" cy="3.8" r="1.5"/><circle cx="4.5" cy="12.2" r="1.5"/><circle cx="11.5" cy="5.8" r="1.5"/><path d="M4.5 5.3v5.4M11.5 7.3c0 2.2-2.5 2.4-6 3.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 16 16"><path d="m8 2.2 1.7 3.6 3.9.5-2.9 2.7.8 3.9L8 10.9l-3.5 2 .8-3.9L2.4 6.3l3.9-.5L8 2.2Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.8"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M12.4 3.6l-1 1M4.6 11.4l-1 1"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11L13 8 4 2.5Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.1 3.1"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="m3.5 3.5 9 9M12.5 3.5l-9 9"/></symbol>
+  <symbol id="i-external" viewBox="0 0 16 16"><path d="M9.5 2.5h4v4M13.5 2.5l-6 6M12 9v3.5a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1H7"/></symbol>
+  <symbol id="i-rss" viewBox="0 0 16 16"><path d="M3 3.5a9.5 9.5 0 0 1 9.5 9.5M3 7.5A5.5 5.5 0 0 1 8.5 13"/><circle cx="3.9" cy="12.1" r="1"/></symbol>
+  <symbol id="i-github" viewBox="0 0 16 16"><g transform="scale(.6667)" stroke-width="2.25"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.2l2 1.3"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 16 16"><circle cx="4.5" cy="3.8" r="1.5"/><circle cx="11.5" cy="3.8" r="1.5"/><circle cx="8" cy="12.2" r="1.5"/><path d="M4.5 5.3v1.2A1.5 1.5 0 0 0 6 8h4a1.5 1.5 0 0 0 1.5-1.5V5.3M8 8v2.7"/></symbol>
+  <symbol id="i-link" viewBox="0 0 16 16"><path d="M6.8 9.2a2.5 2.5 0 0 0 3.5 0l2.2-2.2a2.5 2.5 0 0 0-3.5-3.5l-.8.8M9.2 6.8a2.5 2.5 0 0 0-3.5 0L3.5 9a2.5 2.5 0 0 0 3.5 3.5l.8-.8"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="m2.5 4.5 5.5 4.2 5.5-4.2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v7.5a.5.5 0 0 1-.5.5h-7.5a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5Z"/><path d="M9 2.5v3h3"/></symbol>
+</svg>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- Shared partial: site header. Set aria-current="page" on the section you are in. The nav hrefs below point at archive.html so the
+     kit previews; a real site links /news/, /blog/, /vlogs/, /projects/, /repos/. -->
+<header class="site-header">
+  <div class="container wide bar">
+    <a class="wordmark" href="index.html" aria-label="R7 Orbit, home"><img src="../design-system/assets/r7-mark.svg" alt="">R7 Orbit</a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="index.html#latest">Latest</a>
+      <a href="archive.html?kind=news">News</a>
+      <a href="archive.html" aria-current="page">Blog</a>
+      <a href="archive.html?kind=vlogs">Vlogs</a>
+      <a href="archive.html?kind=projects">Projects</a>
+      <a href="archive.html?kind=repos">Repos</a>
+      <a href="about.html">About</a>
+    </nav>
+    <div class="header-tools">
+      <a class="btn quiet icon" href="archive.html#search" aria-label="Search"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></a>
+      <button class="btn quiet theme-toggle" type="button" data-theme-toggle aria-pressed="false" title="Switch between Obsidian (dark) and Ivory (light)"><svg class="ico" aria-hidden="true"><use href="#i-sun"/></svg><span class="theme-label">Ivory</span></button>
+      <button class="btn quiet icon menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><svg class="ico i-menu" aria-hidden="true"><use href="#i-menu"/></svg><svg class="ico i-close" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+<!-- Blog post / news article. SAMPLE CONTENT: all text below is placeholder, written to show the template. -->
+<div class="container">
+  <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="archive.html">Blog</a></li><li aria-current="page">Why every agent gets its own room</li></ol></nav>
+
+  <header class="post-head">
+    <p class="eyebrow"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><span class="sep" aria-hidden="true">&middot;</span><span>8 min read</span></p>
+    <h1>Why every agent gets <em>its own room</em></h1>
+    <p class="t-lead">Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.</p>
+    <div class="byline">
+      <span class="author"><span class="avatar" aria-hidden="true"><img src="../design-system/assets/r7-mark.svg" alt=""></span>Your Name</span>
+      <span class="meta-item"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg><time datetime="2026-09-28">Sep 28, 2026</time></span>
+      <span class="meta-item"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>8 min read</span>
+      <span class="meta-item">Updated <time datetime="2026-10-01">Oct 1, 2026</time></span>
+      <div class="cluster tags" aria-label="Tags"><a class="chip link" href="archive.html?tag=agents">agents</a><a class="chip link" href="archive.html?tag=git">git</a></div>
+    </div>
+  </header>
+
+  <!-- Optional hero media. Delete it for a text-only post, or swap the .media-ph for <img src alt="..."> and keep the wrapper. -->
+  <div class="media framed post-hero"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div>
+
+  <div class="post-layout">
+    <div class="post-main">
+      <article class="prose" id="article">
+        <div class="callout"><strong>Sample content.</strong> The text on this page is placeholder, written to show the template. Replace it with your post.</div>
+
+        <p>When I first started giving coding tasks to agents, I let them all work in the same folder. It felt efficient. It was also how I lost an afternoon to a file that two of them had quietly rewritten in different directions.</p>
+
+        <h2 id="shared-folder">The trouble with a shared folder</h2>
+        <p>An agent that edits files is a colleague with very fast hands and no sense of what the others are doing. Put two of them in one working directory and the failure is not a crash. It is a test that passes for one and fails for the other, because the other half of the change is somewhere else.</p>
+        <ul>
+          <li>They overwrite each other's edits without noticing.</li>
+          <li>A half-finished change from one breaks the other's test run.</li>
+          <li>Afterwards, nobody can say which change belonged to which task.</li>
+        </ul>
+
+        <h2 id="worktree">A worktree is a folder and a branch</h2>
+        <p>Git already has the answer. A worktree is a second checkout of the same repository, in its own folder, on its own branch. I run <code>git worktree add</code> once per task and delete the folder when the task is merged.</p>
+        <div class="codeblock">
+  <div class="codeblock-bar"><span>terminal</span><button class="btn sm quiet" type="button" data-copy="#post-code-1"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg><span data-copy-label>Copy</span></button></div>
+  <pre class="code" id="post-code-1" tabindex="0"><code>git worktree add ../orbit-task-12 -b task/12-fix-login
+cd ../orbit-task-12
+git status</code></pre>
+</div>
+        <p>That is all of it. The agent works in <code>../orbit-task-12</code>, the branch is named after the task, and my main checkout stays clean.</p>
+
+        <figure>
+          <div class="media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div>
+          <figcaption>Three tasks, three folders, one repository. (Sample figure: replace with a real image and give it alt text.)</figcaption>
+        </figure>
+
+        <blockquote>
+          Nothing leaves a task's folder until I have looked at it.
+          <cite>Sample pull quote</cite>
+        </blockquote>
+
+        <h2 id="approvals">What approvals are for</h2>
+        <p>Rooms keep agents from stepping on each other. Approvals keep them from stepping on you. An approval is the point where an agent hands a decision back and waits, and the useful question is which decisions are worth handing back.</p>
+        <div class="callout brass"><strong>Note.</strong> An approval is not a safety net you can stop paying attention to. It is a place where the agent admits it is not sure.</div>
+
+        <h3 id="say-no">When to say no</h3>
+        <p>I say no, and say why, in three cases:</p>
+        <ol>
+          <li>The command reaches outside the task's folder.</li>
+          <li>The agent wants to install something I did not ask for.</li>
+          <li>I cannot tell, in one read, what the command would do.</li>
+        </ol>
+
+        <h2 id="change">What I would change</h2>
+        <p>If I started again I would write the rules down before the first task, not after the third surprise. A short list, kept in the repository, that both of us can read. Everything else I would leave to the tools, which are better at being boring than I am.</p>
+      </article>
+
+      <div class="share" role="group" aria-label="Share this post" style="margin-top: var(--s-7)">
+        <span class="eyebrow">Share</span>
+        <button class="btn sm quiet" type="button" data-copy="@url"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span data-copy-label>Copy link</span></button>
+        <a class="btn sm quiet" href="mailto:?subject=Why%20every%20agent%20gets%20its%20own%20room"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>Email</a>
+        <!-- TODO: placeholders. Point these at the real share URLs (or delete them): they are plain links, nothing loads from a third party. -->
+        <a class="btn sm quiet" href="#">Bluesky</a>
+        <a class="btn sm quiet" href="#">LinkedIn</a>
+      </div>
+    </div>
+
+    <aside class="toc">
+      <nav aria-label="On this page">
+        <p class="eyebrow">On this page</p>
+        <ol>
+          <li><a href="#shared-folder">The trouble with a shared folder</a></li>
+          <li><a href="#worktree">A worktree is a folder and a branch</a></li>
+          <li>
+            <a href="#approvals">What approvals are for</a>
+            <ol><li><a href="#say-no">When to say no</a></li></ol>
+          </li>
+          <li><a href="#change">What I would change</a></li>
+        </ol>
+      </nav>
+    </aside>
+  </div>
+</div>
+
+<section class="section ruled" aria-labelledby="more-h">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">More from the blog</p>
+        <h2 class="section-title" id="more-h">Keep reading</h2>
+      </div>
+      <a class="more-link" href="archive.html">All posts<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="grid-cards">
+      <a class="card" href="post.html"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Writing evals for the boring parts of an agent</h3><p class="card-text">The flashy demos are hard to test. The boring parts, like whether it ran the tests and said so honestly, are easy to check and catch the most.</p><div class="cluster"><span class="chip">evals</span><span class="chip">agents</span></div><div class="card-foot"><time datetime="2026-09-09">Sep 9</time><span aria-hidden="true">&middot;</span><span>9 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">When two agents change the same file</h3><p class="card-text">Merge conflicts do not go away when the authors are agents. What changes is who is best placed to resolve them.</p><div class="cluster"><span class="chip">git</span><span class="chip">agents</span></div><div class="card-foot"><time datetime="2026-07-27">Jul 27</time><span aria-hidden="true">&middot;</span><span>8 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">What an approval prompt is really asking</h3><p class="card-text">Every &quot;allow this command?&quot; prompt is a small trust decision. Here is how I decide, and what I changed so I decide fewer of them.</p><div class="cluster"><span class="chip">agents</span><span class="chip">design</span></div><div class="card-foot"><time datetime="2026-09-02">Sep 2</time><span aria-hidden="true">&middot;</span><span>6 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+    </div>
+    <nav class="post-nav" aria-label="Previous and next post" style="margin-top: var(--s-7)">
+      <a class="prev" href="post.html" rel="prev"><span class="label-row"><svg class="ico flip" aria-hidden="true"><use href="#i-arrow"/></svg>Older</span><span class="title">The case for slower agents</span></a>
+      <a class="next" href="post.html" rel="next"><span class="label-row">Newer<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></span><span class="title">Writing evals for the boring parts of an agent</span></a>
+    </nav>
+  </div>
+</section>
+
+<!-- Shared partial: subscribe band. Wire the form in site.js (search for "wire a real service"). -->
+<section class="band" id="subscribe" aria-labelledby="subscribe-h">
+  <div class="container wide">
+    <div class="subscribe">
+      <div>
+        <p class="eyebrow">Newsletter</p>
+        <h2 id="subscribe-h" style="margin-top: var(--s-3)">One email when there is something worth reading</h2>
+        <p>New posts and videos, a few times a month. No tracking, and you can leave in one click.</p>
+      </div>
+      <form data-newsletter novalidate>
+        <div class="field">
+          <label for="sub-email">Email address</label>
+          <div class="subscribe-row">
+            <input class="input" id="sub-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+            <button class="btn solid" type="submit">Subscribe</button>
+          </div>
+          <p class="hint" data-newsletter-msg role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- Shared partial: site footer. -->
+<footer class="site-footer">
+  <div class="container wide">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="wordmark" href="index.html"><img src="../design-system/assets/r7-mark.svg" alt="">R7 Orbit</a>
+        <p>Plain notes on building with AI agents: news, writing, videos, projects and code.</p>
+      </div>
+      <nav aria-label="Footer">
+        <ul class="footer-links">
+          <li><a href="rss.xml"><svg class="ico" aria-hidden="true"><use href="#i-rss"/></svg>RSS</a></li><!-- TODO: generate rss.xml at build time -->
+          <li><a href="https://github.com/your-username" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-github"/></svg>GitHub</a></li><!-- TODO: your GitHub -->
+          <li><a href="https://www.youtube.com/@your-channel" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>YouTube</a></li><!-- TODO: your channel -->
+          <li><a href="index.html#subscribe"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>Subscribe</a></li>
+        </ul>
+      </nav>
+      <p class="footer-legal"><span>&copy; 2026</span><span>Made with R7 Orbit</span></p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

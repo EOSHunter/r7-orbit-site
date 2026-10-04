@@ -1,0 +1,39 @@
+---
+import CardMedia from './CardMedia.astro';
+import Icon from './Icon.astro';
+import StatusMark from './StatusMark.astro';
+import { cardAttrs } from './cardAttrs';
+import type { ProjectCardData } from '../lib/cards';
+import { plainTitle } from '../lib/text';
+
+interface Props {
+  post: ProjectCardData;
+}
+
+const { post } = Astro.props;
+const stack = post.stack ?? [];
+---
+
+<a {...cardAttrs(post)}>
+  <CardMedia cover={post.cover} />
+  <div class="card-body">
+    <span class="kind">
+      <Icon name="project" />
+      Project
+    </span>
+    <h3 class="card-title">{plainTitle(post.title)}</h3>
+    <p class="card-text">{post.summary}</p>
+    {stack.length > 0 && (
+      <div class="cluster">
+        {stack.slice(0, 3).map((item) => (
+          <span class="chip mono">{item}</span>
+        ))}
+      </div>
+    )}
+    <div class="card-foot">
+      <StatusMark status={post.status} />
+      <span class="spacer"></span>
+      <Icon name="arrow" />
+    </div>
+  </div>
+</a>

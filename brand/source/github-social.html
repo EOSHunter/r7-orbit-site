@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- GitHub repository social preview: 1280 x 640 (Settings > Social preview). Change the name and line, then re-render. See ../README.md -->
+<html lang="en"><head><meta charset="utf-8"><title>github-social</title>
+<link rel="stylesheet" href="source.css">
+<style>
+  .canvas { width: 1280px; height: 640px; }
+  .glow { left: -140px; top: 40px; width: 720px; height: 720px; }
+  .ring { left: 20px; top: 130px; width: 520px; height: auto; }
+  .text { position: absolute; left: 620px; right: 72px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; }
+  .eyebrow-x { font-size: 15px; margin-bottom: 20px; }
+  h1 { font-size: 100px; line-height: 1; overflow-wrap: anywhere; }
+  p { margin: 26px 0 0; font-size: 30px; line-height: 1.4; color: var(--text-2); max-width: 560px; }
+  .wm { position: absolute; left: 72px; top: 60px; font-size: 16px; }
+  .url { position: absolute; left: 620px; bottom: 52px; font-size: 20px; }
+</style></head>
+<body>
+<div class="canvas">
+  <div class="glow"></div>
+  <img class="ring" src="../../design-system/assets/r7-orbit-mark-transparent.svg" alt="">
+  <div class="wm"><img src="../../design-system/assets/r7-mark.svg" alt="">R7 Orbit</div>
+  <div class="text">
+    <div class="eyebrow-x">Open source</div>
+    <h1 class="display">Project <em>name</em></h1>
+    <p>One plain sentence about what it does and who it is for.</p>
+  </div>
+  <div class="url mono">github.com/owner/repo</div>
+</div>
+</body></html>

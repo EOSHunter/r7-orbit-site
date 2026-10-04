@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The R7 mark in one flat colour (obsidian ink). For ivory and light surfaces. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="610" height="524" viewBox="0 0 610 524" role="img" aria-label="R7">
+  <g fill="#14110a">
+    <path d="M598 0H65L166 98.5H351.5L208 242V407.5L324.5 524V273.5L598 0Z"/>
+    <path d="M162 231.5L208 185.5H0C31.7749 216.5 95.9597 279.6 98.5 284C101.04 288.4 141.892 285.833 162 284V231.5Z"/>
+    <path d="M366.5 284L434.5 225L610 407.5H483L366.5 284Z"/>
+  </g>
+</svg>

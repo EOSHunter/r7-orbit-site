@@ -1,0 +1,16 @@
+dist/
+.astro/
+node_modules/
+package-lock.json
+# Kit files that are copied, not rewritten (see CLAUDE.md "Where things are")
+docs/
+content-examples/
+templates/
+brand/
+src/styles/design-system/
+src/styles/site.css
+src/scripts/orbit.js
+src/scripts/site.js
+public/
+CLAUDE.md
+README.md

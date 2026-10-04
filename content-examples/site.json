@@ -1,0 +1,22 @@
+{
+  "name": "R7 Orbit",
+  "tagline": "Field notes on building with AI",
+  "description": "News, builds and the things in between: writing, videos, projects and code about building with AI.",
+  "url": "https://example.com",
+  "author": {
+    "name": "Your Name",
+    "bio": "Two or three sentences, in the first person.",
+    "photo": null,
+    "email": "hello@example.com"
+  },
+  "links": {
+    "github": "https://github.com/your-username",
+    "youtube": "",
+    "x": "",
+    "linkedin": "",
+    "bluesky": "",
+    "rss": "/rss.xml"
+  },
+  "nav": ["Latest", "News", "Blog", "Vlogs", "Projects", "Repos", "About"],
+  "newsletter": { "provider": "buttondown", "formAction": "" }
+}

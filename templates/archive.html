@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog | R7 Orbit</title>
+<meta name="description" content="Posts about building with AI agents: worktrees, approvals, evals, open-weights models and the small tools in between.">
+<!-- TODO: replace example.com with the real domain (canonical, og:url and og:image must be absolute URLs on a live site) -->
+<link rel="canonical" href="https://example.com/blog/">
+<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="rss.xml">
+
+<meta property="og:site_name" content="R7 Orbit">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog | R7 Orbit">
+<meta property="og:description" content="Posts about building with AI agents: worktrees, approvals, evals, open-weights models and the small tools in between.">
+<meta property="og:url" content="https://example.com/blog/">
+<meta property="og:image" content="../brand/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Blog | R7 Orbit">
+<meta name="twitter:description" content="Posts about building with AI agents: worktrees, approvals, evals, open-weights models and the small tools in between.">
+<meta name="twitter:image" content="../brand/og-default.png">
+
+<meta name="theme-color" content="#09090a">
+<link rel="icon" href="../brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../brand/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="../brand/apple-touch-icon.png">
+<link rel="manifest" href="../brand/site.webmanifest">
+
+<script>
+  /* Apply the saved theme before first paint so there is no flash. Dark is the default. */
+  (function () { var r = document.documentElement; r.classList.add('js'); try { if (localStorage.getItem('r7-theme') === 'light') r.setAttribute('data-theme', 'light'); } catch (e) {} })();
+</script>
+<link rel="stylesheet" href="../design-system/tokens.css">
+<link rel="stylesheet" href="../design-system/components.css">
+<link rel="stylesheet" href="./site.css">
+<script src="./site.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Blog",
+  "url": "https://example.com/blog/",
+  "description": "Posts about building with AI agents.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "R7 Orbit",
+    "url": "https://example.com/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- Icons: 16x16 viewBox, 1.5 stroke, round caps and joins, currentColor. Shown at 15px with class="ico". Shared partial: same on every page. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-news" viewBox="0 0 16 16"><path d="M2.5 3.5h8v9h-7a1 1 0 0 1-1-1v-8Z"/><path d="M10.5 6h3v5.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 6h4M4.5 8.5h4M4.5 10.5h2.5"/></symbol>
+  <symbol id="i-blog" viewBox="0 0 16 16"><path d="M10.8 2.7 13.3 5.2 6 12.5l-3.2.7.7-3.2 7.3-7.3Z"/><path d="M9.5 4l2.5 2.5"/></symbol>
+  <symbol id="i-vlog" viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M6.8 6.2v3.6L10 8 6.8 6.2Z"/></symbol>
+  <symbol id="i-project" viewBox="0 0 16 16"><path d="M8 2 13.5 5v6L8 14 2.5 11V5L8 2Z"/><path d="M2.7 5.1 8 8l5.3-2.9M8 8v5.8"/></symbol>
+  <symbol id="i-repo" viewBox="0 0 16 16"><circle cx="4.5" cy="3.8" r="1.5"/><circle cx="4.5" cy="12.2" r="1.5"/><circle cx="11.5" cy="5.8" r="1.5"/><path d="M4.5 5.3v5.4M11.5 7.3c0 2.2-2.5 2.4-6 3.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 16 16"><path d="m8 2.2 1.7 3.6 3.9.5-2.9 2.7.8 3.9L8 10.9l-3.5 2 .8-3.9L2.4 6.3l3.9-.5L8 2.2Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.8"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M12.4 3.6l-1 1M4.6 11.4l-1 1"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11L13 8 4 2.5Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.1 3.1"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="m3.5 3.5 9 9M12.5 3.5l-9 9"/></symbol>
+  <symbol id="i-external" viewBox="0 0 16 16"><path d="M9.5 2.5h4v4M13.5 2.5l-6 6M12 9v3.5a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1H7"/></symbol>
+  <symbol id="i-rss" viewBox="0 0 16 16"><path d="M3 3.5a9.5 9.5 0 0 1 9.5 9.5M3 7.5A5.5 5.5 0 0 1 8.5 13"/><circle cx="3.9" cy="12.1" r="1"/></symbol>
+  <symbol id="i-github" viewBox="0 0 16 16"><g transform="scale(.6667)" stroke-width="2.25"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.2l2 1.3"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 16 16"><circle cx="4.5" cy="3.8" r="1.5"/><circle cx="11.5" cy="3.8" r="1.5"/><circle cx="8" cy="12.2" r="1.5"/><path d="M4.5 5.3v1.2A1.5 1.5 0 0 0 6 8h4a1.5 1.5 0 0 0 1.5-1.5V5.3M8 8v2.7"/></symbol>
+  <symbol id="i-link" viewBox="0 0 16 16"><path d="M6.8 9.2a2.5 2.5 0 0 0 3.5 0l2.2-2.2a2.5 2.5 0 0 0-3.5-3.5l-.8.8M9.2 6.8a2.5 2.5 0 0 0-3.5 0L3.5 9a2.5 2.5 0 0 0 3.5 3.5l.8-.8"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="m2.5 4.5 5.5 4.2 5.5-4.2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v7.5a.5.5 0 0 1-.5.5h-7.5a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5Z"/><path d="M9 2.5v3h3"/></symbol>
+</svg>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- Shared partial: site header. Set aria-current="page" on the section you are in. The nav hrefs below point at archive.html so the
+     kit previews; a real site links /news/, /blog/, /vlogs/, /projects/, /repos/. -->
+<header class="site-header">
+  <div class="container wide bar">
+    <a class="wordmark" href="index.html" aria-label="R7 Orbit, home"><img src="../design-system/assets/r7-mark.svg" alt="">R7 Orbit</a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="index.html#latest">Latest</a>
+      <a href="archive.html?kind=news">News</a>
+      <a href="archive.html" aria-current="page">Blog</a>
+      <a href="archive.html?kind=vlogs">Vlogs</a>
+      <a href="archive.html?kind=projects">Projects</a>
+      <a href="archive.html?kind=repos">Repos</a>
+      <a href="about.html">About</a>
+    </nav>
+    <div class="header-tools">
+      <a class="btn quiet icon" href="archive.html#search" aria-label="Search"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></a>
+      <button class="btn quiet theme-toggle" type="button" data-theme-toggle aria-pressed="false" title="Switch between Obsidian (dark) and Ivory (light)"><svg class="ico" aria-hidden="true"><use href="#i-sun"/></svg><span class="theme-label">Ivory</span></button>
+      <button class="btn quiet icon menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><svg class="ico i-menu" aria-hidden="true"><use href="#i-menu"/></svg><svg class="ico i-close" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+<!--
+  ONE TEMPLATE FOR EVERY LIST PAGE: /news /blog /vlogs /projects /repos.
+
+  This copy is the Blog list. To switch kind:
+    1. nav:        move aria-current="page" to the matching link in the header
+    2. page head:  change the eyebrow, the h1 (keep one <em> phrase) and the lead
+    3. <title>, meta description, canonical and og tags
+    4. cards:      render each item with that kind's card (see index.html for all five), and set data-kind to
+                   news | blog | vlog | project | repo
+    5. tag chips:  list the tags used by that kind
+    6. count:      data-noun="posts" -> "videos", "projects" or "repos" (it feeds the live count)
+  SAMPLE CONTENT: the twelve posts below are placeholder text.
+-->
+<div class="container wide" data-list>
+  <header class="page-head">
+    <p class="eyebrow brass">Blog</p>
+    <h1>Writing about <em>building with agents</em></h1>
+    <p class="t-lead">Longer posts about the things I make and how they went. Filter by tag, search the titles, or just read from the top.</p>
+  </header>
+
+  <div class="toolbar" role="group" aria-label="Filter and sort posts">
+    <div class="toolbar-row">
+      <form class="search" role="search" aria-label="Search posts">
+        <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+        <label class="visually-hidden" for="search">Search posts</label>
+        <input class="input" id="search" type="search" name="q" placeholder="Search posts" autocomplete="off" data-search>
+      </form>
+      <div class="seg" role="group" aria-label="Sort" data-sort>
+        <button class="on" type="button" data-value="newest" aria-pressed="true">Newest</button>
+        <button type="button" data-value="oldest" aria-pressed="false">Oldest</button>
+      </div>
+    </div>
+    <div class="toolbar-row">
+      <span class="eyebrow" id="tags-label">Tags</span>
+      <div class="tag-list" role="group" aria-labelledby="tags-label" data-tags-filter>
+          <button type="button" class="chip" data-tag="agents" aria-pressed="false">agents</button>
+          <button type="button" class="chip" data-tag="cli" aria-pressed="false">cli</button>
+          <button type="button" class="chip" data-tag="design" aria-pressed="false">design</button>
+          <button type="button" class="chip" data-tag="evals" aria-pressed="false">evals</button>
+          <button type="button" class="chip" data-tag="games" aria-pressed="false">games</button>
+          <button type="button" class="chip" data-tag="git" aria-pressed="false">git</button>
+          <button type="button" class="chip" data-tag="models" aria-pressed="false">models</button>
+          <button type="button" class="chip" data-tag="open-weights" aria-pressed="false">open-weights</button>
+          <button type="button" class="chip" data-tag="prompts" aria-pressed="false">prompts</button>
+          <button type="button" class="chip" data-tag="tools" aria-pressed="false">tools</button>
+          <button type="button" class="chip" data-tag="writing" aria-pressed="false">writing</button>
+      </div>
+    </div>
+    <p class="t-meta toolbar-count" data-count data-noun="posts" aria-live="polite">12 posts</p>
+  </div>
+
+  <h2 class="visually-hidden">Posts</h2>
+  <div class="grid-cards" data-items>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-09-28" data-title="Why every agent gets its own room" data-text="Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches." data-tags="agents git"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Why every agent gets its own room</h3><p class="card-text">Running several agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.</p><div class="cluster"><span class="chip">agents</span><span class="chip">git</span></div><div class="card-foot"><time datetime="2026-09-28">Sep 28</time><span aria-hidden="true">&middot;</span><span>8 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-09-09" data-title="Writing evals for the boring parts of an agent" data-text="The flashy demos are hard to test. The boring parts, like whether it ran the tests and said so honestly, are easy to check and catch the most." data-tags="evals agents"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Writing evals for the boring parts of an agent</h3><p class="card-text">The flashy demos are hard to test. The boring parts, like whether it ran the tests and said so honestly, are easy to check and catch the most.</p><div class="cluster"><span class="chip">evals</span><span class="chip">agents</span></div><div class="card-foot"><time datetime="2026-09-09">Sep 9</time><span aria-hidden="true">&middot;</span><span>9 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-09-02" data-title="What an approval prompt is really asking" data-text="Every &quot;allow this command?&quot; prompt is a small trust decision. Here is how I decide, and what I changed so I decide fewer of them." data-tags="agents design"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">What an approval prompt is really asking</h3><p class="card-text">Every &quot;allow this command?&quot; prompt is a small trust decision. Here is how I decide, and what I changed so I decide fewer of them.</p><div class="cluster"><span class="chip">agents</span><span class="chip">design</span></div><div class="card-foot"><time datetime="2026-09-02">Sep 2</time><span aria-hidden="true">&middot;</span><span>6 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-08-24" data-title="Notes from eleven days of building a game with agents" data-text="Twenty-four tasks, one merge conflict the agents solved themselves, and a plan I threw away on day three." data-tags="games agents"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Notes from eleven days of building a game with agents</h3><p class="card-text">Twenty-four tasks, one merge conflict the agents solved themselves, and a plan I threw away on day three.</p><div class="cluster"><span class="chip">games</span><span class="chip">agents</span></div><div class="card-foot"><time datetime="2026-08-24">Aug 24</time><span aria-hidden="true">&middot;</span><span>12 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-08-17" data-title="A small CLI I keep reaching for" data-text="It turns a task description into a branch and a worktree, opens the right folder, and does nothing else. That is the whole appeal." data-tags="cli tools"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">A small CLI I keep reaching for</h3><p class="card-text">It turns a task description into a branch and a worktree, opens the right folder, and does nothing else. That is the whole appeal.</p><div class="cluster"><span class="chip">cli</span><span class="chip">tools</span></div><div class="card-foot"><time datetime="2026-08-17">Aug 17</time><span aria-hidden="true">&middot;</span><span>5 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-08-10" data-title="Prompts are not the interesting part" data-text="After a few hundred tasks, the wording of the prompt mattered less than I expected. What mattered was the shape of the task." data-tags="prompts writing"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Prompts are not the interesting part</h3><p class="card-text">After a few hundred tasks, the wording of the prompt mattered less than I expected. What mattered was the shape of the task.</p><div class="cluster"><span class="chip">prompts</span><span class="chip">writing</span></div><div class="card-foot"><time datetime="2026-08-10">Aug 10</time><span aria-hidden="true">&middot;</span><span>7 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-08-03" data-title="Reading a benchmark table without getting fooled" data-text="Four questions I ask before a model&#x27;s numbers change anything I do." data-tags="models evals"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Reading a benchmark table without getting fooled</h3><p class="card-text">Four questions I ask before a model&#x27;s numbers change anything I do.</p><div class="cluster"><span class="chip">models</span><span class="chip">evals</span></div><div class="card-foot"><time datetime="2026-08-03">Aug 3</time><span aria-hidden="true">&middot;</span><span>6 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-07-27" data-title="When two agents change the same file" data-text="Merge conflicts do not go away when the authors are agents. What changes is who is best placed to resolve them." data-tags="git agents"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">When two agents change the same file</h3><p class="card-text">Merge conflicts do not go away when the authors are agents. What changes is who is best placed to resolve them.</p><div class="cluster"><span class="chip">git</span><span class="chip">agents</span></div><div class="card-foot"><time datetime="2026-07-27">Jul 27</time><span aria-hidden="true">&middot;</span><span>8 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-07-19" data-title="Running open-weights models on a laptop, honestly" data-text="What fits in memory, what is usable, and what is only a demo. With the numbers I measured, not the ones on the model card." data-tags="models open-weights"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Running open-weights models on a laptop, honestly</h3><p class="card-text">What fits in memory, what is usable, and what is only a demo. With the numbers I measured, not the ones on the model card.</p><div class="cluster"><span class="chip">models</span><span class="chip">open-weights</span></div><div class="card-foot"><time datetime="2026-07-19">Jul 19</time><span aria-hidden="true">&middot;</span><span>10 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-07-11" data-title="How I keep a changelog nobody asked for" data-text="A changelog is a letter to your future self. Writing it in plain words each time costs two minutes and has saved me hours." data-tags="writing tools"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">How I keep a changelog nobody asked for</h3><p class="card-text">A changelog is a letter to your future self. Writing it in plain words each time costs two minutes and has saved me hours.</p><div class="cluster"><span class="chip">writing</span><span class="chip">tools</span></div><div class="card-foot"><time datetime="2026-07-11">Jul 11</time><span aria-hidden="true">&middot;</span><span>4 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-07-02" data-title="The case for slower agents" data-text="Fast is the default pitch. I have started preferring the agent that stops and asks, as long as the question is a good one." data-tags="agents design"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">The case for slower agents</h3><p class="card-text">Fast is the default pitch. I have started preferring the agent that stops and asks, as long as the question is a good one.</p><div class="cluster"><span class="chip">agents</span><span class="chip">design</span></div><div class="card-foot"><time datetime="2026-07-02">Jul 2</time><span aria-hidden="true">&middot;</span><span>6 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="post.html" data-item data-kind="blog" data-date="2026-06-24" data-title="Saving work that survives being closed" data-text="Files written whole, a backup beside them, and a damaged file never mistaken for a new project. Small rules, calmer evenings." data-tags="tools git"><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-blog"/></svg>Blog</span><h3 class="card-title serif">Saving work that survives being closed</h3><p class="card-text">Files written whole, a backup beside them, and a damaged file never mistaken for a new project. Small rules, calmer evenings.</p><div class="cluster"><span class="chip">tools</span><span class="chip">git</span></div><div class="card-foot"><time datetime="2026-06-24">Jun 24</time><span aria-hidden="true">&middot;</span><span>7 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+  </div>
+
+  <div class="empty" data-empty hidden>
+    <h2>Nothing matches that.</h2>
+    <p>Try a different word, or remove a tag.</p>
+    <button class="btn" type="button" data-clear>Clear search and tags</button>
+  </div>
+
+  <!-- Pagination is server-rendered: these links go to /blog/page/2/ and so on. The script hides it while a filter is active. -->
+  <nav class="pagination" aria-label="Pagination" data-hide-filtered>
+    <a class="btn sm" aria-disabled="true" role="link" aria-label="Previous page"><svg class="ico flip" aria-hidden="true"><use href="#i-arrow"/></svg>Previous</a>
+    <ul>
+      <li><a class="chip on" href="archive.html" aria-current="page" aria-label="Page 1">1</a></li>
+      <li><a class="chip" href="archive.html?page=2" aria-label="Page 2">2</a></li>
+      <li><a class="chip" href="archive.html?page=3" aria-label="Page 3">3</a></li>
+    </ul>
+    <a class="btn sm" href="archive.html?page=2" rel="next" aria-label="Next page">Next<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </nav>
+</div>
+<div style="height: var(--s-8)"></div>
+</main>
+
+<!-- Shared partial: site footer. -->
+<footer class="site-footer">
+  <div class="container wide">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="wordmark" href="index.html"><img src="../design-system/assets/r7-mark.svg" alt="">R7 Orbit</a>
+        <p>Plain notes on building with AI agents: news, writing, videos, projects and code.</p>
+      </div>
+      <nav aria-label="Footer">
+        <ul class="footer-links">
+          <li><a href="rss.xml"><svg class="ico" aria-hidden="true"><use href="#i-rss"/></svg>RSS</a></li><!-- TODO: generate rss.xml at build time -->
+          <li><a href="https://github.com/your-username" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-github"/></svg>GitHub</a></li><!-- TODO: your GitHub -->
+          <li><a href="https://www.youtube.com/@your-channel" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>YouTube</a></li><!-- TODO: your channel -->
+          <li><a href="index.html#subscribe"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>Subscribe</a></li>
+        </ul>
+      </nav>
+      <p class="footer-legal"><span>&copy; 2026</span><span>Made with R7 Orbit</span></p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

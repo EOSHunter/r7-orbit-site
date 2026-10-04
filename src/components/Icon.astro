@@ -1,0 +1,17 @@
+---
+import type { IconName } from './icons';
+
+interface Props {
+  name: IconName;
+  /** 13px instead of 15px. */
+  small?: boolean;
+  class?: string;
+}
+
+const { name, small = false, class: extra } = Astro.props;
+const classes = ['ico', small && 'sm', extra].filter(Boolean).join(' ');
+---
+
+<svg class={classes} aria-hidden="true">
+  <use href={`#i-${name}`}></use>
+</svg>
