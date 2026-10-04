@@ -3,7 +3,8 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import IconSprite from '../components/IconSprite.astro';
 import { site } from '../data/site';
-import { absoluteUrl, isoDate, plainTitle } from '../lib/text';
+import { resolveSeo } from '../lib/seo';
+import { isoDate, plainTitle } from '../lib/text';
 import '../styles/design-system/tokens.css';
 import '../styles/design-system/components.css';
 import '../styles/site.css';
@@ -31,11 +32,11 @@ interface Props {
 
 const {
   title,
-  description = site.description,
+  description,
   home = false,
   ogType = 'website',
-  image = '/og-default.png',
-  imageAlt = `${site.name}: the R7 mark inside a ring with one orbiting dot, beside the words "News, builds and the things in between."`,
+  image,
+  imageAlt,
   published,
   modified,
   tags = [],
@@ -45,8 +46,17 @@ const {
 
 const pageTitle = home ? `${site.name} · ${site.tagline}` : `${plainTitle(title)} · ${site.name}`;
 const base = Astro.site ?? new URL(site.url);
-const canonical = absoluteUrl(Astro.url.pathname, base.href);
-const imageUrl = new URL(image, base).href;
+// Canonical and Open Graph fallbacks (brand image, description, alt text) live in src/lib/seo.ts.
+const seo = resolveSeo({
+  path: Astro.url.pathname,
+  base: base.href,
+  description,
+  fallbackDescription: site.description,
+  image,
+  imageAlt,
+  fallbackImageAlt: `${site.name}: the R7 mark inside a ring with one orbiting dot, beside the words "News, builds and the things in between."`,
+});
+const { canonical, imageUrl } = seo;
 ---
 
 <!doctype html>
@@ -55,7 +65,7 @@ const imageUrl = new URL(image, base).href;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={seo.description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content="#09090a" />
@@ -68,10 +78,10 @@ const imageUrl = new URL(image, base).href;
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={home ? pageTitle : plainTitle(title)} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={seo.description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={imageUrl} />
-    <meta property="og:image:alt" content={imageAlt} />
+    {seo.imageAlt && <meta property="og:image:alt" content={seo.imageAlt} />}
     {published && <meta property="article:published_time" content={isoDate(published)} />}
     {modified && <meta property="article:modified_time" content={isoDate(modified)} />}
     {tags.map((tag) => (
