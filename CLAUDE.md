@@ -1,0 +1,100 @@
+# CLAUDE.md
+
+Instructions for AI coding agents working in this repository. Read this first, every session. Humans: this is also the short version of how the project works.
+
+## What this project is
+
+A personal website for posting **AI news, blogs, vlogs, projects and repos**, styled with the **R7 Orbit design system** (obsidian background, ivory text, one brass accent). It is a static site: content is Markdown files, there is no database and no admin. It is **not** the R7 Orbit desktop app; it only shares its look.
+
+Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must supply: `docs/DECISIONS.md`.
+
+## Where things are
+
+```
+CLAUDE.md                     this file
+docs/                         PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
+.github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
+src/
+  layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), no-flash theme script, skip link, Header, Footer
+  components/                 Header, Footer, SubscribeBand, Icon + IconSprite, MediaPlaceholder, StatusMark,
+                              PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard
+  pages/                      index (scaffold placeholder), styleguide/ (noindex, unlinked: both themes via iframes of styleguide/specimen/)
+  data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
+  lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs)
+  styles/design-system/       tokens.css, components.css, tokens.json, DESIGN_SYSTEM.md (moved from design-system/; the source of truth for the look)
+  styles/site.css             site-level layout (from templates/site.css, plus one fix: .media-ph img no longer cropped by .card-media img)
+  scripts/                    site.js (theme toggle, menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (not loaded yet: hero and 404 only)
+public/                       served as-is: fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
+brand/                        the full brand kit (logos, social images, source/ HTML for the text images); only the web essentials are copied to public/
+templates/                    static HTML for every page type: the visual reference to port (not built)
+content-examples/             one example of each kind of post + site.json (phase 3 copies these to src/content/)
+```
+
+Not carried over from the kit: the live design-system page (`design-system/index.html`), `tailwind/theme.css` and `tools/build-design-tokens.mjs` (plain CSS was chosen; `tokens.json` is now edited by hand, or restore the tool with its paths changed).
+
+Phase 3 moves `content-examples/` to `src/content/`; update this section in the same pull request.
+
+## Commands
+
+```
+npm run dev       # local dev server (http://localhost:4321)
+npm run build     # production build to dist/ (must pass before any merge)
+npm run preview   # serve dist/ to look at the built site
+npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
+npm run lint      # eslint
+npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)
+npm run test      # placeholder that exits 0 until phase 7 adds Playwright + axe
+```
+
+Node 22.12 or newer. The styleguide is at `/styleguide/` (both themes, with frame widths); it is not linked from anywhere.
+
+## Design rules (non-negotiable)
+
+1. **Use tokens, never raw values.** Colours, radii, spacing, shadows, font sizes, durations all come from `design-system/tokens.css` as `var(--…)`. No hex codes, no ad-hoc `px` for those things in components or pages. If a value is missing, add a token (and document it), don't hard-code.
+2. **Use the component classes.** `.btn`, `.chip`, `.kind`, `.card`, `.seg`, `.field`, `.callout`, `.prose`, `.mark`, `.site-header` and the rest are in `components.css`. Compose them; extend with a small class in `site.css` only when nothing fits.
+3. **One accent.** Brass is the only accent. Do not introduce other hues. Kinds of post (news/blog/vlog/project/repo) are told apart by **icon and label**, never colour.
+4. **Ivory, never white; obsidian, never black.** No `#fff` or `#000`.
+5. **Depth is tone.** Surfaces step `--bg` → `--surface-1` → `--surface-2` → `--surface-3`. Shadows only for floating things (`--shadow-float`, `--shadow-raise`).
+6. **Hairlines and small radii.** 1px borders (`--line*`), radii from `--r-*`. Pills only for chips and dots.
+7. **Type:** Cormorant Garamond for headlines and pull quotes only; Inter for body and UI; JetBrains Mono for code, data and meta. Body copy is 17px/1.7, measure ≤ 68ch (`.prose`). Headlines are sentence case; one italic-brass phrase per headline at most.
+8. **Motion means something** (`--ease`, `--dur*`). Respect `prefers-reduced-motion`. The orbit (`orbit.js`) is used for the hero, loading and the 404 only.
+9. **Both themes must work** (dark default, `data-theme="light"` Ivory) unless the author has removed the light theme in `docs/DECISIONS.md`.
+10. **Logo:** brass mark on dark, ink mark on light. Never recolour, stretch, add effects, or use the ring versions below ~32px. Files in `design-system/assets/` and `brand/`.
+
+## Content rules
+
+- Follow `docs/CONTENT_MODEL.md`. Every post has `title`, `date`, `summary`; every image has alt text.
+- Voice: plain, specific, first person, calm. No hype words (list in `docs/VOICE_AND_COPY.md`). Never publish AI-written text as the author's without the author's review. Never invent quotes, sources, statistics or benchmarks. Mark sample/placeholder content as such.
+- Never invent the author's identity, bio, links, email, domain or social handles. Use the placeholders from `content-examples/site.json` and ask.
+- No stock photography and no generated images unless the author approves each one. Use the placeholder pattern.
+
+## Engineering rules
+
+- **Static output.** No server runtime, no database. Build-time data only (GitHub stats, README) with a cache and graceful failure: the build must pass with the network off.
+- **No third-party requests on page load.** No CDNs, no Google Fonts, no analytics script unless the author chooses one in `docs/DECISIONS.md`. Video and search load only on interaction. Fonts are self-hosted woff2.
+- **Progressive enhancement.** Pages read and navigate with JavaScript off (filters degrade to links; pagination is real links).
+- **Accessibility is a requirement, not a polish step.** Semantic landmarks, one `h1`, visible focus, keyboard operable, contrast from the tokens, alt text, `lang`, labels on every control. WCAG 2.2 AA.
+- **Performance budgets:** Lighthouse mobile ≥ 95 in all categories; < 50 kB gzipped JavaScript on a typical page; < 40 kB gzipped CSS.
+- **Security:** sanitise any HTML that comes from outside (READMEs). No inline event handlers. No secrets in git: tokens go in environment variables / host secrets. Never commit `.env`.
+- **Dependencies:** keep them few. Ask before adding a runtime dependency; say what it costs in kB and why it is needed.
+- **TypeScript strict** if TypeScript is used. No `any` without a comment saying why.
+- **Tests:** a Playwright smoke test per page type, an axe scan, and unit tests for helper logic (sorting, read time, slugs, related posts). A bug fix includes a test that fails without it.
+
+## How to work
+
+- Small, focused pull requests: one concern each. Branch names `feat/…`, `fix/…`, `content/…`.
+- Before saying a UI task is done: run it, look at it in the browser at 375px and 1280px, in both themes, with the console open. Say what you checked.
+- Never claim a thing works without running it. If you couldn't run or verify something, say so plainly.
+- Don't change the design system's tokens or components as a side effect of a page task; propose it separately.
+- Don't reformat unrelated files. Match the surrounding code's style.
+- When you make a decision that others need to know (a library, a URL shape, a content rule), add it to `docs/DECISIONS.md` or this file in the same pull request.
+- Do not kill processes by name (`taskkill /IM`, `pkill node`, etc.). Stop only the exact process you started.
+
+## Ask the author before
+
+Choosing a domain, name, tagline or bio · adding analytics, comments or any tracking · adding a paid service · publishing or deleting content · changing the colour palette, fonts or logo · adding a new runtime dependency · force-pushing or rewriting git history · anything that sends email or posts to a social network.
+
+## Definition of done (any task)
+
+Builds and passes checks · matches the design system (tokens, classes, both themes) · works at 320–1480px with no horizontal scroll · keyboard and screen-reader friendly · no console errors · docs updated if behaviour or structure changed · you reported what you verified and what you didn't.

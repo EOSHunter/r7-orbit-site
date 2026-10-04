@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SAMPLE feed so the templates' <link rel="alternate"> resolves. A real site generates this at build time (see docs/SEO_AND_SHARING.md). -->
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>R7 Orbit</title>
+    <link>https://example.com/</link>
+    <description>News, builds and the things in between: writing, videos, projects and code about building with AI.</description>
+    <language>en</language>
+    <atom:link href="https://example.com/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Why every agent gets its own room</title>
+      <link>https://example.com/blog/why-every-agent-gets-its-own-room/</link>
+      <guid isPermaLink="true">https://example.com/blog/why-every-agent-gets-its-own-room/</guid>
+      <pubDate>Mon, 28 Sep 2026 12:00:00 GMT</pubDate>
+      <description>Running several AI agents on one repo goes wrong in quiet ways. The fix turns out to be old advice about folders and branches.</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,28 @@
+---
+import Icon from './Icon.astro';
+import { isoDate, shortDate } from '../lib/text';
+
+interface Props {
+  date?: Date | string;
+  /** Text shown instead of a date, e.g. "Updated Oct 1". */
+  label?: string;
+  /** Minutes to read or watch, shown as "8 min". */
+  minutes?: number;
+}
+
+const { date, label, minutes } = Astro.props;
+---
+
+<div class="card-foot">
+  {label && <span>{label}</span>}
+  {date && !label && <time datetime={isoDate(date)}>{shortDate(date)}</time>}
+  {minutes !== undefined && (
+    <>
+      <span aria-hidden="true">&middot;</span>
+      <span>{minutes} min</span>
+    </>
+  )}
+  <slot />
+  <span class="spacer"></span>
+  <Icon name="arrow" />
+</div>

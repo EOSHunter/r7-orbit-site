@@ -1,0 +1,20 @@
+---
+// Placeholder home page for the scaffold. Phase 4a replaces it with the real home (hero, pinned post, latest feed, strips).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SubscribeBand from '../components/SubscribeBand.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout title={site.name} home current="Latest">
+  <section class="hero plate-grid" aria-labelledby="hero-h">
+    <div class="container wide">
+      <p class="eyebrow brass">{site.tagline}</p>
+      <h1 class="t-display" id="hero-h">
+        {site.name}
+      </h1>
+      <p class="t-lead">{site.description}</p>
+      <p class="t-meta">Scaffold only: the layout and shared parts are in place, the pages come next.</p>
+    </div>
+  </section>
+  <SubscribeBand />
+</BaseLayout>

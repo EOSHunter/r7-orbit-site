@@ -1,0 +1,39 @@
+---
+import CardFoot from './CardFoot.astro';
+import CardMedia from './CardMedia.astro';
+import Icon from './Icon.astro';
+import { cardAttrs } from './cardAttrs';
+import type { VlogCardData } from '../lib/cards';
+import { plainTitle } from '../lib/text';
+
+interface Props {
+  post: VlogCardData;
+}
+
+const { post } = Astro.props;
+// "12:48" and "1:02:07" both become whole minutes for the footer
+const parts = post.duration.split(':').map(Number);
+const minutes = parts.length === 3 ? parts[0] * 60 + parts[1] : parts[0];
+---
+
+<a {...cardAttrs(post)}>
+  <CardMedia cover={post.cover}>
+    <div class="play" aria-hidden="true">
+      <span>
+        <svg viewBox="0 0 16 16">
+          <use href="#i-play"></use>
+        </svg>
+      </span>
+    </div>
+    <span class="duration">{post.duration}</span>
+  </CardMedia>
+  <div class="card-body">
+    <span class="kind">
+      <Icon name="vlog" />
+      Vlog
+    </span>
+    <h3 class="card-title">{plainTitle(post.title)}</h3>
+    <p class="card-text">{post.summary}</p>
+    <CardFoot date={post.date} minutes={minutes} />
+  </div>
+</a>

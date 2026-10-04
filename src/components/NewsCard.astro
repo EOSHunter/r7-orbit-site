@@ -1,0 +1,27 @@
+---
+import CardFoot from './CardFoot.astro';
+import CardMedia from './CardMedia.astro';
+import Icon from './Icon.astro';
+import { cardAttrs } from './cardAttrs';
+import type { NewsCardData } from '../lib/cards';
+import { plainTitle } from '../lib/text';
+
+interface Props {
+  post: NewsCardData;
+}
+
+const { post } = Astro.props;
+---
+
+<a {...cardAttrs(post)}>
+  <CardMedia cover={post.cover} />
+  <div class="card-body">
+    <span class="kind">
+      <Icon name="news" />
+      News
+    </span>
+    <h3 class="card-title">{plainTitle(post.title)}</h3>
+    <p class="card-text">{post.summary}</p>
+    <CardFoot date={post.date} minutes={post.readTime} />
+  </div>
+</a>

@@ -1,0 +1,19 @@
+---
+import MediaPlaceholder from './MediaPlaceholder.astro';
+import type { Cover } from '../lib/cards';
+
+interface Props {
+  cover?: Cover;
+}
+
+const { cover } = Astro.props;
+---
+
+<div class="card-media">
+  {cover ? (
+    <img src={cover.src} alt={cover.alt} width={cover.width} height={cover.height} loading="lazy" />
+  ) : (
+    <MediaPlaceholder />
+  )}
+  <slot />
+</div>

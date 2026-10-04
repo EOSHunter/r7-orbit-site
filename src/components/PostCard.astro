@@ -1,0 +1,20 @@
+---
+import BlogCard from './BlogCard.astro';
+import NewsCard from './NewsCard.astro';
+import ProjectCard from './ProjectCard.astro';
+import RepoCard from './RepoCard.astro';
+import VlogCard from './VlogCard.astro';
+import type { CardData } from '../lib/cards';
+
+interface Props {
+  post: CardData;
+}
+
+const { post } = Astro.props;
+---
+
+{post.kind === 'news' && <NewsCard post={post} />}
+{post.kind === 'blog' && <BlogCard post={post} />}
+{post.kind === 'vlog' && <VlogCard post={post} />}
+{post.kind === 'project' && <ProjectCard post={post} />}
+{post.kind === 'repo' && <RepoCard post={post} />}

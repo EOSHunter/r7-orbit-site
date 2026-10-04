@@ -1,0 +1,44 @@
+---
+import CardFoot from './CardFoot.astro';
+import Icon from './Icon.astro';
+import { cardAttrs } from './cardAttrs';
+import type { RepoCardData } from '../lib/cards';
+import { shortDate } from '../lib/text';
+
+interface Props {
+  post: RepoCardData;
+}
+
+const { post } = Astro.props;
+const hasStats = post.language !== undefined || post.stars !== undefined || post.forks !== undefined;
+---
+
+<a {...cardAttrs(post)}>
+  <div class="card-body">
+    <span class="kind">
+      <Icon name="repo" />
+      Repo
+    </span>
+    <h3 class="card-title mono">{post.repo}</h3>
+    <p class="card-text">{post.summary}</p>
+    {hasStats && (
+      <div class="stats">
+        {post.language && <span class="lang">{post.language}</span>}
+        {post.stars !== undefined && (
+          <span>
+            <b>{post.stars}</b> stars
+          </span>
+        )}
+        {post.forks !== undefined && (
+          <span>
+            <b>{post.forks}</b> forks
+          </span>
+        )}
+      </div>
+    )}
+    <CardFoot
+      label={post.updated ? `Updated ${shortDate(post.updated)}` : undefined}
+      date={post.updated ? undefined : post.date}
+    />
+  </div>
+</a>

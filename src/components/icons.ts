@@ -1,0 +1,26 @@
+export const ICON_NAMES = [
+  'news',
+  'blog',
+  'vlog',
+  'project',
+  'repo',
+  'arrow',
+  'star',
+  'sun',
+  'copy',
+  'play',
+  'search',
+  'menu',
+  'close',
+  'external',
+  'rss',
+  'github',
+  'clock',
+  'calendar',
+  'fork',
+  'link',
+  'mail',
+  'file',
+] as const;
+
+export type IconName = (typeof ICON_NAMES)[number];

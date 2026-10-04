@@ -1,0 +1,54 @@
+---
+import Icon from './Icon.astro';
+import { navItems } from '../data/nav';
+import { site } from '../data/site';
+
+interface Props {
+  /** The nav label of the section you are in (e.g. "Blog"). Gets aria-current="page". */
+  current?: string;
+}
+
+const { current } = Astro.props;
+---
+
+<header class="site-header">
+  <div class="container wide bar">
+    <a class="wordmark" href="/" aria-label={`${site.name}, home`}>
+      <img src="/assets/r7-mark.svg" alt="" />
+      {site.name}
+    </a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      {navItems.map((item) => (
+        <a href={item.href} aria-current={item.label === current ? 'page' : undefined}>
+          {item.label}
+        </a>
+      ))}
+    </nav>
+    <div class="header-tools">
+      <a class="btn quiet icon" href="/search/" aria-label="Search">
+        <Icon name="search" />
+      </a>
+      <button
+        class="btn quiet theme-toggle"
+        type="button"
+        data-theme-toggle
+        aria-pressed="false"
+        title="Switch between Obsidian (dark) and Ivory (light)"
+      >
+        <Icon name="sun" />
+        <span class="theme-label">Ivory</span>
+      </button>
+      <button
+        class="btn quiet icon menu-toggle"
+        type="button"
+        data-menu-toggle
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Open menu"
+      >
+        <Icon name="menu" class="i-menu" />
+        <Icon name="close" class="i-close" />
+      </button>
+    </div>
+  </div>
+</header>

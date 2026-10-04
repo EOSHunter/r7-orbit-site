@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- The horizontal wordmark lockup (mark + R7 ORBIT) on a transparent background. ?ink makes the ink version for light backgrounds. See ../README.md -->
+<html lang="en"><head><meta charset="utf-8"><title>lockup</title>
+<link rel="stylesheet" href="source.css">
+<style>
+  body { background: transparent; }
+  #lockup { display: inline-flex; margin: 40px; font-size: 144px; }
+  #lockup.wm img { height: 2.2em; }
+  #lockup.ink { color: #14110a; }
+</style></head>
+<body class="clear">
+<div class="wm" id="lockup"><img id="m" src="../../design-system/assets/r7-mark.svg" alt="">R7 Orbit</div>
+<script>
+  if (location.search.includes('ink')) { document.getElementById('lockup').classList.add('ink'); document.getElementById('m').src = '../../design-system/assets/r7-mark-ink.svg'; }
+</script>
+</body></html>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Small-size version of the app icon: the dark plate and the mark, without the ring (at 16-32 px the ring is only noise). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecd49a"/>
+      <stop offset="0.5" stop-color="#c9a96a"/>
+      <stop offset="1" stop-color="#9a7c46"/>
+    </linearGradient>
+    <radialGradient id="plate" cx="0.5" cy="0.45" r="0.7">
+      <stop offset="0" stop-color="#17171a"/>
+      <stop offset="1" stop-color="#09090a"/>
+    </radialGradient>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#plate)" stroke="#c9a96a" stroke-opacity="0.35" stroke-width="3"/>
+  <g transform="translate(66 96) scale(0.62)" fill="url(#brass)" stroke="#e8d09a" stroke-width="4" stroke-linejoin="round">
+    <path d="M598 0H65L166 98.5H351.5L208 242V407.5L324.5 524V273.5L598 0Z"/>
+    <path d="M162 231.5L208 185.5H0C31.7749 216.5 95.9597 279.6 98.5 284C101.04 288.4 141.892 285.833 162 284V231.5Z"/>
+    <path d="M366.5 284L434.5 225L610 407.5H483L366.5 284Z"/>
+  </g>
+</svg>

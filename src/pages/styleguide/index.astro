@@ -1,0 +1,142 @@
+---
+// The styleguide: the specimen page (every component) loaded twice, once per theme, so both can be checked side by side.
+// Each frame is a real page, so the media queries answer to the frame width: pick 375 to see the phone layout.
+// Not linked from anywhere, and kept out of search engines.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const widths = [
+  { value: 'fit', label: 'Fit' },
+  { value: '375', label: '375' },
+  { value: '768', label: '768' },
+  { value: '1280', label: '1280' },
+];
+const views = [
+  { value: 'both', label: 'Both' },
+  { value: 'dark', label: 'Obsidian' },
+  { value: 'light', label: 'Ivory' },
+];
+---
+
+<BaseLayout
+  title="Styleguide"
+  description="Every shared component of the site, shown in both themes. Not part of the site."
+  noindex
+>
+  <section class="section" aria-labelledby="sg-h" data-styleguide>
+    <div class="container wide">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1 class="t-h1" id="sg-h">
+        Styleguide
+      </h1>
+      <p class="t-lead">
+        Every shared component, in both themes. Each frame below is a real page (
+        <a href="/styleguide/specimen/">/styleguide/specimen/</a>), so the layout answers to the frame width.
+      </p>
+
+      <div class="sg-controls">
+        <div class="seg" role="group" aria-label="Themes shown" data-sg-view>
+          {views.map((v, i) => (
+            <button
+              class={i === 0 ? 'on' : undefined}
+              type="button"
+              data-value={v.value}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+        <div class="seg" role="group" aria-label="Frame width in pixels" data-sg-width>
+          {widths.map((w, i) => (
+            <button
+              class={i === 0 ? 'on' : undefined}
+              type="button"
+              data-value={w.value}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="sg-frames">
+        <figure class="sg-frame" data-sg-frame="dark">
+          <figcaption class="eyebrow">Obsidian (dark)</figcaption>
+          <div class="sg-scroll">
+            <iframe title="Components in the Obsidian theme" src="/styleguide/specimen/?theme=dark"></iframe>
+          </div>
+        </figure>
+        <figure class="sg-frame" data-sg-frame="light">
+          <figcaption class="eyebrow">Ivory (light)</figcaption>
+          <div class="sg-scroll">
+            <iframe title="Components in the Ivory theme" src="/styleguide/specimen/?theme=light"></iframe>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .sg-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-4);
+    margin-top: var(--s-5);
+  }
+  .sg-frames {
+    display: grid;
+    gap: var(--s-6);
+    margin-top: var(--s-6);
+  }
+  .sg-frame {
+    margin: 0;
+    display: grid;
+    gap: var(--s-3);
+  }
+  .sg-frame[hidden] {
+    display: none;
+  }
+  .sg-scroll {
+    overflow-x: auto;
+    border: var(--bw) solid var(--line-strong);
+    border-radius: var(--r-lg);
+  }
+  .sg-scroll iframe {
+    display: block;
+    width: 100%;
+    height: 80vh;
+    border: 0;
+  }
+</style>
+
+<script>
+  const root = document.querySelector('[data-styleguide]');
+  if (root) {
+    const frames = root.querySelectorAll<HTMLElement>('[data-sg-frame]');
+    const press = (group: Element, value: string) => {
+      group.querySelectorAll('button').forEach((b) => {
+        const on = b.dataset.value === value;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    };
+    root.querySelector('[data-sg-view]')?.addEventListener('click', (e) => {
+      const button = (e.target as Element).closest('button');
+      if (!button) return;
+      const value = button.dataset.value ?? 'both';
+      press(button.parentElement as Element, value);
+      frames.forEach((f) => (f.hidden = value !== 'both' && f.dataset.sgFrame !== value));
+    });
+    root.querySelector('[data-sg-width]')?.addEventListener('click', (e) => {
+      const button = (e.target as Element).closest('button');
+      if (!button) return;
+      const value = button.dataset.value ?? 'fit';
+      press(button.parentElement as Element, value);
+      root.querySelectorAll<HTMLIFrameElement>('iframe').forEach((frame) => {
+        frame.style.width = value === 'fit' ? '100%' : `${value}px`;
+      });
+    });
+  }
+</script>

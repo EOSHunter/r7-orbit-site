@@ -1,0 +1,241 @@
+---
+// Every shared component, on one page. The theme can be forced with ?theme=dark or ?theme=light (the /styleguide/ page uses
+// that to show both side by side). Not linked from anywhere, and kept out of search engines. All text is sample content.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
+import PostCard from '../../components/PostCard.astro';
+import StatusMark from '../../components/StatusMark.astro';
+import SubscribeBand from '../../components/SubscribeBand.astro';
+import { ICON_NAMES } from '../../components/icons';
+import { KIND_LABEL, type CardData, type ProjectStatus } from '../../lib/cards';
+
+const cards: CardData[] = [
+  {
+    kind: 'news',
+    href: '#',
+    fresh: true,
+    title: 'Sample news item with a short, plain headline',
+    summary: 'Placeholder text that shows how a news card sets a two-line summary under its title.',
+    date: '2026-10-03',
+    readTime: 4,
+  },
+  {
+    kind: 'blog',
+    href: '#',
+    title: 'Sample blog post, set in the display serif',
+    summary:
+      'Placeholder text for a blog card: a one or two sentence summary, then up to three tags and the read time.',
+    date: '2026-09-28',
+    readTime: 8,
+    tags: ['sample', 'layout'],
+  },
+  {
+    kind: 'vlog',
+    href: '#',
+    title: 'Sample vlog with a play ring and a duration badge',
+    summary: 'Placeholder text for a video card. The poster is the placeholder plate until a real one exists.',
+    date: '2026-09-21',
+    duration: '12:48',
+  },
+  {
+    kind: 'project',
+    href: '#',
+    title: 'Sample project',
+    summary: 'Placeholder text for a project card, with a status mark in the footer.',
+    date: '2026-09-18',
+    status: 'building',
+    stack: ['Astro', 'TypeScript', 'CSS'],
+  },
+  {
+    kind: 'repo',
+    href: '#',
+    title: 'your-username/example-repo',
+    repo: 'your-username/example-repo',
+    summary: 'Placeholder text for a repo card. Stats come from GitHub at build time, never from the visitor.',
+    date: '2026-10-01',
+    language: 'TypeScript',
+    stars: 128,
+    forks: 14,
+    updated: '2026-10-01',
+  },
+];
+
+const statuses: ProjectStatus[] = ['idea', 'building', 'shipped', 'paused', 'archived'];
+
+const withCover: CardData = {
+  kind: 'news',
+  href: '#',
+  title: 'Sample card with a cover image',
+  summary: 'The brand share image stands in for a cover here, to show an img inside the media frame.',
+  date: '2026-09-14',
+  readTime: 5,
+  cover: {
+    src: '/og-default.png',
+    alt: 'The R7 mark inside a ring with one orbiting dot, on a dark plate.',
+    width: 1200,
+    height: 630,
+  },
+};
+
+const pinned: CardData = {
+  kind: 'blog',
+  href: '#',
+  pinned: true,
+  title: 'Sample pinned post: the one large card',
+  summary:
+    'The pinned card carries the slow brass glow, with media on the left and text on the right from 900px up. There is at most one per page.',
+  date: '2026-09-12',
+  readTime: 11,
+  tags: ['sample', 'pinned'],
+};
+---
+
+<BaseLayout
+  title="Styleguide"
+  description="Every shared component of the site, for checking in both themes. Not part of the site."
+  noindex
+>
+  <script slot="head" is:inline>
+    (function () {
+      const theme = new URLSearchParams(window.location.search).get('theme');
+      const root = document.documentElement;
+      if (theme === 'light') root.setAttribute('data-theme', 'light');
+      else if (theme === 'dark') root.removeAttribute('data-theme');
+    })();
+  </script>
+  <section class="section" aria-labelledby="sg-h">
+    <div class="container wide">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1 class="t-h1" id="sg-h">
+        Styleguide
+      </h1>
+      <p class="t-lead">
+        Every shared component in one place. The header above and the footer below are the real ones. All text on this
+        page is sample content.
+      </p>
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-icons-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-icons-h">
+        Icon
+      </h2>
+      <p class="t-meta">16px grid, 1.5 stroke, currentColor. Shown at 15px.</p>
+      <ul class="sg-icons">
+        {ICON_NAMES.map((name) => (
+          <li>
+            <Icon name={name} />
+            <code>{name}</code>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-media-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-media-h">
+        Media placeholder
+      </h2>
+      <p class="t-meta">The plate, a dot grid and the ivory mark. Swap it for an img inside the same frame.</p>
+      <div class="sg-media">
+        <div class="media framed">
+          <MediaPlaceholder />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-cards-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-cards-h">
+        Post cards
+      </h2>
+      <p class="t-meta">
+        One per kind, told apart by icon and label, never colour. {Object.values(KIND_LABEL).join(', ')}. The first has
+        the fresh rail.
+      </p>
+      <div class="grid-cards">
+        {cards.map((post) => (
+          <PostCard post={post} />
+        ))}
+        <PostCard post={withCover} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-status-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-status-h">
+        Project status
+      </h2>
+      <p class="t-meta">Building turns, shipped is a dot, the rest are still.</p>
+      <ul class="sg-status">
+        {statuses.map((status) => (
+          <li>
+            <StatusMark status={status} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-pinned-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-pinned-h">
+        Pinned card
+      </h2>
+      <PostCard post={pinned} />
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-sub-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-sub-h">
+        Subscribe band
+      </h2>
+      <p class="t-meta">The form sends nothing yet: it shows a sample message.</p>
+    </div>
+    <SubscribeBand id="sg-subscribe" />
+  </section>
+</BaseLayout>
+
+<style>
+  .sg-icons {
+    list-style: none;
+    margin: var(--s-5) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: var(--s-3);
+  }
+  .sg-icons li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    background: var(--surface-1);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-md);
+    color: var(--text-2);
+  }
+  .sg-icons code {
+    font: var(--fs-xs) var(--font-mono);
+  }
+  .sg-media {
+    margin-top: var(--s-5);
+    max-width: 32rem;
+  }
+  .sg-status {
+    list-style: none;
+    margin: var(--s-5) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3) var(--s-6);
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+</style>

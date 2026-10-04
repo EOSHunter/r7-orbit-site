@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- YouTube channel art. Drawn 2560 x 1392 (the tallest a screen allows); scripts/build-brand-exports.mjs pads it by 24px top and bottom to the 2560 x 1440 YouTube wants.
+     Everything that must be seen sits inside the centre 1546 x 423 "safe area" (phones, TVs and desktops crop differently). -->
+<html lang="en"><head><meta charset="utf-8"><title>youtube-banner</title>
+<link rel="stylesheet" href="source.css">
+<style>
+  .canvas { width: 2560px; height: 1392px; }
+  .canvas::before { mask-image: radial-gradient(ellipse at 50% 50%, #000 15%, transparent 70%); }
+  .glow { left: 50%; top: 50%; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; }
+  .safe { position: absolute; left: 507px; top: 485px; width: 1546px; height: 423px; display: flex; align-items: center; gap: 70px; }
+  .safe img.ring { position: static; width: 400px; height: auto; flex: none; }
+  .words { display: flex; flex-direction: column; justify-content: center; }
+  .wm { font-size: 40px; }
+  .wm img { height: 1.5em; }
+  h1 { font-size: 78px; line-height: 1.05; margin-top: 26px; white-space: nowrap; }
+  .eyebrow-x { font-size: 26px; margin-top: 30px; }
+</style></head>
+<body>
+<div class="canvas">
+  <div class="glow"></div>
+  <div class="safe">
+    <img class="ring" src="../../design-system/assets/r7-orbit-mark-transparent.svg" alt="">
+    <div class="words">
+      <div class="wm">R7 Orbit</div>
+      <h1 class="display">Building with AI, <em>in the open.</em></h1>
+      <div class="eyebrow-x">Videos · projects · code</div>
+    </div>
+  </div>
+</div>
+</body></html>

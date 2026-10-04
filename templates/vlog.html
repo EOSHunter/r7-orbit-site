@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I built a game with a team of AI agents | R7 Orbit</title>
+<meta name="description" content="Eleven days, twenty-four tasks, and the moment a team of AI agents merged their own conflict. A 13 minute video with chapters and a transcript.">
+<!-- TODO: replace example.com with the real domain (canonical, og:url and og:image must be absolute URLs on a live site) -->
+<link rel="canonical" href="https://example.com/vlogs/i-built-a-game-with-a-team-of-ai-agents/">
+<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="rss.xml">
+
+<meta property="og:site_name" content="R7 Orbit">
+<meta property="og:type" content="video.other">
+<meta property="og:title" content="I built a game with a team of AI agents | R7 Orbit">
+<meta property="og:description" content="Eleven days, twenty-four tasks, and the moment a team of AI agents merged their own conflict. A 13 minute video with chapters and a transcript.">
+<meta property="og:url" content="https://example.com/vlogs/i-built-a-game-with-a-team-of-ai-agents/">
+<meta property="og:image" content="../brand/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="I built a game with a team of AI agents | R7 Orbit">
+<meta name="twitter:description" content="Eleven days, twenty-four tasks, and the moment a team of AI agents merged their own conflict. A 13 minute video with chapters and a transcript.">
+<meta name="twitter:image" content="../brand/og-default.png">
+
+<meta name="theme-color" content="#09090a">
+<link rel="icon" href="../brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../brand/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="../brand/apple-touch-icon.png">
+<link rel="manifest" href="../brand/site.webmanifest">
+
+<script>
+  /* Apply the saved theme before first paint so there is no flash. Dark is the default. */
+  (function () { var r = document.documentElement; r.classList.add('js'); try { if (localStorage.getItem('r7-theme') === 'light') r.setAttribute('data-theme', 'light'); } catch (e) {} })();
+</script>
+<link rel="stylesheet" href="../design-system/tokens.css">
+<link rel="stylesheet" href="../design-system/components.css">
+<link rel="stylesheet" href="./site.css">
+<script src="./site.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  "name": "I built a game with a team of AI agents",
+  "description": "Eleven days, twenty-four tasks, and the moment a team of AI agents merged their own conflict.",
+  "thumbnailUrl": [
+    "https://example.com/images/i-built-a-game.png"
+  ],
+  "uploadDate": "2026-09-21",
+  "duration": "PT12M48S",
+  "contentUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "embedUrl": "https://www.youtube-nocookie.com/embed/VIDEO_ID",
+  "publisher": {
+    "@type": "Organization",
+    "name": "R7 Orbit",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://example.com/brand/icon-512.png"
+    }
+  },
+  "hasPart": [
+    {
+      "@type": "Clip",
+      "name": "Why a game",
+      "startOffset": 0,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=0s"
+    },
+    {
+      "@type": "Clip",
+      "name": "The plan, and the first rooms",
+      "startOffset": 72,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=72s"
+    },
+    {
+      "@type": "Clip",
+      "name": "Twenty-four tasks on a board",
+      "startOffset": 220,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=220s"
+    },
+    {
+      "@type": "Clip",
+      "name": "The merge conflict the agents solved",
+      "startOffset": 365,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=365s"
+    },
+    {
+      "@type": "Clip",
+      "name": "What broke on day eight",
+      "startOffset": 510,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=510s"
+    },
+    {
+      "@type": "Clip",
+      "name": "What I would change",
+      "startOffset": 655,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=655s"
+    },
+    {
+      "@type": "Clip",
+      "name": "Where to play it",
+      "startOffset": 740,
+      "url": "https://www.youtube.com/watch?v=VIDEO_ID&t=740s"
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- Icons: 16x16 viewBox, 1.5 stroke, round caps and joins, currentColor. Shown at 15px with class="ico". Shared partial: same on every page. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-news" viewBox="0 0 16 16"><path d="M2.5 3.5h8v9h-7a1 1 0 0 1-1-1v-8Z"/><path d="M10.5 6h3v5.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 6h4M4.5 8.5h4M4.5 10.5h2.5"/></symbol>
+  <symbol id="i-blog" viewBox="0 0 16 16"><path d="M10.8 2.7 13.3 5.2 6 12.5l-3.2.7.7-3.2 7.3-7.3Z"/><path d="M9.5 4l2.5 2.5"/></symbol>
+  <symbol id="i-vlog" viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M6.8 6.2v3.6L10 8 6.8 6.2Z"/></symbol>
+  <symbol id="i-project" viewBox="0 0 16 16"><path d="M8 2 13.5 5v6L8 14 2.5 11V5L8 2Z"/><path d="M2.7 5.1 8 8l5.3-2.9M8 8v5.8"/></symbol>
+  <symbol id="i-repo" viewBox="0 0 16 16"><circle cx="4.5" cy="3.8" r="1.5"/><circle cx="4.5" cy="12.2" r="1.5"/><circle cx="11.5" cy="5.8" r="1.5"/><path d="M4.5 5.3v5.4M11.5 7.3c0 2.2-2.5 2.4-6 3.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></symbol>
+  <symbol id="i-star" viewBox="0 0 16 16"><path d="m8 2.2 1.7 3.6 3.9.5-2.9 2.7.8 3.9L8 10.9l-3.5 2 .8-3.9L2.4 6.3l3.9-.5L8 2.2Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.8"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M12.4 3.6l-1 1M4.6 11.4l-1 1"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11L13 8 4 2.5Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.1 3.1"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="m3.5 3.5 9 9M12.5 3.5l-9 9"/></symbol>
+  <symbol id="i-external" viewBox="0 0 16 16"><path d="M9.5 2.5h4v4M13.5 2.5l-6 6M12 9v3.5a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1H7"/></symbol>
+  <symbol id="i-rss" viewBox="0 0 16 16"><path d="M3 3.5a9.5 9.5 0 0 1 9.5 9.5M3 7.5A5.5 5.5 0 0 1 8.5 13"/><circle cx="3.9" cy="12.1" r="1"/></symbol>
+  <symbol id="i-github" viewBox="0 0 16 16"><g transform="scale(.6667)" stroke-width="2.25"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.2l2 1.3"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 16 16"><circle cx="4.5" cy="3.8" r="1.5"/><circle cx="11.5" cy="3.8" r="1.5"/><circle cx="8" cy="12.2" r="1.5"/><path d="M4.5 5.3v1.2A1.5 1.5 0 0 0 6 8h4a1.5 1.5 0 0 0 1.5-1.5V5.3M8 8v2.7"/></symbol>
+  <symbol id="i-link" viewBox="0 0 16 16"><path d="M6.8 9.2a2.5 2.5 0 0 0 3.5 0l2.2-2.2a2.5 2.5 0 0 0-3.5-3.5l-.8.8M9.2 6.8a2.5 2.5 0 0 0-3.5 0L3.5 9a2.5 2.5 0 0 0 3.5 3.5l.8-.8"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 16 16"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="m2.5 4.5 5.5 4.2 5.5-4.2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v7.5a.5.5 0 0 1-.5.5h-7.5a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5Z"/><path d="M9 2.5v3h3"/></symbol>
+</svg>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- Shared partial: site header. Set aria-current="page" on the section you are in. The nav hrefs below point at archive.html so the
+     kit previews; a real site links /news/, /blog/, /vlogs/, /projects/, /repos/. -->
+<header class="site-header">
+  <div class="container wide bar">
+    <a class="wordmark" href="index.html" aria-label="R7 Orbit, home"><img src="../design-system/assets/r7-mark.svg" alt="">R7 Orbit</a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="index.html#latest">Latest</a>
+      <a href="archive.html?kind=news">News</a>
+      <a href="archive.html">Blog</a>
+      <a href="archive.html?kind=vlogs" aria-current="page">Vlogs</a>
+      <a href="archive.html?kind=projects">Projects</a>
+      <a href="archive.html?kind=repos">Repos</a>
+      <a href="about.html">About</a>
+    </nav>
+    <div class="header-tools">
+      <a class="btn quiet icon" href="archive.html#search" aria-label="Search"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg></a>
+      <button class="btn quiet theme-toggle" type="button" data-theme-toggle aria-pressed="false" title="Switch between Obsidian (dark) and Ivory (light)"><svg class="ico" aria-hidden="true"><use href="#i-sun"/></svg><span class="theme-label">Ivory</span></button>
+      <button class="btn quiet icon menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><svg class="ico i-menu" aria-hidden="true"><use href="#i-menu"/></svg><svg class="ico i-close" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+<!-- Video page. SAMPLE CONTENT: title, description, chapters and transcript are placeholders. -->
+<div class="container">
+  <nav class="breadcrumb" aria-label="Breadcrumb"><ol><li><a href="index.html">Home</a></li><li><a href="archive.html?kind=vlogs">Vlogs</a></li><li aria-current="page">I built a game with a team of AI agents</li></ol></nav>
+
+  <!--
+    THE PLAYER. Nothing loads from a video host until the visitor presses play.
+    To use a real video, set data-embed on the .player below to the embed address and site.js adds the iframe on click:
+      data-embed="https://www.youtube-nocookie.com/embed/VIDEO_ID"
+    or paste an iframe by hand in place of the poster. Keep loading="lazy" and the nocookie domain, which sets no
+    tracking cookies until the video is played:
+      <iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="I built a game with a team of AI agents"
+              loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+    Vimeo works the same way: https://player.vimeo.com/video/VIDEO_ID?dnt=1
+  -->
+  <div style="padding-top: var(--s-5)">
+    <div class="player" id="player" data-player data-title="I built a game with a team of AI agents">
+      <div class="media-ph" data-poster><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div>
+      <button class="play" type="button" data-player-play data-poster aria-label="Play video: I built a game with a team of AI agents"><span><svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-play"/></svg></span></button>
+      <span class="duration" data-poster>12:48</span>
+      <p class="player-note" data-player-note role="status" hidden></p>
+    </div>
+  </div>
+
+  <header class="post-head">
+    <p class="eyebrow"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>Vlog</span></p>
+    <h1>I built a game with <em>a team of agents</em></h1>
+    <ul class="meta-row" aria-label="Video details">
+      <li><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg><time datetime="2026-09-21">Sep 21, 2026</time></li>
+      <li><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><time datetime="PT12M48S">12:48</time></li>
+      <li>1.2k views <span class="text-3">(sample)</span></li>
+      <li><a class="chip link" href="archive.html?tag=agents">agents</a> <a class="chip link" href="archive.html?tag=games">games</a></li>
+    </ul>
+  </header>
+
+  <div class="split">
+    <div>
+      <section class="block" aria-labelledby="about-h">
+        <h2 class="section-title" id="about-h">About this video</h2>
+        <div class="prose">
+          <p>Eleven days, twenty-four tasks, and one merge conflict the agents solved on their own. I wanted to know how far a small team of agents could get on a game if I only decided what came next.</p>
+          <p>In this video I show the plan, the board I kept the tasks on, the day it went wrong, and the version I ended up with. The code is open, and the project page has the full write-up.</p>
+          <ul>
+            <li>How each task gets its own worktree and branch</li>
+            <li>What I approved, and what I turned down</li>
+            <li>The three things I would do differently</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="chapters-h">
+        <h2 class="section-title" id="chapters-h">Chapters</h2>
+        <ol class="chapters">
+          <li><a href="#player" data-start="0"><time datetime="PT0S">00:00</time><span>Why a game</span></a></li>
+          <li><a href="#player" data-start="72"><time datetime="PT72S">01:12</time><span>The plan, and the first rooms</span></a></li>
+          <li><a href="#player" data-start="220"><time datetime="PT220S">03:40</time><span>Twenty-four tasks on a board</span></a></li>
+          <li><a href="#player" data-start="365"><time datetime="PT365S">06:05</time><span>The merge conflict the agents solved</span></a></li>
+          <li><a href="#player" data-start="510"><time datetime="PT510S">08:30</time><span>What broke on day eight</span></a></li>
+          <li><a href="#player" data-start="655"><time datetime="PT655S">10:55</time><span>What I would change</span></a></li>
+          <li><a href="#player" data-start="740"><time datetime="PT740S">12:20</time><span>Where to play it</span></a></li>
+        </ol>
+      </section>
+
+      <section class="block" aria-labelledby="transcript-h">
+        <h2 class="section-title" id="transcript-h">Transcript</h2>
+        <details class="disclosure">
+          <summary>Show the transcript</summary>
+          <div class="inner">
+            <p><time>00:00</time>Sample transcript. This is placeholder text standing in for the real captions.</p>
+            <p><time>00:12</time>A few weeks ago I wanted to find out what happens when you give a small team of agents a whole project instead of one task.</p>
+            <p><time>01:12</time>The plan was short on purpose. A page of notes, a list of tasks, and a rule that every task gets its own folder.</p>
+            <p><time>03:40</time>By the third day there were twenty-four cards on the board and I had stopped reading all of them.</p>
+          </div>
+        </details>
+      </section>
+    </div>
+
+    <aside class="sticky">
+      <div class="facts">
+        <h2 class="eyebrow">Links</h2>
+        <div class="links">
+          <a class="btn" href="repo.html"><svg class="ico" aria-hidden="true"><use href="#i-repo"/></svg>Source repo<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a class="btn" href="project.html"><svg class="ico" aria-hidden="true"><use href="#i-project"/></svg>Project write-up<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <!-- TODO: your channel -->
+          <a class="btn" href="https://www.youtube.com/@your-channel" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>Subscribe on YouTube<svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
+          <a class="btn" href="index.html#subscribe"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>Get new videos by email<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<section class="section ruled" aria-labelledby="related-h">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">More videos</p>
+        <h2 class="section-title" id="related-h">Keep watching</h2>
+      </div>
+      <a class="more-link" href="archive.html?kind=vlogs">All videos<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="grid-cards">
+      <a class="card" href="vlog.html"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div><div class="play" aria-hidden="true"><span><svg viewBox="0 0 16 16"><use href="#i-play"/></svg></span></div><span class="duration">7:21</span></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>Vlog</span><h3 class="card-title">Three agents, one repo, no conflicts</h3><p class="card-text">A short demo of worktrees: three tasks started at once, three branches, one calm merge.</p><div class="card-foot"><time datetime="2026-08-30">Aug 30</time><span aria-hidden="true">&middot;</span><span>7 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="vlog.html"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div><div class="play" aria-hidden="true"><span><svg viewBox="0 0 16 16"><use href="#i-play"/></svg></span></div><span class="duration">9:05</span></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>Vlog</span><h3 class="card-title">What an approval prompt feels like</h3><p class="card-text">I walk through twenty prompts from one afternoon and say yes or no out loud.</p><div class="card-foot"><time datetime="2026-08-14">Aug 14</time><span aria-hidden="true">&middot;</span><span>9 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+      <a class="card" href="vlog.html"><div class="card-media"><div class="media-ph"><img src="../design-system/assets/r7-mark-ivory.svg" alt=""></div><div class="play" aria-hidden="true"><span><svg viewBox="0 0 16 16"><use href="#i-play"/></svg></span></div><span class="duration">14:32</span></div><div class="card-body"><span class="kind"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>Vlog</span><h3 class="card-title">Reading a benchmark table with me</h3><p class="card-text">A new model, its table, and the four questions I ask before I believe any of it.</p><div class="card-foot"><time datetime="2026-07-29">Jul 29</time><span aria-hidden="true">&middot;</span><span>15 min</span><span class="spacer"></span><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></div></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- Shared partial: subscribe band. Wire the form in site.js (search for "wire a real service"). -->
+<section class="band" id="subscribe" aria-labelledby="subscribe-h">
+  <div class="container wide">
+    <div class="subscribe">
+      <div>
+        <p class="eyebrow">Newsletter</p>
+        <h2 id="subscribe-h" style="margin-top: var(--s-3)">One email when there is something worth reading</h2>
+        <p>New posts and videos, a few times a month. No tracking, and you can leave in one click.</p>
+      </div>
+      <form data-newsletter novalidate>
+        <div class="field">
+          <label for="sub-email">Email address</label>
+          <div class="subscribe-row">
+            <input class="input" id="sub-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+            <button class="btn solid" type="submit">Subscribe</button>
+          </div>
+          <p class="hint" data-newsletter-msg role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- Shared partial: site footer. -->
+<footer class="site-footer">
+  <div class="container wide">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="wordmark" href="index.html"><img src="../design-system/assets/r7-mark.svg" alt="">R7 Orbit</a>
+        <p>Plain notes on building with AI agents: news, writing, videos, projects and code.</p>
+      </div>
+      <nav aria-label="Footer">
+        <ul class="footer-links">
+          <li><a href="rss.xml"><svg class="ico" aria-hidden="true"><use href="#i-rss"/></svg>RSS</a></li><!-- TODO: generate rss.xml at build time -->
+          <li><a href="https://github.com/your-username" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-github"/></svg>GitHub</a></li><!-- TODO: your GitHub -->
+          <li><a href="https://www.youtube.com/@your-channel" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-vlog"/></svg>YouTube</a></li><!-- TODO: your channel -->
+          <li><a href="index.html#subscribe"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>Subscribe</a></li>
+        </ul>
+      </nav>
+      <p class="footer-legal"><span>&copy; 2026</span><span>Made with R7 Orbit</span></p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

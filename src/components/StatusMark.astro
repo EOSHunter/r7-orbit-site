@@ -1,0 +1,20 @@
+---
+import { STATUS_LABEL, STATUS_MARK, type ProjectStatus } from '../lib/cards';
+
+interface Props {
+  status: ProjectStatus;
+}
+
+const { status } = Astro.props;
+const mark = STATUS_MARK[status];
+---
+
+<span class="status">
+  <span class={mark === 'working' ? 'mark' : `mark ${mark}`} aria-hidden="true">
+    <svg viewBox="0 0 14 14">
+      <circle class="track" cx="7" cy="7" r="5.5"></circle>
+      {mark === 'working' ? <circle class="arc" cx="7" cy="7" r="5.5" /> : <circle class="dot" cx="7" cy="7" r="2" />}
+    </svg>
+  </span>
+  <span>{STATUS_LABEL[status]}</span>
+</span>
