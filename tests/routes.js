@@ -33,6 +33,7 @@ const routes = [
   { path: '/no-such-page/', status: 404, noindex: true, lighthouse: '/404.html' },
   { path: '/styleguide/', noindex: true },
   { path: '/styleguide/specimen/', noindex: true },
+  { path: '/styleguide/article-components/', noindex: true },
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

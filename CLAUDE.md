@@ -12,7 +12,7 @@ Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must s
 
 ```
 CLAUDE.md                     this file
-docs/                         PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+docs/                         ARTICLE_COMPONENTS (MDX article component library), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
 src/

@@ -1,0 +1,19 @@
+---
+// Two columns that stack below 720px. Fill the named slots `left` and `right`:
+//   <TwoColumn ratio="2:1"><div slot="left">…</div><div slot="right">…</div></TwoColumn>
+import '../../styles/article.css';
+
+interface Props {
+  /** Width of left to right. */
+  ratio?: '1:1' | '2:1' | '1:2';
+  /** Put the right column first when stacked (small screens). */
+  reverse?: boolean;
+}
+
+const { ratio = '1:1', reverse = false } = Astro.props;
+---
+
+<div class="art-cols" data-ratio={ratio} data-reverse={reverse || undefined}>
+  <div class="art-col"><slot name="left" /></div>
+  <div class="art-col"><slot name="right" /></div>
+</div>

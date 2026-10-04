@@ -1,0 +1,16 @@
+---
+// A line pulled out of the article and set large, between two hairlines. It repeats text that is already in the body,
+// so it is hidden from screen readers (aria-hidden) rather than read twice.
+import '../../styles/article.css';
+
+interface Props {
+  cite?: string;
+}
+
+const { cite } = Astro.props;
+---
+
+<aside class="art-pullquote" aria-hidden="true">
+  <p><slot /></p>
+  {cite && <p class="art-pullquote-cite">{cite}</p>}
+</aside>
