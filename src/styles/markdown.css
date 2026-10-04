@@ -1,0 +1,61 @@
+/* Markdown output: code theme (from tokens), diff lines, callouts, figures, heading anchors.
+   Import after design-system/components.css and site.css. The code theme is Shiki's "css-variables" theme,
+   so the colours below are the whole theme and both Obsidian and Ivory follow the tokens. */
+
+:root {
+  --astro-code-foreground: var(--text-2);
+  --astro-code-background: var(--bg);
+  --astro-code-token-constant: var(--brass);
+  --astro-code-token-string: var(--st-done);
+  --astro-code-token-comment: var(--text-3);
+  --astro-code-token-keyword: var(--brass-bright);
+  --astro-code-token-parameter: var(--text-2);
+  --astro-code-token-function: var(--text);
+  --astro-code-token-string-expression: var(--st-done);
+  --astro-code-token-punctuation: var(--text-3);
+  --astro-code-token-link: var(--brass);
+}
+
+.prose pre.code .line { display: inline-block; min-width: 100%; }
+.prose pre.code .line.add { color: var(--st-done); background: var(--st-done-wash); }
+.prose pre.code .line.del { color: var(--st-failed-text); background: var(--st-failed-wash); }
+.prose pre.code .line.add span, .prose pre.code .line.del span { color: inherit !important; }
+.prose pre.code:focus-visible { outline: var(--bw-accent) solid var(--brass); outline-offset: 2px; }
+.prose pre.code code { font-family: var(--font-mono); background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+
+.prose .codeblock { border: var(--bw) solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--bg); }
+.prose .codeblock pre.code { border: 0; border-radius: 0; margin: 0; }
+
+/* Figures: the image sits flush in the card, the caption under it */
+.prose figure { margin-inline: 0; overflow: hidden; background: var(--surface-1); }
+.prose figure > img { display: block; width: 100%; height: auto; border: 0; border-radius: 0; }
+
+/* Pull quotes: `cite` is the attribution line */
+.prose blockquote > cite { display: block; }
+
+/* Callouts keep their own text size and drop prose spacing quirks */
+.prose .callout > :first-child { margin-top: 0; }
+.prose .callout > :last-child { margin-bottom: 0; }
+.prose .callout > p + p { margin-top: var(--s-3); }
+
+/* Heading anchors: a quiet # that appears on hover or keyboard focus */
+.prose .has-anchor { position: relative; }
+.prose .heading-anchor {
+  margin-left: var(--s-2); border-bottom: 0; color: var(--text-3); font-family: var(--font-mono); font-size: 0.7em;
+  opacity: 0; transition: opacity var(--dur) var(--ease);
+}
+.prose .has-anchor:hover .heading-anchor, .prose .heading-anchor:focus-visible { opacity: 1; }
+.prose .heading-anchor::after { content: '#'; }
+.prose .heading-anchor:hover { color: var(--brass-bright); }
+@media (hover: none) { .prose .heading-anchor { opacity: 0.6; } }
+
+/* Task lists and footnotes (GitHub-flavoured Markdown) */
+.prose ul.contains-task-list { list-style: none; padding-left: 0; }
+.prose .task-list-item input { margin-right: var(--s-2); accent-color: var(--brass); }
+.prose section[data-footnotes] { margin-top: 2.2em; padding-top: var(--s-4); border-top: var(--bw) solid var(--line); font-size: var(--fs-sm); color: var(--text-2); }
+.prose section[data-footnotes] h2 { margin-top: 0; font-size: var(--fs-md); }
+
+/* Tables scroll inside themselves instead of the page */
+.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: var(--fs-md); }
+.prose th, .prose td { padding: var(--s-2) var(--s-3); border-bottom: var(--bw) solid var(--line); text-align: left; vertical-align: top; }
+.prose th { color: var(--text-2); font-weight: var(--fw-medium); }

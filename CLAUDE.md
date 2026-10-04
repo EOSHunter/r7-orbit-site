@@ -21,19 +21,24 @@ src/
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard
   pages/                      index (scaffold placeholder), styleguide/ (noindex, unlinked: both themes via iframes of styleguide/specimen/)
   data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
-  lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs)
+  content/                    news/ blog/ vlogs/ projects/ repos/ (sample posts, copied from content-examples/); site.json stays in src/data/
+  content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
+  lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
+                              content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
+                              content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer)
   styles/design-system/       tokens.css, components.css, tokens.json, DESIGN_SYSTEM.md (moved from design-system/; the source of truth for the look)
+  styles/markdown.css         Markdown output (code theme from tokens, callouts, figures, anchors); import it where a post body is rendered
   styles/site.css             site-level layout (from templates/site.css, plus one fix: .media-ph img no longer cropped by .card-media img)
   scripts/                    site.js (theme toggle, menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (not loaded yet: hero and 404 only)
 public/                       served as-is: fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
 brand/                        the full brand kit (logos, social images, source/ HTML for the text images); only the web essentials are copied to public/
 templates/                    static HTML for every page type: the visual reference to port (not built)
-content-examples/             one example of each kind of post + site.json (phase 3 copies these to src/content/)
+content-examples/             the original examples (phase 3 copied the posts to src/content/)
 ```
 
 Not carried over from the kit: the live design-system page (`design-system/index.html`), `tailwind/theme.css` and `tools/build-design-tokens.mjs` (plain CSS was chosen; `tokens.json` is now edited by hand, or restore the tool with its paths changed).
 
-Phase 3 moves `content-examples/` to `src/content/`; update this section in the same pull request.
+Markdown runs on the `unified` processor (`@astrojs/markdown-remark`, build-time only) because Astro 7 defaults to Satteri, which does not run remark/rehype plugins.
 
 ## Commands
 
@@ -44,7 +49,7 @@ npm run preview   # serve dist/ to look at the built site
 npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
 npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)
-npm run test      # Playwright: smoke + axe + JS/CSS size budgets on every route in tests/routes.js, both themes, 375 and 1280px
+npm run test      # unit tests (node:test *.test.ts + Vitest *.vitest.ts for content/Markdown helpers), then Playwright: smoke + axe + JS/CSS size budgets on every route in tests/routes.js, both themes, 375 and 1280px
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
                   # serves dist/ itself via `npm run preview` (port 4399); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium

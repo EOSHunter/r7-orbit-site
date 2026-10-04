@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "npm run test:unit && npm run test:e2e",
-    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:unit": "node --test \"src/**/*.test.ts\" && vitest run",
     "test:e2e": "playwright test",
     "test:lighthouse": "node tests/lighthouse.mjs"
   },
@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@astrojs/markdown-remark": "^7.3.1",
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@lhci/cli": "^0.15.1",
@@ -36,6 +37,7 @@
     "prettier-plugin-astro": "^1.1.0",
     "sanitize-html": "^2.18.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.71.0"
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
   }
 }
