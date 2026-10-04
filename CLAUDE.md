@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Read this first, e
 
 ## What this project is
 
-A personal website for posting **AI news, blogs, vlogs, projects and repos**, styled with the **R7 Orbit design system** (obsidian background, ivory text, one brass accent). It is a static site: content is Markdown files, there is no database and no admin. It is **not** the R7 Orbit desktop app; it only shares its look.
+A personal website for posting **AI news, blogs, vlogs, projects and repos**, styled with the **R7 Orbit design system** (obsidian background, ivory text, one brass accent). It is a static site: content is Markdown files, there is no database and no admin server (the editor at `/admin` is a static page that writes these same files through git). It is **not** the R7 Orbit desktop app; it only shares its look.
 
 Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must supply: `docs/DECISIONS.md`.
 
@@ -21,7 +21,8 @@ src/
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
-  admin/                      Decap CMS for /admin: config.ts (fields), blocks.ts (article components as editor blocks), main.ts (entry). See README "Admin"
+  admin/                      Decap CMS for /admin: config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
+                              preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry). See README "Admin"
   pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)

@@ -1,0 +1,17 @@
+/* The few rules the preview pane needs on top of the site's own stylesheets (which main.ts loads into it). Tokens only. */
+
+.admin-preview-note {
+  margin: 0;
+  padding: var(--s-2) var(--gutter);
+  font: var(--fs-2xs) var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-3);
+  background: var(--surface-1);
+  border-bottom: var(--bw) solid var(--line);
+}
+
+/* Decap wraps the rendered body in one extra <div> (with a margin), so the prose spacing rule `.prose > * + *` has to be
+   repeated one level down. :where(div) keeps its specificity equal to the original's, so every other prose rule (the
+   heading margins, figures, dividers) still wins over it exactly as it does on the site. */
+.admin-preview .art-prose > div { margin: 0; }
+.art-prose > :where(div) > * + * { margin-top: 1.15em; }
