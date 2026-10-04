@@ -13,9 +13,15 @@ export interface AdminEnv {
   authUrl?: string;
 }
 
-/** Where uploaded images are committed, and the path written into a post (relative to src/content/blog/). */
-export const MEDIA_FOLDER = 'src/assets/blog';
-export const PUBLIC_FOLDER = '../../assets/blog';
+// Two homes for images, matching how the site uses them:
+// - the featured image is an Astro `image()` (optimised at build time), so it lives in src/assets/blog/ and is written
+//   as a path relative to the post;
+// - images in the body and in the article blocks (Figure, ImageGallery) are plain local files that the components
+//   reject if they are remote (src/lib/article.ts), so they live in public/media/ and are written as /media/x.jpg.
+export const FEATURED_MEDIA_FOLDER = '/src/assets/blog';
+export const FEATURED_PUBLIC_FOLDER = '../../assets/blog';
+export const MEDIA_FOLDER = 'public/media';
+export const PUBLIC_FOLDER = '/media';
 
 // Same rules as the `slug` and `title`/`summary` checks in src/content.config.ts.
 const TAG_PATTERN: [string, string] = [
@@ -67,6 +73,8 @@ const blogFields: CmsField[] = [
     label: 'Featured image',
     widget: 'image',
     choose_url: false,
+    media_folder: FEATURED_MEDIA_FOLDER,
+    public_folder: FEATURED_PUBLIC_FOLDER,
     required: false,
     hint: 'The hero behind the headline. Wide (16:9) and at least 1600px across. Your own image, not stock.',
   },
@@ -91,7 +99,7 @@ const blogFields: CmsField[] = [
     label: 'Body',
     widget: 'markdown',
     modes: ['rich_text', 'raw'],
-    // No H1: the title is the page's one h1. The image button uploads to MEDIA_FOLDER.
+    // No H1: the title is the page's one h1. Its image button and the blocks upload to MEDIA_FOLDER.
     buttons: [
       'bold',
       'italic',

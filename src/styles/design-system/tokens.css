@@ -182,56 +182,6 @@
   color-scheme: dark;
 }
 
-/*
-  Ivory: the light theme. PROPOSED for web (the app is dark only). Brass has to darken to read on paper, so on this theme
-  --brass is an ink colour; solid buttons are dark brass with ivory text. Switch with <html data-theme="light">.
-*/
-:root[data-theme='light'] {
-  --bg: #f4efe3;
-  --surface-1: #faf7ef;
-  --surface-2: #fffdf8;
-  --surface-3: #ece6d6;
-  --void: #14110a;
-
-  --line: rgb(26 23 16 / 0.1);
-  --line-strong: rgb(26 23 16 / 0.2);
-  --line-brass: rgb(122 92 30 / 0.5);
-
-  --text: #1a1710;
-  --text-2: #55504a;
-  --text-3: #6f6a60;
-  --text-3-app: #6f6a60;
-
-  --brass: #7a5c1e;
-  --brass-bright: #5f4515;
-  --brass-dim: #a08650;
-  --on-brass: #fbf6e8;
-  --brass-highlight: #c9a96a;
-  --brass-leaf: #b8924a;
-  --brass-shadow: #7a5c1e;
-  --brass-deep: #3a2c10;
-  --brass-wash-1: rgb(122 92 30 / 0.05);
-  --brass-wash-2: rgb(122 92 30 / 0.08);
-  --brass-wash-3: rgb(122 92 30 / 0.14);
-
-  --st-done: #4f6b4a;
-  --st-failed: #9a4a40;
-  --st-idle: #8a857b;
-  --st-failed-text: #8a3f36;
-  --st-failed-wash: rgb(154 74 64 / 0.09);
-  --st-done-wash: rgb(79 107 74 / 0.09);
-
-  --shadow-float: 0 18px 50px rgb(26 23 16 / 0.22), 0 2px 8px rgb(26 23 16 / 0.14);
-  --shadow-raise: 0 8px 24px rgb(26 23 16 / 0.14);
-  --glow-brass: 0 0 28px 0 rgb(122 92 30 / 0.14);
-  --header-veil: rgb(244 239 227 / 0.85);
-  --selection: rgb(122 92 30 / 0.22);
-  --grid-dot: radial-gradient(circle at 1px 1px, rgb(26 23 16 / 0.06) 1px, transparent 0);
-  --plate-gradient: radial-gradient(70% 70% at 50% 45%, #fffdf8 0%, var(--bg) 100%);
-
-  color-scheme: light;
-}
-
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-fast: 0.001ms; --dur: 0.001ms; --dur-slow: 0.001ms; }
 }

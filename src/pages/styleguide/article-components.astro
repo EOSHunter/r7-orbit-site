@@ -1,0 +1,22 @@
+---
+// Demo of the article component library: ArticleTemplate around an MDX file that uses every component.
+// Not linked from anywhere and kept out of search engines, like the rest of the styleguide. Docs: docs/ARTICLE_COMPONENTS.md.
+import { articleComponents } from '../../components/article';
+import ArticleTemplate from '../../components/article/ArticleTemplate.astro';
+import * as Demo from '../../components/article/demo/article-components-demo.mdx';
+
+const headings = Demo.getHeadings();
+---
+
+<ArticleTemplate
+  title="Every article component, in *one* page"
+  summary="A sample article that uses each component once and says what it takes. Sample content, not part of the site."
+  date="2026-10-04"
+  label="Styleguide"
+  tags={['sample']}
+  headings={headings}
+  crumbs={[{ href: '/styleguide/', label: 'Styleguide' }]}
+  noindex
+>
+  <Demo.Content components={articleComponents} headings={headings} />
+</ArticleTemplate>

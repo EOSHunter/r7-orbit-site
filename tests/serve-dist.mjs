@@ -10,9 +10,17 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const port = Number(process.argv[2] ?? 4398);
 const types = {
-  '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json',
-  '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain', '.webmanifest': 'application/manifest+json',
-  '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain',
+  '.webmanifest': 'application/manifest+json',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
 };
 const compressible = new Set(['.html', '.css', '.js', '.json', '.svg', '.xml', '.txt', '.webmanifest', '.ico']);
 

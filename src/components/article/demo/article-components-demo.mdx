@@ -1,0 +1,160 @@
+{/* Sample content: every article component once, with its props. Rendered at /styleguide/article-components/ (noindex).
+    The components are registered, so no imports are needed here: this file is rendered with components={articleComponents}. */}
+
+<Paragraph lead>
+  This page is a sample article. It uses every component in `src/components/article/` once, and the notes under each one
+  say what it takes. Nothing here is real content.
+</Paragraph>
+
+<Toc headings={props.headings} />
+
+## Headings
+
+Plain `##` and `###` in Markdown already get a "link to this section" anchor. Use `Heading` when you need an explicit `id`
+or a level Markdown can't give, and `Subheading` as the shortcut for level 3.
+
+<Heading level={3} id="explicit-id">A heading with its own id</Heading>
+
+<Subheading>A subheading under it</Subheading>
+
+`Paragraph` is one paragraph (`lead` makes it the intro size). `Prose` wraps a run of content in the reading column when the
+page isn't already inside one.
+
+## Figures
+
+`Figure` takes `src`, `alt`, `caption`, `align` (`left`, `right`, `center`, `full`) and `size` (`sm`, `md`, `lg`). Without a
+`src` it shows the placeholder plate, as here.
+
+<Figure alt="Placeholder for a centred picture" caption="center, md: the default alignment at a medium width." size="md" />
+
+<Figure
+  align="left"
+  size="sm"
+  alt="Placeholder for a picture that floats left"
+  caption="left, sm: text wraps round it from 720px up."
+/>
+
+A floated figure sits beside the text that follows it, so a paragraph can run along the side of a picture. On a phone it
+stacks above the paragraph instead. Keep the paragraph long enough to wrap, or the next component will clear past it.
+Here is a little more text so the wrap is visible at desktop widths, which is the point of this sample.
+
+<Figure alt="Placeholder for a picture that floats right" align="right" size="sm" caption="right, sm: the mirror image." />
+
+The same goes for `right`. After floated pictures, headings, callouts, code and dividers all clear the float, so nothing
+ever sits half beside a picture by accident.
+
+<Divider />
+
+<Figure alt="Placeholder for a full-width picture" align="full" caption="full: fills the column, square corners." />
+
+### Image rows
+
+`ImageRow` (also exported as `ImageGallery`) shows two or three images side by side and stacks them below 600px.
+
+<ImageRow
+  images={[
+    { alt: 'Placeholder one', caption: 'One' },
+    { alt: 'Placeholder two', caption: 'Two' },
+    { alt: 'Placeholder three', caption: 'Three' },
+  ]}
+  caption="Three across, with a caption for the whole row."
+/>
+
+<ImageRow images={[{ alt: 'Placeholder left' }, { alt: 'Placeholder right' }]} />
+
+## Callouts
+
+`Callout` takes `type` (`info`, `warn`, `tip`) and an optional `title`. The label says which kind it is, not just the colour.
+
+<Callout type="info">An `info` callout is a plain panel for a side note.</Callout>
+
+<Callout type="tip" title="Try this">
+
+A `tip` is brass. It can hold **Markdown**, [links](#headings) and more than one paragraph.
+
+Like this second one.
+
+</Callout>
+
+<Callout type="warn">A `warn` callout is for the thing that bites you.</Callout>
+
+## Quotes
+
+`Quote` is a quotation in the text. Give it `cite`, and `href` if you can link the source.
+
+<Quote cite="A placeholder source">An agent that can break nothing is an agent you can let run.</Quote>
+
+`Pullquote` repeats a line from the article at display size between two hairlines. Screen readers skip it because the text
+is already in the body.
+
+<Pullquote>One task, one folder, one branch.</Pullquote>
+
+## Code
+
+`CodeBlock` takes `code`, `lang` and an optional `title` for the bar. Colours come from the theme tokens.
+
+<CodeBlock
+  lang="bash"
+  title="terminal"
+  code={`git worktree add ../app.orbit/fix-header -b orbit/fix-header
+npm run build`}
+/>
+
+<CodeBlock
+  lang="diff"
+  code={`- const rooms = 1;
++ const rooms = agents.length;`}
+/>
+
+Fenced code in plain Markdown looks the same:
+
+```ts title="rooms.ts"
+export const rooms = (agents: string[]) => agents.map((a) => `room-${a}`);
+```
+
+## Video
+
+`VideoEmbed` wraps the site's click-to-load player. Nothing is requested from YouTube until you press play. The id below
+is a placeholder.
+
+<VideoEmbed
+  id="dQw4w9WgXcQ"
+  title="Placeholder video"
+  duration="3:32"
+  caption="A sample embed, not real content."
+/>
+
+## Layout
+
+`Divider` is a hairline (`rule`) or three brass dots (`dots`).
+
+<Divider variant="dots" />
+
+`TwoColumn` takes `ratio` (`1:1`, `2:1`, `1:2`) and `reverse`, and fills the named slots `left` and `right`. It stacks below
+720px.
+
+<TwoColumn ratio="2:1">
+
+<div slot="left">
+
+### The wide side
+
+Two thirds of the row. Anything goes here: paragraphs, lists, a figure or a code block.
+
+- One task, one folder.
+- One folder, one branch.
+
+</div>
+
+<div slot="right">
+
+<Callout type="tip" title="Aside">The narrow side suits a note or a small figure.</Callout>
+
+</div>
+
+</TwoColumn>
+
+## Table of contents
+
+`Toc` takes `headings` and a `variant`: `block` (shown at the top of this page), `inline` (the collapsible list for narrow
+screens) and `aside` (the sticky sidebar). `ArticleTemplate` uses the last two for you.

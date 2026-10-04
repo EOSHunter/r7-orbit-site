@@ -1,5 +1,7 @@
 ---
 // The whole page for a blog post or a news item (docs/PAGES.md). The two routes only fetch and pass data.
+import type { ImageMetadata } from 'astro';
+import ArticleHero from './ArticleHero.astro';
 import ArticleJsonLd from './ArticleJsonLd.astro';
 import Icon from './Icon.astro';
 import PrevNext from './PrevNext.astro';
@@ -8,12 +10,13 @@ import SeriesNav from './SeriesNav.astro';
 import ShareRow from './ShareRow.astro';
 import SubscribeBand from './SubscribeBand.astro';
 import TableOfContents from './TableOfContents.astro';
+import { articleComponents } from './article/mdx';
 import { site } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { articleComponents } from '../lib/article-components';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
+import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import '../styles/markdown.css';
 
@@ -43,7 +46,12 @@ const minutes = readTime(post);
 const base = (Astro.site ?? new URL(site.url)).href;
 const url = absoluteUrl(Astro.url.pathname, base);
 const cover = data.cover ? { src: data.cover, alt: data.coverAlt ?? '' } : undefined;
-const image = cover ? new URL(cover.src, base).href : undefined;
+// Blog only: an optional hero image behind the headline. It is the og:image when the post has no cover of its own.
+const featured = (data as { featuredImage?: ImageMetadata }).featuredImage;
+const featuredAlt = (data as { featuredImageAlt?: string }).featuredImageAlt ?? '';
+const featuredOg = featured ? await getImage({ src: featured, width: 1200, height: 630, fit: 'cover', format: 'jpg' }) : undefined;
+const image = cover ? new URL(cover.src, base).href : featuredOg ? new URL(featuredOg.src, base).href : undefined;
+const imageAlt = cover ? cover.alt : featuredOg ? featuredAlt : undefined;
 
 const toc = kind === 'blog' && (data as { toc?: boolean }).toc !== false && (
   (data as { toc?: boolean }).toc === true || headings.filter((h) => h.depth === 2).length >= 3
@@ -66,7 +74,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
   description={data.summary}
   ogType="article"
   image={image}
-  imageAlt={cover?.alt || undefined}
+  imageAlt={imageAlt || undefined}
   published={data.date}
   modified={data.updated}
   tags={data.tags}
@@ -87,7 +95,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
     sourceUrl={news?.sourceUrl}
   />
 
-  <div class="container">
+  <ArticleHero image={featured} alt={featuredAlt}>
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <ol>
         <li><a href="/">Home</a></li>
@@ -121,7 +129,9 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
       </div>
       {assist && <p class="how-made"><strong>How this was made.</strong> {assist}</p>}
     </header>
+  </ArticleHero>
 
+  <div class="container">
     {cover && (
       <div class="media framed post-hero">
         <img src={cover.src} alt={cover.alt} width="1280" height="720" />

@@ -1,6 +1,6 @@
 # Screenshots
 
-Taken for the phase 7 quality pass with `node tests/screenshots.mjs` (needs a build and the preview server on port 4399). Each file is the first screen of the page (not the full page), with reduced motion on, named `page-theme-width.png`, where theme is `dark` (Obsidian) or `light` (Ivory).
+Taken for the phase 7 quality pass with `node tests/screenshots.mjs` (needs a build and the preview server on port 4399). Each file is the first screen of the page (not the full page), with reduced motion on, named `page-width.png`.
 
 Widths: the home page and the sample blog post are saved at 320, 375, 768, 1024, 1280 and 1480px, because their layout changes at each breakpoint (single column, two columns, the table of contents from 1200px). Every other page is saved at 375 and 1280px only: those two show the phone and desktop layouts, and the pages share the same container and header at the widths in between. All six widths were still checked for every page by `tests/audit.spec.js` (no horizontal scroll, nothing poking out, tap targets).
 

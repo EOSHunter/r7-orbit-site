@@ -46,7 +46,6 @@ main:focus { outline: 0; }
 .header-tools { display: flex; align-items: center; gap: var(--s-1); margin-left: auto; }
 .site-header .bar { gap: var(--s-4); }
 
-.theme-toggle .theme-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .menu-toggle { display: none; }
 .menu-toggle .i-close { display: none; }
 .menu-toggle[aria-expanded='true'] .i-close { display: block; }
@@ -68,7 +67,6 @@ main:focus { outline: 0; }
 .js .site-nav a { padding: var(--s-3); font-size: var(--fs-md); }
 
 @media (min-width: 900px) {
-  .theme-toggle .theme-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .site-header .bar, .js .site-header .bar { flex-wrap: nowrap; height: var(--header-h); }
   .site-nav, .js .site-nav { position: static; order: 0; flex: 0 1 auto; display: flex; flex-direction: row; align-items: center; gap: 2px; margin-left: auto; padding: 0; background: none; border: 0; box-shadow: none; overflow-x: auto; animation: none; }
   .site-nav a, .js .site-nav a { padding: 6px var(--s-3); font-size: var(--fs-sm); }
@@ -110,7 +108,6 @@ main:focus { outline: 0; }
 .media-ph { position: absolute; inset: 0; display: grid; place-items: center; }
 .media-ph::before { content: ''; position: absolute; inset: 0; background-image: var(--grid-dot); background-size: var(--grid-size) var(--grid-size); }
 .media-ph img { width: var(--mark-size, 17%); height: auto; object-fit: contain; opacity: 0.1; }  /* height and fit undo .card-media img, which would crop the mark */
-:root[data-theme='light'] .media-ph img { filter: invert(1); opacity: 0.08; }
 .media.framed { border: var(--bw) solid var(--line); border-radius: var(--r-xl); }
 
 /* ----------------------------------------------------------------------------------------------- Card additions */
@@ -200,7 +197,6 @@ button.chip { background: transparent; cursor: pointer; }
 .avatar { position: relative; flex: none; width: calc(var(--s-5) + var(--s-2)); aspect-ratio: 1; border-radius: var(--r-icon); border: var(--bw) solid var(--line-strong); }
 .avatar { display: grid; place-items: center; overflow: hidden; background: var(--plate-gradient); }
 .avatar img { width: 58%; height: auto; }
-:root[data-theme='light'] .avatar img { filter: brightness(0) opacity(0.88); }
 
 a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
 
@@ -348,7 +344,6 @@ button.play { width: 100%; padding: 0; background: none; border: 0; color: inher
 .about-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); padding-block: var(--s-7) var(--s-8); }
 .portrait { position: relative; aspect-ratio: 4 / 5; max-width: 20rem; background: var(--plate-gradient); border: var(--bw) solid var(--line); border-radius: var(--r-xl); overflow: hidden; --mark-size: 34%; }
 .portrait .media-ph img { opacity: 0.9; }
-:root[data-theme='light'] .portrait .media-ph img { filter: brightness(0); opacity: 0.85; }
 @media (min-width: 900px) {
   .about-grid { grid-template-columns: 17rem minmax(0, 1fr); gap: var(--s-8); }
   .about-grid .portrait { position: sticky; top: calc(var(--header-h) + var(--s-5)); }

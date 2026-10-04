@@ -12,11 +12,11 @@ Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must s
 
 ```
 CLAUDE.md                     this file
-docs/                         PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+docs/                         ARTICLE_COMPONENTS (MDX article component library), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
 src/
-  layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), no-flash theme script, skip link, Header, Footer
+  layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, SubscribeBand, NewsletterForm, Icon + IconSprite, MediaPlaceholder, StatusMark,
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
@@ -24,25 +24,24 @@ src/
   admin/                      Decap CMS for /admin: config.ts (fields), blocks.ts (article components as editor blocks), main.ts (entry). See README "Admin"
   pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
-                              styleguide/ (noindex, unlinked: both themes via iframes of styleguide/specimen/)
+                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
   data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
   content/                    news/ blog/ vlogs/ projects/ repos/ (sample posts, copied from content-examples/); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
-                              article-components.ts (MDX `components` map for posts: Figure, Callout, Quote, ImageGallery, TwoColumn, VideoEmbed, Divider),
                               content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging), feed.ts + feed-queries.ts,
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts, newsletter.ts
   styles/design-system/       tokens.css, components.css, tokens.json, DESIGN_SYSTEM.md (moved from design-system/; the source of truth for the look)
   styles/markdown.css         Markdown output (code theme from tokens, callouts, figures, anchors); import it where a post body is rendered
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
-  scripts/                    site.js (theme toggle, menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (hero and 404 only),
+  scripts/                    site.js (menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (hero and 404 only),
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play)
 tests/                        routes.js (every route, one list), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds;
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
-docs/screenshots/             quality-pass screenshots, named page-theme-width.png (see its README)
+docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
 public/                       served as-is: fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
 brand/                        the full brand kit (logos, social images, source/ HTML for the text images); only the web essentials are copied to public/
 templates/                    static HTML for every page type: the visual reference to port (not built)
@@ -65,26 +64,26 @@ npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)
 npm test          # runs test:unit first, then test:e2e (stops at the first failing stage)
 npm run test:unit # node:test *.test.ts + Vitest *.vitest.ts for content/Markdown/SEO helpers
-npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + JS/CSS budgets (both themes, 375 and 1280px),
+npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + JS/CSS budgets (375 and 1280px),
                   # audit (320-1480px, head tags, JSON-LD, links), keyboard, feeds/robots/sitemap
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
                   # serves dist/ itself via `npm run preview` (port 4399); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
 ```
 
-Node 22.12 or newer. The styleguide is at `/styleguide/` (both themes, with frame widths); it is not linked from anywhere.
+Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it is not linked from anywhere.
 
 ## Design rules (non-negotiable)
 
 1. **Use tokens, never raw values.** Colours, radii, spacing, shadows, font sizes, durations all come from `design-system/tokens.css` as `var(--…)`. No hex codes, no ad-hoc `px` for those things in components or pages. If a value is missing, add a token (and document it), don't hard-code.
 2. **Use the component classes.** `.btn`, `.chip`, `.kind`, `.card`, `.seg`, `.field`, `.callout`, `.prose`, `.mark`, `.site-header` and the rest are in `components.css`. Compose them; extend with a small class in `site.css` only when nothing fits.
 3. **One accent.** Brass is the only accent. Do not introduce other hues. Kinds of post (news/blog/vlog/project/repo) are told apart by **icon and label**, never colour.
-4. **Ivory, never white; obsidian, never black.** No `#fff` or `#000`.
+4. **Ivory text, never white; obsidian, never black.** No `#fff` or `#000`.
 5. **Depth is tone.** Surfaces step `--bg` → `--surface-1` → `--surface-2` → `--surface-3`. Shadows only for floating things (`--shadow-float`, `--shadow-raise`).
 6. **Hairlines and small radii.** 1px borders (`--line*`), radii from `--r-*`. Pills only for chips and dots.
 7. **Type:** Cormorant Garamond for headlines and pull quotes only; Inter for body and UI; JetBrains Mono for code, data and meta. Body copy is 17px/1.7, measure ≤ 68ch (`.prose`). Headlines are sentence case; one italic-brass phrase per headline at most.
 8. **Motion means something** (`--ease`, `--dur*`). Respect `prefers-reduced-motion`. The orbit (`orbit.js`) is used for the hero, loading and the 404 only.
-9. **Both themes must work** (dark default, `data-theme="light"` Ivory) unless the author has removed the light theme in `docs/DECISIONS.md`.
+9. **One theme: dark (obsidian).** The light "Ivory" theme and its toggle were removed; do not reintroduce `data-theme`.
 10. **Logo:** brass mark on dark, ink mark on light. Never recolour, stretch, add effects, or use the ring versions below ~32px. Files in `design-system/assets/` and `brand/`.
 
 ## Content rules
@@ -109,7 +108,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (both themes, with fram
 ## How to work
 
 - Small, focused pull requests: one concern each. Branch names `feat/…`, `fix/…`, `content/…`.
-- Before saying a UI task is done: run it, look at it in the browser at 375px and 1280px, in both themes, with the console open. Say what you checked.
+- Before saying a UI task is done: run it, look at it in the browser at 375px and 1280px, with the console open. Say what you checked.
 - Never claim a thing works without running it. If you couldn't run or verify something, say so plainly.
 - Don't change the design system's tokens or components as a side effect of a page task; propose it separately.
 - Don't reformat unrelated files. Match the surrounding code's style.
@@ -122,4 +121,4 @@ Choosing a domain, name, tagline or bio · adding analytics, comments or any tra
 
 ## Definition of done (any task)
 
-Builds and passes checks · matches the design system (tokens, classes, both themes) · works at 320–1480px with no horizontal scroll · keyboard and screen-reader friendly · no console errors · docs updated if behaviour or structure changed · you reported what you verified and what you didn't.
+Builds and passes checks · matches the design system (tokens, classes) · works at 320–1480px with no horizontal scroll · keyboard and screen-reader friendly · no console errors · docs updated if behaviour or structure changed · you reported what you verified and what you didn't.

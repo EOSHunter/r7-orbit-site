@@ -13,6 +13,8 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
+  // MDX posts can use the article components (src/components/article/). It inherits the markdown config below.
+  integrations: [mdx()],
   markdown: {
     // Code colours come from CSS variables mapped to the design tokens in src/styles/markdown.css.
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },
@@ -22,7 +24,5 @@ export default defineConfig({
       rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     }),
   },
-  // MDX lets a post use the article components (src/lib/article-components.ts); plain .md posts are unaffected.
-  integrations: [mdx()],
   devToolbar: { enabled: false },
 });

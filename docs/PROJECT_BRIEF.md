@@ -59,7 +59,7 @@ These can come later; none of them should be blocked by the first build.
 - Archive page per kind, with tag filter, text search, sort, pagination.
 - Post pages for each of the five kinds (see `PAGES.md`).
 - Tag pages; About page; 404 page.
-- Dark theme (default). Light "Ivory" theme if the author decides to ship it (see `DECISIONS.md`).
+- Dark theme only (the light "Ivory" theme was removed; see `DECISIONS.md`).
 - RSS (all posts, plus one feed per kind), `sitemap.xml`, `robots.txt`.
 - Open Graph / Twitter cards, with a good default image and an optional per-post cover.
 - Newsletter sign-up form wired to a real provider.

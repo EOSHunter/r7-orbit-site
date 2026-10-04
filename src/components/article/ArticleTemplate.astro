@@ -1,0 +1,115 @@
+---
+// A default arrangement for an article page, built from the library: breadcrumb, title block, optional cover, the body in a
+// reading column (Prose) with the contents list beside it on wide screens and above it on narrow ones.
+//
+//   <ArticleTemplate title="…" summary="…" date={…} headings={headings}>
+//     <Content components={articleComponents} />     ← or any markup made from the article components
+//   </ArticleTemplate>
+//
+// Slots: default (the body), `before` (above the body, below the title block), `after` (below the body, e.g. share row).
+// This is a plain page layout: it does not touch the site header, the content schema or the theme switcher.
+import Prose from './Prose.astro';
+import Toc from './Toc.astro';
+import Icon from '../Icon.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site';
+import { isoDate, longDate, plainTitle, titleParts } from '../../lib/text';
+import '../../styles/markdown.css';
+import '../../styles/article.css';
+
+interface Props {
+  /** May carry *italic* markers: one italic-brass phrase at most. */
+  title: string;
+  summary: string;
+  date: Date | string;
+  updated?: Date | string;
+  tags?: string[];
+  author?: string;
+  /** Small label above the title, and the nav item that is marked current. */
+  label?: string;
+  /** Minutes to read, if you want it shown. */
+  minutes?: number;
+  /** Headings for the table of contents (from render() or an MDX module's getHeadings()). Leave out for no contents list. */
+  headings?: { depth: number; slug: string; text: string }[];
+  /** Show the contents list. Default: when there are at least three h2s. */
+  toc?: boolean;
+  cover?: string;
+  coverAlt?: string;
+  noindex?: boolean;
+  /** Breadcrumb trail between Home and the title. */
+  crumbs?: { href: string; label: string }[];
+}
+
+const {
+  title,
+  summary,
+  date,
+  updated,
+  tags = [],
+  author = site.author.name,
+  label = 'Blog',
+  minutes,
+  headings = [],
+  toc,
+  cover,
+  coverAlt = '',
+  noindex = false,
+  crumbs = [],
+} = Astro.props;
+
+const showToc = toc ?? headings.filter((h) => h.depth === 2).length >= 3;
+---
+
+<BaseLayout title={title} description={summary} ogType="article" published={date} modified={updated} tags={tags} noindex={noindex} current={label}>
+  <div class="container art-template">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        {crumbs.map((c) => <li><a href={c.href}>{c.label}</a></li>)}
+        <li aria-current="page">{plainTitle(title)}</li>
+      </ol>
+    </nav>
+
+    <header class="post-head">
+      <p class="eyebrow">
+        <span class="kind"><Icon name="blog" />{label}</span>
+        {minutes && <span class="sep" aria-hidden="true">&middot;</span>}
+        {minutes && <span>{minutes} min read</span>}
+      </p>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <p class="t-lead">{summary}</p>
+      <div class="byline">
+        <span class="author">
+          <span class="avatar" aria-hidden="true"><img src="/assets/r7-mark.svg" alt="" /></span>{author}
+        </span>
+        <span class="meta-item"><Icon name="calendar" /><time datetime={isoDate(date)}>{longDate(date)}</time></span>
+        {updated && <span class="meta-item">Updated <time datetime={isoDate(updated)}>{longDate(updated)}</time></span>}
+        {
+          tags.length > 0 && (
+            <div class="cluster tags" aria-label="Tags">
+              {tags.map((tag) => <a class="chip link" href={`/tags/${tag}/`}>{tag}</a>)}
+            </div>
+          )
+        }
+      </div>
+    </header>
+
+    {
+      cover && (
+        <div class="media framed post-hero">
+          <img src={cover} alt={coverAlt} width="1280" height="720" />
+        </div>
+      )
+    }
+
+    <div class="post-layout">
+      <div class="post-main">
+        {showToc && <Toc headings={headings} variant="inline" />}
+        <slot name="before" />
+        <Prose as="article" id="article"><slot /></Prose>
+        <slot name="after" />
+      </div>
+      {showToc && <Toc headings={headings} variant="aside" />}
+    </div>
+  </div>
+</BaseLayout>

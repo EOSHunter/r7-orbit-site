@@ -1,0 +1,44 @@
+---
+// A highlighted code block with the site's bar (title or language, copy button). Colours come from the design tokens through
+// Shiki's css-variables theme (src/styles/markdown.css), so every theme works. Same markup as fenced code in Markdown.
+// In MDX pass the code as a string: <CodeBlock lang="bash" code={`npm run build`} />
+import { Code } from 'astro:components';
+import type { ComponentProps } from 'astro/types';
+import { siteCodeTransformer } from '../../lib/markdown/shiki-transformer.mjs';
+import { uniqueId } from '../../lib/article';
+import '../../styles/markdown.css';
+import '../../styles/article.css';
+
+interface Props {
+  code: string;
+  lang?: string;
+  /** Shown in the bar instead of the language, e.g. a file name. */
+  title?: string;
+}
+
+const { code, lang = 'text', title } = Astro.props;
+const id = uniqueId('art-code');
+// Only the Shiki line transformer (diff colouring) is reused; the <pre> gets its class here.
+const transformers = [
+  {
+    name: 'article-code',
+    pre(node: { properties: Record<string, unknown> }) {
+      delete node.properties.style;
+      node.properties.class = 'code';
+      node.properties.id = id;
+    },
+    line: siteCodeTransformer.line,
+  },
+];
+---
+
+<div class="codeblock art-code">
+  <div class="codeblock-bar">
+    <span>{title ?? lang}</span>
+    <button class="btn sm quiet" type="button" data-copy={`#${id}`}>
+      <svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+      <span data-copy-label>Copy</span>
+    </button>
+  </div>
+  <Code code={code.replace(/\n$/, '')} lang={lang as ComponentProps<typeof Code>['lang']} theme="css-variables" transformers={transformers} />
+</div>

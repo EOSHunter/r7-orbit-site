@@ -20,14 +20,14 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /privacy/                      Privacy (when there is a form or analytics)
 ```
 
-Navigation (header): **Latest · News · Blog · Vlogs · Projects · Repos · About**, then search, theme toggle. A section whose archive has fewer than three items is not in the header.
+Navigation (header): **Latest · News · Blog · Vlogs · Projects · Repos · About**, then search. A section whose archive has fewer than three items is not in the header.
 
 ## Shared parts (build once, reuse)
 
 | Part | Notes |
 |---|---|
-| **Head** | `<title>`, description, canonical, Open Graph/Twitter, theme-color `#09090a`, icons, manifest, the three stylesheets, a tiny inline script that applies the saved theme before paint |
-| **Header** | Sticky, blurred, hairline underline. Wordmark left; nav; search; theme toggle; menu button below 900px |
+| **Head** | `<title>`, description, canonical, Open Graph/Twitter, theme-color `#09090a`, icons, manifest, the three stylesheets, a tiny inline script that adds the `js` class |
+| **Header** | Sticky, blurred, hairline underline. Wordmark left; nav; search; menu button below 900px |
 | **Footer** | Wordmark, one line, links (RSS, GitHub, YouTube, Subscribe), © year, "Made with R7 Orbit" |
 | **Subscribe band** | Eyebrow, short line, email field + solid button, one-sentence privacy note |
 | **Post card** | The five variants in `DESIGN_SYSTEM.md` §9 |
@@ -146,7 +146,7 @@ Plain-language: what the site collects (nothing, or what the newsletter/analytic
 - [ ] Unique `title` (≤ 60 chars) and `description` (≤ 155)
 - [ ] Canonical URL, Open Graph, Twitter card, correct `og:image` size (1200×630)
 - [ ] Works at 320px, 375px, 768px, 1280px, 1480px; no horizontal scroll
-- [ ] Dark and Ivory both look right
+- [ ] Dark theme looks right
 - [ ] Keyboard-only works; focus is visible; skip link works
 - [ ] `prefers-reduced-motion` honoured (orbit still, no fades)
 - [ ] No third-party requests before consent-free interaction

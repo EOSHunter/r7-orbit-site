@@ -1,9 +1,9 @@
 // Editor blocks for the admin: one per component in src/components/article/. Each block is a Decap "editor component":
 // a form in the editor, and a pair of functions that write the block into the post body as MDX (`toBlock`) and read it
-// back (`pattern` + `fromBlock`). The MDX has no `import` line: src/lib/article-components.ts supplies the components.
+// back (`pattern` + `fromBlock`). The MDX has no `import` line: `articleComponents` (src/components/article/mdx.ts) supplies the components.
 //
 // The props written here are the contract with the components. If a component's props change, change them here and in
-// the test next to this file (blocks.vitest.ts), and nowhere else.
+// the test next to this file (blocks.vitest.ts), and nowhere else. Props are documented in docs/ARTICLE_COMPONENTS.md.
 //
 // Decap rules for patterns (decap-cms-widget-markdown): anchored at the start, no `m` flag, and the match must end at
 // the end of the block, so each pattern stops at its closing `/>` or `</Tag>`.
@@ -28,6 +28,11 @@ export function stringAttr(name: string, value: unknown): string {
     .replace(/\s*\n\s*/g, ' ');
   if (!s) return '';
   return /^[^"\\{}<>&]*$/.test(s) ? ` ${name}="${s}"` : ` ${name}={${JSON.stringify(s)}}`;
+}
+
+/** Like `stringAttr`, but nothing when the value is the component's own default. */
+export function optionAttr(name: string, value: unknown, fallback: string): string {
+  return text(value) === fallback ? '' : stringAttr(name, value);
 }
 
 /** ` name={[...]}` with the list as one line of JSON (which is valid JavaScript, so valid in MDX). */
@@ -83,11 +88,30 @@ const captionField = field({ name: 'caption', label: 'Caption', widget: 'string'
 const figure: BlockEditorComponentOptions = {
   id: 'Figure',
   label: 'Figure',
-  fields: [field({ name: 'src', label: 'Image', widget: 'image', choose_url: false }), altField, captionField],
+  fields: [
+    field({ name: 'src', label: 'Image', widget: 'image', choose_url: false }),
+    altField,
+    captionField,
+    field({
+      name: 'align',
+      label: 'Placement',
+      widget: 'select',
+      options: ['center', 'left', 'right', 'full'],
+      default: 'center',
+      hint: 'Left and right float beside the text on wide screens; full fills the column edge to edge.',
+    }),
+    field({ name: 'size', label: 'Size', widget: 'select', options: ['lg', 'md', 'sm'], default: 'lg' }),
+  ],
   pattern: selfClosing('Figure'),
   fromBlock: (m) => parseAttrs(m[1]),
   toBlock: (d: BlockData) =>
-    tag('Figure', [stringAttr('src', d.src), stringAttr('alt', d.alt), stringAttr('caption', d.caption)]),
+    tag('Figure', [
+      stringAttr('src', d.src),
+      stringAttr('alt', d.alt),
+      stringAttr('caption', d.caption),
+      optionAttr('align', d.align, 'center'),
+      optionAttr('size', d.size, 'lg'),
+    ]),
   toPreview: (d: BlockData) => preview('Figure', d.alt),
 };
 
@@ -99,8 +123,8 @@ const callout: BlockEditorComponentOptions = {
       name: 'type',
       label: 'Kind',
       widget: 'select',
-      options: ['note', 'tip', 'warning'],
-      default: 'note',
+      options: ['info', 'tip', 'warn'],
+      default: 'info',
     }),
     field({ name: 'title', label: 'Title', widget: 'string', required: false }),
     field({ name: 'body', label: 'Text', widget: 'text', hint: 'Markdown is fine.' }),
@@ -108,8 +132,8 @@ const callout: BlockEditorComponentOptions = {
   pattern: withChildren('Callout'),
   fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
   toBlock: (d: BlockData) =>
-    wrap('Callout', [stringAttr('type', d.type || 'note'), stringAttr('title', d.title)], d.body),
-  toPreview: (d: BlockData) => preview(`Callout (${text(d.type) || 'note'})`, d.body),
+    wrap('Callout', [stringAttr('type', d.type || 'info'), stringAttr('title', d.title)], d.body),
+  toPreview: (d: BlockData) => preview(`Callout (${text(d.type) || 'info'})`, d.body),
 };
 
 const quote: BlockEditorComponentOptions = {
@@ -117,12 +141,12 @@ const quote: BlockEditorComponentOptions = {
   label: 'Quote',
   fields: [
     field({ name: 'body', label: 'Quote', widget: 'text' }),
-    field({ name: 'author', label: 'Who said it', widget: 'string', required: false }),
-    field({ name: 'source', label: 'Source URL', widget: 'string', required: false }),
+    field({ name: 'cite', label: 'Who said it', widget: 'string', required: false }),
+    field({ name: 'href', label: 'Source URL', widget: 'string', required: false }),
   ],
   pattern: withChildren('Quote'),
   fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
-  toBlock: (d: BlockData) => wrap('Quote', [stringAttr('author', d.author), stringAttr('source', d.source)], d.body),
+  toBlock: (d: BlockData) => wrap('Quote', [stringAttr('cite', d.cite), stringAttr('href', d.href)], d.body),
   toPreview: (d: BlockData) => preview('Quote', d.body),
 };
 
@@ -134,6 +158,9 @@ const imageGallery: BlockEditorComponentOptions = {
       name: 'images',
       label: 'Images',
       widget: 'list',
+      min: 2,
+      max: 3,
+      hint: 'Two or three images, side by side.',
       fields: [field({ name: 'src', label: 'Image', widget: 'image', choose_url: false }), altField, captionField],
     }),
   ],
@@ -159,24 +186,29 @@ const twoColumn: BlockEditorComponentOptions = {
   fields: [
     field({ name: 'left', label: 'Left column', widget: 'text', hint: 'Markdown is fine.' }),
     field({ name: 'right', label: 'Right column', widget: 'text', hint: 'Markdown is fine.' }),
+    field({ name: 'ratio', label: 'Widths', widget: 'select', options: ['1:1', '2:1', '1:2'], default: '1:1' }),
   ],
+  // The slot <div>s are unindented with blank lines round the Markdown, as docs/ARTICLE_COMPONENTS.md asks.
   pattern: new RegExp(
-    String.raw`^<TwoColumn>\s*<Fragment slot="left">\s*([\s\S]*?)\s*</Fragment>\s*<Fragment slot="right">\s*([\s\S]*?)\s*</Fragment>\s*</TwoColumn>`,
+    String.raw`^<TwoColumn${ATTRS}>\s*<div slot="left">\s*([\s\S]*?)\s*</div>\s*<div slot="right">\s*([\s\S]*?)\s*</div>\s*</TwoColumn>`,
   ),
-  fromBlock: (m) => ({ left: m[1].trim(), right: m[2].trim() }),
+  fromBlock: (m) => ({ ...parseAttrs(m[1]), left: m[2].trim(), right: m[3].trim() }),
   toBlock: (d: BlockData) =>
     [
-      '<TwoColumn>',
-      '<Fragment slot="left">',
+      `<TwoColumn${optionAttr('ratio', d.ratio, '1:1')}>`,
+      '',
+      '<div slot="left">',
       '',
       text(d.left).trim(),
       '',
-      '</Fragment>',
-      '<Fragment slot="right">',
+      '</div>',
+      '',
+      '<div slot="right">',
       '',
       text(d.right).trim(),
       '',
-      '</Fragment>',
+      '</div>',
+      '',
       '</TwoColumn>',
     ].join('\n'),
   toPreview: (d: BlockData) => preview('Two columns', d.left),
@@ -187,7 +219,7 @@ const videoEmbed: BlockEditorComponentOptions = {
   label: 'Video',
   fields: [
     field({
-      name: 'youtubeId',
+      name: 'id',
       label: 'YouTube link or id',
       widget: 'string',
       hint: 'Paste the video link; only the id is kept.',
@@ -199,7 +231,7 @@ const videoEmbed: BlockEditorComponentOptions = {
   fromBlock: (m) => parseAttrs(m[1]),
   toBlock: (d: BlockData) =>
     tag('VideoEmbed', [
-      stringAttr('youtubeId', youtubeIdFrom(d.youtubeId)),
+      stringAttr('id', youtubeIdFrom(d.id)),
       stringAttr('title', d.title),
       stringAttr('caption', d.caption),
     ]),
@@ -209,10 +241,10 @@ const videoEmbed: BlockEditorComponentOptions = {
 const divider: BlockEditorComponentOptions = {
   id: 'Divider',
   label: 'Divider',
-  fields: [],
+  fields: [field({ name: 'variant', label: 'Style', widget: 'select', options: ['rule', 'dots'], default: 'rule' })],
   pattern: selfClosing('Divider'),
-  fromBlock: () => ({}),
-  toBlock: () => tag('Divider', []),
+  fromBlock: (m) => parseAttrs(m[1]),
+  toBlock: (d: BlockData) => tag('Divider', [optionAttr('variant', d.variant, 'rule')]),
   toPreview: () => preview('Divider'),
 };
 

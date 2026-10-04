@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
-import { MEDIA_FOLDER, PUBLIC_FOLDER, blogCollection, buildConfig } from './config';
+import {
+  FEATURED_MEDIA_FOLDER,
+  FEATURED_PUBLIC_FOLDER,
+  MEDIA_FOLDER,
+  PUBLIC_FOLDER,
+  blogCollection,
+  buildConfig,
+} from './config';
 
 const env = { repo: 'owner/name', branch: 'main' };
 const field = (name: string) => {
@@ -22,12 +29,20 @@ describe('admin config', () => {
     expect(blogCollection.extension).toBe('mdx');
   });
 
-  it('commits uploads to the image folder and writes paths relative to a post (what Astro image() needs)', () => {
+  it('sends body and block images to public/media as /media/x.jpg (what Figure accepts)', () => {
     const config = buildConfig({ ...env, local: true });
     expect(config.media_folder).toBe(MEDIA_FOLDER);
     expect(config.public_folder).toBe(PUBLIC_FOLDER);
-    expect(MEDIA_FOLDER).toBe('src/assets/blog');
-    expect(PUBLIC_FOLDER).toBe('../../assets/blog');
+    expect(MEDIA_FOLDER).toBe('public/media');
+    expect(PUBLIC_FOLDER).toBe('/media');
+  });
+
+  it('sends the featured image to src/assets/blog, written relative to a post (what Astro image() needs)', () => {
+    const featured = field('featuredImage');
+    expect(featured.media_folder).toBe(FEATURED_MEDIA_FOLDER);
+    expect(featured.public_folder).toBe(FEATURED_PUBLIC_FOLDER);
+    expect(FEATURED_MEDIA_FOLDER).toBe('/src/assets/blog');
+    expect(FEATURED_PUBLIC_FOLDER).toBe('../../assets/blog');
   });
 
   it('offers every article component in the body, no H1, and new posts start as drafts', () => {

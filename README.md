@@ -4,7 +4,7 @@ all things r7 orbit
 
 ## Admin (writing articles at `/admin`)
 
-A git-based editor for blog posts, built on [Decap CMS](https://decapcms.org). There is no server and no database: saving writes an `.mdx` file into `src/content/blog/` and uploads images into `src/assets/blog/`, and the site rebuilds from git like any other change. The admin page is `src/pages/admin/index.astro` (bundled by Astro, nothing loaded from a CDN); the form is in `src/admin/config.ts`, the article blocks in `src/admin/blocks.ts`.
+A git-based editor for blog posts, built on [Decap CMS](https://decapcms.org). There is no server and no database: saving writes an `.mdx` file into `src/content/blog/` and uploads images (`src/assets/blog/` for the featured image, `public/media/` for images in the body), and the site rebuilds from git like any other change. The admin page is `src/pages/admin/index.astro` (bundled by Astro, nothing loaded from a CDN); the form is in `src/admin/config.ts`, the article blocks in `src/admin/blocks.ts`.
 
 **Editing locally** (no sign-in; files change on disk, you commit them yourself):
 
@@ -15,19 +15,19 @@ npm run cms     # terminal 2: the local file proxy, bound to 127.0.0.1:8081
 
 Open <http://localhost:4321/admin/>, click Login, then "Blog post". New posts start as **drafts**; turn Draft off to publish. A draft is excluded from the site, the archives, search, feeds and sitemap.
 
-**The editor.** Fields: title, subtitle, date, summary, tags (up to 6, lowercase-hyphenated), featured image + alt text, featured, draft, and a rich body with H2/H3, lists, quotes, code, links and images (the body's image button uploads to `src/assets/blog/`). The **+** menu in the body inserts the article components. Use the Rich Text / Markdown switch to see or edit the raw MDX.
+**The editor.** Fields: title, subtitle, date, summary, tags (up to 6, lowercase-hyphenated), featured image + alt text, featured, draft, and a rich body with H2/H3, lists, quotes, code, links and images (the body's image button uploads to `public/media/`). The **+** menu in the body inserts the article components. Use the Rich Text / Markdown switch to see or edit the raw MDX.
 
-| Block | Written as | Props |
+| Block | Written as | Props (see `docs/ARTICLE_COMPONENTS.md`) |
 |---|---|---|
-| Figure | `<Figure />` | `src`, `alt`, `caption?` |
-| Callout | `<Callout>…</Callout>` | `type` (`note` `tip` `warning`), `title?`, children |
-| Quote | `<Quote>…</Quote>` | `author?`, `source?`, children |
-| ImageGallery | `<ImageGallery />` | `images`: `[{ src, alt, caption? }]` |
-| TwoColumn | `<TwoColumn>` with `<Fragment slot="left">` and `slot="right"` | two named slots |
-| VideoEmbed | `<VideoEmbed />` | `youtubeId`, `title`, `caption?` |
-| Divider | `<Divider />` | none |
+| Figure | `<Figure />` | `src`, `alt`, `caption?`, `align?` (center, left, right, full), `size?` (lg, md, sm) |
+| Callout | `<Callout>…</Callout>` | `type` (`info` `tip` `warn`), `title?`, children |
+| Quote | `<Quote>…</Quote>` | `cite?`, `href?`, children |
+| ImageGallery | `<ImageGallery />` | `images`: 2-3 of `{ src, alt, caption? }` |
+| TwoColumn | `<TwoColumn>` with `<div slot="left">` and `<div slot="right">` | `ratio?` (1:1, 2:1, 1:2) |
+| VideoEmbed | `<VideoEmbed />` | `id` (YouTube), `title`, `caption?` |
+| Divider | `<Divider />` | `variant?` (rule, dots) |
 
-Posts never `import` these: `src/lib/article-components.ts` finds them in `src/components/article/` by file name and passes them to the post (page and RSS feed). Image paths in props are relative to the post file (`../../assets/blog/x.jpg`), the same form as `featuredImage` and Markdown images. If a component's props change, change `src/admin/blocks.ts` and its test (`blocks.vitest.ts`) to match.
+Posts never `import` these: `ArticlePage` passes `articleComponents` (`src/components/article/mdx.ts`) to the post, and the RSS feed does the same. Image paths in blocks are `/media/x.jpg`: the components only accept local files from `public/`. The featured image is different: it goes to `src/assets/blog/` and is written relative to the post (`../../assets/blog/x.jpg`), because Astro optimises it. If a component's props change, change `src/admin/blocks.ts` and its test (`blocks.vitest.ts`) to match.
 
 **Signing in when deployed.** The live admin edits the GitHub repository directly, so it needs a GitHub sign-in, and GitHub's OAuth flow needs one small server-side step (exchanging a code for a token with the app's secret) that a static site cannot do. Nothing here is live until you set that up once:
 

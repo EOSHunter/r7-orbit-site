@@ -90,22 +90,8 @@ const { canonical, imageUrl } = seo;
     ))}
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- Saved choice, else the system preference, applied before first paint so nothing flashes. Dark is the default. -->
     <script is:inline>
-      (function () {
-        const root = document.documentElement;
-        root.classList.add('js');
-        let saved = null;
-        try {
-          saved = localStorage.getItem('r7-theme');
-        } catch {
-          /* blocked storage: fall back to the system preference */
-        }
-        const light =
-          saved === 'light' ||
-          (saved !== 'dark' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
-        if (light) root.setAttribute('data-theme', 'light');
-      })();
+      document.documentElement.classList.add('js');
     </script>
     <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link

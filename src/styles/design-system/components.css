@@ -203,8 +203,6 @@ a.card:hover .play > span { transform: scale(1.08); border-color: var(--brass); 
 .wordmark { display: inline-flex; align-items: center; gap: var(--s-3); font: var(--fw-medium) 11px var(--font-ui); letter-spacing: var(--tracking-wordmark); text-transform: uppercase; color: var(--text-2); }
 .wordmark img, .wordmark svg { height: 18px; width: auto; }
 .wordmark:hover { color: var(--text); }
-/* On Ivory the brass mark is too faint to read; a real site swaps in r7-mark-ink.svg. This keeps a quick page right. */
-:root[data-theme='light'] .wordmark img[src$='r7-mark.svg'], :root[data-theme='light'] .wordmark img[src$='r7-mark-ivory.svg'] { filter: brightness(0) opacity(0.88); }
 .site-header {
   position: sticky; top: 0; z-index: var(--z-sticky); background: var(--header-veil); backdrop-filter: blur(12px); border-bottom: var(--bw) solid var(--line);
 }

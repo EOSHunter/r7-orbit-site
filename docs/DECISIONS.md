@@ -25,7 +25,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 
 | Question | Recommendation | Answer |
 |---|---|---|
-| Ship the light "Ivory" theme, or dark only? | **Dark default, Ivory available** via a toggle, respecting the visitor's system preference on first visit. Long articles are read in daylight. If the author wants the app's strict dark-only identity, remove the toggle and the `[data-theme='light']` block | |
+| Ship the light "Ivory" theme, or dark only? | **Dark only.** The Ivory theme, its toggle, the `[data-theme='light']` tokens and the saved `r7-theme` preference were removed. | |
 | Framework | Astro | |
 | Tailwind or plain CSS? | Plain CSS from the design system | |
 | Newsletter provider | Buttondown | |
@@ -75,6 +75,6 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 - Admin for articles (2026-10-04): **Decap CMS** at `/admin/`, not Keystatic. Both are git-based and write MDX plus images without a database. Keystatic has the better MDX component editor, but its Astro integration (`@keystatic/astro`) works through server routes (`/api/keystatic/*`, needs an adapter and on-demand rendering) and its router is fixed to `/keystatic`; that breaks "static output, no server runtime" and the `/admin` URL. Decap is one static page at `/admin/`, and its editor components (a form per block, MDX written by `toBlock`, read back by `pattern`) cover the seven article components. Cost: Decap's rich text editor is Markdown-based, so blocks are shortcode-style (checked by `src/admin/blocks.vitest.ts` and by round-tripping in the real editor), and the nested text inside Callout, Quote and TwoColumn is a plain Markdown text box.
   - Dev dependencies: `decap-cms-app` (about 5.6 MB of JS, 1.5 MB gzipped, loaded only on `/admin/`, never on a public page), `decap-server` (local file proxy, `npm run cms`), `react` and `react-dom` (Decap's peer dependencies). `@astrojs/mdx` (build time) is added so posts can use the article components; it renders no extra JS on public pages.
   - Auth: GitHub, through an OAuth proxy the author deploys once (README "Admin"); no proxy URL means `/admin/` shows "sign-in is not set up". Deployed saves go through pull requests (editorial workflow) so CI validates a post before it is live. New posts default to `draft: true`.
-  - Images: uploads go to `src/assets/blog/` and are written as `../../assets/blog/x.jpg`, the relative form Astro's `image()` needs for `featuredImage`.
+  - Images: the featured image uploads to `src/assets/blog/` and is written as `../../assets/blog/x.jpg`, the relative form Astro's `image()` needs. Images in the body and in Figure/ImageGallery upload to `public/media/` and are written as `/media/x.jpg`, because the article components only accept local public files (`src/lib/article.ts`).
   - The blog schema gained `subtitle` (optional, 140 characters). It is stored but not yet shown on the post page.
 

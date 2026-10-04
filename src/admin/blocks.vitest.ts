@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import { blocks, jsonAttr, parseAttrs, stringAttr, youtubeIdFrom, type BlockData } from './blocks';
@@ -17,8 +18,14 @@ function roundTrip(id: string, data: BlockData) {
 }
 
 describe('blocks', () => {
-  it('offers exactly the article components, once each', () => {
+  it('offers exactly the listed article components, once each', () => {
     expect(blocks.map((b) => b.id).sort()).toEqual([...ARTICLE_COMPONENT_NAMES].sort());
+  });
+
+  it('only writes tags that the MDX components map knows, so a post never fails on a missing component', () => {
+    // Read as text: importing the map would load .astro files, which Vitest cannot.
+    const map = readFileSync('src/components/article/mdx.ts', 'utf8').split('export const articleComponents')[1];
+    for (const b of blocks) expect(map, b.id).toMatch(new RegExp(String.raw`\b${b.id}\b`));
   });
 
   it('never uses the multiline flag, and anchors every pattern at the start (Decap requires both)', () => {
@@ -29,21 +36,21 @@ describe('blocks', () => {
   });
 
   const cases: [string, BlockData][] = [
-    ['Figure', { src: '../../assets/blog/a.jpg', alt: 'A chart', caption: 'Figure 1' }],
-    ['Callout', { type: 'warning', title: 'Careful', body: 'Two lines.\n\nWith **markdown** and `code`.' }],
-    ['Quote', { body: 'A quote.', author: 'Someone', source: 'https://example.com/q' }],
+    ['Figure', { src: '/media/a.jpg', alt: 'A chart', caption: 'Figure 1', align: 'left', size: 'md' }],
+    ['Callout', { type: 'warn', title: 'Careful', body: 'Two lines.\n\nWith **markdown** and `code`.' }],
+    ['Quote', { body: 'A quote.', cite: 'Someone', href: 'https://example.com/q' }],
     [
       'ImageGallery',
       {
         images: [
-          { src: '../../assets/blog/a.jpg', alt: 'A' },
-          { src: '../../assets/blog/b.jpg', alt: 'B', caption: 'Bee' },
+          { src: '/media/a.jpg', alt: 'A' },
+          { src: '/media/b.jpg', alt: 'B', caption: 'Bee' },
         ],
       },
     ],
-    ['TwoColumn', { left: 'Left **text**', right: 'Right\n\ntext' }],
-    ['VideoEmbed', { youtubeId: 'dQw4w9WgXcQ', title: 'A video', caption: 'Watch this' }],
-    ['Divider', {}],
+    ['TwoColumn', { left: 'Left **text**', right: 'Right\n\ntext', ratio: '2:1' }],
+    ['VideoEmbed', { id: 'dQw4w9WgXcQ', title: 'A video', caption: 'Watch this' }],
+    ['Divider', { variant: 'dots' }],
   ];
 
   it.each(cases)('%s survives write then read', (id, data) => {
@@ -55,18 +62,27 @@ describe('blocks', () => {
 
   it('keeps awkward characters in attributes intact', () => {
     const alt = 'He said "hi" & <b>left</b> {now} \\ done';
-    const { read } = roundTrip('Figure', { src: '../../assets/blog/a.jpg', alt, caption: "It's fine" });
-    expect(read).toEqual({ src: '../../assets/blog/a.jpg', alt, caption: "It's fine" });
+    const { read } = roundTrip('Figure', { src: '/media/a.jpg', alt, caption: "It's fine" });
+    expect(read).toEqual({ src: '/media/a.jpg', alt, caption: "It's fine" });
   });
 
-  it('omits empty optional attributes and defaults the callout kind', () => {
-    expect(byId('Figure').toBlock({ src: 'a.jpg', alt: 'x', caption: '' })).toBe('<Figure src="a.jpg" alt="x" />');
-    expect(byId('Callout').toBlock({ body: 'Hi' })).toBe('<Callout type="note">\n\nHi\n\n</Callout>');
-    expect(byId('Divider').toBlock({})).toBe('<Divider />');
+  it('omits empty optional attributes and values equal to the component default', () => {
+    expect(byId('Figure').toBlock({ src: 'a.jpg', alt: 'x', caption: '', align: 'center', size: 'lg' })).toBe(
+      '<Figure src="a.jpg" alt="x" />',
+    );
+    expect(byId('Callout').toBlock({ body: 'Hi' })).toBe('<Callout type="info">\n\nHi\n\n</Callout>');
+    expect(byId('Divider').toBlock({ variant: 'rule' })).toBe('<Divider />');
+    expect(byId('TwoColumn').toBlock({ left: 'L', right: 'R', ratio: '1:1' })).toMatch(/^<TwoColumn>\n/);
+  });
+
+  it('writes the TwoColumn slots as docs/ARTICLE_COMPONENTS.md asks: unindented, blank lines round the Markdown', () => {
+    expect(byId('TwoColumn').toBlock({ left: 'L', right: 'R' })).toBe(
+      '<TwoColumn>\n\n<div slot="left">\n\nL\n\n</div>\n\n<div slot="right">\n\nR\n\n</div>\n\n</TwoColumn>',
+    );
   });
 
   it('reads a block that was just inserted with empty fields (Decap does this on insert)', () => {
-    for (const id of ['Callout', 'Quote', 'Figure', 'VideoEmbed', 'ImageGallery', 'TwoColumn']) {
+    for (const id of ['Callout', 'Quote', 'Figure', 'VideoEmbed', 'ImageGallery', 'TwoColumn', 'Divider']) {
       const { match } = roundTrip(id, {});
       expect(match, id).not.toBeNull();
     }
@@ -74,7 +90,7 @@ describe('blocks', () => {
 
   it('does not run on to a second block of the same kind', () => {
     const block = byId('Callout');
-    const one = block.toBlock({ type: 'note', body: 'One' });
+    const one = block.toBlock({ type: 'info', body: 'One' });
     const two = block.toBlock({ type: 'tip', body: 'Two' });
     expect(block.pattern.exec(`${one}\n\n${two}`)?.[0]).toBe(one);
   });

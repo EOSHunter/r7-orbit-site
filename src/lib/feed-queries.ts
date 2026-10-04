@@ -5,7 +5,7 @@ import { loadRenderers } from 'astro:container';
 import { render } from 'astro:content';
 import sanitizeHtml from 'sanitize-html';
 import { site } from '../data/site';
-import { articleComponents } from './article-components';
+import { articleComponents } from '../components/article/mdx';
 import { getAllPosts, getPosts, type SitePost } from './content-queries';
 import type { CollectionName } from './content';
 import { postUrl } from './content';

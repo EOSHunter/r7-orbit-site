@@ -90,7 +90,7 @@ A page is roughly **78% obsidian, 12% surfaces, 8% ivory text, 2% brass.** Brass
 | `--surface-3` | `#1b1b1f` | Selected tab or segment, the highest raise |
 | `--void` | `#020203` | *(web)* Inside the logo; wells that must read as holes |
 | `--scrim` / `--scrim-strong` | `rgb(9 9 10 / 0.6)` / `0.78` | *(web)* Dark veil over media: the play ring, duration badges. Dark in both themes |
-| `--header-veil` | `rgb(9 9 10 / 0.82)` (Ivory: `rgb(244 239 227 / 0.85)`) | *(web)* The sticky header's translucent background |
+| `--header-veil` | `rgb(9 9 10 / 0.82)` | *(web)* The sticky header's translucent background |
 | `--on-scrim` | `#ece6d8` | *(web)* Text and icons on a scrim; ivory in both themes |
 
 ### Lines: warm ivory at low opacity
@@ -160,23 +160,6 @@ Working and attention are deliberately not colours of their own: they are brass 
 
 The page computes these live from the current theme.
 
-### Ivory: the light theme *(proposed)*
-
-The app is dark only. Because a blog gets read in daylight, `tokens.css` also defines a light theme, switched with `<html data-theme="light">`. It keeps the same names, so components need no changes. Brass darkens to an ink-like `#7a5c1e` (5.4:1 on paper); solid buttons become dark brass with ivory text.
-
-| Token | Ivory value | Token | Ivory value |
-|---|---|---|---|
-| `--bg` | `#f4efe3` | `--text` | `#1a1710` |
-| `--surface-1` | `#faf7ef` | `--text-2` | `#55504a` |
-| `--surface-2` | `#fffdf8` | `--text-3` | `#6f6a60` |
-| `--surface-3` | `#ece6d6` | `--brass` | `#7a5c1e` |
-| `--line` | `rgb(26 23 16 / 0.10)` | `--brass-bright` | `#5f4515` |
-| `--line-strong` | `rgb(26 23 16 / 0.20)` | `--on-brass` | `#fbf6e8` |
-| `--line-brass` | `rgb(122 92 30 / 0.50)` | `--st-done` / `--st-failed` | `#4f6b4a` / `#9a4a40` |
-
-On Ivory, swap the logo for `r7-mark-ink.svg` (or the plate icon). Decide whether the site ships Ivory at all; see [section 12](#12-what-is-from-the-app-what-is-new-what-is-open).
-
----
 
 ## 4. Typography
 
@@ -416,9 +399,9 @@ Edit `tokens.css` first: it is the source of truth. Then update `tokens.json` an
 
 ### Frameworks
 
-`tokens.json` has every token with its type, grouped (`color`, `fontSize`, `space`, `radius`, `shadow`, `motion`, `layout`, `breakpoint`, ...) plus the Ivory overrides under `themes.light`. It can feed a Figma variables import or a mobile app; values are CSS values.
+`tokens.json` has every token with its type, grouped (`color`, `fontSize`, `space`, `radius`, `shadow`, `motion`, `layout`, `breakpoint`, ...). It can feed a Figma variables import or a mobile app; values are CSS values.
 
-**Tailwind v4:** `../tailwind/theme.css` maps the tokens onto Tailwind's names while pointing at the CSS variables, so the Ivory theme still switches. In your CSS: `@import "tailwindcss"; @import "./design-system/tokens.css"; @import "./tailwind/theme.css";`. Utilities then read `bg-bg`, `bg-surface-1`, `text-text-2`, `text-brass`, `border-line`, `font-display`, `rounded-lg`, `text-3xl` (the system's 44px), `shadow-orbit-float`, `ease-orbit`, and `md:` means 900px. The default Tailwind palette and breakpoints are switched off on purpose. (Checked against Tailwind 4.3.)
+**Tailwind v4:** `../tailwind/theme.css` maps the tokens onto Tailwind's names while pointing at the CSS variables. In your CSS: `@import "tailwindcss"; @import "./design-system/tokens.css"; @import "./tailwind/theme.css";`. Utilities then read `bg-bg`, `bg-surface-1`, `text-text-2`, `text-brass`, `border-line`, `font-display`, `rounded-lg`, `text-3xl` (the system's 44px), `shadow-orbit-float`, `ease-orbit`, and `md:` means 900px. The default Tailwind palette and breakpoints are switched off on purpose. (Checked against Tailwind 4.3.)
 
 ---
 
@@ -426,13 +409,12 @@ Edit `tokens.css` first: it is the source of truth. Then update `tokens.json` an
 
 **Taken as-is from the app** (`src/renderer/tokens.css`): the three surfaces, the three lines, `--text`, `--text-2`, brass / bright / dim / on-brass, the status colours, the three font families and their pairing, `--r-sm/md/lg`, `--s-1` to `--s-7`, the easing and three durations, `--shadow-float`, and the component vocabulary (`.btn`, `.chip`, `.card`, `.seg`, `.eyebrow`, the status mark, the dot grid, the orbit).
 
-**Added for the web** (each marked *(web)* above): `--void`, the extra brass tones taken from the logo, a web-safe `--text-3`, larger spacing and radius steps, a type scale for reading (17px body, big display sizes), page-width and breakpoint tokens, z-index, the focus ring, `.prose`, post cards, form fields, the site header and footer, and the Ivory light theme.
+**Added for the web** (each marked *(web)* above): `--void`, the extra brass tones taken from the logo, a web-safe `--text-3`, larger spacing and radius steps, a type scale for reading (17px body, big display sizes), page-width and breakpoint tokens, z-index, the focus ring, `.prose`, post cards, form fields, the site header and footer.
 
 **One deliberate change from the app:** `--text-3` is lifted from `#6b675f` (3.5:1) to `#827e75` (4.9:1) so captions and meta pass AA. The app's value stays available as `--text-3-app`.
 
 **Open questions to settle next**
 
-1. **Light theme:** ship Ivory, or stay dark only like the app? (Everything works either way; this is a brand call.)
 2. **Content-type colour:** the system keeps one accent and tells kinds apart by icon and label. If you want a second hue for kinds, it should be a muted one added deliberately, not drift in.
 3. **Imagery:** what a post's media looks like (screenshots, generated art, video stills), and a treatment that fits the palette (for example a warm duotone).
 4. **Voice of the site:** headline tone and microcopy. The app's is plain and calm ("Needs you", "Finished").

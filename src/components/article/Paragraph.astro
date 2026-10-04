@@ -1,0 +1,12 @@
+---
+// One paragraph. `lead` sets it as the intro: larger, in the quieter text colour.
+import '../../styles/article.css';
+
+interface Props {
+  lead?: boolean;
+}
+
+const { lead = false } = Astro.props;
+---
+
+<p class:list={['art-p', { 'art-lead': lead }]}><slot /></p>

@@ -1,0 +1,18 @@
+---
+// The reading column: .prose type (17px/1.7, 68ch) plus the article component styles. ArticleTemplate uses it for the body.
+// Put it round hand-written HTML, or round a run of components when the page isn't already inside a .prose.
+import '../../styles/markdown.css';
+import '../../styles/article.css';
+
+interface Props {
+  /** The element to render. `article` for the main body, `div` (default) for a section of it. */
+  as?: 'div' | 'article' | 'section';
+  /** Larger intro text for the first paragraph. */
+  lead?: boolean;
+  id?: string;
+}
+
+const { as: Tag = 'div', lead = false, id } = Astro.props;
+---
+
+<Tag class:list={['prose', 'art-prose', { 'art-lead-first': lead }]} id={id}><slot /></Tag>
