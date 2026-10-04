@@ -13,7 +13,9 @@
     "check": "astro check",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:e2e": "playwright test",
     "test:lighthouse": "node tests/lighthouse.mjs"
   },
   "dependencies": {
@@ -25,11 +27,14 @@
     "@eslint/js": "^10.0.1",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.5",
+    "@types/sanitize-html": "^2.16.2",
     "eslint": "^10.12.0",
     "eslint-plugin-astro": "^1.7.0",
     "globals": "^17.13.0",
     "prettier": "^3.9.9",
     "prettier-plugin-astro": "^1.1.0",
+    "sanitize-html": "^2.18.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0"
   }

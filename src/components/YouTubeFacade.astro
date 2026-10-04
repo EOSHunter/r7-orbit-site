@@ -1,0 +1,69 @@
+---
+// Click-to-load YouTube player. Until the visitor presses play (or a chapter) nothing is requested from YouTube, not even
+// the thumbnail: the poster is a local image or the placeholder plate. Then a youtube-nocookie.com iframe is added and the
+// chapters seek it (src/scripts/yt-facade.js). Without JavaScript the chapters are links to the video on YouTube.
+import Icon from './Icon.astro';
+import MediaPlaceholder from './MediaPlaceholder.astro';
+
+interface Chapter {
+  /** `m:ss` or `h:mm:ss`. */
+  t: string;
+  title: string;
+}
+
+interface Props {
+  /** The 11-character YouTube id. */
+  id: string;
+  title: string;
+  /** A local image path. Omit it for the placeholder plate. */
+  poster?: string;
+  /** Shown as the badge on the player, e.g. `12:48`. */
+  duration?: string;
+  chapters?: Chapter[];
+}
+
+const { id, title, poster, duration, chapters = [] } = Astro.props;
+
+if (!/^[\w-]{11}$/.test(id)) throw new Error(`YouTubeFacade: "${id}" is not an 11-character YouTube id.`);
+
+function seconds(t: string): number {
+  return t.split(':').reduce((total, part) => total * 60 + Number(part), 0);
+}
+
+function iso(total: number): string {
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  return `PT${h ? `${h}H` : ''}${m ? `${m}M` : ''}${total % 60}S`;
+}
+---
+
+<div class="yt" data-yt data-yt-id={id} data-yt-title={title}>
+  <div class="player">
+    {poster ? <img class="yt-poster" src={poster} alt="" data-yt-facade /> : <MediaPlaceholder />}
+    <button class="play" type="button" data-yt-play data-yt-facade aria-label={`Play video: ${title}`}>
+      <span><Icon name="play" /></span>
+    </button>
+    {duration && <span class="duration" data-yt-facade>{duration}</span>}
+  </div>
+  <p class="yt-nojs">
+    <a href={`https://www.youtube.com/watch?v=${id}`} rel="noopener">Watch on YouTube<Icon name="external" small /></a>
+  </p>
+  {
+    chapters.length > 0 && (
+      <ol class="chapters" aria-label="Chapters">
+        {chapters.map((c) => (
+          <li>
+            <a href={`https://www.youtube.com/watch?v=${id}&t=${seconds(c.t)}s`} rel="noopener" data-yt-start={seconds(c.t)}>
+              <time datetime={iso(seconds(c.t))}>{c.t}</time>
+              <span>{c.title}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+</div>
+
+<script>
+  import '../scripts/yt-facade.js';
+</script>
