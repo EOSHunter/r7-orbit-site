@@ -1,0 +1,80 @@
+---
+// One archive page: /news/, /blog/, /vlogs/, /projects/, /repos/ and /latest/, and their /page/N/ routes.
+import ArchiveList from './ArchiveList.astro';
+import Icon from './Icon.astro';
+import SubscribeBand from './SubscribeBand.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import type { CollectionName } from '../lib/content';
+import { tagCounts } from '../lib/content';
+import type { SitePost } from '../lib/content-queries';
+import type { Kind } from '../lib/cards';
+import { PAGE_SIZE, kindInfo, pageUrl } from '../lib/listing';
+import { toCards } from '../lib/post-cards';
+import { site } from '../data/site';
+import { titleParts } from '../lib/text';
+
+interface Props {
+  /** One kind, or undefined for the mixed /latest/ archive. */
+  collection?: CollectionName;
+  /** Every published post in this listing, newest first. */
+  posts: SitePost[];
+  page: number;
+  pages: number;
+}
+
+const { collection, posts, page, pages } = Astro.props;
+const info = collection ? kindInfo(collection) : undefined;
+
+const base = collection ? `/${collection}/` : '/latest/';
+const label = info?.label ?? 'Latest';
+const heading = info?.title ?? 'Everything, *newest first*';
+const lead = info?.lead ?? 'News, writing, videos, projects and repos in one list. Filter by kind or tag, or search.';
+const description = info?.description ?? site.description;
+
+const cards = await toCards(posts, { filterable: true });
+const kinds: Kind[] = collection
+  ? []
+  : (['news', 'blog', 'vlog', 'project', 'repo'] as const).filter((k) => cards.some((c) => c.kind === k));
+const tags = tagCounts(posts).map((t) => t.tag);
+const first = (page - 1) * PAGE_SIZE;
+---
+
+<BaseLayout
+  title={page > 1 ? `${label}, page ${page}` : label}
+  description={page > 1 ? `Page ${page} of ${pages}. ${description}` : description}
+  current={info?.label}
+  noindex={posts.length === 0}
+>
+  {page > 1 && <link slot="head" rel="prev" href={pageUrl(base, page - 1)} />}
+  {page < pages && <link slot="head" rel="next" href={pageUrl(base, page + 1)} />}
+
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">
+        {info && <Icon name={info.icon} />}
+        {label}
+      </p>
+      <h1>
+        {titleParts(heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}
+      </h1>
+      <p class="t-lead">{lead}</p>
+    </header>
+
+    <ArchiveList
+      cards={cards}
+      start={first}
+      size={PAGE_SIZE}
+      {page}
+      {pages}
+      {base}
+      {tags}
+      {kinds}
+      noun={info?.noun ?? 'posts'}
+      nounOne={info?.nounOne ?? 'post'}
+      empty={info?.empty ?? 'Nothing is posted yet.'}
+      what={info ? info.noun : 'posts'}
+    />
+  </div>
+  <div class="archive-end"></div>
+  <SubscribeBand />
+</BaseLayout>
