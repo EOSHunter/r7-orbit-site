@@ -56,7 +56,7 @@ Markdown runs on the `unified` processor (`@astrojs/markdown-remark`, build-time
 ```
 npm run dev       # local dev server (http://localhost:4321)
 npm run build     # production build to dist/ (must pass before any merge)
-npm run preview   # serve dist/ to look at the built site
+npm run preview   # serve dist/ to look at the built site (search only works here: Pagefind indexes dist/ during `npm run build`)
 npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
 npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)

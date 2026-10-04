@@ -25,7 +25,8 @@ const { current } = Astro.props;
       ))}
     </nav>
     <div class="header-tools">
-      <a class="btn quiet icon" href="/search/" aria-label="Search">
+      <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
+      <a class="btn quiet icon" href="/search/" aria-label="Search" data-search-open>
         <Icon name="search" />
       </a>
       <button

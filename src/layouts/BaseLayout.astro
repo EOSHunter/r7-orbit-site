@@ -2,6 +2,7 @@
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import IconSprite from '../components/IconSprite.astro';
+import Search from '../components/Search.astro';
 import { site } from '../data/site';
 import { resolveSeo } from '../lib/seo';
 import { isoDate, plainTitle } from '../lib/text';
@@ -133,6 +134,8 @@ const { canonical, imageUrl } = seo;
       <slot />
     </main>
     <Footer />
+    <!-- search: the dialog opened by "/" and the header button -->
+    <Search />
     <script>
       import '../scripts/site.js';
     </script>
