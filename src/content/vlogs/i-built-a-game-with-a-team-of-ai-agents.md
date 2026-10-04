@@ -1,9 +1,10 @@
 ---
 # SAMPLE CONTENT
-title: I built a game with a team of *AI agents*
+title: "Sample: I built a game with *AI agents*"
 date: 2026-09-21
 summary: A walkthrough of building a small browser game with several agents working at once, including the moment two of them had to settle a merge conflict.
 tags: [ai-agents, game-dev, video]
+# Deliberate easter egg: this is the only sample that uses the Rickroll ID. Keep it or delete it before launch.
 youtubeId: dQw4w9WgXcQ
 duration: "12:48"
 chapters:
@@ -13,6 +14,8 @@ chapters:
   - { t: "9:30", title: "Playing the result" }
 transcript: false
 ---
+
+Sample note: this video ID is a deliberate easter egg and the chapters and duration are made up. Delete this post before launch.
 
 In this video I build a small game with several AI agents working in parallel. Below are the links and notes.
 

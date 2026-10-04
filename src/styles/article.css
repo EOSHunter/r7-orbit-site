@@ -1,4 +1,4 @@
-/* Article component library (src/components/article/). Tokens only, so every theme follows.
+/* Article component library (src/components/article/). Tokens only.
    Selectors are self-contained (.art-*) and sit one step above .prose rules where they must win (img, figure). */
 
 /* Headings and paragraphs */

@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Read this first, e
 
 ## What this project is
 
-A personal website for posting **AI news, blogs, vlogs, projects and repos**, styled with the **R7 Orbit design system** (obsidian background, ivory text, one brass accent). It is a static site: content is Markdown files, there is no database and no admin. It is **not** the R7 Orbit desktop app; it only shares its look.
+A personal website for posting **AI news, blogs, vlogs, projects and repos**, styled with the **R7 Orbit design system** (obsidian background, ivory text, one brass accent). It is a static site: content is Markdown files, there is no database and no admin server (the editor at `/admin` is a static page that writes these same files through git). It is **not** the R7 Orbit desktop app; it only shares its look.
 
 Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must supply: `docs/DECISIONS.md`.
 
@@ -21,7 +21,8 @@ src/
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
-  admin/                      Decap CMS for /admin: config.ts (fields), blocks.ts (article components as editor blocks), main.ts (entry). See README "Admin"
+  admin/                      Decap CMS for /admin: config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
+                              preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry). See README "Admin"
   pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
@@ -39,7 +40,8 @@ src/
   scripts/                    site.js (menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (hero and 404 only),
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play)
 tests/                        routes.js (every route, one list), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
-                              head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds;
+                              head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
+                              admin (noindex, out of robots/sitemap/feeds), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
 public/                       served as-is: fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
@@ -67,7 +69,7 @@ npm run test:unit # node:test *.test.ts + Vitest *.vitest.ts for content/Markdow
 npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + JS/CSS budgets (375 and 1280px),
                   # audit (320-1480px, head tags, JSON-LD, links), keyboard, feeds/robots/sitemap
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
-                  # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=n if taken); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
+                  # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=4401 if another checkout already uses it: Playwright reuses a server it finds there and would test that one's dist/); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
 ```
 

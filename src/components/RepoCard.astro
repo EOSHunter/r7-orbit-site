@@ -1,6 +1,7 @@
 ---
 import CardFoot from './CardFoot.astro';
 import Icon from './Icon.astro';
+import PreviewBadge from './PreviewBadge.astro';
 import { cardAttrs } from './cardAttrs';
 import type { RepoCardData } from '../lib/cards';
 import { shortDate } from '../lib/text';
@@ -19,6 +20,7 @@ const hasStats = post.language !== undefined || post.stars !== undefined || post
       <Icon name="repo" />
       Repo
     </span>
+    {post.preview && <PreviewBadge label={post.preview} />}
     <h3 class="card-title mono">{post.repo}</h3>
     <p class="card-text">{post.summary}</p>
     {hasStats && (

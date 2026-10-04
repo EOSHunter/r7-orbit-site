@@ -22,18 +22,26 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `title` | string | yes | Plain text. ≤ 70 characters reads best; ≤ 60 fits a search result. One phrase may be wrapped in `*asterisks*` to be shown in italic brass (e.g. `Why every agent gets its own *room*`); the site strips them for `<title>` and feeds |
-| `date` | date (`YYYY-MM-DD`) | yes | Publish date; future dates are hidden until then |
+| `date` | date (`YYYY-MM-DD`) | yes | Publish date; future dates are hidden until then (see "Drafts and scheduled posts") |
 | `updated` | date | no | Set when the post is materially changed; shown as "Updated Oct 8" |
 | `summary` | string | yes | 1–2 sentences, ≤ 155 characters. Used on cards, in the meta description and in feeds |
 | `tags` | string[] | no | 1–4 lowercase tags, hyphenated (`ai-agents`, `evals`, `git`). Reuse existing tags before inventing |
 | `cover` | image path | no | 16:9, ≥ 1280×720. If absent, the plate placeholder is shown (never a stock photo) |
 | `coverAlt` | string | if `cover` | Describe what is in the image. Empty string only if purely decorative |
 | `featured` | boolean | no | Pins to the top of the home page. **At most one at a time** (the build should warn if two) |
-| `draft` | boolean | no | `true` = built in dev, not published |
+| `draft` | boolean | no | Default `false`. `true` = hidden in production, shown in dev with a "Draft" badge. See "Drafts and scheduled posts" |
 | `readTime` | number (minutes) | no | Computed from the body if absent (≈ 220 words/min) |
 | `author` | string (author id) | no | Defaults to the site author |
 | `canonicalUrl` | URL | no | Only when the post was first published elsewhere |
 | `aiAssist` | `'none' \| 'edited' \| 'drafted'` | no | If the author wants the "How this was made" line (see `DECISIONS.md` §C). Shown as a quiet note under the byline |
+
+## Drafts and scheduled posts
+
+A post is **hidden in production builds** if `draft: true` **or** its `date` is later than today (UTC calendar day, checked at build time). Today's date is published. The rule lives in one place, `src/lib/content.ts` (`isPublished` / `filterPublished`), applied by `getPosts` and `getAllPosts` in `src/lib/content-queries.ts`. Every page, archive, tag page, pagination, home/latest, related, prev/next and series list, RSS and per-kind feed, the sitemap and JSON-LD read through those, so a hidden post has no page, no feed entry and nothing for Pagefind to index (it indexes the built `dist/`). Use `getPosts`/`getAllPosts`, never `getCollection` directly.
+
+**A scheduled post does not publish itself.** It goes live on the first build/deploy on or after its date. For it to appear on time, rebuild daily (a host cron or a GitHub Actions `schedule`; see `BUILD_PLAN.md`).
+
+In `npm run dev`, drafts and scheduled posts are shown so they can be previewed, each with a brass **Draft** or **Scheduled for Oct 12, 2026** badge on cards and on the post page. The badge never renders in a production build.
 
 ## Extra fields by kind
 

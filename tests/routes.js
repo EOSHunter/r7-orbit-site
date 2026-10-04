@@ -18,6 +18,8 @@ const routes = [
   { path: '/news/2026-10-03-open-weights-model-lands/' },
   { path: '/blog/' },
   { path: '/blog/why-every-agent-gets-its-own-room/' },
+  { path: '/blog/a-featured-image-on-a-post/' }, // .md with a featured image
+  { path: '/blog/an-article-built-from-components/' }, // .mdx with a featured image and every article block
   { path: '/vlogs/' },
   { path: '/vlogs/i-built-a-game-with-a-team-of-ai-agents/' },
   { path: '/projects/' },

@@ -9,6 +9,17 @@
 // the end of the block, so each pattern stops at its closing `/>` or `</Tag>`.
 import type { BlockEditorComponentOptions, EditorComponentField } from 'decap-cms-core';
 import type { ArticleComponentName } from '../lib/article-component-names';
+import {
+  calloutHtml,
+  dividerHtml,
+  figureHtml,
+  imageRowHtml,
+  quoteHtml,
+  twoColumnHtml,
+  videoHtml,
+  type GetAsset,
+  type ResolveAsset,
+} from './preview-html';
 
 export type BlockData = Record<string, unknown>;
 
@@ -60,10 +71,27 @@ const tag = (name: ArticleComponentName, attrs: string[]) => `<${name}${attrs.jo
 const wrap = (name: ArticleComponentName, attrs: string[], body: unknown) =>
   `<${name}${attrs.join('')}>\n\n${text(body).trim()}\n\n</${name}>`;
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const preview = (label: string, detail?: unknown) =>
-  `<p><strong>${label}</strong>${text(detail) ? `: ${escapeHtml(text(detail))}` : ''}</p>`;
+// What Decap passes to `toPreview` besides the block's data: `getAsset` turns an uploaded-but-unsaved image path into a
+// URL the preview can show, and `fields` is the block's field list (an Immutable List, hence the loose type).
+interface FieldList {
+  find(match: (f: { get(key: string): unknown }) => boolean): { get(key: string): unknown } | undefined;
+}
+type Preview = (d: BlockData, getAsset?: GetAsset, fields?: FieldList) => string;
+// Decap's typings say `toPreview` takes only the data, but it also passes `getAsset` and `fields` (see
+// decap-cms-widget-markdown/src/serializers/remarkRehypeShortcodes.js).
+const preview = (fn: Preview) => fn as unknown as BlockEditorComponentOptions['toPreview'];
+
+/** Resolves image paths through Decap, so an image that is chosen but not yet saved still shows. Falls back to the path. */
+function assetResolver(getAsset: GetAsset | undefined, field: unknown): ResolveAsset {
+  return (path) => {
+    try {
+      return String(getAsset?.(path, field) ?? '') || path;
+    } catch {
+      return path;
+    }
+  };
+}
+const fieldNamed = (fields: FieldList | undefined, name: string) => fields?.find((f) => f.get('name') === name);
 
 /** "https://youtu.be/ID", "https://www.youtube.com/watch?v=ID", ".../embed/ID" or a bare id -> the 11-character id. */
 export function youtubeIdFrom(input: unknown): string {
@@ -112,7 +140,7 @@ const figure: BlockEditorComponentOptions = {
       optionAttr('align', d.align, 'center'),
       optionAttr('size', d.size, 'lg'),
     ]),
-  toPreview: (d: BlockData) => preview('Figure', d.alt),
+  toPreview: preview((d, getAsset, fields) => figureHtml(d, assetResolver(getAsset, fieldNamed(fields, 'src')))),
 };
 
 const callout: BlockEditorComponentOptions = {
@@ -133,7 +161,7 @@ const callout: BlockEditorComponentOptions = {
   fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
   toBlock: (d: BlockData) =>
     wrap('Callout', [stringAttr('type', d.type || 'info'), stringAttr('title', d.title)], d.body),
-  toPreview: (d: BlockData) => preview(`Callout (${text(d.type) || 'info'})`, d.body),
+  toPreview: preview((d) => calloutHtml(d)),
 };
 
 const quote: BlockEditorComponentOptions = {
@@ -147,7 +175,7 @@ const quote: BlockEditorComponentOptions = {
   pattern: withChildren('Quote'),
   fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
   toBlock: (d: BlockData) => wrap('Quote', [stringAttr('cite', d.cite), stringAttr('href', d.href)], d.body),
-  toPreview: (d: BlockData) => preview('Quote', d.body),
+  toPreview: preview((d) => quoteHtml(d)),
 };
 
 const imageGallery: BlockEditorComponentOptions = {
@@ -177,7 +205,11 @@ const imageGallery: BlockEditorComponentOptions = {
     }));
     return tag('ImageGallery', [jsonAttr('images', images)]);
   },
-  toPreview: (d: BlockData) => preview('Image gallery', `${Array.isArray(d.images) ? d.images.length : 0} images`),
+  toPreview: preview((d, getAsset, fields) => {
+    const images = (Array.isArray(d.images) ? d.images : []) as BlockData[];
+    const list = fieldNamed(fields, 'images')?.get('fields') as FieldList | undefined;
+    return imageRowHtml(images, assetResolver(getAsset, fieldNamed(list, 'src')));
+  }),
 };
 
 const twoColumn: BlockEditorComponentOptions = {
@@ -211,7 +243,7 @@ const twoColumn: BlockEditorComponentOptions = {
       '',
       '</TwoColumn>',
     ].join('\n'),
-  toPreview: (d: BlockData) => preview('Two columns', d.left),
+  toPreview: preview((d) => twoColumnHtml(d)),
 };
 
 const videoEmbed: BlockEditorComponentOptions = {
@@ -235,7 +267,7 @@ const videoEmbed: BlockEditorComponentOptions = {
       stringAttr('title', d.title),
       stringAttr('caption', d.caption),
     ]),
-  toPreview: (d: BlockData) => preview('Video', d.title),
+  toPreview: preview((d) => videoHtml(d)),
 };
 
 const divider: BlockEditorComponentOptions = {
@@ -245,7 +277,7 @@ const divider: BlockEditorComponentOptions = {
   pattern: selfClosing('Divider'),
   fromBlock: (m) => parseAttrs(m[1]),
   toBlock: (d: BlockData) => tag('Divider', [optionAttr('variant', d.variant, 'rule')]),
-  toPreview: () => preview('Divider'),
+  toPreview: preview((d) => dividerHtml(d)),
 };
 
 export const blocks: BlockEditorComponentOptions[] = [

@@ -1,6 +1,6 @@
 ---
 # SAMPLE CONTENT
-title: A featured image behind the *headline*
+title: "Sample: a featured image behind the *headline*"
 date: 2026-09-30
 summary: A short sample post that shows the optional hero image, which sits behind the breadcrumbs and title, under a dark gradient.
 tags: [site-notes]
@@ -16,4 +16,4 @@ Add `featuredImage` (a file under `src/assets/`) and `featuredImageAlt` to a pos
 
 ## Why a gradient
 
-The text stays ivory in both themes, so the image gets a dark gradient that keeps it readable.
+The text is always ivory, so the image gets a dark gradient that keeps it readable.

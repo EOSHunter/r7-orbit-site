@@ -21,6 +21,8 @@ interface CardBase {
   pinned?: boolean;
   /** Adds the data-* attributes site.js filters on (home "Latest" and the archives). */
   filterable?: boolean;
+  /** Dev preview only: "Draft" or "Scheduled for <date>". Never set in a production build. */
+  preview?: string;
 }
 
 export interface NewsCardData extends CardBase {

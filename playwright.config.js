@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
+// E2E_PORT lets two checkouts test at once: with a server already on the port, Playwright reuses it (and so tests its dist/).
 const PORT = Number(process.env.E2E_PORT ?? 4399);
 
 // Tests run against the built site served by `npm run preview` (run `npm run build` first).

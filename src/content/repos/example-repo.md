@@ -1,6 +1,6 @@
 ---
 # SAMPLE CONTENT: replace `repo` with a real public repository. Stats are fetched from GitHub at build time.
-title: example-repo
+title: "example-repo (sample)"
 date: 2026-09-10
 summary: A small command-line tool that does one thing well. (Sample.)
 tags: [tooling, typescript]
