@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+
+const { url: SITE_URL } = JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8'));
 
 // Feeds, robots and sitemap: reachable, well-formed enough, and consistent with each other.
 const feeds = ['/rss.xml', '/news/rss.xml', '/blog/rss.xml', '/vlogs/rss.xml', '/projects/rss.xml', '/repos/rss.xml'];
@@ -10,7 +13,7 @@ for (const path of feeds) {
     expect(res.headers()['content-type']).toMatch(/xml/);
     const xml = await res.text();
     expect(xml).toMatch(/^<\?xml[^>]*\?>\s*<rss version="2\.0"/);
-    expect(xml).toContain(`<atom:link href="https://example.com${path}" rel="self"`);
+    expect(xml).toContain(`<atom:link href="${SITE_URL}${path}" rel="self"`);
     expect(xml).toContain('<lastBuildDate>');
     expect(xml.match(/<item>/g)?.length ?? 0, 'at least one item').toBeGreaterThan(0);
     expect(xml.match(/<item>/g)?.length).toBe(xml.match(/<\/item>/g)?.length);
@@ -24,7 +27,7 @@ for (const path of feeds) {
 test('robots.txt points at the sitemap', async ({ request }) => {
   const text = await (await request.get('/robots.txt')).text();
   expect(text).toMatch(/User-agent: \*/);
-  expect(text).toMatch(/Sitemap: https:\/\/[^\s]+\/sitemap-index\.xml/);
+  expect(text).toContain(`Sitemap: ${SITE_URL}/sitemap-index.xml`);
 });
 
 test('sitemap lists pages, not noindex pages', async ({ request }) => {
@@ -34,7 +37,8 @@ test('sitemap lists pages, not noindex pages', async ({ request }) => {
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   expect(locs.length).toBeGreaterThan(5);
   for (const loc of locs) {
-    expect(loc).toMatch(/^https:\/\/[^/]+\/.*\/$|^https:\/\/[^/]+\/$/);
+    expect(loc.startsWith(`${SITE_URL}/`), loc).toBe(true);
+    expect(loc).toMatch(/\/$/);
     expect(loc).not.toMatch(/styleguide|404|search/);
   }
   expect(new Set(locs).size, 'no duplicates').toBe(locs.length);

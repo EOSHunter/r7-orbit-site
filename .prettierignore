@@ -12,5 +12,6 @@ src/styles/site.css
 src/scripts/orbit.js
 src/scripts/site.js
 public/
+workers/
 CLAUDE.md
 README.md

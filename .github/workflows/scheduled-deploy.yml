@@ -1,0 +1,29 @@
+name: Scheduled deploy
+
+# A post dated in the future is left out of the build until its day, and nothing rebuilds the site by itself when that
+# day arrives. So once a day, just after midnight UTC (the site counts days in UTC), this asks Cloudflare Pages for a fresh
+# production build through a Deploy Hook. Setup: docs/DEPLOY_CLOUDFLARE.md, section "Scheduled posts".
+#
+# Needs the repository secret CF_DEPLOY_HOOK_URL. Without it the job says so and does nothing, so it never fails red.
+
+on:
+  schedule:
+    - cron: '5 0 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the Cloudflare Pages deploy hook
+        env:
+          CF_DEPLOY_HOOK_URL: ${{ secrets.CF_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$CF_DEPLOY_HOOK_URL" ]; then
+            echo "::notice::CF_DEPLOY_HOOK_URL is not set, so no deploy was triggered. See docs/DEPLOY_CLOUDFLARE.md."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 30 --request POST "$CF_DEPLOY_HOOK_URL"
+          echo "Deploy requested."

@@ -10,34 +10,30 @@ import tokensCss from '../styles/design-system/tokens.css?inline';
 import markdownCss from '../styles/markdown.css?inline';
 import siteCss from '../styles/site.css?inline';
 import { blocks } from './blocks';
-import { buildConfig } from './config';
+import { buildConfig, CMS_AUTH_URL, CMS_BRANCH, CMS_REPO } from './config';
 import { blogPreview } from './preview';
 import { globalStyleOf, spriteOf } from './preview-assets';
 import previewCss from './preview.css?inline';
 
-const authUrl = import.meta.env.PUBLIC_CMS_AUTH_URL as string | undefined;
+// The defaults are the constants in config.ts. A build can override each with a PUBLIC_ variable; those are readable in the
+// browser, so never put a secret in one.
+const authUrl = (import.meta.env.PUBLIC_CMS_AUTH_URL as string | undefined) || CMS_AUTH_URL;
 const local = import.meta.env.DEV;
 
-if (!local && !authUrl) {
-  // A production build with no OAuth proxy cannot sign anyone in; say so instead of calling Decap's default (Netlify).
-  const note = document.getElementById('admin-unconfigured');
-  if (note) note.hidden = false;
-} else {
-  for (const block of blocks) CMS.registerEditorComponent(block);
+for (const block of blocks) CMS.registerEditorComponent(block);
 
-  // The preview pane is an iframe, so it starts with no styles. These are the same files the public pages load, in the
-  // order BaseLayout and its components import them, plus the hero's own block, which lives inside ArticleHero.astro.
-  for (const css of [tokensCss, componentsCss, siteCss, markdownCss, articleCss, globalStyleOf(heroSource), previewCss]) {
-    CMS.registerPreviewStyle(css, { raw: true });
-  }
-  CMS.registerPreviewTemplate('blog', blogPreview({ sprite: spriteOf(spriteSource), authorName: site.author.name }));
-
-  CMS.init({
-    config: buildConfig({
-      local,
-      authUrl,
-      repo: (import.meta.env.PUBLIC_CMS_REPO as string | undefined) || 'EOSHunter/r7-orbit-site',
-      branch: (import.meta.env.PUBLIC_CMS_BRANCH as string | undefined) || 'main',
-    }),
-  });
+// The preview pane is an iframe, so it starts with no styles. These are the same files the public pages load, in the
+// order BaseLayout and its components import them, plus the hero's own block, which lives inside ArticleHero.astro.
+for (const css of [tokensCss, componentsCss, siteCss, markdownCss, articleCss, globalStyleOf(heroSource), previewCss]) {
+  CMS.registerPreviewStyle(css, { raw: true });
 }
+CMS.registerPreviewTemplate('blog', blogPreview({ sprite: spriteOf(spriteSource), authorName: site.author.name }));
+
+CMS.init({
+  config: buildConfig({
+    local,
+    authUrl,
+    repo: (import.meta.env.PUBLIC_CMS_REPO as string | undefined) || CMS_REPO,
+    branch: (import.meta.env.PUBLIC_CMS_BRANCH as string | undefined) || CMS_BRANCH,
+  }),
+});

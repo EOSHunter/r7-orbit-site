@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-// /admin is the content manager: reachable by URL only, never indexed, never listed. (Its editor needs a sign-in or the
-// local proxy, so what runs here is what a production build does without PUBLIC_CMS_AUTH_URL: say so, and stay quiet.)
+// /admin is the content manager: reachable by URL only, never indexed, never listed. (Its editor needs a GitHub sign-in or
+// the local proxy, so what runs here is the login screen. tests/headers.spec.js covers the admin under its CSP.)
 
-test('admin page is noindex and says sign-in is not set up', async ({ page }) => {
+test('admin page is noindex, shows the GitHub login and makes no third-party request on load', async ({ page }) => {
   const external = [];
   page.on('request', (req) => {
     if (!req.url().startsWith('http://127.0.0.1')) external.push(req.url());
@@ -14,7 +14,7 @@ test('admin page is noindex and says sign-in is not set up', async ({ page }) =>
   const res = await page.goto('/admin/');
   expect(res?.status()).toBe(200);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
-  await expect(page.locator('#admin-unconfigured')).toBeVisible();
+  await expect(page.getByRole('button', { name: /login with github/i })).toBeVisible();
   expect(external, 'no third-party requests').toEqual([]);
   expect(errors).toEqual([]);
 });

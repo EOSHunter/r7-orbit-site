@@ -1,6 +1,8 @@
 node_modules/
 .env
 .env.*
+.dev.vars
+.wrangler/
 *.log
 dist/
 build/
