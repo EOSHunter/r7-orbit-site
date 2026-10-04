@@ -1,0 +1,59 @@
+---
+import Icon from './Icon.astro';
+import { pageUrl, pageWindow } from '../lib/listing';
+
+interface Props {
+  /** The first page's path, ending in a slash: `/blog/`. */
+  base: string;
+  page: number;
+  pages: number;
+}
+
+const { base, page, pages } = Astro.props;
+const numbers = pageWindow(page, pages);
+---
+
+{pages > 1 && (
+  <nav class="pagination" aria-label="Pagination" data-hide-filtered>
+    {page > 1 ? (
+      <a class="btn sm" href={pageUrl(base, page - 1)} rel="prev" aria-label="Previous page">
+        <Icon name="arrow" class="flip" />
+        Previous
+      </a>
+    ) : (
+      <span class="btn sm" aria-disabled="true">
+        <Icon name="arrow" class="flip" />
+        Previous
+      </span>
+    )}
+    <ul>
+      {numbers.map((n) =>
+        n === null ? (
+          <li aria-hidden="true">&hellip;</li>
+        ) : (
+          <li>
+            <a
+              class:list={['chip', n === page && 'on']}
+              href={pageUrl(base, n)}
+              aria-label={`Page ${n}`}
+              aria-current={n === page ? 'page' : undefined}
+            >
+              {n}
+            </a>
+          </li>
+        ),
+      )}
+    </ul>
+    {page < pages ? (
+      <a class="btn sm" href={pageUrl(base, page + 1)} rel="next" aria-label="Next page">
+        Next
+        <Icon name="arrow" />
+      </a>
+    ) : (
+      <span class="btn sm" aria-disabled="true">
+        Next
+        <Icon name="arrow" />
+      </span>
+    )}
+  </nav>
+)}

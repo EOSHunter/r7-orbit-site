@@ -1,0 +1,66 @@
+---
+import Icon from '../../components/Icon.astro';
+import PostCard from '../../components/PostCard.astro';
+import SubscribeBand from '../../components/SubscribeBand.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { postsWithTag, tagsWithPages } from '../../lib/content';
+import { getAllPosts } from '../../lib/content-queries';
+import { KINDS, countLabel } from '../../lib/listing';
+import { toCards } from '../../lib/post-cards';
+
+export async function getStaticPaths() {
+  const posts = await getAllPosts();
+  return tagsWithPages(posts).map((tag) => ({ params: { tag }, props: { posts: postsWithTag(posts, tag) } }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+const cards = await toCards(posts);
+
+// Grouped by kind, kinds in the site's order, newest first inside each group.
+const groups = KINDS.map((info) => ({
+  info,
+  cards: cards.filter((_, i) => posts[i]?.collection === info.collection),
+})).filter((g) => g.cards.length > 0);
+---
+
+<BaseLayout
+  title={`Posts tagged ${tag}`}
+  description={`${countLabel(posts.length, 'post', 'posts')} tagged ${tag}: news, writing, videos, projects and repos, newest first.`}
+>
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">
+        <a href="/tags/">Tags</a>
+      </p>
+      <h1>
+        Posts tagged <em>{tag}</em>
+      </h1>
+      <p class="t-lead">{countLabel(posts.length, 'post', 'posts')}, newest first within each kind.</p>
+    </header>
+
+    {groups.map(({ info, cards: group }) => (
+      <section class="block" aria-labelledby={`${info.collection}-h`}>
+        <h2 class="section-title tag-group" id={`${info.collection}-h`}>
+          <span class="kind">
+            <Icon name={info.icon} />
+            {info.label}
+          </span>
+          <span class="t-meta">{countLabel(group.length, info.nounOne, info.noun)}</span>
+        </h2>
+        <div class="grid-cards">
+          {group.map((post) => <PostCard {post} />)}
+        </div>
+      </section>
+    ))}
+
+    <p class="tag-back">
+      <a class="more-link" href="/tags/">
+        <Icon name="arrow" class="flip" />
+        All tags
+      </a>
+    </p>
+  </div>
+  <div class="archive-end"></div>
+  <SubscribeBand />
+</BaseLayout>

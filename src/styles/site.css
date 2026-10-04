@@ -407,6 +407,23 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox-caption:empty { display: none; }
 .lightbox-prev .ico { transform: rotate(180deg); }
 
+/* ------------------------------------------------------------------------- Home, archives and tags (phase 4a) */
+.archive-end { height: var(--s-8); }
+.feed-more { margin: var(--s-6) 0 0; }
+/* Without script the kind filter above is hidden, so the kinds are offered as links to their archives. */
+.feed-kinds { display: none; margin-top: var(--s-6); }
+html:not(.js) .feed-kinds { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); }
+.feed-kinds ul { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2); margin: 0; padding: 0; }
+.feed-kinds .chip { min-height: 28px; padding-inline: var(--s-3); }
+.pagination li[aria-hidden='true'] { color: var(--text-3); align-self: center; }
+.tag-index { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-3); margin: 0; padding: 0; }
+.tag-index .chip { min-height: 32px; padding-inline: var(--s-4); }
+.tag-index .count { color: var(--text-3); font-size: var(--fs-2xs); }
+.tag-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-4); margin-bottom: var(--s-5); }
+.tag-back { margin: var(--s-7) 0 0; }
+.toolbar { grid-template-columns: minmax(0, 1fr); }
+.toolbar-row > .seg, .toolbar-row > .tag-list { min-width: 0; }
+
 /* --- project and repo pages (phase 4d) --- */
 html:not(.js) .repo-head [data-copy] { display: none; }
 .readme-note { margin-top: var(--s-5); }
