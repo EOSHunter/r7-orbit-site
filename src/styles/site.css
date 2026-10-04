@@ -406,3 +406,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox-caption { margin: 0; padding: var(--s-3) var(--s-4) 0; font-size: var(--fs-sm); color: var(--text-2); }
 .lightbox-caption:empty { display: none; }
 .lightbox-prev .ico { transform: rotate(180deg); }
+
+/* Vlog page (src/pages/vlogs/[slug].astro) */
+.facts .links { display: grid; gap: var(--s-3); }
+.facts .links .btn { justify-content: space-between; }
