@@ -1,7 +1,7 @@
 // Maps published posts onto the shapes the cards take. Listing pages (home, archives, tags) use this.
 import type { CardData, Cover, ProjectStatus } from './cards';
 import { loadGitHubRepo } from './github';
-import { postUrl, readTime } from './content';
+import { postUrl, previewLabel, readTime } from './content';
 import type { SitePost } from './content-queries';
 
 /** Cover images are 16:9 by the content rules (docs/CONTENT_MODEL.md); the card crops to that anyway. */
@@ -69,6 +69,7 @@ export async function toCard(post: SitePost, options: CardOptions = {}): Promise
     summary: (data as { summary?: string }).summary ?? '',
     date: data.date,
     tags: data.tags,
+    preview: previewLabel(post),
     ...options,
   };
   const cover = coverOf(data as { cover?: string; coverAlt?: string });

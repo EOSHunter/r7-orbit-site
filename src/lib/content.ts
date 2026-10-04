@@ -53,6 +53,30 @@ export function isPublished(
   return !isDraft(post) && !isScheduled(post, now);
 }
 
+/** Draft wins over scheduled. Only meaningful in dev, where unpublished posts are shown; production builds drop them. */
+export type PublishState = 'published' | 'draft' | 'scheduled';
+
+export function publishState(post: Post, now: Date = new Date()): PublishState {
+  if (isDraft(post)) return 'draft';
+  return isScheduled(post, now) ? 'scheduled' : 'published';
+}
+
+/** Badge text for the dev preview: "Draft", "Scheduled for Oct 12, 2026", or undefined for a published post. */
+export function previewLabel(post: Post, now: Date = new Date()): string | undefined {
+  const state = publishState(post, now);
+  if (state === 'draft') return 'Draft';
+  if (state === 'scheduled') {
+    const date = post.data.date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+    return `Scheduled for ${date}`;
+  }
+  return undefined;
+}
+
 export function filterPublished<P extends Post>(posts: P[], options?: PublishOptions): P[] {
   return posts.filter((post) => isPublished(post, options));
 }
