@@ -1,0 +1,233 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
+import PostCard from '../../components/PostCard.astro';
+import SubscribeBand from '../../components/SubscribeBand.astro';
+import YouTubeFacade from '../../components/YouTubeFacade.astro';
+import VideoJsonLd from '../../components/vlog/VideoJsonLd.astro';
+import { renderMarkdown, splitTranscript } from '../../components/vlog/renderNotes';
+import { site } from '../../data/site';
+import type { VlogCardData } from '../../lib/cards';
+import { adjacentPosts, postUrl, relatedPosts } from '../../lib/content';
+import { getPosts, type SitePost } from '../../lib/content-queries';
+import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../../lib/text';
+import '../../styles/markdown.css';
+
+export const getStaticPaths = (async () => {
+  const vlogs = await getPosts('vlogs');
+  return vlogs.map((post) => ({ params: { slug: post.id }, props: { post, vlogs } }));
+}) satisfies GetStaticPaths;
+
+// content.config.ts builds the vlog schema through a helper that widens the extra fields; this is their real shape.
+interface VlogFields {
+  youtubeId?: string;
+  videoUrl?: string;
+  duration: string;
+  poster?: string;
+  chapters?: { t: string; title: string }[];
+  transcript?: boolean;
+}
+type VlogData = SitePost<'vlogs'>['data'] & VlogFields;
+
+interface Props {
+  post: SitePost<'vlogs'>;
+  vlogs: SitePost<'vlogs'>[];
+}
+
+const { post, vlogs } = Astro.props;
+const data = post.data as VlogData;
+const durationOf = (p: SitePost<'vlogs'>) => (p.data as VlogData).duration;
+const title = plainTitle(data.title);
+const base = Astro.site ?? new URL(site.url);
+
+const { notes, transcript } = data.transcript
+  ? splitTranscript(post.body ?? '')
+  : { notes: post.body ?? '', transcript: '' };
+const [notesHtml, transcriptHtml] = await Promise.all([renderMarkdown(notes), renderMarkdown(transcript)]);
+
+const poster = data.poster ?? data.cover;
+const imageUrl = data.cover ? new URL(data.cover, base).href : undefined;
+
+const card = (p: SitePost<'vlogs'>): VlogCardData => ({
+  kind: 'vlog',
+  href: postUrl(p),
+  title: p.data.title,
+  summary: p.data.summary,
+  date: p.data.date,
+  tags: p.data.tags,
+  duration: durationOf(p),
+});
+const related = relatedPosts(post, vlogs, 3);
+const { newer, older } = adjacentPosts(post, vlogs);
+const youtube = site.links.youtube;
+
+const breadcrumbs = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', base.href) },
+    { '@type': 'ListItem', position: 2, name: 'Vlogs', item: absoluteUrl('/vlogs/', base.href) },
+    { '@type': 'ListItem', position: 3, name: title, item: absoluteUrl(Astro.url.pathname, base.href) },
+  ],
+}).replace(/</g, '\\u003c');
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.summary}
+  ogType="video.other"
+  image={data.cover}
+  imageAlt={data.cover ? data.coverAlt || title : undefined}
+  published={data.date}
+  modified={data.updated}
+  tags={data.tags}
+  current="Vlogs"
+>
+  <VideoJsonLd
+    slot="head"
+    name={title}
+    description={data.summary}
+    uploadDate={isoDate(data.date)}
+    duration={data.duration}
+    thumbnailUrl={imageUrl}
+    youtubeId={data.youtubeId}
+    videoUrl={data.videoUrl}
+    chapters={data.chapters}
+  />
+  <script slot="head" type="application/ld+json" set:html={breadcrumbs} />
+
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/vlogs/">Vlogs</a></li>
+        <li aria-current="page">{title}</li>
+      </ol>
+    </nav>
+
+    <header class="post-head">
+      <p class="eyebrow">
+        <span class="kind"><Icon name="vlog" />Vlog</span>
+      </p>
+      <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <ul class="meta-row" aria-label="Video details">
+        <li><Icon name="calendar" /><time datetime={isoDate(data.date)}>{longDate(data.date)}</time></li>
+        <li><Icon name="clock" /><span>{data.duration}</span></li>
+        {data.updated && <li>Updated <time datetime={isoDate(data.updated)}>{longDate(data.updated)}</time></li>}
+        {
+          data.tags.length > 0 && (
+            <li>
+              {data.tags.map((tag) => (
+                <span class="chip">{tag}</span>
+              ))}
+            </li>
+          )
+        }
+      </ul>
+    </header>
+
+    {
+      data.youtubeId ? (
+        <YouTubeFacade id={data.youtubeId} title={title} poster={poster} duration={data.duration} chapters={data.chapters} />
+      ) : (
+        <div class="player">
+          <MediaPlaceholder />
+          <a class="play" href={data.videoUrl} rel="noopener" aria-label={`Watch video on its own site: ${title}`}>
+            <span><Icon name="play" /></span>
+          </a>
+          <span class="duration">{data.duration}</span>
+        </div>
+      )
+    }
+
+    <div class="split">
+      <div>
+        {
+          notesHtml && (
+            <section class="block" aria-labelledby="notes-h">
+              <h2 class="section-title" id="notes-h">About this video</h2>
+              <div class="prose" set:html={notesHtml} />
+            </section>
+          )
+        }
+        {
+          transcriptHtml && (
+            <section class="block" aria-labelledby="transcript-h">
+              <h2 class="section-title" id="transcript-h">Transcript</h2>
+              <details class="disclosure">
+                <summary>Show the transcript</summary>
+                <div class="inner prose" set:html={transcriptHtml} />
+              </details>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="sticky">
+        <div class="facts">
+          <h2 class="eyebrow">Follow along</h2>
+          <div class="links">
+            {
+              youtube && (
+                <a class="btn" href={youtube} rel="noopener">
+                  <Icon name="vlog" />Subscribe on YouTube<Icon name="external" />
+                </a>
+              )
+            }
+            <a class="btn" href="/subscribe/">
+              <Icon name="mail" />Get new videos by email<Icon name="arrow" />
+            </a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  {
+    related.length > 0 && (
+      <section class="section ruled" aria-labelledby="related-h">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">More videos</p>
+              <h2 class="section-title" id="related-h">Keep watching</h2>
+            </div>
+            <a class="more-link" href="/vlogs/">
+              All videos<Icon name="arrow" />
+            </a>
+          </div>
+          <div class="grid-cards">{related.map((p) => <PostCard post={card(p)} />)}</div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    (newer || older) && (
+      <section class="section ruled" aria-label="Previous and next video">
+        <div class="container">
+          <nav class="post-nav" aria-label="Previous and next video">
+            {older ? (
+              <a class="prev" href={postUrl(older)} rel="prev">
+                <span class="label-row">Older video</span>
+                <span class="title">{plainTitle(older.data.title)}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {newer && (
+              <a class="next" href={postUrl(newer)} rel="next">
+                <span class="label-row">Newer video</span>
+                <span class="title">{plainTitle(newer.data.title)}</span>
+              </a>
+            )}
+          </nav>
+        </div>
+      </section>
+    )
+  }
+
+  <SubscribeBand />
+</BaseLayout>
