@@ -13,7 +13,7 @@
     "check": "astro check",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "node -e \"console.log('No tests yet (phase 7 adds Playwright + axe).')\""
+    "test": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "astro": "^7.3.5"
@@ -21,11 +21,14 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "@types/sanitize-html": "^2.16.2",
     "eslint": "^10.12.0",
     "eslint-plugin-astro": "^1.7.0",
     "globals": "^17.13.0",
     "prettier": "^3.9.9",
     "prettier-plugin-astro": "^1.1.0",
+    "sanitize-html": "^2.18.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0"
   }
