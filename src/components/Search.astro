@@ -1,0 +1,56 @@
+---
+// Site search. Two shapes of the same panel, both driven by src/scripts/search.js:
+//   default      a modal <dialog>, opened with "/" or the header button (mounted once in BaseLayout)
+//   page={true}  the same panel inline, for /search/ (and the no-JS fallback note)
+// The index is made by Pagefind at build time (npm run build) and loaded from /pagefind/ on first use.
+import Icon from './Icon.astro';
+
+interface Props {
+  page?: boolean;
+}
+
+const { page = false } = Astro.props;
+const Tag = page ? 'div' : 'dialog';
+---
+
+<Tag
+  class={page ? 'search-panel page' : 'search-dialog'}
+  aria-label={page ? undefined : 'Search'}
+  data-search-page={page ? '' : undefined}
+  data-search-dialog={page ? undefined : ''}
+>
+  <div class="search-panel-inner">
+    <form class="search-form" role="search" aria-label="Search the site" data-search-form>
+      <div class="search">
+        <Icon name="search" />
+        <input
+          class="input"
+          type="search"
+          name="q"
+          placeholder="Search posts"
+          aria-label="Search posts"
+          autocomplete="off"
+          spellcheck="false"
+          data-search-input
+        />
+      </div>
+      {!page && (
+        <button class="btn quiet sm" type="button" data-search-close>
+          <Icon name="close" small />
+          Close
+        </button>
+      )}
+    </form>
+    <p class="t-meta search-status" role="status" data-search-status>
+      Type to search…
+    </p>
+    <ol class="search-results" data-search-results></ol>
+    <p class="t-meta search-keys" aria-hidden="true">
+      ↑ ↓ move · Enter opens · Esc closes
+    </p>
+  </div>
+</Tag>
+
+<script>
+  import '../scripts/search.js';
+</script>
