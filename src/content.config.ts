@@ -25,26 +25,29 @@ const common = {
   aiAssist: z.enum(['none', 'edited', 'drafted']).optional(),
 };
 
+type ImageHelper = Parameters<Extract<Parameters<typeof defineCollection>[0]['schema'], (...args: never[]) => unknown>>[0]['image'];
+
 function collection(
   dir: string,
-  extra: z.ZodRawShape = {},
+  extra: z.ZodRawShape | ((image: ImageHelper) => z.ZodRawShape) = {},
   refine?: (data: Record<string, unknown>, ctx: z.RefinementCtx) => void,
 ) {
   return defineCollection({
     loader: glob({ pattern: '**/*.{md,mdx}', base: `./src/content/${dir}` }),
-    schema: z
-      .object({ ...common, ...extra })
-      .strict()
-      .superRefine((data, ctx) => {
-        if (data.cover && data.coverAlt === undefined) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['coverAlt'],
-            message: 'coverAlt is required when cover is set (use "" only for a decorative image)',
-          });
-        }
-        refine?.(data, ctx);
-      }),
+    schema: ({ image }) =>
+      z
+        .object({ ...common, ...(typeof extra === 'function' ? extra(image) : extra) })
+        .strict()
+        .superRefine((data, ctx) => {
+          if (data.cover && data.coverAlt === undefined) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['coverAlt'],
+              message: 'coverAlt is required when cover is set (use "" only for a decorative image)',
+            });
+          }
+          refine?.(data, ctx);
+        }),
   });
 }
 
@@ -56,12 +59,22 @@ export const collections = {
   }),
   blog: collection(
     'blog',
-    {
+    (image) => ({
       series: z.string().optional(),
       seriesOrder: z.number().int().positive().optional(),
       toc: z.boolean().optional(),
-    },
+      // Optional hero background behind the breadcrumbs and headline: a file under src/assets/, optimised at build time.
+      featuredImage: image().optional(),
+      featuredImageAlt: z.string().optional(),
+    }),
     (data, ctx) => {
+      if (data.featuredImage && data.featuredImageAlt === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['featuredImageAlt'],
+          message: 'featuredImageAlt is required when featuredImage is set (use "" only for a decorative image)',
+        });
+      }
       if (data.series && data.seriesOrder === undefined) {
         ctx.addIssue({ code: 'custom', path: ['seriesOrder'], message: 'seriesOrder is required when series is set' });
       }
