@@ -21,6 +21,7 @@ src/
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
+  admin/                      Decap CMS for /admin: config.ts (fields), blocks.ts (article components as editor blocks), main.ts (entry). See README "Admin"
   pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
@@ -57,6 +58,7 @@ Markdown runs on the `unified` processor (`@astrojs/markdown-remark`, build-time
 npm run dev       # local dev server (http://localhost:4321)
 npm run build     # production build to dist/ (must pass before any merge)
 npm run preview   # serve dist/ to look at the built site (search only works here: Pagefind indexes dist/ during `npm run build`)
+npm run cms       # Decap local proxy for /admin (run next to `npm run dev`; see README "Admin")
 npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
 npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)

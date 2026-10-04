@@ -10,7 +10,7 @@ export interface SitemapEntry {
 }
 
 /** Pages that never go in the sitemap, whatever their source says: not content, or deliberately unindexed. */
-export const EXCLUDED_PATHS = ['/404/', '/search/', '/styleguide/'];
+export const EXCLUDED_PATHS = ['/404/', '/search/', '/styleguide/', '/admin/'];
 
 export function isExcluded(path: string): boolean {
   return EXCLUDED_PATHS.some((p) => path === p || path.startsWith(p));
@@ -80,5 +80,5 @@ export function buildSitemapIndex(sitemapPaths: string[], base: string, lastmod?
 }
 
 export function buildRobots(base: string): string {
-  return `User-agent: *\nAllow: /\n\nSitemap: ${new URL('/sitemap-index.xml', base).href}\n`;
+  return `User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: ${new URL('/sitemap-index.xml', base).href}\n`;
 }

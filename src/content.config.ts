@@ -60,6 +60,7 @@ export const collections = {
   blog: collection(
     'blog',
     (image) => ({
+      subtitle: z.string().max(140).optional(),
       series: z.string().optional(),
       seriesOrder: z.number().int().positive().optional(),
       toc: z.boolean().optional(),

@@ -1,0 +1,6 @@
+# Cloudflare Pages / Netlify response headers.
+# The admin is never indexed (it is also noindex in its HTML, disallowed in robots.txt and left out of the sitemap).
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+  Referrer-Policy: same-origin
