@@ -1,6 +1,6 @@
 /* Markdown output: code theme (from tokens), diff lines, callouts, figures, heading anchors.
    Import after design-system/components.css and site.css. The code theme is Shiki's "css-variables" theme,
-   so the colours below are the whole theme and both Obsidian and Ivory follow the tokens. */
+   so the colours below are the whole theme and follow the tokens. */
 
 :root {
   --astro-code-foreground: var(--text-2);

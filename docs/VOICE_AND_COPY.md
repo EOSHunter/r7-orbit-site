@@ -47,7 +47,6 @@ One or two sentences, ≤ 155 characters, that say what the reader will get. Not
 | External link | (icon only; no "opens in a new tab" noise) | |
 | 404 title | That page has drifted out of orbit. | Oops! |
 | 404 body | It may have moved, or it never existed. Try search, or go back to the latest. | |
-| Theme toggle label | Switch to Ivory / Switch to Obsidian | Dark mode |
 | Updated note | Updated Oct 8, 2026 | Last modified on… |
 | Stats freshness | Stats from GitHub, refreshed daily | |
 | Draft preview banner (dev only) | Draft. Not published. | |

@@ -1,51 +1,50 @@
 import { test, expect } from '@playwright/test';
 import routes from './routes.js';
-import { themes, setTheme } from './helpers.js';
 
 // Phase 7 checks that go beyond the smoke test: layout at every width, head tags, JSON-LD, links, heading order.
 const widths = [320, 375, 768, 1024, 1280, 1480];
 
 for (const route of routes) {
-  for (const theme of themes) {
-    test(`layout ${route.path} [${theme}]`, async ({ page, context }) => {
-      await setTheme(context, theme);
-      for (const width of widths) {
-        await page.setViewportSize({ width, height: 900 });
-        await page.goto(route.path, { waitUntil: 'networkidle' });
-        const issues = await page.evaluate(() => {
-          const out = [];
-          const view = document.documentElement.clientWidth;
-          if (document.documentElement.scrollWidth > view) out.push('horizontal scroll');
-          // Elements poking out of the viewport, unless they sit inside a scroller (code blocks, tables, frames).
-          for (const el of document.body.querySelectorAll('*')) {
-            const r = el.getBoundingClientRect();
-            if (r.width === 0 || r.right <= view + 1) continue;
-            let p = el.parentElement;
-            let scrolls = false;
-            while (p && p !== document.body) {
-              const ox = getComputedStyle(p).overflowX;
-              if (ox === 'auto' || ox === 'scroll' || ox === 'hidden' || ox === 'clip') scrolls = true;
-              if (getComputedStyle(p).position === 'fixed') scrolls = true;
-              p = p.parentElement;
-            }
-            const cs = getComputedStyle(el);
-            if (!scrolls && cs.position !== 'fixed' && cs.visibility !== 'hidden' && cs.display !== 'none') {
-              out.push(`overflows: <${el.tagName.toLowerCase()} class="${el.className}">`);
-              if (out.length > 5) break;
-            }
+  test(`layout ${route.path}`, async ({ page }) => {
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(route.path, { waitUntil: 'networkidle' });
+      const issues = await page.evaluate(() => {
+        const out = [];
+        const view = document.documentElement.clientWidth;
+        if (document.documentElement.scrollWidth > view) out.push('horizontal scroll');
+        // Elements poking out of the viewport, unless they sit inside a scroller (code blocks, tables, frames).
+        for (const el of document.body.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.right <= view + 1) continue;
+          let p = el.parentElement;
+          let scrolls = false;
+          while (p && p !== document.body) {
+            const ox = getComputedStyle(p).overflowX;
+            if (ox === 'auto' || ox === 'scroll' || ox === 'hidden' || ox === 'clip') scrolls = true;
+            if (getComputedStyle(p).position === 'fixed') scrolls = true;
+            p = p.parentElement;
           }
-          // Tap targets: visible controls at least 24x24 CSS px (WCAG 2.5.8); axe's target-size rule covers spacing for small links.
-          for (const el of document.querySelectorAll('button, [role=button], input:not([type=hidden]), select, summary, a.btn, a.chip')) {
-            const r = el.getBoundingClientRect();
-            if (r.width === 0 || r.height === 0) continue;
-            if (r.width < 24 || r.height < 24) out.push(`small target ${Math.round(r.width)}x${Math.round(r.height)}: ${el.outerHTML.slice(0, 80)}`);
+          const cs = getComputedStyle(el);
+          if (!scrolls && cs.position !== 'fixed' && cs.visibility !== 'hidden' && cs.display !== 'none') {
+            out.push(`overflows: <${el.tagName.toLowerCase()} class="${el.className}">`);
+            if (out.length > 5) break;
           }
-          return out;
-        });
-        expect(issues, `${width}px`).toEqual([]);
-      }
-    });
-  }
+        }
+        // Tap targets: visible controls at least 24x24 CSS px (WCAG 2.5.8); axe's target-size rule covers spacing for small links.
+        for (const el of document.querySelectorAll(
+          'button, [role=button], input:not([type=hidden]), select, summary, a.btn, a.chip',
+        )) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          if (r.width < 24 || r.height < 24)
+            out.push(`small target ${Math.round(r.width)}x${Math.round(r.height)}: ${el.outerHTML.slice(0, 80)}`);
+        }
+        return out;
+      });
+      expect(issues, `${width}px`).toEqual([]);
+    }
+  });
 
   test(`head, links and headings ${route.path}`, async ({ page }) => {
     await page.goto(route.path, { waitUntil: 'networkidle' });
@@ -54,7 +53,11 @@ for (const route of routes) {
       const ld = [...document.querySelectorAll('script[type="application/ld+json"]')].map((s) => s.textContent ?? '');
       const links = [...document.querySelectorAll('a')].map((a) => ({
         href: a.getAttribute('href'),
-        name: (a.textContent ?? '').trim() || a.getAttribute('aria-label') || a.querySelector('img[alt]')?.getAttribute('alt') || '',
+        name:
+          (a.textContent ?? '').trim() ||
+          a.getAttribute('aria-label') ||
+          a.querySelector('img[alt]')?.getAttribute('alt') ||
+          '',
       }));
       const levels = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => Number(h.tagName[1]));
       return {
@@ -116,10 +119,15 @@ test('print stylesheet for a blog post', async ({ page }) => {
       return [s, !el || getComputedStyle(el).display === 'none'];
     }),
   );
-  expect(hidden.filter(([, ok]) => !ok).map(([s]) => s), 'chrome still visible in print').toEqual([]);
+  expect(
+    hidden.filter(([, ok]) => !ok).map(([s]) => s),
+    'chrome still visible in print',
+  ).toEqual([]);
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   expect(bg, 'paper background in print').toMatch(/^rgba?\(255, 255, 255|rgba\(0, 0, 0, 0\)/);
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+  );
   expect(overflow, 'no horizontal overflow in print').toBe(true);
 });
 
