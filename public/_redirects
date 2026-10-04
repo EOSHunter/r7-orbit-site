@@ -9,3 +9,6 @@
 /rss        /rss.xml            301
 /atom.xml   /rss.xml            301
 /sitemap.xml /sitemap-index.xml 301
+
+# Without the trailing slash the admin would 404.
+/admin      /admin/             301

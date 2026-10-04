@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
 import { rehypeHeadingIds, unified } from '@astrojs/markdown-remark';
 import site from './src/data/site.json' with { type: 'json' };
 import remarkCallouts from './src/lib/markdown/remark-callouts.mjs';
@@ -21,5 +22,7 @@ export default defineConfig({
       rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     }),
   },
+  // MDX lets a post use the article components (src/lib/article-components.ts); plain .md posts are unaffected.
+  integrations: [mdx()],
   devToolbar: { enabled: false },
 });

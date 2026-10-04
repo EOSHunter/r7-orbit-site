@@ -45,6 +45,7 @@ describe('noindex detection', () => {
     expect(isExcluded('/404/')).toBe(true);
     expect(isExcluded('/search/')).toBe(true);
     expect(isExcluded('/styleguide/specimen/')).toBe(true);
+    expect(isExcluded('/admin/')).toBe(true);
     expect(isExcluded('/blog/')).toBe(false);
   });
 });
@@ -90,9 +91,9 @@ describe('XML output', () => {
     expect(xml).toContain('<sitemapindex');
     expect(xml).toContain('<loc>https://example.com/sitemap-0.xml</loc>');
   });
-  it('points robots.txt at the sitemap index and allows crawling', () => {
+  it('points robots.txt at the sitemap index, allows crawling and keeps /admin/ out', () => {
     expect(buildRobots('https://example.com')).toBe(
-      'User-agent: *\nAllow: /\n\nSitemap: https://example.com/sitemap-index.xml\n',
+      'User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: https://example.com/sitemap-index.xml\n',
     );
   });
 });

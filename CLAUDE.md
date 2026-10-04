@@ -21,6 +21,7 @@ src/
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
+  admin/                      Decap CMS for /admin: config.ts (fields), blocks.ts (article components as editor blocks), main.ts (entry). See README "Admin"
   pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: both themes via iframes of styleguide/specimen/)
@@ -29,6 +30,7 @@ src/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
+                              article-components.ts (MDX `components` map for posts: Figure, Callout, Quote, ImageGallery, TwoColumn, VideoEmbed, Divider),
                               content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging), feed.ts + feed-queries.ts,
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts, newsletter.ts
@@ -57,6 +59,7 @@ Markdown runs on the `unified` processor (`@astrojs/markdown-remark`, build-time
 npm run dev       # local dev server (http://localhost:4321)
 npm run build     # production build to dist/ (must pass before any merge)
 npm run preview   # serve dist/ to look at the built site (search only works here: Pagefind indexes dist/ during `npm run build`)
+npm run cms       # Decap local proxy for /admin (run next to `npm run dev`; see README "Admin")
 npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
 npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)

@@ -10,6 +10,7 @@ import SubscribeBand from './SubscribeBand.astro';
 import TableOfContents from './TableOfContents.astro';
 import { site } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { articleComponents } from '../lib/article-components';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
@@ -142,7 +143,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
         )}
 
         <article class="prose" id="article">
-          <Content />
+          <Content components={articleComponents} />
         </article>
 
         {series && <SeriesNav series={series} />}

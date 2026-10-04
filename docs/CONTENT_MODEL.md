@@ -51,6 +51,7 @@ Body: 150–500 words. Say what happened, why it matters (or doesn't), and what 
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
+| `subtitle` | string | no | Up to 140 characters. One line under the title (written by the admin; not yet shown on the page) |
 | `series` | string | no | Name of a series; posts with the same value link to each other |
 | `seriesOrder` | number | if `series` | 1, 2, 3… |
 | `toc` | boolean | no | Default `true` when the post has 3+ `h2` headings |

@@ -1,8 +1,11 @@
 // Astro-bound feed loaders: turn published posts into RSS items. The XML itself is built by feed.ts.
+import { getContainerRenderer as mdxRenderer } from '@astrojs/mdx/container-renderer';
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
+import { loadRenderers } from 'astro:container';
 import { render } from 'astro:content';
 import sanitizeHtml from 'sanitize-html';
 import { site } from '../data/site';
+import { articleComponents } from './article-components';
 import { getAllPosts, getPosts, type SitePost } from './content-queries';
 import type { CollectionName } from './content';
 import { postUrl } from './content';
@@ -26,7 +29,7 @@ const escapeHtml = (s: string) =>
 /** Rendered post body, with the site's own widgets (copy buttons, heading anchors) and any scripts stripped. */
 async function bodyHtml(post: SitePost, container: AstroContainer): Promise<string> {
   const { Content } = await render(post.entry);
-  const html = await container.renderToString(Content);
+  const html = await container.renderToString(Content, { props: { components: articleComponents } });
   // Page chrome (heading anchors, the code block bar with its copy button) means nothing in a feed reader.
   const content = html
     .replace(/<a class="heading-anchor"[^>]*><\/a>/g, '')
@@ -78,7 +81,8 @@ function descriptionFor(post: SitePost, summary: string): string {
 /** The RSS XML for one kind, or for everything when `kind` is omitted. */
 export async function feedXml(kind?: CollectionName): Promise<string> {
   const posts = kind ? await getPosts(kind) : await getAllPosts();
-  const container = await AstroContainer.create();
+  // The MDX renderer is what lets the container render a post that uses the article components.
+  const container = await AstroContainer.create({ renderers: await loadRenderers([mdxRenderer()]) });
   const items = await Promise.all(posts.slice(0, 50).map((post) => toItem(post, container)));
   const path = kind ? `/${kind}/rss.xml` : '/rss.xml';
   return buildRss(
