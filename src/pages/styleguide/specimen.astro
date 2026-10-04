@@ -1,6 +1,5 @@
 ---
-// Every shared component, on one page. The theme can be forced with ?theme=dark or ?theme=light (the /styleguide/ page uses
-// that to show both side by side). Not linked from anywhere, and kept out of search engines. All text is sample content.
+// Every shared component, on one page. Not linked from anywhere, and kept out of search engines. All text is sample content.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Gallery from '../../components/Gallery.astro';
 import Icon from '../../components/Icon.astro';
@@ -108,17 +107,9 @@ const pinned: CardData = {
 
 <BaseLayout
   title="Styleguide"
-  description="Every shared component of the site, for checking in both themes. Not part of the site."
+  description="Every shared component of the site, for checking. Not part of the site."
   noindex
 >
-  <script slot="head" is:inline>
-    (function () {
-      const theme = new URLSearchParams(window.location.search).get('theme');
-      const root = document.documentElement;
-      if (theme === 'light') root.setAttribute('data-theme', 'light');
-      else if (theme === 'dark') root.removeAttribute('data-theme');
-    })();
-  </script>
   <section class="section" aria-labelledby="sg-h">
     <div class="container wide">
       <p class="eyebrow brass">Not part of the site</p>

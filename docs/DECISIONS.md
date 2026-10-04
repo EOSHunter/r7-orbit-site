@@ -25,7 +25,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 
 | Question | Recommendation | Answer |
 |---|---|---|
-| Ship the light "Ivory" theme, or dark only? | **Dark default, Ivory available** via a toggle, respecting the visitor's system preference on first visit. Long articles are read in daylight. If the author wants the app's strict dark-only identity, remove the toggle and the `[data-theme='light']` block | |
+| Ship the light "Ivory" theme, or dark only? | **Dark only.** The Ivory theme, its toggle, the `[data-theme='light']` tokens and the saved `r7-theme` preference were removed. | |
 | Framework | Astro | |
 | Tailwind or plain CSS? | Plain CSS from the design system | |
 | Newsletter provider | Buttondown | |

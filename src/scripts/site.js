@@ -1,7 +1,6 @@
 /*
   R7 Orbit site kit: behaviour. Plain JS, no dependencies, no network.
 
-    (a) theme toggle            [data-theme-toggle]      (the first paint is handled by a tiny inline script in each <head>)
     (b) mobile menu             [data-menu-toggle]       controls #site-nav
     (c) list filtering          [data-list]              home feed and archive: kind, tags, search, sort, count, empty state
     (d) copy buttons            [data-copy]              "#id" copies that element's text, "@url" copies this page's address, anything else is copied as is
@@ -17,29 +16,6 @@
   var root = document.documentElement;
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
   function $$(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
-
-  /* ------------------------------------------------------------------------------------------ (a) theme */
-  var THEME_KEY = 'r7-theme';
-
-  function syncThemeUI() {
-    var light = root.getAttribute('data-theme') === 'light';
-    $$('[data-theme-toggle]').forEach(function (b) { b.setAttribute('aria-pressed', String(light)); });
-    // Keep the browser chrome colour in step with the page
-    var meta = $('meta[name="theme-color"]');
-    var bg = getComputedStyle(root).getPropertyValue('--bg').trim();
-    if (meta && bg) meta.setAttribute('content', bg);
-  }
-
-  function setTheme(next) {
-    if (next === 'light') root.setAttribute('data-theme', 'light'); else root.removeAttribute('data-theme');
-    try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private window or blocked storage: the choice just isn't remembered */ }
-    syncThemeUI();
-  }
-
-  $$('[data-theme-toggle]').forEach(function (b) {
-    b.addEventListener('click', function () { setTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); });
-  });
-  syncThemeUI();
 
   /* ------------------------------------------------------------------------------------------- (b) menu */
   var menuBtn = $('[data-menu-toggle]');

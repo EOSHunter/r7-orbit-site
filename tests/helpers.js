@@ -1,23 +1,9 @@
-// Shared setup: the theme is set the way the site does it (localStorage 'r7-theme', read by the inline
-// script in BaseLayout.astro before first paint), and viewports are the two the brief checks.
-
-export const themes = ['dark', 'light'];
+// Shared setup: the viewports the brief checks, and a watcher for page problems.
 
 export const viewports = [
   { name: '375', width: 375, height: 812 },
   { name: '1280', width: 1280, height: 800 },
 ];
-
-/** Set the saved theme before any page script runs. */
-export async function setTheme(context, theme) {
-  await context.addInitScript((t) => {
-    try {
-      localStorage.setItem('r7-theme', t);
-    } catch {
-      /* storage blocked */
-    }
-  }, theme);
-}
 
 /** Collect console errors, page errors, failed requests, bad responses and third-party requests. */
 export function watchPage(page, baseURL) {
