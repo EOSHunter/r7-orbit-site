@@ -1,0 +1,36 @@
+---
+import Icon from './Icon.astro';
+import { postUrl } from '../lib/content';
+import type { CollectionName } from '../lib/content';
+import { plainTitle } from '../lib/text';
+
+interface Neighbour {
+  collection: CollectionName;
+  id: string;
+  data: { title: string };
+}
+
+interface Props {
+  newer?: Neighbour;
+  older?: Neighbour;
+}
+
+const { newer, older } = Astro.props;
+---
+
+{(newer || older) && (
+  <nav class="post-nav" aria-label="Previous and next post">
+    {older ? (
+      <a class="prev" href={postUrl(older)} rel="prev">
+        <span class="label-row"><Icon name="arrow" class="flip" />Older</span>
+        <span class="title">{plainTitle(older.data.title)}</span>
+      </a>
+    ) : <span />}
+    {newer && (
+      <a class="next" href={postUrl(newer)} rel="next">
+        <span class="label-row">Newer<Icon name="arrow" /></span>
+        <span class="title">{plainTitle(newer.data.title)}</span>
+      </a>
+    )}
+  </nav>
+)}

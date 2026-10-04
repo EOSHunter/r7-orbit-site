@@ -1,0 +1,44 @@
+---
+import Icon from './Icon.astro';
+import { postUrl } from '../lib/content';
+import type { CollectionName } from '../lib/content';
+import { plainTitle } from '../lib/text';
+
+interface SeriesPost {
+  collection: CollectionName;
+  id: string;
+  data: { title: string };
+}
+
+interface Props {
+  series: { name: string; position: number; posts: SeriesPost[]; prev?: SeriesPost; next?: SeriesPost };
+}
+
+const { series } = Astro.props;
+---
+
+{series.posts.length > 1 && (
+  <nav class="series" aria-label={`Series: ${series.name}`}>
+    <p class="eyebrow">Series · part {series.position} of {series.posts.length}</p>
+    <p class="series-name">{series.name}</p>
+    <ol>
+      {series.posts.map((p, i) => (
+        <li>
+          {i + 1 === series.position ? (
+            <span aria-current="page">{plainTitle(p.data.title)}</span>
+          ) : (
+            <a href={postUrl(p)}>{plainTitle(p.data.title)}</a>
+          )}
+        </li>
+      ))}
+    </ol>
+    <div class="series-steps">
+      {series.prev && (
+        <a class="btn sm quiet" href={postUrl(series.prev)} rel="prev"><Icon name="arrow" class="flip" />Previous part</a>
+      )}
+      {series.next && (
+        <a class="btn sm quiet" href={postUrl(series.next)} rel="next">Next part<Icon name="arrow" /></a>
+      )}
+    </div>
+  </nav>
+)}

@@ -1,0 +1,164 @@
+---
+// The whole page for a blog post or a news item (docs/PAGES.md). The two routes only fetch and pass data.
+import ArticleJsonLd from './ArticleJsonLd.astro';
+import Icon from './Icon.astro';
+import PrevNext from './PrevNext.astro';
+import RelatedPosts from './RelatedPosts.astro';
+import SeriesNav from './SeriesNav.astro';
+import ShareRow from './ShareRow.astro';
+import SubscribeBand from './SubscribeBand.astro';
+import TableOfContents from './TableOfContents.astro';
+import { site } from '../data/site';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
+import type { SitePost } from '../lib/content-queries';
+import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
+import { render } from 'astro:content';
+import '../styles/markdown.css';
+
+interface Props {
+  post: SitePost<'blog'> | SitePost<'news'>;
+  /** Published posts of the same kind, newest first. */
+  sameKind: SitePost<'blog'>[] | SitePost<'news'>[];
+  /** Published posts of every kind, for related posts. */
+  everything: SitePost[];
+}
+
+const { post, sameKind, everything } = Astro.props;
+const kind = post.collection as 'blog' | 'news';
+const { data } = post;
+const { Content, headings } = await render(post.entry as never);
+
+// <title> and og:title stay within 60 characters with the site name added (docs/PAGES.md); the h1 keeps the full headline.
+function headTitle(title: string): string {
+  const room = 60 - ' · '.length - site.name.length;
+  const plain = plainTitle(title);
+  if (plain.length <= room) return title;
+  return plain.slice(0, room - 1).replace(/\s+\S*$/, '') + '…';
+}
+
+const label = kind === 'news' ? 'News' : 'Blog';
+const minutes = readTime(post);
+const base = (Astro.site ?? new URL(site.url)).href;
+const url = absoluteUrl(Astro.url.pathname, base);
+const cover = data.cover ? { src: data.cover, alt: data.coverAlt ?? '' } : undefined;
+const image = cover ? new URL(cover.src, base).href : undefined;
+
+const toc = kind === 'blog' && (data as { toc?: boolean }).toc !== false && (
+  (data as { toc?: boolean }).toc === true || headings.filter((h) => h.depth === 2).length >= 3
+);
+const series = kind === 'blog' ? seriesFor(post, sameKind as SitePost<'blog'>[]) : undefined;
+const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
+const related = relatedPosts(post, everything);
+const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string }) : undefined;
+
+const author = data.author ?? site.author.name;
+const ASSIST = {
+  edited: 'Written by me and edited with AI help.',
+  drafted: 'The first draft was written with AI help.',
+} as const;
+const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist] : undefined;
+---
+
+<BaseLayout
+  title={headTitle(data.title)}
+  description={data.summary}
+  ogType="article"
+  image={image}
+  imageAlt={cover?.alt || undefined}
+  published={data.date}
+  modified={data.updated}
+  tags={data.tags}
+  current={label}
+>
+  <ArticleJsonLd
+    slot="head"
+    kind={kind}
+    title={data.title}
+    description={data.summary}
+    url={url}
+    base={base}
+    published={data.date}
+    modified={data.updated}
+    tags={data.tags}
+    image={image}
+    minutes={minutes}
+    sourceUrl={news?.sourceUrl}
+  />
+
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href={`/${kind}/`}>{label}</a></li>
+        <li aria-current="page">{plainTitle(data.title)}</li>
+      </ol>
+    </nav>
+
+    <header class="post-head">
+      <p class="eyebrow">
+        <span class="kind"><Icon name={kind} />{label}</span>
+        <span class="sep" aria-hidden="true">&middot;</span>
+        <span>{minutes} min read</span>
+      </p>
+      <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <p class="t-lead">{data.summary}</p>
+      <div class="byline">
+        <span class="author">
+          <span class="avatar" aria-hidden="true"><img src="/assets/r7-mark.svg" alt="" /></span>{author}
+        </span>
+        <span class="meta-item"><Icon name="calendar" /><time datetime={isoDate(data.date)}>{longDate(data.date)}</time></span>
+        <span class="meta-item"><Icon name="clock" />{minutes} min read</span>
+        {data.updated && (
+          <span class="meta-item">Updated <time datetime={isoDate(data.updated)}>{longDate(data.updated)}</time></span>
+        )}
+        {data.tags.length > 0 && (
+          <div class="cluster tags" aria-label="Tags">
+            {data.tags.map((tag) => <a class="chip link" href={`/tags/${tag}/`}>{tag}</a>)}
+          </div>
+        )}
+      </div>
+      {assist && <p class="how-made"><strong>How this was made.</strong> {assist}</p>}
+    </header>
+
+    {cover && (
+      <div class="media framed post-hero">
+        <img src={cover.src} alt={cover.alt} width="1280" height="720" />
+      </div>
+    )}
+
+    <div class="post-layout">
+      <div class="post-main">
+        {toc && <TableOfContents headings={headings} variant="inline" />}
+
+        {news && (
+          <aside class="source-box" aria-label="Source">
+            <p class="eyebrow">Source</p>
+            <p class="source-link">
+              <a href={news.sourceUrl} rel="noopener">{news.sourceName}<Icon name="external" /></a>
+            </p>
+            {news.take && <p class="source-take"><span>My read:</span> {news.take}</p>}
+          </aside>
+        )}
+
+        <article class="prose" id="article">
+          <Content />
+        </article>
+
+        {series && <SeriesNav series={series} />}
+
+        <ShareRow title={plainTitle(data.title)} url={url} />
+      </div>
+
+      {toc && <TableOfContents headings={headings} variant="aside" />}
+    </div>
+  </div>
+
+  <RelatedPosts posts={related} />
+
+  <div class="container post-nav-wrap">
+    <PrevNext newer={newer} older={older} />
+  </div>
+
+  <SubscribeBand />
+</BaseLayout>

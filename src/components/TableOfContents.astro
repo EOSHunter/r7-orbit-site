@@ -1,0 +1,61 @@
+---
+// Headings from Astro's render(): h2 at the top level, h3 nested under the h2 before it.
+// Wide screens: sticky sidebar (.toc). Below that: a <details> above the body. site.js highlights the current section.
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  /** `aside` is the sticky sidebar; `inline` is the <details> shown on smaller screens. */
+  variant: 'aside' | 'inline';
+}
+
+const { headings, variant } = Astro.props;
+type Node = { slug: string; text: string; children: { slug: string; text: string }[] };
+const tree: Node[] = [];
+for (const h of headings) {
+  if (h.depth === 2) tree.push({ slug: h.slug, text: h.text, children: [] });
+  else if (h.depth === 3 && tree.length) tree[tree.length - 1].children.push({ slug: h.slug, text: h.text });
+}
+---
+
+{tree.length > 0 && (
+  variant === 'aside' ? (
+    <aside class="toc toc-aside">
+      <nav aria-label="On this page">
+        <p class="eyebrow">On this page</p>
+        <ol>
+          {tree.map((n) => (
+            <li>
+              <a href={`#${n.slug}`}>{n.text}</a>
+              {n.children.length > 0 && (
+                <ol>
+                  {n.children.map((c) => (
+                    <li><a href={`#${c.slug}`}>{c.text}</a></li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </aside>
+  ) : (
+    <details class="toc-inline">
+      <summary>On this page</summary>
+      <nav aria-label="On this page (short screens)">
+        <ol>
+          {tree.map((n) => (
+            <li>
+              <a href={`#${n.slug}`}>{n.text}</a>
+              {n.children.length > 0 && (
+                <ol>
+                  {n.children.map((c) => (
+                    <li><a href={`#${c.slug}`}>{c.text}</a></li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </details>
+  )
+)}

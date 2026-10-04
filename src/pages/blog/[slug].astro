@@ -1,0 +1,14 @@
+---
+import ArticlePage from '../../components/ArticlePage.astro';
+import { getAllPosts, getPosts } from '../../lib/content-queries';
+
+export async function getStaticPaths() {
+  const posts = await getPosts('blog');
+  const everything = await getAllPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post, sameKind: posts, everything } }));
+}
+
+const { post, sameKind, everything } = Astro.props;
+---
+
+<ArticlePage post={post} sameKind={sameKind} everything={everything} />

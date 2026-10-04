@@ -1,0 +1,34 @@
+---
+// Copy link (site.js), email, and the author's own profiles. Plain links: nothing loads from a third party.
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+import { site } from '../data/site';
+
+interface Props {
+  title: string;
+  url: string;
+}
+
+const { title, url } = Astro.props;
+const profiles = (
+  [
+    { label: 'GitHub', href: site.links.github, icon: 'github' },
+    { label: 'YouTube', href: site.links.youtube, icon: 'vlog' },
+    { label: 'X', href: site.links.x, icon: 'link' },
+    { label: 'LinkedIn', href: site.links.linkedin, icon: 'link' },
+    { label: 'Bluesky', href: site.links.bluesky, icon: 'link' },
+  ] as { label: string; href: string; icon: IconName }[]
+).filter((p) => p.href);
+const mailto = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`;
+---
+
+<div class="share" role="group" aria-label="Share this post">
+  <span class="eyebrow">Share</span>
+  <button class="btn sm quiet" type="button" data-copy="@url">
+    <Icon name="link" /><span data-copy-label>Copy link</span>
+  </button>
+  <a class="btn sm quiet" href={mailto}><Icon name="mail" />Email</a>
+  {profiles.map((p) => (
+    <a class="btn sm quiet" href={p.href} rel="noopener"><Icon name={p.icon} />{p.label}</a>
+  ))}
+</div>
