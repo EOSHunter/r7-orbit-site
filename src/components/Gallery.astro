@@ -1,0 +1,75 @@
+---
+// Screenshot gallery: a grid of thumbnails, each opening a shared <dialog> with the picture, its caption and
+// previous/next (src/scripts/gallery.js). Every item needs alt text. Leave `src` out to show the placeholder plate.
+import Icon from './Icon.astro';
+import MediaPlaceholder from './MediaPlaceholder.astro';
+
+interface Shot {
+  /** A local image path. Omit it for the placeholder plate. */
+  src?: string;
+  alt: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+}
+
+interface Props {
+  shots: Shot[];
+  /** Names the dialog for screen readers. */
+  label?: string;
+}
+
+const { shots, label = 'Screenshots' } = Astro.props;
+---
+
+<div class="gallery-wrap" data-gallery>
+  <div class="gallery">
+    {
+      shots.map((shot) => (
+        <figure>
+          <button
+            class="shot"
+            type="button"
+            data-gallery-open
+            data-alt={shot.alt}
+            data-caption={shot.caption}
+            aria-label={`Enlarge: ${shot.alt}`}
+            aria-haspopup="dialog"
+          >
+            <div class="media">
+              {shot.src ? (
+                <img src={shot.src} alt="" width={shot.width} height={shot.height} loading="lazy" decoding="async" />
+              ) : (
+                <MediaPlaceholder />
+              )}
+            </div>
+          </button>
+          {shot.caption && <figcaption>{shot.caption}</figcaption>}
+        </figure>
+      ))
+    }
+  </div>
+
+  <dialog class="lightbox" aria-label={label} data-gallery-dialog>
+    <div class="lightbox-bar">
+      <span class="t-meta" data-gallery-count aria-live="polite"></span>
+      <button class="btn sm quiet" type="button" data-gallery-close>
+        <Icon name="close" small />Close
+      </button>
+    </div>
+    <div class="lightbox-stage" data-gallery-stage></div>
+    <p class="lightbox-caption" data-gallery-caption></p>
+    <div class="lightbox-nav">
+      <button class="btn sm lightbox-prev" type="button" data-gallery-prev>
+        <Icon name="arrow" small />Previous
+      </button>
+      <button class="btn sm" type="button" data-gallery-next>
+        Next<Icon name="arrow" small />
+      </button>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  import '../scripts/gallery.js';
+</script>

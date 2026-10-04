@@ -7,3 +7,9 @@ build/
 .DS_Store
 Thumbs.db
 .astro/
+
+# test artifacts
+test-results/
+playwright-report/
+.lighthouseci/
+.cache/

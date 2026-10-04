@@ -49,7 +49,10 @@ npm run preview   # serve dist/ to look at the built site
 npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
 npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)
-npm run test      # vitest run (unit tests in src/**/*.test.ts); phase 7 adds Playwright + axe
+npm run test      # unit tests (node:test *.test.ts + Vitest *.vitest.ts for content/Markdown helpers), then Playwright: smoke + axe + JS/CSS size budgets on every route in tests/routes.js, both themes, 375 and 1280px
+                  # needs a build first and browsers once: npm run build && npx playwright install chromium
+                  # serves dist/ itself via `npm run preview` (port 4399); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
+npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
 ```
 
 Node 22.12 or newer. The styleguide is at `/styleguide/` (both themes, with frame widths); it is not linked from anywhere.
