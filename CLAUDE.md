@@ -67,7 +67,7 @@ npm run test:unit # node:test *.test.ts + Vitest *.vitest.ts for content/Markdow
 npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + JS/CSS budgets (375 and 1280px),
                   # audit (320-1480px, head tags, JSON-LD, links), keyboard, feeds/robots/sitemap
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
-                  # serves dist/ itself via `npm run preview` (port 4399); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
+                  # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=n if taken); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
 ```
 

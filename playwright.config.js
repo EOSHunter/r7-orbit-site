@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const PORT = 4399;
+const PORT = Number(process.env.E2E_PORT ?? 4399);
 
 // Tests run against the built site served by `npm run preview` (run `npm run build` first).
 export default defineConfig({
