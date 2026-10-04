@@ -1,0 +1,24 @@
+---
+// A heading with a "link to this section" anchor. Use it when you need an explicit id or a level Markdown can't give;
+// plain `##` in a post gets the same anchor from the rehype step in src/lib/markdown/. Anchor styles live in markdown.css.
+import { plainText, slugify } from '../../lib/article';
+import '../../styles/markdown.css';
+import '../../styles/article.css';
+
+interface Props {
+  /** 2 to 4. The page title is the h1, so articles start at 2. */
+  level?: 2 | 3 | 4;
+  /** Overrides the id made from the heading text. Set it when two headings share the same words. */
+  id?: string;
+}
+
+const { level = 2, id } = Astro.props;
+const html = await Astro.slots.render('default');
+const text = plainText(html);
+const slug = id ?? slugify(text);
+const Tag = `h${level}` as 'h2' | 'h3' | 'h4';
+---
+
+<Tag id={slug} class="has-anchor art-heading">
+  <Fragment set:html={html} /><a class="heading-anchor" href={`#${slug}`} aria-label={`Link to this section: ${text}`}></a>
+</Tag>

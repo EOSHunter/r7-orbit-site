@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
 import { rehypeHeadingIds, unified } from '@astrojs/markdown-remark';
 import site from './src/data/site.json' with { type: 'json' };
 import remarkCallouts from './src/lib/markdown/remark-callouts.mjs';
@@ -12,6 +13,8 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
+  // MDX posts can use the article components (src/components/article/). It inherits the markdown config below.
+  integrations: [mdx()],
   markdown: {
     // Code colours come from CSS variables mapped to the design tokens in src/styles/markdown.css.
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },

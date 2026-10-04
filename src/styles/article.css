@@ -1,0 +1,100 @@
+/* Article component library (src/components/article/). Tokens only, so every theme follows.
+   Selectors are self-contained (.art-*) and sit one step above .prose rules where they must win (img, figure). */
+
+/* Headings and paragraphs */
+.art-heading { clear: both; scroll-margin-top: calc(var(--header-h) + var(--s-5)); }
+.art-lead, .art-prose.art-lead-first > p:first-child { font-size: var(--fs-lg); line-height: 1.55; color: var(--text-2); }
+.art-prose { display: flow-root; }
+
+/* Figure: one image, aligned */
+.art-fig { margin: 0; overflow: hidden; background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); }
+.art-fig .art-img { display: block; width: 100%; height: auto; border: 0; border-radius: 0; }
+.art-fig > .media { border-radius: 0; }
+.art-fig figcaption { margin: 0; padding: var(--s-3) var(--s-4); border-top: var(--bw) solid var(--line); font-size: var(--fs-sm); line-height: 1.5; color: var(--text-3); }
+.art-fig[data-align='center'] { margin-inline: auto; }
+.art-fig[data-align='center'][data-size='sm'] { max-width: 20rem; }
+.art-fig[data-align='center'][data-size='md'] { max-width: 32rem; }
+.art-fig[data-align='full'] { width: 100%; border-radius: 0; }
+.art-fig[data-align='left'], .art-fig[data-align='right'] { margin-inline: auto; }
+.art-fig[data-align='left'][data-size='sm'], .art-fig[data-align='right'][data-size='sm'] { max-width: 14rem; }
+.art-fig[data-align='left'][data-size='md'], .art-fig[data-align='right'][data-size='md'] { max-width: 20rem; }
+@media (min-width: 720px) {
+  .art-fig[data-align='left'], .art-fig[data-align='right'] { width: 50%; margin-block: var(--s-2) var(--s-3); }
+  .art-fig[data-align='left'][data-size='sm'], .art-fig[data-align='right'][data-size='sm'] { width: 14rem; }
+  .art-fig[data-align='left'][data-size='md'], .art-fig[data-align='right'][data-size='md'] { width: 20rem; }
+  .art-fig[data-align='left'] { float: left; margin-right: var(--s-5); }
+  .art-fig[data-align='right'] { float: right; margin-left: var(--s-5); }
+}
+
+/* ImageRow: two or three side by side */
+.art-row { margin: 0; }
+.art-row-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
+@media (min-width: 600px) {
+  .art-row[data-count='2'] .art-row-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .art-row[data-count='3'] .art-row-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.art-row .art-fig { height: 100%; display: flex; flex-direction: column; }
+.art-row .art-fig figcaption { flex: 1; }
+.art-row-caption { margin-top: var(--s-2); font-size: var(--fs-sm); color: var(--text-3); }
+
+/* Callout (colours come from .callout, .brass and .bad in components.css) */
+.art-callout { clear: both; font-size: var(--fs-md); line-height: 1.6; }
+.art-callout-title { margin: 0 0 var(--s-2); }
+.art-callout-body > :first-child { margin-top: 0; }
+.art-callout-body > :last-child { margin-bottom: 0; }
+.art-callout-body > * + * { margin-top: var(--s-3); }
+.art-callout a { text-decoration: underline; text-underline-offset: 0.2em; }
+
+/* Quote and pull quote */
+.art-quote { margin: 0; padding: 0 0 0 var(--s-5); border-left: var(--bw-accent) solid var(--brass-dim); }
+.art-quote blockquote { margin: 0; padding: 0; border: 0; font: italic var(--fw-regular) var(--fs-xl)/1.4 var(--font-display); color: var(--text); }
+.art-quote blockquote > * + * { margin-top: var(--s-3); }
+.art-quote figcaption { margin: var(--s-2) 0 0; padding: 0; border: 0; font: var(--fs-xs) var(--font-ui); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.art-quote figcaption a { color: inherit; }
+.art-pullquote { clear: both; margin-block: var(--s-6); padding-block: var(--s-5); border-block: var(--bw) solid var(--line-brass); text-align: center; text-wrap: balance; }
+.art-pullquote p { margin: 0; font: italic var(--fw-regular) var(--fs-2xl)/1.25 var(--font-display); color: var(--text); }
+.art-pullquote .art-pullquote-cite { margin-top: var(--s-3); font: var(--fs-xs) var(--font-ui); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--brass); }
+
+/* Code: the .codeblock bar and pre.code come from site.css and markdown.css */
+.art-code { clear: both; max-width: 100%; }
+.art-code pre.code { margin: 0; border: 0; border-radius: 0; }
+.art-code pre.code .line { display: inline-block; min-width: 100%; }
+.art-code pre.code .line.add { color: var(--st-done); background: var(--st-done-wash); }
+.art-code pre.code .line.del { color: var(--st-failed-text); background: var(--st-failed-wash); }
+.art-code pre.code code { font-family: var(--font-mono); background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+
+/* Video */
+.art-video { clear: both; margin: 0; }
+.art-video figcaption { margin-top: var(--s-2); font-size: var(--fs-sm); color: var(--text-3); }
+
+/* Divider */
+.art-divider { clear: both; }
+hr.art-divider { margin-block: var(--s-6); }
+div.art-divider { display: flex; justify-content: center; gap: var(--s-3); margin-block: var(--s-6); }
+div.art-divider span { width: var(--s-1); height: var(--s-1); border-radius: var(--r-full); background: var(--brass); }
+
+/* Two columns */
+.art-cols { clear: both; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
+.art-col { min-width: 0; }
+.art-col > :first-child { margin-top: 0; }
+.art-col > :last-child { margin-bottom: 0; }
+.art-col > * + * { margin-top: 1em; }
+.art-cols[data-reverse] .art-col:first-child { order: 2; }
+@media (min-width: 720px) {
+  .art-cols { gap: var(--s-6); }
+  .art-cols[data-reverse] .art-col:first-child { order: 0; }
+  .art-cols[data-ratio='1:1'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .art-cols[data-ratio='2:1'] { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .art-cols[data-ratio='1:2'] { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+}
+
+/* Table of contents, in the article */
+.art-toc { clear: both; padding: var(--s-4) var(--s-5); border: var(--bw) solid var(--line); border-radius: var(--r-md); background: var(--surface-1); }
+.art-toc .eyebrow { margin: 0 0 var(--s-3); }
+.art-toc ol { margin: 0; padding: 0; list-style: none; }
+.art-toc ol ol { padding-left: var(--s-4); }
+.art-toc a { display: block; padding: var(--s-1) 0; font-size: var(--fs-md); color: var(--text-2); }
+.art-toc a:hover { color: var(--text); }
+
+/* ArticleTemplate: reading column and sidebar */
+.art-template .post-main { gap: var(--s-6); }

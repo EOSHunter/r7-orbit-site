@@ -1,0 +1,47 @@
+---
+// Table of contents. Pass `headings` from render() (`const { headings } = await render(entry)`) or from an MDX module's getHeadings().
+//   block   (default) a bordered list that sits in the article
+//   inline  the collapsible <details> the blog uses on screens narrower than 1200px
+//   aside   the sticky sidebar for wide screens (put it in a grid column next to the text, as ArticleTemplate does)
+// inline and aside are the existing TableOfContents; site.js highlights the current section in aside.
+import TableOfContents from '../TableOfContents.astro';
+import { tocTree } from '../../lib/article';
+import '../../styles/article.css';
+
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  variant?: 'block' | 'inline' | 'aside';
+  title?: string;
+  /** 2 lists h2 only; 3 (default) nests h3 under each h2. */
+  maxDepth?: 2 | 3;
+}
+
+const { headings, variant = 'block', title = 'On this page', maxDepth = 3 } = Astro.props;
+const tree = tocTree(headings, maxDepth);
+---
+
+{
+  variant === 'block' ? (
+    tree.length > 0 && (
+      <nav class="art-toc" aria-label={title}>
+        <p class="eyebrow">{title}</p>
+        <ol>
+          {tree.map((item) => (
+            <li>
+              <a href={`#${item.slug}`}>{item.text}</a>
+              {item.children.length > 0 && (
+                <ol>
+                  {item.children.map((child) => (
+                    <li><a href={`#${child.slug}`}>{child.text}</a></li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )
+  ) : (
+    <TableOfContents headings={maxDepth === 2 ? headings.filter((h) => h.depth === 2) : headings} variant={variant} />
+  )
+}

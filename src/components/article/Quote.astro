@@ -1,0 +1,22 @@
+---
+// A quotation inside the text: brass rule on the left, display italic. Attribution goes in `cite`; `href` links the source.
+import '../../styles/article.css';
+
+interface Props {
+  cite?: string;
+  href?: string;
+}
+
+const { cite, href } = Astro.props;
+---
+
+<figure class="art-quote">
+  <blockquote cite={href}><slot /></blockquote>
+  {
+    cite && (
+      <figcaption>
+        {href ? <a href={href} rel="noopener">{cite}</a> : cite}
+      </figcaption>
+    )
+  }
+</figure>

@@ -1,0 +1,36 @@
+---
+// An image with a caption. Without `src` it shows the placeholder plate (CLAUDE.md: no stock or generated images).
+// `alt` is required: pass "" only for a purely decorative image. Local files only (public/media/ or an imported image).
+import MediaPlaceholder from '../MediaPlaceholder.astro';
+import { resolveImage, type ImageSource } from '../../lib/article';
+import '../../styles/markdown.css';
+import '../../styles/article.css';
+
+interface Props {
+  /** A local path or an imported image. Omit it for the placeholder plate. */
+  src?: ImageSource;
+  alt: string;
+  caption?: string;
+  /** `left` and `right` float beside the text from 720px up and stack below that. `full` fills the column edge to edge. */
+  align?: 'left' | 'right' | 'center' | 'full';
+  /** Width for left, right and center: small, medium or large (large fills the column). Ignored by `full`. */
+  size?: 'sm' | 'md' | 'lg';
+  width?: number;
+  height?: number;
+}
+
+const { src, alt, caption, align = 'center', size = 'lg', width, height } = Astro.props;
+if (alt === undefined) throw new Error('Figure: alt is required (use "" only for a decorative image).');
+const image = src === undefined ? undefined : resolveImage(src, 'Figure');
+---
+
+<figure class="art-fig" data-align={align} data-size={size}>
+  {
+    image ? (
+      <img class="art-img" src={image.src} alt={alt} width={width ?? image.width} height={height ?? image.height} loading="lazy" decoding="async" />
+    ) : (
+      <div class="media" role={alt ? 'img' : undefined} aria-label={alt || undefined}><MediaPlaceholder /></div>
+    )
+  }
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
