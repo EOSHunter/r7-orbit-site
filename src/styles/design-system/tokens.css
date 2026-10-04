@@ -50,11 +50,11 @@
   --brass-shadow: #9a7c46;                 /* web: dark end of the logo gradient */
   --brass-deep: #5c4d2c;                   /* web: brass in shadow; borders on brass-tinted surfaces */
 
-  /* Scrims: a dark veil over media (video posters, the play ring, duration badges). Dark in both themes, so text on it is ivory in both. */
+  /* Scrims: a dark veil over media (video posters, the play ring, duration badges). Always dark, so text on it is ivory. */
   --scrim: rgb(9 9 10 / 0.6);              /* web */
   --scrim-strong: rgb(9 9 10 / 0.78);      /* web: badges on media */
   --header-veil: rgb(9 9 10 / 0.82);       /* web: the sticky header's translucent background (blurred behind) */
-  --on-scrim: #ece6d8;                     /* web: text and icons on a scrim; the same ivory in both themes */
+  --on-scrim: #ece6d8;                     /* web: text and icons on a scrim */
 
   /* Brass as light on dark: tints used behind things that need a little warmth */
   --brass-wash-1: rgb(201 169 106 / 0.05);

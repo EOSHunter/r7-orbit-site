@@ -27,7 +27,7 @@ Open <http://localhost:4321/admin/>, click Login, then "Blog post". New posts st
 | VideoEmbed | `<VideoEmbed />` | `id` (YouTube), `title`, `caption?` |
 | Divider | `<Divider />` | `variant?` (rule, dots) |
 
-Posts never `import` these: `ArticlePage` passes `articleComponents` (`src/components/article/mdx.ts`) to the post, and the RSS feed does the same. Image paths in blocks are `/media/x.jpg`: the components only accept local files from `public/`. The featured image is different: it goes to `src/assets/blog/` and is written relative to the post (`../../assets/blog/x.jpg`), because Astro optimises it. If a component's props change, change `src/admin/blocks.ts` and its test (`blocks.vitest.ts`) to match.
+`Pullquote` and `CodeBlock` have no block in the admin (its built-in code block writes a fenced block, which looks the same as `CodeBlock`); type them in the Markdown view, as in `src/content/blog/an-article-built-from-components.mdx`. `ImageGallery` is the same component as `ImageRow`. Posts never `import` these: `ArticlePage` passes `articleComponents` (`src/components/article/mdx.ts`) to the post, and the RSS feed does the same. Image paths in blocks are `/media/x.jpg`: the components only accept local files from `public/`. The featured image is different: it goes to `src/assets/blog/` and is written relative to the post (`../../assets/blog/x.jpg`), because Astro optimises it. If a component's props change, change `src/admin/blocks.ts` and its test (`blocks.vitest.ts`) to match.
 
 **Signing in when deployed.** The live admin edits the GitHub repository directly, so it needs a GitHub sign-in, and GitHub's OAuth flow needs one small server-side step (exchanging a code for a token with the app's secret) that a static site cannot do. Nothing here is live until you set that up once:
 
@@ -38,5 +38,7 @@ Posts never `import` these: `ArticlePage` passes `articleComponents` (`src/compo
 Anyone who can sign in to GitHub **and has write access to the repository** can use it; the token stays in that browser. When deployed, every save opens a pull request (Decap's editorial workflow), so CI runs `npm run build` on the post, and the strict content schema rejects a bad field, before it reaches the live site; Cloudflare Pages previews show the post as it will look. Merging the pull request publishes it.
 
 **Kept out of indexes.** `/admin/` is `noindex, nofollow` in its HTML and (on Cloudflare Pages) in `public/_headers`, disallowed in `robots.txt`, excluded from the sitemap (`EXCLUDED_PATHS`), outside the search index (`pagefind.yml` only indexes the five content folders), and never linked. Feeds are built from the content collections, so it cannot appear there. `tests/admin.spec.js` and `src/admin/exclusions.vitest.ts` check this.
+
+Two things the form cannot enforce, so the build does: a featured image needs `featuredImageAlt` (leave it empty on purpose only for a decorative image), and clearing an optional field writes an empty value (`featuredImage: ''`), which the site treats as not set.
 
 Existing `.md` posts keep working but are not listed in the admin (it manages `.mdx`); edit those in a code editor, or rename them to `.mdx`.

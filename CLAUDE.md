@@ -39,7 +39,8 @@ src/
   scripts/                    site.js (menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (hero and 404 only),
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play)
 tests/                        routes.js (every route, one list), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
-                              head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds;
+                              head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
+                              admin (noindex, out of robots/sitemap/feeds), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
 public/                       served as-is: fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
@@ -67,7 +68,7 @@ npm run test:unit # node:test *.test.ts + Vitest *.vitest.ts for content/Markdow
 npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + JS/CSS budgets (375 and 1280px),
                   # audit (320-1480px, head tags, JSON-LD, links), keyboard, feeds/robots/sitemap
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
-                  # serves dist/ itself via `npm run preview` (port 4399); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
+                  # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=4401 if another checkout already uses it: Playwright reuses a server it finds there and would test that one's dist/); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
 ```
 

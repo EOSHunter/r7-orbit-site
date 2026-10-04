@@ -89,9 +89,9 @@ A page is roughly **78% obsidian, 12% surfaces, 8% ivory text, 2% brass.** Brass
 | `--surface-2` | `#151518` | Hovered cards, raised panels, inputs on hover |
 | `--surface-3` | `#1b1b1f` | Selected tab or segment, the highest raise |
 | `--void` | `#020203` | *(web)* Inside the logo; wells that must read as holes |
-| `--scrim` / `--scrim-strong` | `rgb(9 9 10 / 0.6)` / `0.78` | *(web)* Dark veil over media: the play ring, duration badges. Dark in both themes |
+| `--scrim` / `--scrim-strong` | `rgb(9 9 10 / 0.6)` / `0.78` | *(web)* Dark veil over media: the play ring, duration badges |
 | `--header-veil` | `rgb(9 9 10 / 0.82)` | *(web)* The sticky header's translucent background |
-| `--on-scrim` | `#ece6d8` | *(web)* Text and icons on a scrim; ivory in both themes |
+| `--on-scrim` | `#ece6d8` | *(web)* Text and icons on a scrim |
 
 ### Lines: warm ivory at low opacity
 
@@ -158,7 +158,7 @@ Working and attention are deliberately not colours of their own: they are brass 
 | `--st-failed` | 4.84 | AA |
 | `--st-idle` | 4.22 | UI marks only |
 
-The page computes these live from the current theme.
+The styleguide page computes these live.
 
 
 ## 4. Typography
@@ -352,7 +352,7 @@ Five kinds of post, one visual system. **The kind is a label and an icon, never 
 design-system/
   DESIGN_SYSTEM.md   this document
   index.html         the live design system page
-  tokens.css         all design tokens + fonts (+ Ivory theme)
+  tokens.css         all design tokens + fonts
   tokens.json        the same tokens as data
   components.css     base styles + all components
   orbit.js           the animated ring and dot
