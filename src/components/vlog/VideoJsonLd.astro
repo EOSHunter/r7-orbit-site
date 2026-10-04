@@ -1,0 +1,59 @@
+---
+// VideoObject structured data. Only fields we know are written; empty ones are left out. Chapters become Clip parts.
+interface Chapter {
+  t: string;
+  title: string;
+}
+
+interface Props {
+  name: string;
+  description: string;
+  uploadDate: string;
+  /** `m:ss` or `h:mm:ss`. */
+  duration: string;
+  /** Absolute image URL, if the post has a poster or cover. */
+  thumbnailUrl?: string;
+  youtubeId?: string;
+  videoUrl?: string;
+  chapters?: Chapter[];
+}
+
+const { name, description, uploadDate, duration, thumbnailUrl, youtubeId, videoUrl, chapters = [] } = Astro.props;
+
+const seconds = (t: string) => t.split(':').reduce((total, part) => total * 60 + Number(part), 0);
+const total = seconds(duration);
+const h = Math.floor(total / 3600);
+const m = Math.floor((total % 3600) / 60);
+const iso = `PT${h ? `${h}H` : ''}${m ? `${m}M` : ''}${total % 60}S`;
+
+const watch = youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : videoUrl;
+// A chapter that starts at or after the end of the video is a typo in the content; leave it out rather than publish it.
+const parts = youtubeId
+  ? chapters
+      .filter((c) => seconds(c.t) < total)
+      .map((c, i, kept) => ({
+        '@type': 'Clip',
+        name: c.title,
+        startOffset: seconds(c.t),
+        endOffset: i + 1 < kept.length ? seconds(kept[i + 1].t) : total,
+        url: `${watch}&t=${seconds(c.t)}s`,
+      }))
+  : [];
+
+const data = {
+  '@context': 'https://schema.org',
+  '@type': 'VideoObject',
+  name,
+  description,
+  ...(thumbnailUrl && { thumbnailUrl: [thumbnailUrl] }),
+  uploadDate,
+  duration: iso,
+  ...(watch && { contentUrl: watch }),
+  ...(youtubeId && { embedUrl: `https://www.youtube-nocookie.com/embed/${youtubeId}` }),
+  ...(parts.length > 0 && { hasPart: parts }),
+};
+// "<" cannot end the script element early
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<script type="application/ld+json" set:html={json} />

@@ -1,0 +1,33 @@
+---
+// The README, already sanitised by src/lib/github.ts, inside .readme > .prose.
+// Two more steps here: headings move down a level (the page's h1 is the repo name), and remote images are
+// replaced by their alt text, because the site makes no third-party requests when a page loads.
+import Icon from './Icon.astro';
+import '../styles/markdown.css';
+
+interface Props {
+  html: string;
+}
+
+const { html } = Astro.props;
+
+let removedImages = 0;
+const body = html
+  .replace(/<(\/?)h([1-6])\b/gi, (_m, slash: string, level: string) => `<${slash}h${Math.min(6, Number(level) + 1)}`)
+  .replace(/<(pre|table)\b/gi, '<$1 tabindex="0"')
+  .replace(/<img\b[^>]*>/gi, (tag) => {
+    const src = /\ssrc="([^"]*)"/i.exec(tag)?.[1] ?? '';
+    if (!/^(https?:)?\/\//i.test(src)) return tag;
+    removedImages += 1;
+    const alt = /\salt="([^"]*)"/i.exec(tag)?.[1]?.trim();
+    return alt ? `<span>${alt}</span>` : '';
+  });
+---
+
+<div class="readme">
+  <div class="readme-bar"><Icon name="file" />README.md</div>
+  <div class="readme-body">
+    <div class="prose" set:html={body} />
+    {removedImages > 0 && <p class="t-meta readme-note">Images in the README are not loaded here. They are on GitHub.</p>}
+  </div>
+</div>

@@ -1,0 +1,11 @@
+# Cloudflare Pages / Netlify redirects: "from to status". Never change a published URL without a 301 here
+# (docs/SEO_AND_SHARING.md). Add one line per moved page, above the catch-alls.
+#
+# Not here, because they need the real domain and are set in the host's dashboard: www <-> apex and HTTP -> HTTPS.
+
+# Common guesses for the feed and the sitemap.
+/feed       /rss.xml            301
+/feed.xml   /rss.xml            301
+/rss        /rss.xml            301
+/atom.xml   /rss.xml            301
+/sitemap.xml /sitemap-index.xml 301

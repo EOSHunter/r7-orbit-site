@@ -1,0 +1,71 @@
+---
+// JSON-LD for the project page (SoftwareApplication) and the repo page (SoftwareSourceCode), plus a breadcrumb.
+// Only fields that are known are written: no rating, price, category or author URL is made up.
+import { site } from '../data/site';
+import { isoDate, absoluteUrl, plainTitle } from '../lib/text';
+
+interface Props {
+  kind: 'project' | 'repo';
+  name: string;
+  description: string;
+  /** Path of this page, e.g. /projects/r7-orbit/ */
+  path: string;
+  published?: Date | string;
+  modified?: Date | string;
+  keywords?: string[];
+  /** Project: the live site or app. */
+  liveUrl?: string;
+  /** Link to the code: the GitHub repo. */
+  codeRepository?: string;
+  language?: string | null;
+  /** SPDX id, when GitHub reports one. */
+  license?: string | null;
+}
+
+const p = Astro.props;
+const base = (Astro.site ?? new URL(site.url)).href;
+const pageUrl = absoluteUrl(p.path, base);
+const section = p.kind === 'project' ? { name: 'Projects', path: '/projects/' } : { name: 'Repos', path: '/repos/' };
+const licenseUrl = p.license && /^[\w.+-]+$/.test(p.license) && p.license !== 'NOASSERTION' ? `https://spdx.org/licenses/${p.license}` : undefined;
+
+const main: Record<string, unknown> =
+  p.kind === 'project'
+    ? {
+        '@type': 'SoftwareApplication',
+        name: plainTitle(p.name),
+        description: p.description,
+        mainEntityOfPage: pageUrl,
+        ...(p.liveUrl ? { url: p.liveUrl } : {}),
+        ...(p.codeRepository ? { sameAs: [p.codeRepository] } : {}),
+      }
+    : {
+        '@type': 'SoftwareSourceCode',
+        name: p.name,
+        description: p.description,
+        url: pageUrl,
+        ...(p.codeRepository ? { codeRepository: p.codeRepository } : {}),
+        ...(p.language ? { programmingLanguage: p.language } : {}),
+        ...(licenseUrl ? { license: licenseUrl } : {}),
+      };
+if (p.published) main.datePublished = isoDate(p.published);
+if (p.modified) main.dateModified = isoDate(p.modified);
+if (p.keywords?.length) main.keywords = p.keywords.join(', ');
+main['author'] = { '@type': 'Person', name: site.author.name };
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    main,
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', base) },
+        { '@type': 'ListItem', position: 2, name: section.name, item: absoluteUrl(section.path, base) },
+        { '@type': 'ListItem', position: 3, name: plainTitle(p.name), item: pageUrl },
+      ],
+    },
+  ],
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\u003c')} />

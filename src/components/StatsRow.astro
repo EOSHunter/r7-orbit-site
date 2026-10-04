@@ -1,0 +1,31 @@
+---
+import Icon from './Icon.astro';
+import { isoDate, longDate } from '../lib/text';
+
+interface Props {
+  language?: string | null;
+  stars: number;
+  forks: number;
+  pushedAt?: string | null;
+}
+
+const { language, stars, forks, pushedAt } = Astro.props;
+const count = new Intl.NumberFormat('en-US');
+---
+
+<div class="stats">
+  {language && <span class="lang">{language}</span>}
+  <span>
+    <Icon name="star" /><b>{count.format(stars)}</b> {stars === 1 ? 'star' : 'stars'}
+  </span>
+  <span>
+    <Icon name="fork" /><b>{count.format(forks)}</b> {forks === 1 ? 'fork' : 'forks'}
+  </span>
+  {
+    pushedAt && (
+      <span>
+        <Icon name="clock" />Updated <time datetime={isoDate(pushedAt)}>{longDate(pushedAt)}</time>
+      </span>
+    )
+  }
+</div>
