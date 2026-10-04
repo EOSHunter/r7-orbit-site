@@ -407,6 +407,13 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox-caption:empty { display: none; }
 .lightbox-prev .ico { transform: rotate(180deg); }
 
+/* --- project and repo pages (phase 4d) --- */
+html:not(.js) .repo-head [data-copy] { display: none; }
+.readme-note { margin-top: var(--s-5); }
+.readme .prose pre, .readme .prose table { display: block; max-width: 100%; overflow-x: auto; }
+.facts dd.facts-links { display: grid; gap: var(--s-1); justify-items: start; }
+.facts dd.facts-links a { min-height: 24px; }
+
 /* Vlog page (src/pages/vlogs/[slug].astro) */
 .facts .links { display: grid; gap: var(--s-3); }
 .facts .links .btn { justify-content: space-between; }

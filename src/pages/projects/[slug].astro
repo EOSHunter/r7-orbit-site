@@ -1,0 +1,239 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Gallery from '../../components/Gallery.astro';
+import Icon from '../../components/Icon.astro';
+import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
+import PostCard from '../../components/PostCard.astro';
+import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
+import StatusMark from '../../components/StatusMark.astro';
+import SubscribeBand from '../../components/SubscribeBand.astro';
+import { localImage, toCard, type ProjectData, type RepoData } from '../../components/detailCards';
+import { getAllPosts, getPosts, type SitePost } from '../../lib/content-queries';
+import { relatedPosts } from '../../lib/content';
+import { loadGitHubRepo } from '../../lib/github';
+import { isoDate, longDate, plainTitle, titleParts } from '../../lib/text';
+import '../../styles/markdown.css';
+
+export async function getStaticPaths() {
+  const projects = await getPosts('projects');
+  return projects.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+interface Props {
+  post: SitePost<'projects'>;
+}
+
+const { post } = Astro.props;
+const data = post.entry.data as unknown as ProjectData;
+const { Content } = await render(post.entry);
+
+const all = await getAllPosts();
+const repos = all.filter((p): p is SitePost<'repos'> => p.collection === 'repos');
+const related = relatedPosts(post, all);
+
+// Source: this site's repo page when there is one, else the repo URL, else the GitHub address of `repo`.
+const repoName = data.repo?.toLowerCase();
+const repoPage = repoName ? repos.find((r) => (r.entry.data as unknown as RepoData).repo.toLowerCase() === repoName) : undefined;
+const githubUrl = data.repoUrl ?? (data.repo ? `https://github.com/${data.repo}` : undefined);
+const source = repoPage
+  ? { href: `/repos/${repoPage.id}/`, external: false }
+  : githubUrl
+    ? { href: githubUrl, external: true }
+    : undefined;
+
+// The licence comes from the GitHub loader; nothing is shown when it has no data.
+const gh = data.repo ? await loadGitHubRepo(data.repo) : undefined;
+const license = gh?.status === 'ok' ? gh.stats.license : null;
+
+const cover = localImage(data.cover);
+const shots = data.gallery.map((shot) => ({ src: localImage(shot.src), alt: shot.alt, caption: shot.caption }));
+const timeline = [...data.timeline].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+const hasBody = Boolean(post.body?.trim());
+const path = `/projects/${post.id}/`;
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.summary}
+  current="Projects"
+  published={data.date}
+  modified={data.updated}
+  tags={data.tags}
+>
+  <ProjectJsonLd
+    slot="head"
+    kind="project"
+    name={data.title}
+    description={data.summary}
+    path={path}
+    published={data.date}
+    modified={data.updated}
+    keywords={[...data.stack, ...data.tags]}
+    liveUrl={data.liveUrl}
+    codeRepository={githubUrl}
+  />
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/projects/">Projects</a></li>
+        <li aria-current="page">{plainTitle(data.title)}</li>
+      </ol>
+    </nav>
+
+    <header class="project-head">
+      <p class="eyebrow">
+        <span class="kind"><Icon name="project" />Project</span>
+      </p>
+      <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <p class="t-lead">{data.summary}</p>
+      <p class="status-line"><StatusMark status={data.status} /></p>
+      {
+        data.stack.length > 0 && (
+          <div class="cluster" aria-label="Built with">
+            {data.stack.map((item) => (
+              <span class="chip mono">{item}</span>
+            ))}
+          </div>
+        )
+      }
+      {
+        (data.liveUrl || source) && (
+          <div class="cluster actions">
+            {data.liveUrl && (
+              <a class="btn solid" href={data.liveUrl} rel="noopener">
+                Live site<Icon name="external" />
+              </a>
+            )}
+            {source && (
+              <a class={data.liveUrl ? 'btn' : 'btn solid'} href={source.href} rel={source.external ? 'noopener' : undefined}>
+                <Icon name="github" />Source repo{source.external && <Icon name="external" />}
+              </a>
+            )}
+          </div>
+        )
+      }
+    </header>
+
+    <div class="media framed">
+      {cover ? <img src={cover} alt={data.coverAlt ?? ''} width="1280" height="720" decoding="async" /> : <MediaPlaceholder />}
+    </div>
+
+    <div class="split">
+      <div>
+        {
+          hasBody && (
+            <section class="block" aria-label="Write-up">
+              <div class="prose">
+                <Content />
+              </div>
+            </section>
+          )
+        }
+
+        {
+          shots.length > 0 && (
+            <section class="block" aria-labelledby="shots-h">
+              <h2 class="section-title" id="shots-h">Screenshots</h2>
+              <Gallery shots={shots} label={`${plainTitle(data.title)} screenshots`} />
+            </section>
+          )
+        }
+
+        {
+          timeline.length > 0 && (
+            <section class="block" aria-labelledby="changelog-h">
+              <h2 class="section-title" id="changelog-h">Changelog</h2>
+              <ol class="timeline">
+                {timeline.map((item) => (
+                  <li>
+                    <time datetime={isoDate(item.date)}>{isoDate(item.date)}</time>
+                    <p>{item.text}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="sticky" aria-label="Project facts">
+        <div class="facts">
+          <h2 class="eyebrow">Facts</h2>
+          <dl>
+            <div><dt>Status</dt><dd><StatusMark status={data.status} /></dd></div>
+            {
+              data.started && (
+                <div><dt>Started</dt><dd class="mono"><time datetime={isoDate(data.started)}>{longDate(data.started)}</time></dd></div>
+              )
+            }
+            {
+              data.shipped && (
+                <div><dt>Shipped</dt><dd class="mono"><time datetime={isoDate(data.shipped)}>{longDate(data.shipped)}</time></dd></div>
+              )
+            }
+            {data.role && <div><dt>Role</dt><dd>{data.role}</dd></div>}
+            {
+              data.stack.length > 0 && (
+                <div>
+                  <dt>Stack</dt>
+                  <dd>
+                    <div class="cluster">
+                      {data.stack.map((item) => (
+                        <span class="chip mono">{item}</span>
+                      ))}
+                    </div>
+                  </dd>
+                </div>
+              )
+            }
+            {license && <div><dt>License</dt><dd>{license}</dd></div>}
+            {
+              (data.liveUrl || source) && (
+                <div>
+                  <dt>Links</dt>
+                  <dd class="facts-links">
+                    {data.liveUrl && (
+                      <a href={data.liveUrl} rel="noopener">
+                        Live site<Icon name="external" small />
+                      </a>
+                    )}
+                    {source && (
+                      <a href={source.href} rel={source.external ? 'noopener' : undefined}>
+                        Source repo<Icon name={source.external ? 'external' : 'arrow'} small />
+                      </a>
+                    )}
+                  </dd>
+                </div>
+              )
+            }
+          </dl>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  {
+    related.length > 0 && (
+      <section class="section ruled" aria-labelledby="related-h">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Writing about it</p>
+              <h2 class="section-title" id="related-h">Related posts</h2>
+            </div>
+          </div>
+          <div class="grid-cards">
+            {related.map((item) => (
+              <PostCard post={toCard(item)} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <SubscribeBand />
+</BaseLayout>
