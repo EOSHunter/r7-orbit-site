@@ -1,6 +1,6 @@
 ---
 # SAMPLE CONTENT
-title: R7 Orbit
+title: "Sample project: R7 Orbit"
 date: 2026-08-15
 summary: A desktop app for directing AI coding agents on your git repos, each task in its own worktree, with approvals and diff review.
 tags: [ai-agents, electron, typescript, tooling]
@@ -11,7 +11,7 @@ repo: owner/r7-orbit
 started: 2026-04-01
 role: Solo
 gallery:
-  - { src: /media/projects/r7-orbit/canvas.png, alt: "The R7 Orbit canvas with agent cards around the R7 mark", caption: "The canvas: each card is an agent working in its own folder." }
+  - { src: /assets/r7-mark.svg, alt: "The R7 mark, standing in for a screenshot in this sample", caption: "Sample caption: replace with a real screenshot." }
 timeline:
   - { date: 2026-09-20, text: "Finished work now merges into main by itself." }
   - { date: 2026-09-05, text: "Whiteboards for flows and charts." }
