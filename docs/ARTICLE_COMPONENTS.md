@@ -1,6 +1,6 @@
 # Article components
 
-Building blocks for blog and news articles, in `src/components/article/`. Styles: `src/styles/article.css` (tokens only, so every theme works). Live demo with every component: `/styleguide/article-components/` (source: `src/components/article/demo/article-components-demo.mdx`).
+Building blocks for blog and news articles, in `src/components/article/`. Styles: `src/styles/article.css` (tokens only). Live demo with every component: `/styleguide/article-components/` (source: `src/components/article/demo/article-components-demo.mdx`).
 
 ## Using them
 

@@ -6,7 +6,7 @@ Assumes the recommended stack (Astro, plain CSS from the design system, Markdown
 
 ## Phase 0: Decisions and accounts (the author, ~1 hour)
 
-- [ ] Fill `docs/DECISIONS.md` §A and §B (name, tagline, bio, domain, links, light theme yes/no)
+- [ ] Fill `docs/DECISIONS.md` §A and §B (name, tagline, bio, domain, links)
 - [ ] Create the GitHub repository for the site (private until launch)
 - [ ] Create a Cloudflare (or Netlify/Vercel) account; connect the repository later
 - [ ] Buy the domain (or decide to launch on the host's free subdomain first)
@@ -29,13 +29,12 @@ Assumes the recommended stack (Astro, plain CSS from the design system, Markdown
 
 ## Phase 2: Layout and shared parts
 
-- [ ] `BaseLayout.astro`: head (all tags from `SEO_AND_SHARING.md`), skip link, header, footer, theme script (no flash)
+- [ ] `BaseLayout.astro`: head (all tags from `SEO_AND_SHARING.md`), skip link, header, footer
 - [ ] `Header`, `Footer`, `SubscribeBand`, `Icon` (sprite or inline SVG components), `MediaPlaceholder`
 - [ ] Post card components for the five kinds (`PostCard.astro` with a `kind` switch)
 - [ ] `site.json` wired in; nothing author-specific hard-coded
-- [ ] Theme toggle + system preference
 
-**Done when:** a test page renders every component in both themes at 320 / 768 / 1280 px with no console output; Lighthouse accessibility is 100 on it.
+**Done when:** a test page renders every component at 320 / 768 / 1280 px with no console output; Lighthouse accessibility is 100 on it.
 
 ## Phase 3: Content collections and sample content (parallel)
 
@@ -79,7 +78,7 @@ Port from `templates/`; the template HTML is the visual spec. Keep class names f
 
 ## Phase 7: Quality pass
 
-- [ ] Playwright smoke test per page type (loads, no console errors, key element visible) in both themes
+- [ ] Playwright smoke test per page type (loads, no console errors, key element visible)
 - [ ] axe accessibility scan on every page type; fix all serious/critical
 - [ ] Lighthouse CI budgets (≥ 95 mobile everywhere; JS < 50 kB; CSS < 40 kB)
 - [ ] Visual checks at 320 / 375 / 768 / 1024 / 1280 / 1480; screenshots saved in `docs/screenshots/`
@@ -105,7 +104,7 @@ Per the minimum in `PROJECT_BRIEF.md` §7. Write in Markdown; run `npm run check
 
 ## After launch (ideas, not commitments)
 
-Per-post OG images · related posts by embeddings · a /now page · webmentions · a changelog pulled from GitHub releases · a monthly digest · localisation · a dark/light OG image per theme.
+Per-post OG images · related posts by embeddings · a /now page · webmentions · a changelog pulled from GitHub releases · a monthly digest · localisation.
 
 ## Working rules for the build
 

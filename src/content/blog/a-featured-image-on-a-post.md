@@ -16,4 +16,4 @@ Add `featuredImage` (a file under `src/assets/`) and `featuredImageAlt` to a pos
 
 ## Why a gradient
 
-The text stays ivory in both themes, so the image gets a dark gradient that keeps it readable.
+The text is always ivory, so the image gets a dark gradient that keeps it readable.
