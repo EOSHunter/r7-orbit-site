@@ -7,6 +7,7 @@
     (e) newsletter form         form[data-newsletter]    placeholder only, nothing is sent
     (f) table of contents       .toc a[href^="#"]        highlights the heading you are reading
     (g) video poster            [data-player]            loads an iframe on click when data-embed is set
+    (h) search loader           [data-search-open], "/"   loads search.js (the dialog and /search/ page) on first use
 
   Every piece does nothing if its markup is not on the page, and every piece survives missing storage or clipboard.
 */
@@ -337,4 +338,45 @@
       });
     });
   });
+
+  /* ------------------------------------------------------------------------------------------- (h) search loader */
+  // search.js (about 4 kB) is not needed to paint the page, so it loads on first use: a click on a [data-search-open]
+  // button or the "/" key. The /search/ page needs it at once. Once loaded, search.js owns the listeners.
+  var searchPanel = $('[data-search-page]') || $('[data-search-dialog]');
+  var searchSrc = searchPanel ? searchPanel.getAttribute('data-search-src') : null;
+  function injectSearch(done) {
+    var tag = document.createElement('script');
+    tag.type = 'module';
+    tag.src = searchSrc;
+    if (done) tag.addEventListener('load', done);
+    document.head.appendChild(tag);
+  }
+  if (searchSrc && searchPanel.hasAttribute('data-search-page')) {
+    injectSearch();
+  } else if (searchSrc) {
+    // The first click or "/" is replayed once search.js has attached its own listeners.
+    var loadSearch = function (replay) {
+      document.removeEventListener('click', onSearchClick);
+      document.removeEventListener('keydown', onSearchKey);
+      injectSearch(replay);
+    };
+    var onSearchClick = function (e) {
+      var trigger = e.target instanceof Element && e.target.closest('[data-search-open]');
+      if (!trigger || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      loadSearch(function () { trigger.click(); });
+    };
+    var onSearchKey = function (e) {
+      if (e.key !== '/' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+      var t = e.target;
+      if (t instanceof Element && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+      if ($('dialog[open]')) return;
+      e.preventDefault();
+      loadSearch(function () {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true, cancelable: true }));
+      });
+    };
+    document.addEventListener('click', onSearchClick);
+    document.addEventListener('keydown', onSearchKey);
+  }
 })();

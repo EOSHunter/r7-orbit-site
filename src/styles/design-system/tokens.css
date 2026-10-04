@@ -17,6 +17,7 @@
 @font-face { font-family: 'Cormorant Fallback'; font-style: normal; src: local('Times New Roman'), local('Times'); size-adjust: 97.4%; ascent-override: 94.9%; descent-override: 29.5%; line-gap-override: 0%; }
 @font-face { font-family: 'Cormorant Fallback'; font-style: italic; src: local('Times New Roman Italic'), local('Times-Italic'), local('Times Italic'); size-adjust: 87.5%; ascent-override: 105.6%; descent-override: 32.8%; line-gap-override: 0%; }
 @font-face { font-family: 'Inter Fallback'; src: local('Arial'), local('Helvetica'); size-adjust: 107.6%; ascent-override: 90%; descent-override: 22.4%; line-gap-override: 0%; }
+@font-face { font-family: 'JetBrains Mono Fallback'; src: local('Courier New'), local('Liberation Mono'), local('Courier'); size-adjust: 100%; ascent-override: 102%; descent-override: 30%; line-gap-override: 0%; }
 
 :root {
   /* ------------------------------------------------------------------------------------------------ Colour: surfaces */
@@ -78,7 +79,7 @@
   /* ------------------------------------------------------------------------------------------------------ Typography */
   --font-display: 'Cormorant Garamond', 'Cormorant Fallback', 'Times New Roman', serif;
   --font-ui: 'Inter Variable', 'Inter Fallback', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', Consolas, monospace;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono Fallback', Consolas, monospace;
 
   /* Sizes. The app is dense (13px base); a website reads at 17px. Each has a job. */
   --fs-2xs: 0.625rem;                      /* 10px  eyebrows, tiny labels (always uppercase + tracked) */

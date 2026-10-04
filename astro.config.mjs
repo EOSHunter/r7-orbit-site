@@ -24,5 +24,7 @@ export default defineConfig({
       rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     }),
   },
+  // No modulepreload helper: it is an extra request on every page, and search.js is the only dynamic import.
+  vite: { build: { modulePreload: false, assetsInlineLimit: 16384 } },
   devToolbar: { enabled: false },
 });

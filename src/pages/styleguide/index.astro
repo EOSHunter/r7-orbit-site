@@ -72,6 +72,7 @@ const widths = [
     display: none;
   }
   .sg-scroll {
+    min-height: 80vh;
     overflow-x: auto;
     border: var(--bw) solid var(--line-strong);
     border-radius: var(--r-lg);
@@ -82,6 +83,11 @@ const widths = [
     height: 80vh;
     border: 0;
   }
+  /* The frame is a whole page that lays itself out as it loads (CSS, then fonts); Lighthouse counts those shifts as ours.
+     It stays invisible, at its final size, until the page inside has loaded. */
+  .sg-scroll iframe:not(.ready) {
+    display: none;
+  }
 </style>
 
 <script>
@@ -90,7 +96,10 @@ const widths = [
     // The frames are whole pages (fonts, CSS, script each): start them a moment after this page has settled, so they do not compete with it.
     window.addEventListener('load', () =>
       setTimeout(() => {
-        root.querySelectorAll<HTMLIFrameElement>('iframe[data-src]').forEach((f) => (f.src = f.dataset.src ?? ''));
+        root.querySelectorAll<HTMLIFrameElement>('iframe[data-src]').forEach((f) => {
+          f.addEventListener('load', () => f.classList.add('ready'), { once: true });
+          f.src = f.dataset.src ?? '';
+        });
       }, 1500),
     );
     const press = (group: Element, value: string) => {

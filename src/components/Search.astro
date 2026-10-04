@@ -4,6 +4,9 @@
 //   page={true}  the same panel inline, for /search/ (and the no-JS fallback note)
 // The index is made by Pagefind at build time (npm run build) and loaded from /pagefind/ on first use.
 import Icon from './Icon.astro';
+// ?url emits search.js as its own hashed file instead of bundling it, so site.js (which loads it on first use) has no
+// imports and Astro can inline it into the page: one request fewer before first paint.
+import searchSrc from '../scripts/search.js?url&no-inline';
 
 interface Props {
   page?: boolean;
@@ -18,6 +21,7 @@ const Tag = page ? 'div' : 'dialog';
   aria-label={page ? undefined : 'Search'}
   data-search-page={page ? '' : undefined}
   data-search-dialog={page ? undefined : ''}
+  data-search-src={searchSrc}
 >
   <div class="search-panel-inner">
     <form class="search-form" role="search" aria-label="Search the site" data-search-form>
@@ -50,7 +54,3 @@ const Tag = page ? 'div' : 'dialog';
     </p>
   </div>
 </Tag>
-
-<script>
-  import '../scripts/search.js';
-</script>
