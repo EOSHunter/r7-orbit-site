@@ -2,11 +2,13 @@
 // Every shared component, on one page. The theme can be forced with ?theme=dark or ?theme=light (the /styleguide/ page uses
 // that to show both side by side). Not linked from anywhere, and kept out of search engines. All text is sample content.
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Gallery from '../../components/Gallery.astro';
 import Icon from '../../components/Icon.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
 import PostCard from '../../components/PostCard.astro';
 import StatusMark from '../../components/StatusMark.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
+import YouTubeFacade from '../../components/YouTubeFacade.astro';
 import { ICON_NAMES } from '../../components/icons';
 import { KIND_LABEL, type CardData, type ProjectStatus } from '../../lib/cards';
 
@@ -59,6 +61,19 @@ const cards: CardData[] = [
     forks: 14,
     updated: '2026-10-01',
   },
+];
+
+const chapters = [
+  { t: '0:00', title: 'Sample chapter one' },
+  { t: '1:12', title: 'Sample chapter two' },
+  { t: '3:40', title: 'Sample chapter three' },
+  { t: '1:02:05', title: 'Sample chapter with an hour mark' },
+];
+
+const shots = [
+  { alt: 'Sample screenshot of a task board.', caption: 'Sample screenshot one: the board.' },
+  { alt: 'Sample screenshot of an approval prompt.', caption: 'Sample screenshot two: an approval.' },
+  { alt: 'Sample screenshot of a review step.' },
 ];
 
 const statuses: ProjectStatus[] = ['idea', 'building', 'shipped', 'paused', 'archived'];
@@ -188,6 +203,31 @@ const pinned: CardData = {
         Pinned card
       </h2>
       <PostCard post={pinned} />
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-yt-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-yt-h">
+        YouTube facade
+      </h2>
+      <p class="t-meta">
+        Nothing is requested from YouTube until play. Chapters seek the video once it has loaded. Sample id, so playback
+        needs the network.
+      </p>
+      <div class="sg-media">
+        <YouTubeFacade id="aqz-KE-bpKQ" title="Sample video" duration="12:48" chapters={chapters} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section ruled" aria-labelledby="sg-gallery-h">
+    <div class="container wide">
+      <h2 class="section-title" id="sg-gallery-h">
+        Gallery
+      </h2>
+      <p class="t-meta">Thumbnails open a dialog: Esc closes, arrow keys step, focus returns to the thumbnail.</p>
+      <Gallery shots={shots} />
     </div>
   </section>
 
