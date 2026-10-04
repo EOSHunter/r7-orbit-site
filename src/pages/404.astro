@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<BaseLayout
+  title="Page not found"
+  description="That page has drifted out of orbit. It may have moved, or it never existed."
+  noindex
+>
+  <section class="plate-grid">
+    <div class="container wide">
+      <div class="lost">
+        <!-- A quiet orbit: the dot drifts, nothing is working. -->
+        <div class="orbit" data-orbit></div>
+        <p class="eyebrow brass">Error 404</p>
+        <h1 class="t-display">
+          That page has drifted <em>out of orbit</em>.
+        </h1>
+        <p class="t-lead">It may have moved, or it never existed. Try search, or go back to the latest.</p>
+        <form class="search-form" role="search" action="/search/" method="get" aria-label="Search the site">
+          <div class="search">
+            <Icon name="search" />
+            <label class="visually-hidden" for="lost-search">
+              Search posts
+            </label>
+            <input
+              class="input"
+              id="lost-search"
+              type="search"
+              name="q"
+              placeholder="Search posts"
+              autocomplete="off"
+            />
+          </div>
+          <button class="btn solid" type="submit">
+            Search
+          </button>
+        </form>
+        <div class="cluster">
+          <a class="btn" href="/">
+            <Icon name="arrow" class="flip" />
+            Back home
+          </a>
+          <a class="btn" href="/#latest">
+            See the latest
+            <Icon name="arrow" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script>
+    import '../scripts/orbit.js';
+  </script>
+</BaseLayout>
