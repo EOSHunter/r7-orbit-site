@@ -2,17 +2,27 @@ import { rehypeHeadingIds, createMarkdownProcessor } from '@astrojs/markdown-rem
 import { describe, expect, it } from 'vitest';
 import remarkCallouts from './remark-callouts.mjs';
 import remarkFigures from './remark-figures.mjs';
-import { rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from './rehype-site.mjs';
+import { rehypeBodyHeadings, rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from './rehype-site.mjs';
 import { siteCodeTransformer } from './shiki-transformer.mjs';
 
 async function render(markdown: string): Promise<string> {
   const processor = await createMarkdownProcessor({
     remarkPlugins: [remarkCallouts, remarkFigures],
-    rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
+    rehypePlugins: [rehypeHeadingIds, rehypeBodyHeadings, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },
   });
   return (await processor.render(markdown)).code;
 }
+
+describe('headings in the body', () => {
+  it('turns a # heading into an h2, so the page title stays the only h1', async () => {
+    const html = await render('# A title in the body\n\n## A section\n\nText.');
+    expect(html).not.toMatch(/<h1/);
+    expect(html).toMatch(/<h2 id="a-title-in-the-body"[^>]*>A title in the body/);
+    expect(html).toMatch(/<h2 id="a-section"/);
+    expect(html).toMatch(/class="[^"]*has-anchor/); // the new h2 gets an anchor like the rest
+  });
+});
 
 describe('callouts', () => {
   it('turns NOTE and TIP into brass callouts and WARNING into a bad one', async () => {

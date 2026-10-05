@@ -6,6 +6,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { featuredPost } from '../lib/content';
 import { getAllPosts } from '../lib/content-queries';
+import { countLabel } from '../lib/listing';
 import type { CardData, Kind } from '../lib/cards';
 import { toCard, toCards } from '../lib/post-cards';
 import { jsonLdString, websiteLd } from '../lib/seo';
@@ -13,13 +14,17 @@ import { jsonLdString, websiteLd } from '../lib/seo';
 const posts = await getAllPosts();
 
 const featured = featuredPost(posts);
-const pinned = featured ? await toCard(featured, { pinned: true }) : undefined;
+// With one post, Latest already shows it: a pinned copy above would be the same card twice.
+const pinned = featured && posts.length > 1 ? await toCard(featured, { pinned: true }) : undefined;
 
 const latest = await toCards(posts.slice(0, 8), { filterable: true });
 if (latest[0]) latest[0] = { ...latest[0], fresh: true };
 
 const kindOrder: Kind[] = ['news', 'blog', 'vlog', 'project', 'repo'];
 const kinds = kindOrder.filter((kind) => latest.some((card) => card.kind === kind));
+// Links to the archives of every kind that has something, not only the kinds among the latest eight.
+const KIND_COLLECTION: Record<Kind, string> = { news: 'news', blog: 'blog', vlog: 'vlogs', project: 'projects', repo: 'repos' };
+const browseKinds = kindOrder.filter((kind) => posts.some((post) => post.collection === KIND_COLLECTION[kind]));
 const KIND_PLURAL: Record<Kind, string> = { news: 'News', blog: 'Blogs', vlog: 'Vlogs', project: 'Projects', repo: 'Repos' };
 const KIND_HREF: Record<Kind, string> = {
   news: '/news/',
@@ -88,9 +93,9 @@ const repoCards = (await toCards(posts.filter((p) => p.collection === 'repos')))
           </div>
         )}
       </div>
-      <p class="t-meta feed-count" data-count data-noun="posts" aria-live="polite">{latest.length} posts</p>
       {latest.length > 0 ? (
         <>
+          <p class="t-meta feed-count" data-count data-noun="posts" data-noun-one="post" aria-live="polite">{countLabel(latest.length, 'post', 'posts')}</p>
           <div class="grid-cards" data-items>
             {latest.map((post) => <PostCard {post} />)}
           </div>
@@ -106,19 +111,21 @@ const repoCards = (await toCards(posts.filter((p) => p.collection === 'repos')))
           <p>Subscribe below and I will send an email when the first post is up.</p>
         </div>
       )}
-      <nav class="feed-kinds" aria-label="Browse by kind">
-        <span class="eyebrow">Browse by kind</span>
-        <ul>
-          {kinds.map((kind) => (
-            <li>
-              <a class="chip" href={KIND_HREF[kind]}>
-                <Icon name={kind} />
-                {KIND_PLURAL[kind]}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {browseKinds.length > 0 && (
+        <nav class="feed-kinds" aria-label="Browse by kind">
+          <span class="eyebrow">Browse by kind</span>
+          <ul>
+            {browseKinds.map((kind) => (
+              <li>
+                <a class="chip" href={KIND_HREF[kind]}>
+                  <Icon name={kind} />
+                  {KIND_PLURAL[kind]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
       {latest.length > 0 && (
         <p class="feed-more">
           <a class="more-link" href="/latest/">

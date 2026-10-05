@@ -4,6 +4,8 @@ all things r7 orbit
 
 ## Admin (writing posts at `/admin`)
 
+Author's guide: [`docs/PUBLISHING.md`](docs/PUBLISHING.md) (write and publish a post, scheduled posts, the manual check after admin or header changes, rolling back, build failures).
+
 A git-based editor for every kind of post, built on [Decap CMS](https://decapcms.org). There is no server and no database: saving writes a Markdown file into `src/content/<kind>/` and uploads images, and the site rebuilds from git like any other change. The admin page is `src/pages/admin/index.astro` (bundled by Astro, nothing loaded from a CDN); the forms are in `src/admin/config.ts`, the article blocks in `src/admin/blocks.ts`, the blog preview in `src/admin/preview.ts`.
 
 | Collection | Writes | Fields beyond the common ones |
@@ -29,7 +31,7 @@ npm run cms     # terminal 2: the local file proxy, bound to 127.0.0.1:8081
 
 Open <http://localhost:4321/admin/> (the port `npm run dev` prints, if 4321 is busy), click Login, and pick a collection. **Draft** is off by default, like the schema; turn it on to hold an entry back. A draft is excluded from the site, the archives, search, feeds and sitemap.
 
-**The editor.** Every body is a rich Markdown editor with H2/H3, lists, quotes, code, links and images (the image button uploads to `public/media/`); use the Rich Text / Markdown switch to see or edit the raw text. Tags are up to six, lowercase and hyphenated. Dates are written `2026-10-03`. In blog posts the **+** menu in the body inserts the article components (below); news, vlogs, projects and repos are plain Markdown. Saving a sample post rewrites its frontmatter in Decap's own format, so the `# SAMPLE CONTENT` comment at the top of the samples is dropped.
+**The editor.** Every body is a rich Markdown editor with H2/H3, lists, quotes, code, links and images (the image button uploads to `public/media/`); use the Rich Text / Markdown switch to see or edit the raw text. Tags are up to six, lowercase and hyphenated. Dates are written `2026-10-03`. In blog posts the **+** menu in the body inserts the article components (below); news, vlogs, projects and repos are plain Markdown.
 
 | Block | Written as | Props (see `docs/ARTICLE_COMPONENTS.md`) |
 |---|---|---|
@@ -41,7 +43,7 @@ Open <http://localhost:4321/admin/> (the port `npm run dev` prints, if 4321 is b
 | VideoEmbed | `<VideoEmbed />` | `id` (YouTube), `title`, `caption?` |
 | Divider | `<Divider />` | `variant?` (rule, dots) |
 
-`Pullquote` and `CodeBlock` have no block in the admin (its built-in code block writes a fenced block, which looks the same as `CodeBlock`); type them in the Markdown view, as in `src/content/blog/an-article-built-from-components.mdx`. `ImageGallery` is the same component as `ImageRow`. Posts never `import` these (only blog posts are MDX): `ArticlePage` passes `articleComponents` (`src/components/article/mdx.ts`) to the post, and the RSS feed does the same. Image paths in blocks are `/media/x.jpg`: the components only accept local files from `public/`. The featured image is different: it goes to `src/assets/blog/` and is written relative to the post (`../../assets/blog/x.jpg`), because Astro optimises it. If a component's props change, change `src/admin/blocks.ts` and its test (`blocks.vitest.ts`) to match.
+`Pullquote` and `CodeBlock` have no block in the admin (its built-in code block writes a fenced block, which looks the same as `CodeBlock`); type them in the Markdown view, as in the demo `src/components/article/demo/article-components-demo.mdx` (shown at `/styleguide/article-components/`). `ImageGallery` is the same component as `ImageRow`. Posts never `import` these (only blog posts are MDX): `ArticlePage` passes `articleComponents` (`src/components/article/mdx.ts`) to the post, and the RSS feed does the same. Image paths in blocks are `/media/x.jpg`: the components only accept local files from `public/`. The featured image is different: it goes to `src/assets/blog/` and is written relative to the post (`../../assets/blog/x.jpg`), because Astro optimises it. If a component's props change, change `src/admin/blocks.ts` and its test (`blocks.vitest.ts`) to match.
 
 **The blog preview.** Blog posts show a live preview beside the form, drawn with the site's real styles. `src/admin/main.ts` loads the same CSS files the public pages use (design-system tokens and components, `site.css`, `markdown.css`, `article.css`) and the global style block of `ArticleHero.astro` into the preview pane, and `src/admin/preview.ts` renders the page the way `ArticlePage` lays it out: breadcrumb, headline with the italic brass phrase, summary, byline, tags, the hero with the featured image under its dark gradient (or the plain header without one), the contents list, and the body in the reading column (`.prose`, with the class names `ArticleTemplate` uses). Change a stylesheet and the preview follows; change the markup in `ArticlePage` or `ArticleHero` and `preview.ts` has to be changed to match.
 

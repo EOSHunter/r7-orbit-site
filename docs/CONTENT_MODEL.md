@@ -4,11 +4,11 @@ What a post is made of. Content is **Markdown (or MDX) files with frontmatter**,
 
 ```
 src/content/
-  news/       2026-10-03-open-weights-model-lands.md
-  blog/       why-every-agent-gets-its-own-room.md
-  vlogs/      i-built-a-game-with-a-team-of-ai-agents.md
-  projects/   r7-orbit.md
-  repos/      orbit-the-game.md
+  news/       2026-10-03-a-short-headline.md
+  blog/       a-post-about-something.md
+  vlogs/      a-video-about-something.md
+  projects/   a-project.md
+  repos/      a-repo.md
   authors/    hunter.json          (optional; one author to start)
   site.json                        (site name, tagline, links: see below)
 public/
@@ -203,7 +203,7 @@ Standard Markdown plus:
 - **Pull quotes**: a blockquote with a final `— Name` line uses the serif quote style.
 - **Footnotes**, tables and task lists as in GitHub-flavoured Markdown.
 - **Headings** get anchor links; the table of contents is built from `##` and `###`.
-- **Links** to other posts use the slug path (`/blog/why-every-agent-gets-its-own-room/`); external links open normally (no `target="_blank"` unless the author asks) and get `rel="noopener"` when they do.
+- **Links** to other posts use the slug path (`/blog/a-post-about-something/`); external links open normally (no `target="_blank"` unless the author asks) and get `rel="noopener"` when they do.
 - **Images**: always with alt text; width/height are read from the file.
 
 ## Tags

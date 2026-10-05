@@ -1,5 +1,5 @@
 ---
-// Up to three cards by shared tags (relatedPosts in lib/content).
+// Up to three cards by shared tags, then recency (relatedPosts in lib/content, which skips drafts and scheduled posts). Renders nothing when there are none.
 import PostCard from './PostCard.astro';
 import { postUrl } from '../lib/content';
 import type { CollectionName } from '../lib/content';

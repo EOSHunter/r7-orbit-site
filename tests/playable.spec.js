@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -191,6 +191,7 @@ test('every embedded playUrl in src/content/projects/ is on the frame-src allow-
   expect(allowed, 'no wildcards, no other schemes').toEqual(allowed.filter((s) => /^https:\/\/[a-z0-9.-]+$/.test(s)));
 
   const dir = new URL('../src/content/projects/', import.meta.url);
+  if (!existsSync(dir)) return; // no projects published yet
   for (const file of readdirSync(dir).filter((f) => /\.mdx?$/.test(f))) {
     const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(new URL(file, dir), 'utf8'))?.[1] ?? '';
     const url = /^playUrl:\s*["']?([^"'\s]+)["']?\s*$/m.exec(front)?.[1];

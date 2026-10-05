@@ -8,26 +8,52 @@
 //
 // To try a route without editing this file: EXTRA_ROUTES="/some/path/,/other/" npm test
 
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 /** @typedef {{ path: string, noindex?: boolean, status?: number, lighthouse?: string }} Route */
+
+// Posts are not listed here: the site's content is whatever the author has published (and may be empty of a kind, or of
+// everything), so the post and tag pages are found in dist/ after the build. The archives, /latest/ and /tags/ always exist,
+// with their empty states when there is nothing to list.
+const dist = fileURLToPath(new URL('../dist/', import.meta.url));
+const KINDS = ['news', 'blog', 'vlogs', 'projects', 'repos'];
+const PER_GROUP = 2; // pages checked per kind (and per tag group), newest slugs first
+
+/** Directory names under dist/<dir>/ that hold an index.html (a post or tag page; `page/` only holds numbered pages). */
+function pagesIn(dir) {
+  const base = join(dist, dir);
+  if (!existsSync(base)) return [];
+  return readdirSync(base, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && existsSync(join(base, e.name, 'index.html')))
+    .map((e) => e.name)
+    .sort()
+    .reverse();
+}
+
+/** Numbered archive pages (`/blog/page/2/`) exist once an archive has more than a page of posts: check the first of each. */
+const secondPages = ['latest', ...KINDS].filter((dir) => existsSync(join(dist, dir, 'page', '2', 'index.html')));
+
+/** The post pages checked, per kind: `/blog/some-post/`. Empty when nothing is published. */
+const postPaths = (kind) => pagesIn(kind).slice(0, PER_GROUP).map((slug) => `/${kind}/${slug}/`);
+
+/** Blog posts and news items: the pages built from ArticlePage (hero, table of contents, share row, prev/next). */
+export const articlePaths = [...postPaths('blog'), ...postPaths('news')];
+
+/** The articles with a featured image (an `.article-hero` behind the headline). */
+export const heroPaths = articlePaths.filter((path) =>
+  readFileSync(join(dist, path, 'index.html'), 'utf8').includes('class="article-hero"'),
+);
 
 /** @type {Route[]} */
 const routes = [
   { path: '/' },
   { path: '/latest/' },
-  { path: '/news/' },
-  { path: '/news/2026-10-03-open-weights-model-lands/' },
-  { path: '/blog/' },
-  { path: '/blog/why-every-agent-gets-its-own-room/' },
-  { path: '/blog/a-featured-image-on-a-post/' }, // .md with a featured image
-  { path: '/blog/an-article-built-from-components/' }, // .mdx with a featured image and every article block
-  { path: '/vlogs/' },
-  { path: '/vlogs/i-built-a-game-with-a-team-of-ai-agents/' },
-  { path: '/projects/' },
-  { path: '/projects/r7-orbit/' },
-  { path: '/repos/' },
-  { path: '/repos/example-repo/' },
+  ...KINDS.flatMap((kind) => [{ path: `/${kind}/` }, ...postPaths(kind).map((path) => ({ path }))]),
+  ...secondPages.map((dir) => ({ path: `/${dir}/page/2/` })),
   { path: '/tags/' },
-  { path: '/tags/ai-agents/' },
+  ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
   { path: '/about/' },
   { path: '/subscribe/' },
   { path: '/privacy/' },
