@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { CardData, ProjectStatus } from '../lib/cards';
 import { postUrl, readTime } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
+import { isPlayable, type PlayFields } from '../lib/play';
 
 /** The post as a card. Covers are left to the placeholder: their pixel size is not known here. */
 export function toCard(post: SitePost): CardData {
@@ -27,6 +28,7 @@ export function toCard(post: SitePost): CardData {
         kind: 'project',
         status: (post.data as unknown as { status: ProjectStatus }).status,
         stack: (post.data as unknown as { stack: string[] }).stack,
+        playable: isPlayable(post.data as unknown as PlayFields),
       };
     case 'repos':
       return { ...base, kind: 'repo', repo: (post.data as unknown as { repo: string }).repo };
@@ -43,7 +45,7 @@ export function localImage(src: string | undefined): string | undefined {
 // know the common fields. These mirror the project and repo schemas there; keep them in step.
 type Common = SitePost['data'];
 
-export type ProjectData = Common & {
+export type ProjectData = Common & PlayFields & {
   status: ProjectStatus;
   stack: string[];
   liveUrl?: string;
