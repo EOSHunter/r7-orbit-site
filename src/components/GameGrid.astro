@@ -10,9 +10,12 @@ interface Props {
   level?: 2 | 3;
   /** Only the hub sets this: with exactly one game, a final "More games coming" card keeps the row from looking unfinished. */
   soon?: boolean;
+  /** Only the hub sets this: there the grid is the top of the page. On the home teaser and the "More games" strip it sits
+   * far below the fold, where an eager poster would compete with the page's LCP. */
+  eager?: boolean;
 }
 
-const { games, level = 2, soon = false } = Astro.props;
+const { games, level = 2, soon = false, eager = false } = Astro.props;
 const showSoon = soon && games.length === 1;
 const few = games.length + (showSoon ? 1 : 0) <= 2;
 const Heading = `h${level}` as 'h2' | 'h3';
@@ -21,8 +24,8 @@ const Heading = `h${level}` as 'h2' | 'h3';
 <ul class:list={['game-grid', few && 'few']} data-games>
   {games.map((game, i) => (
     <li>
-      {/* The first row (at most three cards) loads at once; the rest wait until they are near the screen. */}
-      <GameCard {game} {level} eager={i < 3} />
+      {/* On the hub the first row (at most three cards) loads at once; the rest wait until they are near the screen. */}
+      <GameCard {game} {level} eager={eager && i < 3} />
     </li>
   ))}
   {showSoon && (
