@@ -4,6 +4,7 @@
 //
 // What is copied, not shared: the markup (an Astro component cannot run in the browser) and the Markdown reader. The rows
 // themselves come from `layoutSections`, the same function the page uses, so the grouping cannot drift.
+import { titleParts } from '../lib/text';
 import { layoutSections, type Section } from '../lib/page-sections';
 import {
   blocksHtml,
@@ -19,6 +20,12 @@ import {
 
 type Loose = Record<string, unknown>;
 const text = (v: unknown): string => (typeof v === 'string' ? v : '');
+
+/** A heading's text with its one `*phrase*` set in italic brass, as `titleParts` does on the page (the CSS colours `h2 em`). */
+export const headingText = (source: string): string =>
+  titleParts(source)
+    .map((part) => (part.em ? `<em>${escapeHtml(part.text)}</em>` : escapeHtml(part.text)))
+    .join('');
 
 /** Only addresses a visitor may follow (https, or a page on this site): anything else is not made a link. */
 const safeLink = (url: string): string => (/^(https:\/\/\S+|\/(?!\/)\S*)$/.test(url) ? url : '#');
@@ -129,7 +136,7 @@ type ProseBlock = Exclude<Section, { type: 'portrait' }>;
 function blockHtml(block: ProseBlock, resolve: ResolveAsset): string {
   switch (block.type) {
     case 'heading':
-      return `<h${block.level}>${escapeHtml(block.text)}</h${block.level}>`;
+      return `<h${block.level}>${headingText(block.text)}</h${block.level}>`;
     case 'text':
       return markdownHtml(block.text);
     case 'image':
@@ -171,7 +178,7 @@ export function sectionsHtml(value: unknown, resolve: ResolveAsset): string {
         const { portrait, lead } = row;
         const url = portrait.image ? resolve(portrait.image) : '';
         const picture = url ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(altOf(portrait))}" />` : PLACEHOLDER;
-        const heading = lead ? `<h${lead.level}>${escapeHtml(lead.text)}</h${lead.level}>` : '';
+        const heading = lead ? `<h${lead.level}>${headingText(lead.text)}</h${lead.level}>` : '';
         const body = [markdownHtml(portrait.text), ...row.blocks.map((b) => blockHtml(b, resolve))].join('');
         return `<div class="${PREVIEW_ROW}"><div class="about-grid" data-side="${portrait.side}"><div class="portrait">${picture}</div><div class="prose">${heading}${body}</div></div></div>`;
       }

@@ -67,7 +67,7 @@ const sectionTypes = [
     widget: 'object',
     summary: 'Heading: {{fields.text}}',
     fields: [
-      field({ name: 'text', label: 'Heading text', widget: 'string', hint: 'Sentence case, e.g. "How I work".' }),
+      field({ name: 'text', label: 'Heading text', widget: 'string', hint: 'Sentence case, e.g. "How I work". Put one phrase in *asterisks* for the italic brass accent, e.g. "How I *work*".' }),
       field({
         name: 'level',
         label: 'Size',

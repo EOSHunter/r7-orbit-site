@@ -6,6 +6,7 @@ import Divider from './article/Divider.astro';
 import Figure from './article/Figure.astro';
 import Quote from './article/Quote.astro';
 import Icon from './Icon.astro';
+import { titleParts } from '../lib/text';
 import type { ProseBlock } from '../lib/page-sections';
 import type { ImageSize } from '../lib/section-images';
 
@@ -21,7 +22,14 @@ const { block, html = '', size } = Astro.props;
 const external = (url: string) => url.startsWith('https://');
 ---
 
-{block.type === 'heading' && (block.level === 3 ? <h3>{block.text}</h3> : <h2>{block.text}</h2>)}
+{
+  block.type === 'heading' &&
+    (block.level === 3 ? (
+      <h3>{titleParts(block.text).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h3>
+    ) : (
+      <h2>{titleParts(block.text).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>
+    ))
+}
 {block.type === 'text' && <Fragment set:html={html} />}
 {
   block.type === 'image' && (

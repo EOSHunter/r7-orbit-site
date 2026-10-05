@@ -24,6 +24,29 @@ describe('markdownHtml', () => {
   });
 });
 
+describe('headings', () => {
+  it('set one *phrase* in italic brass, as a title does, and escape everything else', () => {
+    const html = sectionsHtml([{ type: 'heading', level: 2, text: 'How I *work* <b>' }, { type: 'heading', level: 3, text: 'No marks' }], resolve);
+    expect(html).toContain('<h2>How I <em>work</em> &lt;b&gt;</h2>');
+    expect(html).toContain('<h3>No marks</h3>');
+  });
+
+  it('does the same for the heading beside a portrait', () => {
+    const html = sectionsHtml(
+      [
+        { type: 'heading', level: 2, text: 'Hunter *Newton*' },
+        { type: 'portrait', image: '/media/a.jpg', alt: 'A', text: 'Beside.' },
+      ],
+      resolve,
+    );
+    expect(html).toContain('<div class="prose"><h2>Hunter <em>Newton</em></h2>');
+  });
+
+  it('leaves **bold** as bold: only a heading phrase is brass', () => {
+    expect(markdownHtml('Some **bold** words')).toBe('<p>Some <strong>bold</strong> words</p>');
+  });
+});
+
 describe('previewProblems', () => {
   it('flags a picture with no alt text unless it is decorative, naming the block', () => {
     const blocks = [
