@@ -10,7 +10,7 @@ status: shipped
 stack: [JavaScript, Three.js, WebGL2]
 role: Directed the AI agents
 shipped: 2026-10-05
-playUrl: https://play.r7orbit.io/
+playUrl: https://vesper.r7orbit.io/
 playMode: embed
 playAspect: "16:9"
 controls:

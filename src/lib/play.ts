@@ -27,7 +27,7 @@ export function aspectRatio(aspect: string | undefined): string {
   return m ? `${m[1]} / ${m[2]}` : '16 / 9';
 }
 
-/** The origin (`https://play.r7orbit.io`) of a play address: what `frame-src` in public/_headers has to list. */
+/** The origin (`https://vesper.r7orbit.io`) of a play address: what `frame-src` in public/_headers has to list. */
 export function playOrigin(playUrl: string): string {
   return new URL(playUrl).origin;
 }

@@ -18,8 +18,8 @@ describe('play helpers', () => {
   });
 
   it('reads the origin a play address needs in frame-src', () => {
-    expect(playOrigin('https://play.r7orbit.io/vesper-drift/')).toBe('https://play.r7orbit.io');
-    expect(playOrigin('https://play.r7orbit.io/')).toBe('https://play.r7orbit.io');
+    expect(playOrigin('https://vesper.r7orbit.io/')).toBe('https://vesper.r7orbit.io');
+    expect(playOrigin('https://vesper.r7orbit.io/')).toBe('https://vesper.r7orbit.io');
   });
 });
 
