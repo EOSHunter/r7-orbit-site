@@ -134,6 +134,13 @@ test('images are lazy-loaded except the first row, and every poster frame is 16:
   }
 });
 
+test('outside the hub (the home teaser) every game poster is lazy, so none competes with the page LCP', async ({ page }) => {
+  await page.goto('/');
+  const imgs = page.locator('[data-games] .card-media img:not(.media-ph img)');
+  test.skip((await imgs.count()) === 0, 'no published game with a poster on the home page');
+  expect(new Set(await imgs.evaluateAll((els) => els.map((e) => e.getAttribute('loading'))))).toEqual(new Set(['lazy']));
+});
+
 test('the JSON-LD is an ItemList of the games in the order shown, with the page and the breadcrumb', async ({
   page,
 }) => {

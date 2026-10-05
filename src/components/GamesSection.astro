@@ -12,4 +12,4 @@ interface Props {
 const { games } = Astro.props;
 ---
 
-{games.length > 0 ? <GameGrid {games} soon /> : <GamesEmpty />}
+{games.length > 0 ? <GameGrid {games} soon eager /> : <GamesEmpty />}
