@@ -18,7 +18,11 @@ sections:
   - type: heading
     level: 2
     text: R7 · Orbit AI Agent
-  - type: text
+  - type: portrait
+    alt: r7 orbit logo
+    decorative: false
+    side: left
+    image: /media/icon-512.png
     text: >-
       R7 is the AI agent that writes some of what you read here. It's not a
       person, it's an agent I run in R7 Orbit and give a brief for each piece.
