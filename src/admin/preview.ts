@@ -4,28 +4,31 @@
 //
 // What is exact: the stylesheets, the class names and the markup of the hero, breadcrumb, headline, byline, contents list
 // and prose; the article blocks (preview-html.ts copies their markup). What is approximated, and why, is in the README
-// ("What the preview does not show").
+// ("What the preview does not show"). A post written as sections (docs/SECTIONS.md "Posts") is drawn by the sections preview
+// (sections-html.ts) in the post's column; its reading time and contents list come from the site's own projection (post-body.ts).
 import { createElement as h, Fragment, type MouseEvent, type ReactNode } from 'react';
 import type { PreviewTemplateComponentProps } from 'decap-cms-core';
-import { WORDS_PER_MINUTE, countWords } from '../lib/content';
 import { longDate, isoDate, plainTitle, titleParts } from '../lib/text';
 import { bridgeGetAsset } from './asset-bridge';
-import { headingsOf, type GetAsset, type Heading } from './preview-html';
+import { adminAuthors } from './authors';
+import { postBody } from './post-body';
+import type { GetAsset, Heading } from './preview-html';
+import { problemsHtml, sectionsHtml } from './sections-html';
 
 type Data = Record<string, unknown>;
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
 /** A reader is not navigating away from an editor: links in the preview do nothing. */
-const keepOnPage = (event: MouseEvent) => {
+export const keepOnPage = (event: MouseEvent) => {
   if ((event.target as Element).closest('a')) event.preventDefault();
 };
 
-function icon(name: string): ReactNode {
+export function icon(name: string): ReactNode {
   return h('svg', { className: 'ico', 'aria-hidden': true }, h('use', { href: `#i-${name}` }));
 }
 
 /** The contents list, in the two shapes of TableOfContents.astro: the aside (wide) and the <details> (narrow). */
-function contents(headings: Heading[], variant: 'aside' | 'inline'): ReactNode {
+export function contents(headings: Heading[], variant: 'aside' | 'inline'): ReactNode {
   const tree: { heading: Heading; children: Heading[] }[] = [];
   for (const heading of headings) {
     if (heading.depth === 2) tree.push({ heading, children: [] });
@@ -63,17 +66,36 @@ export interface PreviewOptions {
   authorNames?: Record<string, string>;
 }
 
+/** The authors the Author box block can show, as the sections preview needs them. */
+export const previewAuthors = adminAuthors.map((a) => ({ slug: a.slug, name: a.name, bio: a.bio, agent: a.kind === 'agent', subtitle: a.subtitle }));
+
+/**
+ * The URL a picture in the `sections` list can be loaded from in the preview frame (one chosen but not saved yet is a blob: URL
+ * only Decap can resolve), or the path as written.
+ */
+export function sectionsAssets(getAsset: unknown, fields: PreviewTemplateComponentProps['fields'] | undefined) {
+  const sectionsField = fields?.find((f) => f.get('name') === 'sections');
+  return (path: string): string => {
+    try {
+      return String(bridgeGetAsset(getAsset as GetAsset)(path, sectionsField) ?? '') || path;
+    } catch {
+      return path;
+    }
+  };
+}
+
 export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOptions) {
   return function BlogPreview({ entry, widgetFor, getAsset, fields }: PreviewTemplateComponentProps) {
     const data = (entry.get('data')?.toJS() ?? {}) as Data;
-    const body = str(data.body);
+    // The body as the page reads it: the sections when there are any, else the Markdown (the reading time and contents list too).
+    const body = postBody(data);
     const title = str(data.title) || 'Untitled post';
     const summary = str(data.summary);
     const tags = (Array.isArray(data.tags) ? data.tags : []).filter((t): t is string => typeof t === 'string' && !!t);
     const author = authorNames[str(data.author)] ?? (str(data.author) || authorName);
     const published = str(data.date);
     const updated = str(data.updated);
-    const minutes = Number(data.readTime) > 0 ? Number(data.readTime) : Math.max(1, Math.ceil(countWords(body) / WORDS_PER_MINUTE));
+    const { minutes, headings } = body;
 
     const assetFor = (name: string, path: string): string => {
       if (!path) return '';
@@ -88,7 +110,6 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
     const cover = assetFor('cover', str(data.cover));
 
     // The same rule as ArticlePage: a contents list for three or more H2s, unless `toc` says otherwise.
-    const headings = headingsOf(body);
     const showToc = data.toc !== false && (data.toc === true || headings.filter((x) => x.depth === 2).length >= 3);
 
     const date = (iso: string) => {
@@ -172,6 +193,9 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
         { className: 'admin-preview-note' },
         'Preview: the post as it will look. The site header, share row, related posts and next/previous links are not shown.',
       ),
+      body.problems.length
+        ? h('div', { className: 'container', dangerouslySetInnerHTML: { __html: problemsHtml(body.problems) } })
+        : null,
       // ArticleHero: with a featured image the headline sits on it under a dark gradient, without one it is just the header.
       featured
         ? h(
@@ -195,7 +219,14 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
             'div',
             { className: 'post-main' },
             showToc ? contents(headings, 'inline') : null,
-            h('article', { className: 'prose art-prose', id: 'article' }, widgetFor('body')),
+            body.sections.length
+              ? h('article', {
+                  id: 'article',
+                  dangerouslySetInnerHTML: {
+                    __html: sectionsHtml(data.sections, sectionsAssets(getAsset, fields), previewAuthors, { layout: 'column' }),
+                  },
+                })
+              : h('article', { className: 'prose art-prose', id: 'article' }, widgetFor('body')),
           ),
           showToc ? contents(headings, 'aside') : null,
         ),

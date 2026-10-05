@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7; the words of the Subscribe, Privacy, 404 and Search pages are section 8, the site-wide settings (name, your details, links, navigation, footer) are section 9, and the home page and the listing pages (archives, Latest, Games, Tags) are section 10. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7; the words of the Subscribe, Privacy, 404 and Search pages are section 8, the site-wide settings (name, your details, links, navigation, footer) are section 9, writing a post as blocks instead of one Markdown text is section 10, and the home page and the listing pages (archives, Latest, Games, Tags) are section 11. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -13,7 +13,7 @@ For the author. Adding pictures is section 6 and editing the About page (and wha
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos. Every step for pictures is in [section 6, Adding images](#6-adding-images).
-5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component.
+5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component. Or build the body from blocks under **Sections** instead, as on the About page: [section 10](#10-write-a-post-with-sections). Use one or the other, not both.
 6. **Draft and scheduled.**
    - **Draft** on: the post is kept out of the live site, archives, search, feeds and sitemap, even after it is published to GitHub. Turn it off when you want the post public.
    - **Date in the future**: the post is **scheduled**. It stays hidden until that day (counted in UTC), then goes live at the next daily rebuild (section 2).
@@ -139,7 +139,7 @@ Alt text is what a screen reader says in place of the picture, and what shows if
 
 ### Case 4: a picture on a page
 
-The About page is made of blocks ([section 7](#7-editing-the-about-page)), and its pictures work like the ones above. So are the home page's rows and the blocks above and below a listing ([section 10](#10-editing-the-home-page-and-listing-pages)): their pictures go to the same folder for pages.
+The About page is made of blocks ([section 7](#7-editing-the-about-page)), and its pictures work like the ones above. So are the home page's rows and the blocks above and below a listing ([section 11](#11-editing-the-home-page-and-listing-pages)): their pictures go to the same folder for pages.
 
 1. In the editor open **Pages**, then **About page**.
 2. Add an **Image** or **Portrait and text** block, or open an existing one.
@@ -224,7 +224,22 @@ If the check on the pull request is red, the first error names the setting: for 
 
 After a change to the header links, do the check in section 3 (step 6 at least): open the home page at phone and computer width, open the menu, and click a few links.
 
-## 10. Editing the home page and listing pages
+## 10. Write a post with sections
+
+Any post (a blog post, news item, vlog, project or repo) can be written as **sections**: a list of blocks you add, re-order and remove, the same blocks as the About page (section 7), instead of the one Markdown text in **Body**. Use sections when the layout matters (a picture beside text, a gallery, a button, two columns, a video in the middle); keep the Body for a long essay that is mostly text. Nothing changes for posts you already wrote: a post with a Body stays as it is.
+
+1. Open or create the post as in section 1 and fill in the fields as usual (title, summary, date, tags, author, the source of a news item, the video of a vlog, the status of a project, the repository of a repo). Those still come from the form, whichever way the body is written.
+2. **Leave Body empty.** A post uses sections **or** the Body, **never both**: the editor refuses to save a post that has both ("Not saved. This post has both sections and a Body…"), and the build would stop on one, naming the file. To switch an existing post to sections, cut its text out of Body and rebuild it as blocks; nothing converts it for you.
+3. Under **Sections**, click **Add section** and pick a block, exactly as in section 7, steps 3 to 8. Pictures you upload in blocks go to the post's own folder (`public/media/<kind>/`), and each needs alt text unless it is marked **Decorative image**.
+4. **Headings.** Use **Heading** blocks for the parts of the post (*Section heading* for the main ones). On a blog post with three or more section headings the contents list ("On this page") appears beside the text, built from them and from any `##` heading you type inside a Text block. A `##` inside a Text block must be on a line of its own with a blank line before and after it: the build stops on one it cannot list.
+5. **Reading time** is counted from the words in the blocks (code, alt text and pull quotes are not counted), unless you type your own in **Reading time**.
+6. **A vlog's transcript.** With sections there is no Body to hold it, so put it in **Transcript (for a vlog written as sections)**. It is shown folded under the notes, as before. Leave **Transcript below** off: that switch is for a Body that ends with a "Transcript" heading.
+7. **A repo** with **README source** set to *Local* shows your sections instead of the README from GitHub, as it does with a Body.
+8. **The preview** on the right draws the blocks in the post's column with the site's styles, and lists above the page what the build would stop on (a picture without alt text, a post with both sections and a Body). Blog posts get the full page preview; news, vlogs, projects and repos get the head of the page and the body, and a note at the top says what is not drawn (the facts column, a project's play section, gallery and changelog, a repo's README). The limits of the block preview in section 7, step 9, apply here too.
+9. **Feeds.** A post written as sections sends its blocks to feed readers as simple formatted text: headings, paragraphs, lists, quotes, code, pictures with their captions and links (a spacer, the latest posts, the latest feed, the pinned post, the games row, the newsletter form and the contents list are left out). Blocks with a video or a game send a link to it.
+10. **Save** and **Publish** as in section 1. If the check on the pull request is red, its first error names the post's file and the block ("blog/my-post.md, block 3 (Image)").
+
+## 11. Editing the home page and listing pages
 
 The words of the home page, of **Latest**, of the five archives (News, Blog, Vlogs, Projects, Repos), of the **Games** page and of the **Tags** page are under **Pages** too, below the About page. They are saved, previewed and published like the About page (section 7). The posts on these pages are not written here: they come from the posts themselves, when the site is built.
 

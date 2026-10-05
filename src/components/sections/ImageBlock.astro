@@ -1,6 +1,7 @@
 ---
 // A picture: the Figure article component. Narrow sits in the reading column (centred, or floated left or right at a size); wide
-// and full leave it (Sections.astro puts them in a row of their own), and full reaches both edges of the window.
+// and full leave it (Sections.astro puts them in a row of their own), and full reaches both edges of the window. In a post's text
+// column (`layout: 'column'`) nothing reaches the window's edges, so a full picture is drawn as a wide one.
 import Figure from '../article/Figure.astro';
 import type { BlockContext } from './context';
 import type { SectionOf } from '../../lib/sections';
@@ -20,7 +21,7 @@ const narrow = block.width === 'narrow';
   alt={block.decorative ? '' : block.alt}
   decorative={block.decorative}
   caption={block.caption || undefined}
-  align={block.width === 'full' ? 'full' : narrow ? block.align : 'center'}
+  align={block.width === 'full' && ctx.layout === 'page' ? 'full' : narrow ? block.align : 'center'}
   size={narrow ? block.size : 'lg'}
   width={size?.width}
   height={size?.height}

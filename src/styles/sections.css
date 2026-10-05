@@ -41,3 +41,14 @@
 /* An author box in the reading column: the margin the post footer's note has would be too much between two blocks. */
 .sections .prose > * + .author-box { margin-top: 1.15em; }
 .sections .prose > .author-box:first-child { margin-top: 0; }
+
+/* A post written as sections (Sections.astro with layout="column"): the rows sit in the post's text column, which has its own
+   spacing above and below, so the rows only need the gap between them. The portrait's side column is narrower there. */
+.sections[data-layout='column'] { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+.sections[data-layout='column'] > .sec-row,
+.sections[data-layout='column'] > .sec-row:first-child,
+.sections[data-layout='column'] > .sec-row:last-child { padding-block: 0; }
+@media (min-width: 900px) {
+  .sections[data-layout='column'] .about-grid { grid-template-columns: 12rem minmax(0, 1fr); gap: var(--s-7); }
+  .sections[data-layout='column'] .about-grid[data-side='right'] { grid-template-columns: minmax(0, 1fr) 12rem; }
+}

@@ -72,6 +72,8 @@ const routes = [
   { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
   { path: '/styleguide/listing/', noindex: true }, // fixture for tests/site-pages.spec.js: an archive with blocks above and below its list
   { path: '/styleguide/nav/', noindex: true }, // fixture for tests/site-settings.spec.js: the nav with every label renamed
+  // fixtures for tests/post-sections.spec.js: one post per kind written as sections (tests/fixtures/posts/), drawn by the real post pages
+  ...KINDS.map((kind) => ({ path: `/styleguide/posts/${kind}/`, noindex: true })),
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

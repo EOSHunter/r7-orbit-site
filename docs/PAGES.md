@@ -39,7 +39,7 @@ Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · R
 
 ## Pages whose words are edited in /admin
 
-The home page, `/latest/`, the five archives, `/games/` and `/tags/` take their words from `src/content/pages/<id>.md` (the `pages` collection, edited in /admin under **Pages**; fields in `CONTENT_MODEL.md`, "Pages"; the author's steps in `PUBLISHING.md`, section 10). What is made from the posts stays in code: the listing with its filters, counts and pagination, the games grid, the tag chips, the kind labels and icons (shared with the navigation). The numbered pages (`/blog/page/2/`) repeat their archive's words.
+The home page, `/latest/`, the five archives, `/games/` and `/tags/` take their words from `src/content/pages/<id>.md` (the `pages` collection, edited in /admin under **Pages**; fields in `CONTENT_MODEL.md`, "Pages"; the author's steps in `PUBLISHING.md`, section 11). What is made from the posts stays in code: the listing with its filters, counts and pagination, the games grid, the tag chips, the kind labels and icons (shared with the navigation). The numbered pages (`/blog/page/2/`) repeat their archive's words.
 
 | Page | File | What the file holds |
 |---|---|---|

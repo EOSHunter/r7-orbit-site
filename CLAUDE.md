@@ -12,7 +12,7 @@ Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must s
 
 ```
 CLAUDE.md                     this file
-docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: every page and, later, every post is an ordered list of blocks; the catalogue, the rules, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: the About page, and optionally the body of any post, is an ordered list of blocks; the catalogue, the rules, posts written as sections, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
 .github/workflows/scheduled-deploy.yml   daily Cloudflare Pages Deploy Hook (publishes future-dated posts); needs secret CF_DEPLOY_HOOK_URL
@@ -24,28 +24,31 @@ src/
                               AuthorByline + AuthorAvatar + AgentChip + AuthorNote + AuthorPage (the /authors/<slug>/ page),
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               GamesSection + GameGrid + GameCard (the /games/ hub),
-                              Sections + sections/ (a page built from blocks: About, the home page's rows, the blocks around a listing; one <Id>Block.astro per block,
-                              registry.ts, SectionBand.astro = the home rows' ruled section frame) + AuthorBox, TagIndex (the /tags/ list),
+                              Sections + sections/ (a page built from blocks: About, the home page's rows, the blocks around a listing, and a post's body written as sections with layout="column";
+                              one <Id>Block.astro per block, registry.ts, SectionBand.astro = the home rows' ruled section frame) + AuthorBox, TagIndex (the /tags/ list),
                               PageBlocks (library blocks drawn in place inside a page's own frame: subscribe, privacy, 404, search),
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
+                              VlogPage, ProjectPage, RepoPage (the vlog, project and repo pages; their routes only fetch, like ArticlePage's),
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
   admin/                      Decap CMS for /admin: settings.ts (the "Site settings" file collection over src/data/site.json), config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry);
+                              post-body.ts (a post's body for the previews, written as Markdown or sections; the save check that refuses both), post-preview.ts (the preview of news, vlogs, projects and repos),
                               pages.ts (the "Pages" file collection: About, then site-page-files.ts = home, Latest, the five archives, Games, Tags, then subscribe, privacy, 404 and search in their own block),
                               page-previews.ts + page-preview-html.ts (home and listing previews: hero or page head, blocks, a labelled stand-in where posts go), framed-preview.ts (subscribe/privacy/404/search preview: About's, with settings tokens filled), sections-config.ts (the Decap block list, generated from the block definitions; `sectionsField()` attaches it to any collection), about-preview.ts + sections-html.ts (the live preview of a page of blocks). See README "Admin" and docs/SECTIONS.md
   pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), games/ (hub of playable projects), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
-                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, games/, listing/, nav/ and others for the tests)
+                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, games/, listing/, nav/ and others for the tests; styleguide/posts/<kind>/ + rss.xml draw the tests' fixture posts)
   data/site.json              the site settings: name, tagline, description, default share image, author, profile links, nav (label + href), footer links + note, newsletter;
                               edited in /admin as "Site settings" (admin/settings.ts) except `url` and `links.rss`. site.ts parses it with siteSchema (lib/site-settings.ts) and every reader imports site.ts; nav.ts gives navItems + footerItems
-  content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state), pages/ (about.md as blocks; home.md = hero fields + rows as blocks; latest, news, blog, vlogs, projects, repos, games, tags .md = each listing's words, empty state and blocks above/below its list; subscribe.md, privacy.md, 404.md, search.md = the words of those pages, their frame stays in src/pages/; all edited in /admin); site.json stays in src/data/
+  content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state; a post's body is Markdown OR a `sections` list, never both), pages/ (about.md as blocks; home.md = hero fields + rows as blocks; latest, news, blog, vlogs, projects, repos, games, tags .md = each listing's words, empty state and blocks above/below its list; subscribe.md, privacy.md, 404.md, search.md = the words of those pages, their frame stays in src/pages/; all edited in /admin); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               sections/ (THE block library, docs/SECTIONS.md: definitions.ts defines every block once - fields, schema, label, placement, example; fields.ts is the field vocabulary; schema.ts exports `sectionsSchema` for any collection; layout.ts is the row rule; describe.ts reads a schema back for the admin form and the build; prepare.ts renders each block's Markdown and measures its pictures; checks.ts holds the checks a schema cannot make; catalogue.ts writes the catalogue in docs/SECTIONS.md; unit-tested),
-                              section-markdown.ts + section-images.ts (build-time Markdown and picture sizes for those blocks),
+                              sections-to-content.ts (THE projection of a sections body: plain text for reading time, headings for contents lists and anchors, Markdown for feeds; every consumer goes through it, unit-tested per block),
+                              section-markdown.ts + section-images.ts (build-time Markdown and picture sizes for those blocks; renderFeedMarkdown for feed items),
                               page-copy.ts + page-copy-queries.ts (subscribe/privacy/404/search: settings tokens such as {author.email}, the {if newsletter connected} line, which block goes where; unit-tested),
-                              content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
-                              content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer),
+                              content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings, bodyConflict (sections XOR Markdown body); unit-tested),
+                              content-queries.ts (getPosts/getAllPosts over astro:content; getFixturePosts for the tests' fixtures), markdown/ (remark/rehype plugins, Shiki transformer),
                               authors.ts + authors-queries.ts (authors: default, byline rules, JSON-LD; unit-tested),
                               site-settings.ts (site.json schema, footer links, isCurrent/searchKinds: nav matched by href; unit-tested) + site-routes.ts (build-only: every site path in the settings exists),
                               games.ts + game-cards.ts (the /games/ hub: which projects are games, order, Play link; unit-tested),
@@ -58,7 +61,9 @@ src/
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
   scripts/                    site.js (menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (hero and 404 only),
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro)
-tests/                        sections.spec.js (every block drawn on /styleguide/sections/: axe, widths, behaviour), admin-sections.spec.js (adds each block type in the real editor, GitHub mocked),
+tests/                        fixtures/posts/<kind>/ (one post per kind written as sections: read by the fixture* collections in content.config.ts, never part of the site),
+                              post-sections.spec.js (those fixtures through the real post pages: blocks, chrome, contents list, reading time, JSON-LD, feed, axe and widths, Pagefind search),
+                              sections.spec.js (every block drawn on /styleguide/sections/: axe, widths, behaviour), admin-sections.spec.js (adds each block type in the real editor, GitHub mocked),
                               page-text.spec.js + page-text.js (the words of home, archives, Latest, Games, Tags against tests/fixtures/pages/<id>.json; refresh with UPDATE_PAGE_TEXT=1),
                               site-pages.spec.js (hero anchors, row order, blocks around a list on /styleguide/listing/), admin-site-pages.spec.js (those pages in the real editor), routes.js (the fixed routes, plus the post and tag pages it finds in dist/: no slugs listed), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
