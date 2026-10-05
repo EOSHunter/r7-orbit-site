@@ -22,6 +22,7 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `title` | string | yes | Plain text. ≤ 70 characters reads best; ≤ 60 fits a search result. One phrase may be wrapped in `*asterisks*` to be shown in italic brass (e.g. `Why every agent gets its own *room*`); the site strips them for `<title>` and feeds |
+| `seoTitle` | string | no | Shorter title for the browser tab, search results and `og:title`, when the title is too long. At most 49 characters (60 minus ` · R7 Orbit`; the build fails with a readable message if it is longer). Without it the title is used, and the headline and JSON-LD always keep the real title |
 | `date` | date (`YYYY-MM-DD`) | yes | Publish date; future dates are hidden until then (see "Drafts and scheduled posts") |
 | `updated` | date | no | Set when the post is materially changed; shown as "Updated Oct 8" |
 | `summary` | string | yes | 1–2 sentences, ≤ 155 characters. Used on cards, in the meta description and in feeds |

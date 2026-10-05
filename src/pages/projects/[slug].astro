@@ -16,6 +16,7 @@ import { getAllPosts, getPosts, type SitePost } from '../../lib/content-queries'
 import { relatedPosts } from '../../lib/content';
 import { loadGitHubRepo } from '../../lib/github';
 import { isPlayable } from '../../lib/play';
+import { headTitleFor } from '../../lib/seo';
 import { isoDate, longDate, plainTitle, titleParts } from '../../lib/text';
 import '../../styles/markdown.css';
 
@@ -73,7 +74,7 @@ const path = `/projects/${post.id}/`;
 ---
 
 <BaseLayout
-  title={data.title}
+  title={headTitleFor(data.title, data.seoTitle)}
   description={data.summary}
   current="Projects"
   published={data.date}

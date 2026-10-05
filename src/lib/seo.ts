@@ -4,6 +4,18 @@ import { absoluteUrl, isoDate, plainTitle } from './text';
 
 const DEFAULT_IMAGE = '/og-default.png';
 const MAX_DESCRIPTION = 155;
+/** The most a browser-tab title may be, site name and separator included (tests/smoke.spec.js, docs/PAGES.md). */
+export const MAX_PAGE_TITLE = 60;
+
+/** The longest `seoTitle` that still fits once ` · {site name}` is added. */
+export function seoTitleMax(siteName: string): number {
+  return MAX_PAGE_TITLE - ' · '.length - siteName.length;
+}
+
+/** The title for the tab, search results and og:title: the post's `seoTitle` when it has one, else its title. */
+export function headTitleFor(title: string, seoTitle?: string): string {
+  return seoTitle?.trim() || title;
+}
 
 /** Shortens to `max` characters at a word boundary, with an ellipsis. */
 export function truncate(text: string, max = MAX_DESCRIPTION): string {

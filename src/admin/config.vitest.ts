@@ -1,3 +1,4 @@
+import site from '../data/site.json';
 import { describe, expect, it, vi } from 'vitest';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import {
@@ -52,6 +53,25 @@ const byName = (fields: readonly unknown[] | undefined): Record<string, Field> =
   Object.fromEntries((fields ?? []).map((f) => [(f as { name: string }).name, f as Field]));
 const fieldsOf = (collection: string) => byName(collections.find((c) => c.name === collection)?.fields);
 const pattern = (f: Field) => ((f.pattern as [string, string] | undefined) ?? [''])[0];
+
+describe('seoTitle', () => {
+  it('is optional on every collection, limited so the <title> fits 60 characters, and in the admin under the same name', async () => {
+    const shapes = await schemaShapes();
+    const limit = 60 - ' · '.length - site.name.length;
+    for (const [name, shape] of Object.entries(shapes)) {
+      const seo = shape.seoTitle;
+      expect(seo, `${name} schema`).toBeDefined();
+      expect(seo.isOptional(), `${name} optional`).toBe(true);
+      expect(seo.safeParse('x'.repeat(limit)).success, `${name} at the limit`).toBe(true);
+      expect(seo.safeParse('x'.repeat(limit + 1)).success, `${name} over the limit`).toBe(false);
+      expect(seo.safeParse(undefined).success, `${name} absent`).toBe(true);
+      const adminField = fieldsOf(name).seoTitle;
+      expect(adminField, `${name} admin`).toBeDefined();
+      expect(adminField.required).toBe(false);
+      expect(adminField.hint).toContain(`Max ${limit} characters`);
+    }
+  });
+});
 
 describe('admin config', () => {
   it('writes MDX posts into the blog content folder', () => {

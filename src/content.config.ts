@@ -1,6 +1,8 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import site from './data/site.json';
+import { seoTitleMax } from './lib/seo';
 
 // Schema from docs/CONTENT_MODEL.md. `.strict()` turns a misspelt field into a readable build error
 // instead of silently dropping it.
@@ -9,8 +11,16 @@ const slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'use lowercase words j
 const ownerName = z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'use the form "owner/name"');
 const isoDate = z.coerce.date({ error: 'use a date like 2026-10-03' });
 
+const seoTitleLimit = seoTitleMax(site.name);
+
 const common = {
   title: z.string().min(1).max(90),
+  // Optional shorter title for the browser tab, search results and og:title; the page headline and JSON-LD keep `title`.
+  seoTitle: z
+    .string()
+    .min(1)
+    .max(seoTitleLimit, `seoTitle is too long: at most ${seoTitleLimit} characters, so "· ${site.name}" still fits in 60`)
+    .optional(),
   date: isoDate,
   updated: isoDate.optional(),
   summary: z.string().min(1).max(180),

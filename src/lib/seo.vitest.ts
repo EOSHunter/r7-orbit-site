@@ -9,6 +9,9 @@ import {
   prune,
   resolveSeo,
   truncate,
+  headTitleFor,
+  seoTitleMax,
+  MAX_PAGE_TITLE,
   videoObjectLd,
   websiteLd,
   type SiteInfo,
@@ -145,5 +148,19 @@ describe('breadcrumbLd', () => {
       [2, 'Blog', 'https://example.com/blog/'],
       [3, 'A post', undefined],
     ]);
+  });
+});
+
+describe('seoTitle', () => {
+  it('leaves room for the separator and the site name inside 60 characters', () => {
+    expect(seoTitleMax('R7 Orbit')).toBe(49);
+    expect(seoTitleMax('R7 Orbit') + ' · R7 Orbit'.length).toBe(MAX_PAGE_TITLE);
+  });
+
+  it('is used for the head title when set, and the real title otherwise', () => {
+    expect(headTitleFor('A long title', 'Short')).toBe('Short');
+    expect(headTitleFor('A long title')).toBe('A long title');
+    expect(headTitleFor('A long title', undefined)).toBe('A long title');
+    expect(headTitleFor('A long title', '   ')).toBe('A long title');
   });
 });
