@@ -151,6 +151,8 @@ A list of tags with counts, and for each tag the filtered archive (all kinds mix
 
 Pagefind UI styled with tokens, opened from the header icon or the `/` key. Results show kind label, title, excerpt. Works without third-party requests. Keyboard: `/` opens, `Esc` closes, arrows move, Enter opens.
 
+Words: `src/content/pages/search.md` (**Pages > Search page**): the heading, browser title, description, and the note shown only without JavaScript (every block of the file is that note, drawn inside `<noscript>`). The eyebrow, the search box and the kind links are code. See "Pages with a fixed frame" below.
+
 ## About `/about/`
 
 The author's own text only, written in /admin (**Pages > About page**) and stored in `src/content/pages/about.md`: the page heading, then an ordered list of blocks (heading, text, image, portrait and text, quote, callout, links list, button, divider; see `CONTENT_MODEL.md`, "Pages"). Today: "Hunter Newton" with the portrait beside the bio, then "R7 · Orbit AI Agent" in the same column. The portrait is a block with its own picture and alt text (file in `public/media/about/`), not `author.photo`. `Person` structured data and the meta description keep their values: the name and bio come from `site.json`, the description from `about.md`.
@@ -161,13 +163,25 @@ Layout: the page head, then one row per run of blocks (`Sections.astro`): a read
 
 The form alone, plus what you'll get and how often, a link to RSS, and the privacy note. Success and error states are inline, polite, and in plain words (see `VOICE_AND_COPY.md`).
 
+Words: `src/content/pages/subscribe.md` (**Pages > Subscribe page**). A Lead paragraph at the top sits under the heading; the blocks up to the **Newsletter sign-up** block sit in the box beside the form (the block marks where the box ends; its own heading and text are not used here); the blocks after it sit under the box, Text set as small print (`.t-meta`). The eyebrow "Newsletter" and the form (`NewsletterForm`, with its label, button and hint) are code.
+
 ## 404
 
 "That page has drifted out of orbit." The orbit (dot animating), a search field, links Home and Latest. Returns HTTP 404.
 
+Words: `src/content/pages/404.md` (**Pages > Page not found (404)**): the heading (`title`), the browser title (`seoTitle`, "Page not found"), the description, and a Lead paragraph under the heading (other blocks follow it, above the search box). The orbit (`orbit.js`), the eyebrow "Error 404", the search form and the two buttons are code. The page stays `noindex`, and the host still answers unknown addresses with `dist/404.html` and a 404 status.
+
 ## Privacy `/privacy/`
 
 Plain-language: what the site collects (nothing, or what the newsletter/analytics provider collects), where the form goes, how to unsubscribe, contact.
+
+Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The contact address is `{author.email}` and the RSS link `{links.rss}`, filled from `src/data/site.json` at build time, so changing the email in the settings changes this page. The two newsletter variants are two Text blocks starting with `{if newsletter connected}` and `{if newsletter not connected}`: the one that matches `newsletter.formAction` is shown, as before.
+
+## Pages with a fixed frame (subscribe, privacy, 404, search)
+
+These four keep their markup in `src/pages/*.astro` and take only their words from `src/content/pages/<page>.md` (the `pages` collection, the same schema and block library as About: `SECTIONS.md`). `src/lib/page-copy.ts` fills the settings tokens (`{site.name}`, `{author.email}`, `{links.rss}`, `{newsletter.provider}`; an unknown one stops the build), applies the newsletter condition lines, and says which blocks go where (`subscribeSlots`, `privacySlots`, `lostSlots`). `src/components/PageBlocks.astro` draws those blocks in place with the library's own block components, adding no rows or wrappers, so each page's markup and spacing are what they were (`Sections.astro` would add its row padding). A Lead paragraph in a page head is drawn as `p.t-lead`.
+
+When they became editable, their text was captured from `main` into `tests/fixtures/pages/<page>.txt` (title, description, robots, headings, paragraphs, links with addresses, form text) and `tests/pages.spec.js` compares the built pages with it line by line; full-page screenshots at 375 and 1280px were byte-identical before and after. Change a fixture in the same commit as a deliberate change to the words.
 
 ## Feeds
 

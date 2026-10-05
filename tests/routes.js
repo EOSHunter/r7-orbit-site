@@ -60,6 +60,7 @@ const routes = [
   { path: '/about/' },
   { path: '/subscribe/' },
   { path: '/privacy/' },
+  { path: '/search/', noindex: true },
   // Any unknown path: `astro preview` serves dist/404.html with HTTP 404.
   { path: '/no-such-page/', status: 404, noindex: true, lighthouse: '/404.html' },
   { path: '/styleguide/', noindex: true },
@@ -69,6 +70,7 @@ const routes = [
   { path: '/styleguide/author-empty/', noindex: true }, // fixture for tests/authors.spec.js: an author with no posts
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
   { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
+  { path: '/styleguide/nav/', noindex: true }, // fixture for tests/site-settings.spec.js: the nav with every label renamed
   // fixtures for tests/post-sections.spec.js: one post per kind written as sections (tests/fixtures/posts/), drawn by the real post pages
   ...KINDS.map((kind) => ({ path: `/styleguide/posts/${kind}/`, noindex: true })),
 ];

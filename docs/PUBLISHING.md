@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Adding pictures is section 6, editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7, and writing a post as blocks instead of one Markdown text is section 8. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7; the words of the Subscribe, Privacy, 404 and Search pages are section 8, the site-wide settings (name, your details, links, navigation, footer) are section 9, and writing a post as blocks instead of one Markdown text is section 10. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -13,7 +13,7 @@ For the author. Adding pictures is section 6, editing the About page (and what e
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos. Every step for pictures is in [section 6, Adding images](#6-adding-images).
-5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component. Or build the body from blocks under **Sections** instead, as on the About page: [section 8](#8-write-a-post-with-sections). Use one or the other, not both.
+5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component. Or build the body from blocks under **Sections** instead, as on the About page: [section 10](#10-write-a-post-with-sections). Use one or the other, not both.
 6. **Draft and scheduled.**
    - **Draft** on: the post is kept out of the live site, archives, search, feeds and sitemap, even after it is published to GitHub. Turn it off when you want the post public.
    - **Date in the future**: the post is **scheduled**. It stays hidden until that day (counted in UTC), then goes live at the next daily rebuild (section 2).
@@ -186,9 +186,45 @@ The About page is not a post. It is a list of **blocks** (a heading, some text, 
 9. **What the preview is not.** It is the page drawn with the site's real styles, so colours, type and spacing are right. It is not the real page: the header and footer are missing, the text is read by a simpler Markdown reader (headings, paragraphs, lists, bold, italic, code and links only), and the preview pane is narrower than a screen, so a portrait that sits beside the text on a computer may sit above it here. Blocks that need the built site (**Latest posts**, **GitHub stats row**, the game, the video, code colours, the gallery's full-size window) show a stand-in, and a line under each says so. Open the Cloudflare preview link on the pull request (section 1, step 7) to see the real thing.
 10. **Save**, then **Publish** exactly as for a post (section 1, steps 7 to 9). The check on the pull request builds the site. If it is red, open it and read the first error: it names the block ("Block 3 (Image)" is the third block, counting from 1; `sections.2` counts from 0) and what is wrong, usually missing alt text or an address that does not start with `https://` or `/`. The preview shows the same messages above the page while you type.
 
-Good to know: the details search engines read about you (name and bio, the "Person" data) come from `src/data/site.json`, not from this page. If you change your bio here and want search engines to see the change too, it has to be changed there as well.
+Good to know: the details search engines read about you (name and bio, the "Person" data) come from **Site settings** (section 9), not from this page. If you change your bio here and want search engines to see the change too, change it there as well.
 
-## 8. Write a post with sections
+## 8. Editing subscribe, privacy and 404
+
+The words of **Subscribe**, **Privacy**, the **Page not found (404)** page and **Search** are under **Pages** too, next to About. They work like the About page (section 7: open, edit blocks, preview, save, publish), with one difference: the page keeps its own frame, and only the words are yours to change. The newsletter form, the search box, the 404 orbit and its two buttons, and the small label above each heading ("Newsletter", "Privacy", "Error 404", "Search") stay as they are.
+
+1. Open **Pages**, then the page. **Page heading** is the big heading (one phrase in `*asterisks*` is the italic brass accent); **Browser title** is the short name in the tab ("Subscribe", "Privacy", "Page not found", "Search"); **Description for search results** is not shown on the page.
+2. **Where the blocks go** is written above the blocks of each page, and is fixed:
+   - **Subscribe:** a **Lead paragraph** at the top sits under the heading. The blocks after it sit in the box beside the sign-up form, up to the **Newsletter sign-up** block, which only marks where the box ends (the form is always there; leave that block's heading and text empty, they are not used on this page). Blocks after it sit under the box; Text there is set as small print.
+   - **Privacy:** a **Lead paragraph** at the top sits under the heading, then the policy as one column of headings and text. The **last Text block** is set as small print: it is the "Last updated" line, so change its date when you change the policy.
+   - **Page not found (404):** a **Lead paragraph** under the heading. Anything you add after it appears below it, above the search box.
+   - **Search:** the text is shown only to readers whose browser has JavaScript turned off (search needs it).
+3. **Settings in the text.** Write `{author.email}`, `{site.name}`, `{links.rss}` or `{newsletter.provider}` (with the braces) to print that value from the site settings. The privacy page's contact address is written `[{author.email}](mailto:{author.email})`: leave it like that, and change the address in the site settings (section 9), so it is right everywhere at once. The preview shows the real values. A misspelt one (`{author.mail}`) shows "Fix before saving" in the preview and stops the build.
+4. **The two newsletter paragraphs on Privacy.** One Text block starts with the line `{if newsletter connected}` and is shown only once the newsletter is connected in the settings; the other starts with `{if newsletter not connected}` and is shown until then. Keep each first line exactly as it is. The preview shows the one that applies today.
+5. **Save** and **Publish** as for a post. The check on the pull request compares these pages with a saved copy of their words, so the first time you change a word it goes red with a line-by-line difference: that is expected. Ask whoever maintains the site to update the copy in `tests/fixtures/pages/` in the same pull request (it is one file per page).
+
+The preview of these pages draws the blocks one after another, as on About; it does not draw the form beside the text or the 404 orbit. Open the Cloudflare preview link on the pull request to see the real page.
+
+## 9. Site settings
+
+The words and links that appear on every page live in one place: in the editor's left list, **Site settings**, then **Site settings**. It is saved, checked and published like a post (section 1, steps 7 to 9): a pull request, a green check, then **Publish**. The file it changes is `src/data/site.json`.
+
+What you can change there:
+
+- **Site name**, **Tagline** and **Description**: the name in the header and footer and at the end of every browser title, the line above the home headline, and the sentence about the site (home page, footer, feeds, search results). A longer name leaves less room for post titles.
+- **Default share image** and its **alt text**: the picture shown when a page without its own picture is shared (1200 × 630 pixels).
+- **Author**: your name, bio, photo and email. The email is printed on the Privacy page. Your posts, your author page and the About page's search-engine data use these.
+- **Profile links**: GitHub, YouTube, X, LinkedIn, Bluesky. Each is a full address starting with `https://`, or empty. An empty one leaves its icon and link out everywhere.
+- **Header navigation**: the links across the top, in order. Each has a **Label** (the word shown) and an **Address** (`/blog/` for a page of this site, or `https://…`). Drag to re-order. **You can rename a label freely**: the site finds the current section by its address, so the highlight and the search page keep working. Change an address only if you mean to send the link somewhere else. Turn on **Also in the footer** (and pick an **Icon**) to list the link in the footer too, before the footer links.
+- **Footer**: the **Footer links** (each with a label, an icon, and either an **Address** or a **Profile link**, not both: a profile link stays hidden while that profile is empty) and the **Note** after the year ("Made with R7 Orbit").
+- **Newsletter**: the **Provider**'s name (the Privacy page names it) and the **Form address** your provider gives you for its sign-up form. While it is empty the form is a sample that sends nothing.
+
+What is not there on purpose: the site's address (`https://r7orbit.io`, which every link, feed and search result is built on), the RSS feed address, and where the editor itself saves and signs in. Those are changed in code by whoever maintains the site, so an edit here cannot break your sign-in or move the site.
+
+If the check on the pull request is red, the first error names the setting: for example `nav.2 ("Blog"): /blgo/ is not a page or file of this site` (the third header link, counting from 0, goes to a page that does not exist), `links.x: use a full address that starts with https://`, or `two nav links go to /blog/`. Fix it in the same entry and save again.
+
+After a change to the header links, do the check in section 3 (step 6 at least): open the home page at phone and computer width, open the menu, and click a few links.
+
+## 10. Write a post with sections
 
 Any post (a blog post, news item, vlog, project or repo) can be written as **sections**: a list of blocks you add, re-order and remove, the same blocks as the About page (section 7), instead of the one Markdown text in **Body**. Use sections when the layout matters (a picture beside text, a gallery, a button, two columns, a video in the middle); keep the Body for a long essay that is mostly text. Nothing changes for posts you already wrote: a post with a Body stays as it is.
 
@@ -202,4 +238,3 @@ Any post (a blog post, news item, vlog, project or repo) can be written as **sec
 8. **The preview** on the right draws the blocks in the post's column with the site's styles, and lists above the page what the build would stop on (a picture without alt text, a post with both sections and a Body). Blog posts get the full page preview; news, vlogs, projects and repos get the head of the page and the body, and a note at the top says what is not drawn (the facts column, a project's play section, gallery and changelog, a repo's README). The limits of the block preview in section 7, step 9, apply here too.
 9. **Feeds.** A post written as sections sends its blocks to feed readers as simple formatted text: headings, paragraphs, lists, quotes, code, pictures with their captions and links (a spacer, the latest posts, the newsletter form and the contents list are left out). Blocks with a video or a game send a link to it.
 10. **Save** and **Publish** as in section 1. If the check on the pull request is red, its first error names the post's file and the block ("blog/my-post.md, block 3 (Image)").
-

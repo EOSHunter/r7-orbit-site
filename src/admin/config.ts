@@ -10,6 +10,9 @@ import { seoTitleMax } from '../lib/seo';
 import { pageCollections } from './pages';
 import { sectionsField } from './sections-config';
 import { authorOptions, DEFAULT_AUTHOR } from './authors';
+// ---- Site settings (src/admin/settings.ts) ----
+import { settingsCollections } from './settings';
+// ---- end site settings ----
 
 // ---- Where the live admin signs in (edit here; the Cloudflare steps are in docs/DEPLOY_CLOUDFLARE.md) -----------------------
 
@@ -827,7 +830,13 @@ export function buildConfig(env: AdminEnv): CmsConfig {
     // ---- end images --------------------------------------------------------------------------------------------------
     // The five post collections and the About page turn their live preview on; anything else (the authors) has none.
     editor: { preview: false },
-    // The five post collections, then the block-built pages (src/admin/pages.ts).
-    collections: [...collections, ...pageCollections],
+    // The five post collections, then the block-built pages (src/admin/pages.ts), then the site settings (src/admin/settings.ts).
+    collections: [
+      ...collections,
+      ...pageCollections,
+      // ---- Site settings ----
+      ...settingsCollections,
+      // ---- end site settings ----
+    ],
   };
 }

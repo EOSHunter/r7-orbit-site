@@ -1,10 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import NewsletterForm from '../components/NewsletterForm.astro';
+import PageBlocks from '../components/PageBlocks.astro';
 import { site } from '../data/site';
-import { absoluteUrl } from '../lib/text';
+import { subscribeSlots } from '../lib/page-copy';
+import { loadPage } from '../lib/page-copy-queries';
+import { headTitleFor } from '../lib/seo';
+import { absoluteUrl, titleParts } from '../lib/text';
 
-const description = `Get an email when ${site.name} publishes something new. A few times a month, and one click to leave.`;
+// The words are src/content/pages/subscribe.md (edited in /admin, "Pages"); the eyebrow and the form are the page's frame.
+// Where each block sits: subscribeSlots in src/lib/page-copy.ts.
+const { title, seoTitle, description, sections, contexts } = await loadPage('subscribe');
+const { lead, beside, after } = subscribeSlots(sections);
 const base = Astro.site ?? new URL(site.url);
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -16,33 +23,24 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout title="Subscribe" description={description}>
-  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\u003c')} />
+<BaseLayout title={headTitleFor(title, seoTitle)} description={description}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '<')} />
   <div class="container wide">
     <header class="page-head">
       <p class="eyebrow brass">Newsletter</p>
-      <h1>
-        One email when something new is <em>worth reading</em>
-      </h1>
-      <p class="t-lead">New posts and videos from {site.name}, a few times a month. Nothing else.</p>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <PageBlocks blocks={lead} contexts={contexts} lead="t-lead" />
     </header>
 
     <div class="subscribe">
       <div>
-        <h2 id="subscribe-h">What you'll get</h2>
-        <p>
-          A short email each time a post, video, project or repo goes up, with a line on why it's worth your time. You
-          can leave in one click.
-        </p>
-        <p>
-          Prefer a feed reader? <a href={site.links.rss}>The RSS feed</a> has everything the email does.
-        </p>
+        <PageBlocks blocks={beside} contexts={contexts} />
       </div>
       <NewsletterForm id="subscribe-page" />
     </div>
 
-    <p class="t-meta" style="padding-block: var(--s-5) var(--s-8)">
-      What happens to your address is explained in plain words on the <a href="/privacy/">privacy page</a>.
-    </p>
+    <div style="padding-block: var(--s-5) var(--s-8)">
+      <PageBlocks blocks={after} contexts={contexts} paragraphs="t-meta" />
+    </div>
   </div>
 </BaseLayout>

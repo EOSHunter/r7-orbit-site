@@ -1,15 +1,16 @@
 ---
 import Icon from './Icon.astro';
+import { footerItems, type FooterLink } from '../data/nav';
 import { site } from '../data/site';
 
-// Only links the owner has filled in appear (empty strings in site.json are left out).
-const links = [
-  { label: 'Games', href: '/games/', icon: 'play', external: false },
-  { label: 'RSS', href: site.links.rss, icon: 'rss', external: false },
-  { label: 'GitHub', href: site.links.github, icon: 'github', external: true },
-  { label: 'YouTube', href: site.links.youtube, icon: 'vlog', external: true },
-  { label: 'Subscribe', href: '/subscribe/', icon: 'mail', external: false },
-] as const;
+interface Props {
+  /** The links to draw. Default: the ones in the site settings. Only the styleguide fixture passes others. */
+  links?: FooterLink[];
+}
+
+// The nav items marked "show in footer", then the footer links (site.json, Site settings in /admin). A link to a profile that
+// is empty in the settings is already left out (footerLinks in src/lib/site-settings.ts).
+const { links = footerItems } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
@@ -25,21 +26,19 @@ const year = new Date().getFullYear();
       </div>
       <nav aria-label="Footer">
         <ul class="footer-links">
-          {links
-            .filter((link) => link.href)
-            .map((link) => (
-              <li>
-                <a href={link.href} rel={link.external ? 'noopener' : undefined}>
-                  <Icon name={link.icon} />
-                  {link.label}
-                </a>
-              </li>
-            ))}
+          {links.map((link) => (
+            <li>
+              <a href={link.href} rel={link.external ? 'noopener' : undefined}>
+                <Icon name={link.icon} />
+                {link.label}
+              </a>
+            </li>
+          ))}
         </ul>
       </nav>
       <p class="footer-legal">
         <span>&copy; {year}</span>
-        <span>Made with R7 Orbit</span>
+        {site.footer.note && <span>{site.footer.note}</span>}
       </p>
     </div>
   </div>
