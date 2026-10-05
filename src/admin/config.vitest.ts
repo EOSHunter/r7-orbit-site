@@ -212,7 +212,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
       ['projects', 'repo', ['owner/name', 'a.b/c-d_e'], ['owner', 'owner/name/extra', 'https://github.com/o/n']],
       ['projects', 'liveUrl', ['https://example.com/r7-orbit'], ['example.com']],
       ['projects', 'repoUrl', ['https://github.com/o/n'], ['github.com/o/n']],
-      ['projects', 'playUrl', ['https://play.r7orbit.io/vesper-drift/'], ['play.r7orbit.io', 'http://play.r7orbit.io/']],
+      ['projects', 'playUrl', ['https://vesper.r7orbit.io/'], ['vesper.r7orbit.io', 'http://vesper.r7orbit.io/']],
       ['projects', 'playAspect', ['16:9', '4:3', '21:9'], ['16/9', '16:0', 'wide', '16:9; x']],
       ['projects', 'playNote', ['Best on desktop with a mouse'], ['', 'x'.repeat(121)]],
       ['repos', 'repo', ['EOSHunter/r7-orbit-site'], ['r7-orbit-site']],

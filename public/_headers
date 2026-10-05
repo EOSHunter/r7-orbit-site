@@ -18,10 +18,10 @@
 # directive: this page may frame that one origin and no other, and nothing else about scripts or images is restricted. It is on
 # /projects/* and not on /*, because the YouTube player on vlog and blog pages is a frame too and would be blocked, and because
 # /admin/* sets its own policy (rules are cumulative: a second CSP there would be enforced as well as the admin's and break its
-# preview frame). If the game moves, change the origin here to match its playUrl: tests/headers.spec.js fails when an embedded
+# preview frame). Adding a game means adding its host here (explicit, no wildcard), and if a game moves, change it to match its playUrl: tests/headers.spec.js fails when an embedded
 # playUrl in src/content/projects/ is not covered by this line.
 /projects/*
-  Content-Security-Policy: frame-src https://play.r7orbit.io
+  Content-Security-Policy: frame-src https://vesper.r7orbit.io
 
 # Built assets have a content hash in the file name, so they never change under the same URL.
 /_astro/*

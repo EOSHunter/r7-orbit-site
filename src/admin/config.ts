@@ -383,7 +383,7 @@ const playFields: CmsField[] = [
     widget: 'string',
     required: false,
     pattern: HTTPS_URL_PATTERN,
-    hint: 'Where the game runs, e.g. https://play.r7orbit.io/vesper-drift/. Setting it makes this a Playable project: a Play section on the page and a Playable badge on cards. https only. To embed it, its origin must be listed in frame-src in public/_headers.',
+    hint: 'Where the game runs, e.g. https://vesper.r7orbit.io/. Setting it makes this a Playable project: a Play section on the page and a Playable badge on cards. https only. To embed it, its origin must be listed in frame-src in public/_headers.',
   }),
   field({
     name: 'playMode',
