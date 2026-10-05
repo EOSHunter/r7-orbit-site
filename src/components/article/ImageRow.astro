@@ -2,14 +2,18 @@
 // Two or three images side by side, each with an optional caption. One column below 600px.
 // Exported twice: as ImageRow and as ImageGallery (the lightbox gallery for projects is a different component, Gallery.astro).
 import MediaPlaceholder from '../MediaPlaceholder.astro';
-import { resolveImage, type ImageSource } from '../../lib/article';
+import ArticleImage from './ArticleImage.astro';
+import { resolveBodyImage } from './assets';
+import type { ImageSource } from '../../lib/article';
 import '../../styles/markdown.css';
 import '../../styles/article.css';
 
 interface Item {
   /** Omit for the placeholder plate. */
   src?: ImageSource;
+  /** Required; an empty one is refused unless `decorative` is set. */
   alt: string;
+  decorative?: boolean;
   caption?: string;
 }
 
@@ -23,10 +27,21 @@ const { images, caption } = Astro.props;
 if (images.length < 2 || images.length > 3) {
   throw new Error(`ImageRow: expects 2 or 3 images, got ${images.length}. Use Figure for one.`);
 }
-const items = images.map((item) => {
-  if (item.alt === undefined) throw new Error('ImageRow: every image needs alt text (use "" only for decoration).');
-  return { ...item, image: item.src === undefined ? undefined : resolveImage(item.src, 'ImageRow') };
-});
+const items = await Promise.all(
+  images.map(async (item) => {
+    if (item.alt === undefined && !item.decorative) throw new Error('ImageRow: every image needs alt text (or decorative for a picture that is only decoration).');
+    if (item.src !== undefined && !item.decorative && !item.alt?.trim()) {
+      throw new Error('ImageRow: an image has no alt text. Describe it in one plain sentence, or set decorative if it is only decoration.');
+    }
+    return {
+      ...item,
+      alt: item.decorative ? '' : (item.alt ?? ''),
+      image: item.src === undefined ? undefined : await resolveBodyImage(item.src, 'ImageRow'),
+    };
+  }),
+);
+// Each picture is about a third or a half of the reading column (720px), and the full column below 600px.
+const sizes = `(min-width: 600px) ${Math.round(720 / items.length)}px, 100vw`;
 ---
 
 <figure class="art-row" data-count={items.length}>
@@ -36,7 +51,7 @@ const items = images.map((item) => {
         <figure class="art-fig">
           {
             item.image ? (
-              <img class="art-img" src={item.image.src} alt={item.alt} width={item.image.width} height={item.image.height} loading="lazy" decoding="async" />
+              <ArticleImage image={item.image} alt={item.alt} sizes={sizes} />
             ) : (
               <div class="media" role={item.alt ? 'img' : undefined} aria-label={item.alt || undefined}><MediaPlaceholder /></div>
             )

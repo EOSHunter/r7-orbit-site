@@ -86,9 +86,18 @@ describe('block previews use the components\' own markup', () => {
     expect(html).not.toContain('<use');
   });
 
+  it('warns under a picture that has no alt text, but not under a described or decorative one', () => {
+    expect(figureHtml({ src: '/a.jpg', alt: '' }, same)).toContain('admin-alt-warning');
+    expect(figureHtml({ src: '/a.jpg', alt: 'A chart' }, same)).not.toContain('admin-alt-warning');
+    expect(figureHtml({ src: '/a.jpg', decorative: true }, same)).not.toContain('admin-alt-warning');
+    expect(figureHtml({ alt: '' }, same)).not.toContain('admin-alt-warning'); // no picture yet
+    expect(imageRowHtml([{ src: '/a.jpg', alt: '' }, { src: '/b.jpg', alt: 'B' }], same)).toContain('admin-alt-warning');
+  });
+
   it('only uses classes and attributes that the real components still have', () => {
     const sources: Record<string, string> = {
       Figure: read('src/components/article/Figure.astro'),
+      ArticleImage: read('src/components/article/ArticleImage.astro'),
       Callout: read('src/components/article/Callout.astro'),
       Quote: read('src/components/article/Quote.astro'),
       ImageRow: read('src/components/article/ImageRow.astro'),
@@ -113,7 +122,8 @@ describe('block previews use the components\' own markup', () => {
       dividerHtml({ variant: 'rule' }),
       videoHtml({ title: 'T', caption: 'C' }),
     ].join('');
-    for (const cls of new Set(classesIn(html))) {
+    // `admin-*` classes exist only in the preview (preview.css), not in a component.
+    for (const cls of [...new Set(classesIn(html))].filter((c) => !c.startsWith('admin-'))) {
       expect(all, `class "${cls}"`).toMatch(new RegExp(String.raw`(?<![\w-])${cls}(?![\w-])`));
     }
     for (const attr of ['data-align', 'data-size', 'data-type', 'data-count', 'data-ratio', 'data-variant', 'role="note"', 'role="separator"']) {

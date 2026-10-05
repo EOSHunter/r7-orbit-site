@@ -8,6 +8,7 @@ import {
   FEATURED_MEDIA_FOLDER,
   FEATURED_PUBLIC_FOLDER,
   MEDIA_FOLDER,
+  mediaFolders,
   PUBLIC_FOLDER,
   blogCollection,
   buildConfig,
@@ -85,6 +86,45 @@ describe('admin config', () => {
     expect(config.public_folder).toBe(PUBLIC_FOLDER);
     expect(MEDIA_FOLDER).toBe('public/media');
     expect(PUBLIC_FOLDER).toBe('/media');
+  });
+
+  it('gives each collection its own upload folder, absolute from the repository root (a relative one is read from the post file)', () => {
+    for (const name of ['news', 'vlogs', 'projects', 'repos']) {
+      const c = collections.find((x) => x.name === name) as unknown as Record<string, string>;
+      expect(c.media_folder, name).toBe(`/public/media/${name}`);
+      expect(c.public_folder, name).toBe(`/media/${name}`);
+      // What Decap writes into a post must be a path the site serves: public_folder + file name <-> media_folder under public/.
+      expect(c.media_folder.replace('/public', '')).toBe(c.public_folder);
+    }
+    expect(mediaFolders('about')).toEqual({ media_folder: '/public/media/about', public_folder: '/media/about' });
+  });
+
+  it('keeps blog body pictures in src/assets/blog (optimised) and the blog cover, a plain file, in public/media/blog', () => {
+    const blog = blogCollection as unknown as Record<string, string>;
+    expect(blog.media_folder).toBe('/src/assets/blog');
+    expect(blog.public_folder).toBe('/src/assets/blog');
+    expect(fieldsOf('blog').cover).toMatchObject({ media_folder: '/public/media/blog', public_folder: '/media/blog' });
+  });
+
+  it('limits the size of an upload on every image widget (Decap reads the limit from the widget, not the top level)', () => {
+    const limit = 10 * 1024 * 1024;
+    const widgets = [fieldsOf('blog').cover, fieldsOf('blog').featuredImage, fieldsOf('vlogs').poster, fieldsOf('news').cover];
+    for (const w of widgets) expect(w.media_library, String(w.name)).toMatchObject({ config: { max_file_size: limit } });
+    const gallery = (fieldsOf('projects').gallery.fields as Field[]).find((f) => f.name === 'src');
+    expect(gallery?.media_library).toMatchObject({ config: { max_file_size: limit } });
+  });
+
+  it('offers the Image block (Figure) and not the built-in image block in the blog body; the Markdown bodies keep image', () => {
+    expect(fieldsOf('blog').body.editor_components).not.toContain('image');
+    expect(fieldsOf('blog').body.editor_components).toContain('Figure');
+    for (const name of ['news', 'vlogs', 'projects', 'repos']) {
+      expect(fieldsOf(name).body.editor_components, name).toContain('image');
+    }
+  });
+
+  it('names uploads lowercase with hyphens and no accents, ', () => {
+    const config = buildConfig({ ...env, local: true });
+    expect(config.slug).toMatchObject({ encoding: 'ascii', clean_accents: true, sanitize_replacement: '-' });
   });
 
   it('sends the featured image to src/assets/blog, written relative to a post (what Astro image() needs)', () => {

@@ -1,8 +1,11 @@
 ---
 // An image with a caption. Without `src` it shows the placeholder plate (CLAUDE.md: no stock or generated images).
-// `alt` is required: pass "" only for a purely decorative image. Local files only (public/media/ or an imported image).
+// `alt` is required, and an empty one is refused unless `decorative` is set (the image adds nothing for someone who cannot see it).
+// Local files only: /src/assets/... (optimised at build), /media/... (public/media/, served as it is) or an imported image.
 import MediaPlaceholder from '../MediaPlaceholder.astro';
-import { resolveImage, type ImageSource } from '../../lib/article';
+import ArticleImage from './ArticleImage.astro';
+import { resolveBodyImage } from './assets';
+import type { ImageSource } from '../../lib/article';
 import '../../styles/markdown.css';
 import '../../styles/article.css';
 
@@ -10,6 +13,8 @@ interface Props {
   /** A local path or an imported image. Omit it for the placeholder plate. */
   src?: ImageSource;
   alt: string;
+  /** The picture is only decoration: no alt text is needed (and `alt` is ignored). */
+  decorative?: boolean;
   caption?: string;
   /** `left` and `right` float beside the text from 720px up and stack below that. `full` fills the column edge to edge. */
   align?: 'left' | 'right' | 'center' | 'full';
@@ -19,15 +24,28 @@ interface Props {
   height?: number;
 }
 
-const { src, alt, caption, align = 'center', size = 'lg', width, height } = Astro.props;
-if (alt === undefined) throw new Error('Figure: alt is required (use "" only for a decorative image).');
-const image = src === undefined ? undefined : resolveImage(src, 'Figure');
+const { src, alt: altProp, decorative = false, caption, align = 'center', size = 'lg', width, height } = Astro.props;
+if (altProp === undefined && !decorative) throw new Error('Figure: alt is required (or set decorative for a picture that is only decoration).');
+if (src !== undefined && !decorative && !altProp?.trim()) {
+  throw new Error('Figure: the image has no alt text. Describe it in one plain sentence, or set decorative if it is only decoration.');
+}
+const alt = decorative ? '' : (altProp ?? '');
+const image = src === undefined ? undefined : await resolveBodyImage(src, 'Figure');
+
+// How wide the picture is drawn, so the browser picks the right file from the srcset.
+const floated = align === 'left' || align === 'right';
+const sizes =
+  align === 'full' || size === 'lg'
+    ? '(min-width: 760px) 720px, 100vw'
+    : size === 'md'
+      ? floated ? '(min-width: 720px) 320px, 100vw' : '(min-width: 600px) 512px, 100vw'
+      : floated ? '(min-width: 720px) 224px, 100vw' : '(min-width: 600px) 320px, 100vw';
 ---
 
 <figure class="art-fig" data-align={align} data-size={size}>
   {
     image ? (
-      <img class="art-img" src={image.src} alt={alt} width={width ?? image.width} height={height ?? image.height} loading="lazy" decoding="async" />
+      <ArticleImage image={image} alt={alt} sizes={sizes} width={width} height={height} />
     ) : (
       <div class="media" role={alt ? 'img' : undefined} aria-label={alt || undefined}><MediaPlaceholder /></div>
     )

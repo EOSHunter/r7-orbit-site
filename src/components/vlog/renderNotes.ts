@@ -3,6 +3,7 @@
 import { createMarkdownProcessor, rehypeHeadingIds } from '@astrojs/markdown-remark';
 import remarkCallouts from '../../lib/markdown/remark-callouts.mjs';
 import remarkFigures from '../../lib/markdown/remark-figures.mjs';
+import remarkImageAlt from '../../lib/markdown/remark-image-alt.mjs';
 import { rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from '../../lib/markdown/rehype-site.mjs';
 import { siteCodeTransformer } from '../../lib/markdown/shiki-transformer.mjs';
 
@@ -24,12 +25,13 @@ export function splitTranscript(body: string): { notes: string; transcript: stri
 
 let processor: ReturnType<typeof createMarkdownProcessor> | undefined;
 
-export async function renderMarkdown(markdown: string): Promise<string> {
+export async function renderMarkdown(markdown: string, fileURL?: URL): Promise<string> {
   if (!markdown.trim()) return '';
   processor ??= createMarkdownProcessor({
-    remarkPlugins: [remarkCallouts, remarkFigures],
+    // `always`: this renders a piece of a vlog body, so the file path is not known, but the alt rule still holds.
+    remarkPlugins: [[remarkImageAlt, { always: true }], remarkCallouts, remarkFigures],
     rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },
   });
-  return (await (await processor).render(markdown)).code;
+  return (await (await processor).render(markdown, fileURL ? { fileURL } : undefined)).code;
 }

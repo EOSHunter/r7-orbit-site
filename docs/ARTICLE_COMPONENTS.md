@@ -16,8 +16,8 @@ Building blocks for blog and news articles, in `src/components/article/`. Styles
 | `Subheading` | `id` | Level 3 `Heading`. |
 | `Paragraph` | `lead` | One paragraph; `lead` is the intro size. |
 | `Prose` | `as`, `lead`, `id` | The `.prose` reading column. |
-| `Figure` | `src`, `alt` (required), `caption`, `align` left/right/center/full, `size` sm/md/lg, `width`, `height` | No `src` = placeholder plate. Floats at 720px+. Local images only. |
-| `ImageRow` / `ImageGallery` | `images` (2-3 of `{src, alt, caption}`), `caption` | Stacks below 600px. Not the lightbox `Gallery`. |
+| `Figure` | `src`, `alt` (required), `decorative`, `caption`, `align` left/right/center/full, `size` sm/md/lg, `width`, `height` | No `src` = placeholder plate. Floats at 720px+. Local images only: `/src/assets/...` is optimised (AVIF/WebP, srcset), `/media/...` is served as it is. An empty `alt` is refused unless `decorative`. The editor's **Image** block writes this. |
+| `ImageRow` / `ImageGallery` | `images` (2-3 of `{src, alt, caption, decorative?}`), `caption` | Stacks below 600px. Not the lightbox `Gallery`. |
 | `Callout` | `type` info/warn/tip, `title` | Same classes as `> [!NOTE]`. |
 | `Quote` | `cite`, `href` | Inline quotation. |
 | `Pullquote` | `cite` | Large display quote; `aria-hidden` (repeats body text). |
@@ -29,4 +29,4 @@ Building blocks for blog and news articles, in `src/components/article/`. Styles
 
 ## Rules
 
-Images must be local (`public/media/`); an `http(s)` source throws at build. `getHeadings()` only sees Markdown headings (`##`), not `Heading` components, so use `##` for sections that should appear in a contents list.
+Images must be local: `/src/assets/...` (optimised) or `/media/...` (`public/media/`, served as it is); an `http(s)` source throws at build, and so does a body image with no alt text (`docs/IMAGES.md`). `getHeadings()` only sees Markdown headings (`##`), not `Heading` components, so use `##` for sections that should appear in a contents list.

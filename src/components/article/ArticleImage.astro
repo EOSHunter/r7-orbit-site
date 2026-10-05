@@ -1,0 +1,36 @@
+---
+// The <img> inside a Figure or an ImageRow. A file from src/assets/ is drawn as <picture> with several widths in AVIF and WebP, so
+// a 6 MB phone photo reaches a reader as a few dozen kB. A file from public/media/ is a plain <img> (it is served as it is).
+import { Picture } from 'astro:assets';
+import type { ResolvedImage } from './assets';
+
+interface Props {
+  image: ResolvedImage;
+  alt: string;
+  /** The width the picture is shown at, for `sizes`. */
+  sizes: string;
+  width?: number;
+  height?: number;
+}
+
+const { image, alt, sizes, width, height } = Astro.props;
+---
+
+{
+  image.kind === 'optimised' ? (
+    <Picture
+      class="art-img"
+      src={image.meta}
+      alt={alt}
+      widths={[480, 768, 1200, 1600]}
+      sizes={sizes}
+      formats={['avif', 'webp']}
+      fallbackFormat="jpg"
+      quality={80}
+      loading="lazy"
+      decoding="async"
+    />
+  ) : (
+    <img class="art-img" src={image.src} alt={alt} width={width ?? image.width} height={height ?? image.height} loading="lazy" decoding="async" />
+  )
+}

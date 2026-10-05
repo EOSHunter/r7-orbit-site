@@ -15,3 +15,13 @@
    heading margins, figures, dividers) still wins over it exactly as it does on the site. */
 .admin-preview .art-prose > div { margin: 0; }
 .art-prose > :where(div) > * + * { margin-top: 1.15em; }
+
+/* A picture with no alt text yet (preview-html.ts ALT_WARNING): impossible to miss, because the post cannot be saved like that. */
+.admin-alt-warning {
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--fs-sm);
+  color: var(--st-failed-text);
+  border-top: var(--bw) solid var(--st-failed-text);
+  background: var(--st-failed-wash);
+}

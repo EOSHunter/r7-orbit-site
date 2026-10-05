@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/search-index.mjs",
+    "build": "node scripts/media.mjs check && astro build && node scripts/media.mjs dist && node scripts/search-index.mjs",
+    "media:check": "node scripts/media.mjs check",
     "preview": "astro preview",
     "check": "astro check",
     "lint": "eslint .",
@@ -43,6 +44,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "sanitize-html": "^2.18.0",
+    "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"

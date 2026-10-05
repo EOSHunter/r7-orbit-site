@@ -12,7 +12,7 @@ src/content/
   authors/    hunter.json          (optional; one author to start)
   site.json                        (site name, tagline, links: see below)
 public/
-  media/<kind>/<slug>/...          (covers, screenshots; or use src/assets for optimised images)
+  media/<kind>/...                 (covers, posters, gallery, Markdown-body pictures, one folder per kind; shrunk at build)
 ```
 
 The **file name is the slug** (the last part of the URL). Keep it lowercase, words joined with hyphens, no dates (except for news, where a date prefix helps sorting by eye; strip it from the URL if you like).
@@ -207,7 +207,7 @@ Standard Markdown plus:
 - **Footnotes**, tables and task lists as in GitHub-flavoured Markdown.
 - **Headings** get anchor links; the table of contents is built from `##` and `###`.
 - **Links** to other posts use the slug path (`/blog/a-post-about-something/`); external links open normally (no `target="_blank"` unless the author asks) and get `rel="noopener"` when they do.
-- **Images**: always with alt text; width/height are read from the file.
+- **Images**: always with alt text (`![what it shows](/media/news/x.jpg)`), or `![](/media/news/x.jpg "decorative")` for pure decoration: the build stops on an image with neither. Where files go and what the build does to them: [`IMAGES.md`](IMAGES.md).
 
 ## Tags
 
@@ -226,6 +226,6 @@ Standard Markdown plus:
 
 1. A post is never published without `title`, `date`, `summary`.
 2. Slugs never change after publishing; if they must, add a redirect.
-3. Every content image has alt text.
+3. Every content image has alt text (or is explicitly decorative); the build and the admin enforce it for body images.
 4. Nothing in the body hot-links an image or script from another site.
 5. No two posts have the same `title` + `kind`.
