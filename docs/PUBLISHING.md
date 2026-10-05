@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7, and the words of the Subscribe, Privacy, 404 and Search pages are section 8. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -187,3 +187,19 @@ The About page is not a post. It is a list of **blocks** (a heading, some text, 
 10. **Save**, then **Publish** exactly as for a post (section 1, steps 7 to 9). The check on the pull request builds the site. If it is red, open it and read the first error: it names the block ("Block 3 (Image)" is the third block, counting from 1; `sections.2` counts from 0) and what is wrong, usually missing alt text or an address that does not start with `https://` or `/`. The preview shows the same messages above the page while you type.
 
 Good to know: the details search engines read about you (name and bio, the "Person" data) come from `src/data/site.json`, not from this page. If you change your bio here and want search engines to see the change too, it has to be changed there as well.
+
+## 8. Editing subscribe, privacy and 404
+
+The words of **Subscribe**, **Privacy**, the **Page not found (404)** page and **Search** are under **Pages** too, next to About. They work like the About page (section 7: open, edit blocks, preview, save, publish), with one difference: the page keeps its own frame, and only the words are yours to change. The newsletter form, the search box, the 404 orbit and its two buttons, and the small label above each heading ("Newsletter", "Privacy", "Error 404", "Search") stay as they are.
+
+1. Open **Pages**, then the page. **Page heading** is the big heading (one phrase in `*asterisks*` is the italic brass accent); **Browser title** is the short name in the tab ("Subscribe", "Privacy", "Page not found", "Search"); **Description for search results** is not shown on the page.
+2. **Where the blocks go** is written above the blocks of each page, and is fixed:
+   - **Subscribe:** a **Lead paragraph** at the top sits under the heading. The blocks after it sit in the box beside the sign-up form, up to the **Newsletter sign-up** block, which only marks where the box ends (the form is always there; leave that block's heading and text empty, they are not used on this page). Blocks after it sit under the box; Text there is set as small print.
+   - **Privacy:** a **Lead paragraph** at the top sits under the heading, then the policy as one column of headings and text. The **last Text block** is set as small print: it is the "Last updated" line, so change its date when you change the policy.
+   - **Page not found (404):** a **Lead paragraph** under the heading. Anything you add after it appears below it, above the search box.
+   - **Search:** the text is shown only to readers whose browser has JavaScript turned off (search needs it).
+3. **Settings in the text.** Write `{author.email}`, `{site.name}`, `{links.rss}` or `{newsletter.provider}` (with the braces) to print that value from the site settings. The privacy page's contact address is written `[{author.email}](mailto:{author.email})`: leave it like that, and change the address in the site settings, so it is right everywhere at once. The preview shows the real values. A misspelt one (`{author.mail}`) shows "Fix before saving" in the preview and stops the build.
+4. **The two newsletter paragraphs on Privacy.** One Text block starts with the line `{if newsletter connected}` and is shown only once the newsletter is connected in the settings; the other starts with `{if newsletter not connected}` and is shown until then. Keep each first line exactly as it is. The preview shows the one that applies today.
+5. **Save** and **Publish** as for a post. The check on the pull request compares these pages with a saved copy of their words, so the first time you change a word it goes red with a line-by-line difference: that is expected. Ask whoever maintains the site to update the copy in `tests/fixtures/pages/` in the same pull request (it is one file per page).
+
+The preview of these pages draws the blocks one after another, as on About; it does not draw the form beside the text or the 404 orbit. Open the Cloudflare preview link on the pull request to see the real page.
