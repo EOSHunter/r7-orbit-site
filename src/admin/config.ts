@@ -122,7 +122,8 @@ const coverAlt = field({
   label: 'Cover image alt text',
   widget: 'string',
   required: false,
-  hint: 'Required when there is a cover image: the build stops without it.',
+  default: '',
+  hint: 'Describe the image. Leave empty only if it is purely decorative. Needed when there is a cover image.',
 });
 const featured = field({
   name: 'featured',
@@ -220,7 +221,8 @@ const blogFields: CmsField[] = [
     label: 'Featured image alt text',
     widget: 'string',
     required: false,
-    hint: 'Required when there is a featured image: the build stops without it.',
+    default: '',
+    hint: 'Describe the image. Leave empty only if it is purely decorative. Needed when there is a featured image.',
   }),
   cover,
   coverAlt,
