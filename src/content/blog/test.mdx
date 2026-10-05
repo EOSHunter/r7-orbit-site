@@ -1,10 +1,155 @@
 ---
-title: Test
+title: How I built a browser game with *R7 Orbit*
+subtitle: ""
 date: 2026-10-05
-summary: test
+summary: What actually happened when I directed a team of AI agents to build a
+  browser game, including the parts that went wrong
 tags: []
 featuredImage: ../../assets/blog/screenshot-2026-10-03-200430.png
-featured: false
+cover: /media/screenshot-2026-10-03-195701.png
+series: Browser Games
+seriesOrder: 1
+featured: true
 draft: false
+updated: 2026-10-05
+author: R7, Orbit AI Agent
 ---
-test
+# Vesper Drift: Building a Game by *Directing AI Agents*
+
+
+Vesper Drift is a browser game where you start as a pebble in space and grow, one absorbed body at a time, into a black hole. I built it in R7 Orbit, a desktop app where I hand tasks to Claude or Codex agents. Each agent gets its own git worktree and `orbit/*` branch, and its work comes back to `main` through a pull request.
+
+
+At the start of my recording I said I'd "sit the passenger seat for this one." That was only half true. The agents wrote nearly all the code. I made the calls that changed the project's direction, and a few of those calls were reversals.
+
+
+## *Plan*
+
+
+Two agents wrote docs first, no code.
+
+
+The `research agent` worked out that the game I meant was *Drifter Star: Evolution*. It admitted it couldn't confirm most of the details, because Steam returned HTTP 429. The 12-stage ladder, Meteorite to Black Hole, came from a Steam review and is still the ladder today.
+
+
+The `creative director agent` came up with the name, plus my favorite line of the project:
+
+
+> "a quiet, luminous drift through a dark sky where you grow from a glowing pebble into a black hole, and every size feels different."
+
+
+The first thing that didn't stick: Orbit asked "2D top-down or 3D like the original?" I said 3D. It shipped as 2D anyway, and I can't find any record of why. Answering a question doesn't mean the answer reaches the agents who need it.
+
+
+
+
+## *Build*
+
+
+I ran four agents in parallel: core engine, stages and choices, renderer and VFX, and HUD and screens. They landed about 5,400 lines in roughly 25 minutes, and all four PRs merged in the same minute.
+
+
+They built against stubs of each other's code, and a fallback file held it together until an integrator replaced it.
+
+
+
+
+## *Playtest*
+
+
+To wire everything together I started an integrator on Sonnet, then swapped to Opus 5.5 at medium effort partway through. It deleted the stubs, rewrote the game loop and added smoke tests.
+
+
+The "playtest" was a headless bot, and a bot only really measures pacing. Its own doc says the bots barely get hit, so it says little about how threats feel. I was the real playtest. My first reaction was "I was hoping for better," then "it's not bad, I can work with it." That became PR #7 and version 1, a 2D canvas game.
+
+
+
+
+## *Research*
+
+
+Next I had an agent look into how space actually works, because asteroids looked like they were on fire. It traced that to a thruster flag on the early stages.
+
+
+It also produced a plan: six workstreams with strict file ownership and a frozen interface doc for the next team. I let it make the open calls ("use your best judgment"), so we ended up with an angled top-down camera, vendored Three.js and a 2D fallback.
+
+
+## *Phase 3:* Five Specialists at Once
+
+
+This was the big swing. A creative director, UI designer, sound designer, 3D engine agent and simulation agent all worked in parallel, and I merged their PRs the next morning. The 3D engine commit alone was 105 files and +18,365 lines. They also wrote good direction docs:
+
+
+> "The game should read like a calm astrophotograph you can play."
+
+
+> "Space is silent, the game is not."
+
+
+Sound is all synthesized with Web Audio, so the repo has no audio files. The simulation is deterministic: every random number comes from a seeded generator.
+
+
+
+
+### *What Broke*
+
+
+- **Merge conflicts.** A frozen contract didn't stop the engine and UI branches from colliding in `src/main3d.js`. Orbit sent follow-ups and the agents sorted it out, but it ate a chunk of the next morning.
+- **3D quietly fell back to 2D.** Three.js wasn't in the repo because `.gitignore` had `build/`, which also swallowed `vendor/three/build/`. The fix was one character (`/build/`), plus the 80,306 lines of Three.js it let in. That's why the repo's line count is mostly vendor code.
+
+
+## *Phase 4:* 3D Becomes the Default
+
+
+Four more tasks: README and run scripts, 3D polish, making 3D the default, and balance tuning. A bot ran 24 seeds and 18 finished all 12 stages (median 14:55).
+
+
+Then I actually played it and didn't like it. "This is very overwhelming." "The first version was better." I said I probably wasn't going to continue. (I'd used 17% of my weekly Max plan by then.)
+
+
+## *Polish Pass*
+
+
+I kept going, but with four small, specific tasks instead of a big team:
+
+
+- **Remove radar and hide cursor.** The radar was the UI agent's own work, and I cut it.
+- **Simplify the background.** It took four tries. The first pass felt "like underwater," and the last one added a nebula that I loved.
+- **Evolution previews.** They came out a bit pixelated but worked.
+- **Gravity.** I stopped this one halfway, so only the gravity part landed: the player now pulls smaller bodies toward it. Gravity was the thing I asked for most, again and again.
+
+
+
+## *Dev Tools*
+
+
+To test late stages without playing for 15 minutes, I asked for a menu to start at any stage. The first thing I did was start as a black hole, and I said "so far I'd say the clone is a big success." A few hours earlier I'd said the first version was better.
+
+
+
+
+## *Video*
+
+
+I recorded the whole process: 11 clips, 54 minutes. Agents turned that into a video. One indexed and transcribed the footage, one built a brand kit, one wrote the script, and one built the edit as code in Remotion.
+
+
+The first render needed several rounds of fixes. The script aimed for 8:00 and the final cut landed at 10:51, which I was fine with.
+
+
+## *What I'd Tell Someone Trying This*
+
+
+- **Questions get answered, then lost.** I said 3D and got 2D. Make sure decisions end up in a doc the agents actually read.
+- **Agents tell you what they don't know.** Read those warnings. They were accurate.
+- **A bot can test pacing, not fun.** The bot liked v1 and the 3D build passed its smoke test, but I found them boring and unplayable.
+- **Contracts reduce conflicts, they don't remove them.**
+- **Check git, not just the summary.** 3D "worked" while silently running 2D.
+- **Docs go stale fast.** The README still calls 2D the default.
+- **The fix was smaller, not bigger.** Four narrow tasks and a dev menu turned it around, not another big parallel team.
+
+
+## *Closing*
+
+
+Vesper Drift exists: 12 stages, six endings, a deterministic universe and synthesized sound. It's about 13,400 lines of game JavaScript, and I didn't write most of it. What I did was decide what to keep, what to cut, and when something wasn't good enough, including when a lot of agent work was the thing that wasn't good enough.
