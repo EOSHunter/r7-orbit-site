@@ -1,7 +1,7 @@
 // Sitemap, robots.txt and the list of indexable URLs, pure. The Astro-bound endpoints are in src/pages/.
 import { escapeXml } from './feed';
 import { absoluteUrl, isoDate } from './text';
-import { postUrl, tagsWithPages, type CollectionName, type Post } from './content';
+import { postUrl, tagCounts, tagsWithPages, type CollectionName, type Post } from './content';
 
 export interface SitemapEntry {
   /** Path, e.g. `/blog/`. */
@@ -31,6 +31,9 @@ export function sourceIsNoindex(source: string): boolean {
 
 const KINDS: CollectionName[] = ['news', 'blog', 'vlogs', 'projects', 'repos'];
 
+/** Pages that exist whatever the content, but are noindex while they have nothing to list, so they are added by content, not by file. */
+const LISTINGS = ['/latest/', '/tags/', ...KINDS.map((kind) => `/${kind}/`)];
+
 const newest = (posts: Post[]) =>
   posts.reduce<Date | undefined>((acc, p) => {
     const d = p.data.updated ?? p.data.date;
@@ -38,9 +41,9 @@ const newest = (posts: Post[]) =>
   }, undefined);
 
 /**
- * Every indexable URL: the static pages found in src/pages (minus noindex ones), the archive for each kind that has
- * posts, `/tags/` and each tag with two or more posts, and every published post. `posts` must already exclude drafts
- * and future-dated posts.
+ * Every indexable URL: the static pages found in src/pages (minus noindex ones), `/latest/` and the archive for each kind
+ * that has posts, `/tags/` once a post has a tag and each tag with two or more posts, and every published post. `posts`
+ * must already exclude drafts and future-dated posts.
  */
 export function collectSitemapEntries(staticPaths: string[], posts: Post[]): SitemapEntry[] {
   const entries = new Map<string, SitemapEntry>();
@@ -49,14 +52,15 @@ export function collectSitemapEntries(staticPaths: string[], posts: Post[]): Sit
     entries.set(path, { path, lastmod: lastmod ?? entries.get(path)?.lastmod });
   };
 
-  for (const path of staticPaths) add(path);
+  for (const path of staticPaths) if (!LISTINGS.includes(path)) add(path);
   add('/', newest(posts));
+  if (posts.length) add('/latest/', newest(posts));
   for (const kind of KINDS) {
     const ofKind = posts.filter((p) => p.collection === kind);
     if (ofKind.length) add(`/${kind}/`, newest(ofKind));
   }
   const tags = tagsWithPages(posts);
-  if (tags.length) add('/tags/', newest(posts));
+  if (tagCounts(posts).length) add('/tags/', newest(posts));
   for (const tag of tags) add(`/tags/${tag}/`, newest(posts.filter((p) => p.data.tags.includes(tag))));
   for (const post of posts) add(postUrl(post), post.data.updated ?? post.data.date);
 

@@ -1,20 +1,22 @@
 # Launch checklist
 
-Everything still sample or owed by the author before the site goes public. Every sample post carries "Sample" in its title and a `# SAMPLE CONTENT` comment in its front matter.
+Everything still sample or owed by the author before the site goes public.
 
-## Sample files to delete or replace
+## Sample content: done
 
-| File | What it is | Action |
-| --- | --- | --- |
-| `src/content/blog/why-every-agent-gets-its-own-room.md` | Sample blog post (has a sample pull quote and "Sample text" lines) | Replace with a real post, or delete |
-| `src/content/blog/a-featured-image-on-a-post.md` | Sample showing the featured image | Delete |
-| `src/assets/blog/sample-orbit-hero.jpg` | Placeholder hero drawing used by the post above | Delete with that post |
-| `src/content/news/2026-10-03-open-weights-model-lands.md` | Sample news item. `sourceUrl` is `example.com`; no real model or benchmark | Replace or delete |
-| `src/content/vlogs/i-built-a-game-with-a-team-of-ai-agents.md` | Sample vlog. **Deliberate easter egg:** the only sample using the Rickroll ID `dQw4w9WgXcQ`. Duration and chapters are made up | Delete (or keep as a joke, your call) |
-| `src/content/projects/r7-orbit.md` | Sample project. `liveUrl` is `example.com`, `repo` is `owner/r7-orbit`, gallery image is the R7 mark standing in for a screenshot, timeline is invented | Replace with the real project |
-| `src/content/repos/example-repo.md` | Sample repo. `repo: owner/example-repo` does not exist | Replace with a real public repo |
+The sample posts are gone (2026-10-05). `src/content/` now holds only the author's own posts, written through `/admin`.
 
-After deleting, the home page, archives and `tests/routes.js` reference these slugs: update the route list in `tests/routes.js` (and `EXTRA_ROUTES` use) so e2e still passes with the real posts. `src/pages/styleguide/specimen.astro` also uses sample text but is noindex and unlinked.
+- [x] ~~`src/content/blog/why-every-agent-gets-its-own-room.md`~~ deleted.
+- [x] ~~`src/content/blog/a-featured-image-on-a-post.md`~~ deleted.
+- [x] ~~`src/content/blog/an-article-built-from-components.mdx`~~ deleted (not in the old list, but its body said "This is sample content", and it used the sample images below).
+- [x] ~~`src/assets/blog/sample-orbit-hero.jpg`~~ and ~~`public/media/sample-rings-{left,right,wide}.svg`~~ deleted with those posts.
+- [x] ~~`src/content/news/2026-10-03-open-weights-model-lands.md`~~ deleted.
+- [x] ~~`src/content/vlogs/i-built-a-game-with-a-team-of-ai-agents.md`~~ deleted, easter egg included (the author no longer wants samples).
+- [x] ~~`src/content/projects/r7-orbit.md`~~ deleted. Add the real project in `/admin` when it is ready.
+- [x] ~~`src/content/repos/example-repo.md`~~ deleted. Add a real public repo in `/admin`.
+- [x] Pages with nothing in them have empty states: archives, `/latest/`, `/tags/`, the home page, related posts, series and prev/next. Feeds, sitemap and search stay valid with no posts (`docs/DECISIONS.md`, "No samples, empty states").
+- [x] `tests/routes.js`, the screenshot script and the docs no longer name sample slugs: post and tag pages are found in `dist/`. The article-components demo is at `/styleguide/article-components/` (noindex, not content).
+- [ ] Still sample, outside `src/content/` and never published: `content-examples/` (the original kit examples, not built), `templates/` (static HTML references) and the placeholder text in `src/pages/styleguide/specimen.astro` (noindex, unlinked).
 
 ## `src/data/site.json` placeholders
 

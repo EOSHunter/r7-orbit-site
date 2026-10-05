@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import routes from './routes.js';
+import routes, { articlePaths } from './routes.js';
 
 // Phase 7 checks that go beyond the smoke test: layout at every width, head tags, JSON-LD, links, heading order.
 const widths = [320, 375, 768, 1024, 1280, 1480];
@@ -80,7 +80,9 @@ for (const route of routes) {
     expect(info.ogDesc, 'og:description').toBeTruthy();
     expect(info.ogUrl, 'og:url is absolute').toMatch(/^https?:\/\//);
     expect(info.ogImage, 'og:image is absolute').toMatch(/^https?:\/\//);
-    expect(info.ogAlt, 'og:image:alt').toBeTruthy();
+    // The brand image always has alt text. A post's own image with no alt text (allowed: "" marks it decorative) gets no
+    // og:image:alt rather than a wrong one (resolveSeo in src/lib/seo.ts).
+    if (/\/og-default\.png$/.test(info.ogImage ?? '')) expect(info.ogAlt, 'og:image:alt').toBeTruthy();
     expect(info.twitter, 'twitter:card').toBeTruthy();
     expect(info.canonical, 'canonical is absolute').toMatch(/^https?:\/\//);
     expect(info.ogTitle, 'no * markers in og:title').not.toContain('*');
@@ -110,8 +112,9 @@ for (const route of routes) {
 }
 
 // Print: a post prints as plain text on paper, with no site chrome.
-test('print stylesheet for a blog post', async ({ page }) => {
-  await page.goto('/blog/why-every-agent-gets-its-own-room/', { waitUntil: 'networkidle' });
+test('print stylesheet for a post', async ({ page }) => {
+  test.skip(articlePaths.length === 0, 'no blog post or news item is published yet');
+  await page.goto(articlePaths[0], { waitUntil: 'networkidle' });
   await page.emulateMedia({ media: 'print' });
   const hidden = await page.evaluate(() =>
     ['.site-header', '.site-footer', '.band', '.share'].map((s) => {
@@ -134,7 +137,7 @@ test('print stylesheet for a blog post', async ({ page }) => {
 // Forced colors (Windows high contrast): nothing overflows and the page still has its landmarks.
 test('forced colors', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' });
-  for (const path of ['/', '/blog/why-every-agent-gets-its-own-room/', '/subscribe/']) {
+  for (const path of ['/', ...articlePaths.slice(0, 1), '/subscribe/']) {
     await page.goto(path, { waitUntil: 'networkidle' });
     const ok = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
     expect(ok, `${path} overflows in forced colors`).toBe(true);

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
-  <!-- Sample placeholder drawing for the article-components sample post. Replace with your own image. -->
-  <rect width="800" height="600" fill="#0f0f11"/>
-  <g fill="none" stroke="#c9a96a" stroke-width="2">
-    <circle cx="260" cy="300" r="90" opacity=".9"/><circle cx="260" cy="300" r="170" opacity=".5"/>
-  </g>
-  <circle cx="430" cy="300" r="10" fill="#f1dca8"/>
-</svg>

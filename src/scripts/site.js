@@ -54,7 +54,7 @@
   //     [data-search]                     a text input
   //     [data-tags-filter] button[data-tag]       toggle chips; a post matches if it has ANY selected tag
   //     [data-sort] button[data-value]    newest | oldest
-  //     [data-count][data-noun]           live region, e.g. "3 of 12 posts"
+  //     [data-count][data-noun]           live region, e.g. "3 of 12 posts" ([data-noun-one] is the singular: "1 post")
   //     [data-items] > [data-item]        each item carries data-kind, data-date (YYYY-MM-DD), data-title, data-text, data-tags
   //     [data-empty] [data-clear]         empty state and its reset button
   //     [data-hide-filtered]              anything to hide while a filter is active (e.g. pagination)
@@ -110,7 +110,8 @@
       var filtered = state.kind !== 'all' || state.tags.length > 0 || words.length > 0;
       if (count) {
         var noun = count.getAttribute('data-noun') || 'posts';
-        count.textContent = shown === items.length ? items.length + ' ' + noun : shown + ' of ' + items.length + ' ' + noun;
+        var one = count.getAttribute('data-noun-one') || noun;
+        count.textContent = shown === items.length ? items.length + ' ' + (items.length === 1 ? one : noun) : shown + ' of ' + items.length + ' ' + noun;
       }
       if (empty) empty.hidden = shown !== 0;
       $$('[data-hide-filtered]', scope).forEach(function (el) { el.hidden = filtered; });

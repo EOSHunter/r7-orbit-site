@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { watchPage } from './helpers.js';
+import { articlePaths } from './routes.js';
 
 // The site is dark only. Earlier builds saved a theme choice in localStorage ("r7-theme"); a visitor who still has one,
 // or anything that sets data-theme, must see the same dark page and no errors.
@@ -13,7 +14,7 @@ for (const stored of ['ivory', 'light', 'dark']) {
       for (const key of ['r7-theme', 'theme']) localStorage.setItem(key, value);
     }, stored);
 
-    for (const path of ['/', '/blog/an-article-built-from-components/']) {
+    for (const path of ['/', ...articlePaths.slice(0, 1), '/styleguide/article-components/']) {
       await page.goto(path, { waitUntil: 'networkidle' });
       await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), stored);
       await expect(page.locator('body'), path).toHaveCSS('background-color', OBSIDIAN);
