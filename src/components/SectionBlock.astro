@@ -36,6 +36,7 @@ const external = (url: string) => url.startsWith('https://');
     <Figure
       src={block.image}
       alt={block.decorative ? '' : block.alt}
+      decorative={block.decorative}
       caption={block.caption || undefined}
       width={size?.width}
       height={size?.height}

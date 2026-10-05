@@ -10,6 +10,8 @@ import PostCard from '../../components/PostCard.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import YouTubeFacade from '../../components/YouTubeFacade.astro';
 import VideoJsonLd from '../../components/vlog/VideoJsonLd.astro';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { renderMarkdown, splitTranscript } from '../../components/vlog/renderNotes';
 import { site } from '../../data/site';
 import { authorSlugOf } from '../../lib/authors';
@@ -52,7 +54,9 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 const { notes, transcript } = data.transcript
   ? splitTranscript(post.body ?? '')
   : { notes: post.body ?? '', transcript: '' };
-const [notesHtml, transcriptHtml] = await Promise.all([renderMarkdown(notes), renderMarkdown(transcript)]);
+// The file's address, so an image with no alt text is reported with the vlog it is in.
+const source = post.entry.filePath ? pathToFileURL(resolve(post.entry.filePath)) : undefined;
+const [notesHtml, transcriptHtml] = await Promise.all([renderMarkdown(notes, source), renderMarkdown(transcript, source)]);
 
 const poster = data.poster ?? data.cover;
 const imageUrl = data.cover ? new URL(data.cover, base).href : undefined;

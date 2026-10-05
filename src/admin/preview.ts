@@ -9,6 +9,7 @@ import { createElement as h, Fragment, type MouseEvent, type ReactNode } from 'r
 import type { PreviewTemplateComponentProps } from 'decap-cms-core';
 import { WORDS_PER_MINUTE, countWords } from '../lib/content';
 import { longDate, isoDate, plainTitle, titleParts } from '../lib/text';
+import { bridgeGetAsset } from './asset-bridge';
 import { headingsOf, type GetAsset, type Heading } from './preview-html';
 
 type Data = Record<string, unknown>;
@@ -78,7 +79,7 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
       if (!path) return '';
       const field = fields?.find((f) => f.get('name') === name);
       try {
-        return String((getAsset as unknown as GetAsset)(path, field) ?? '');
+        return String(bridgeGetAsset(getAsset as unknown as GetAsset)(path, field) ?? '');
       } catch {
         return '';
       }

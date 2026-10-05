@@ -4,6 +4,7 @@ import { rehypeHeadingIds, unified } from '@astrojs/markdown-remark';
 import site from './src/data/site.json' with { type: 'json' };
 import remarkCallouts from './src/lib/markdown/remark-callouts.mjs';
 import remarkFigures from './src/lib/markdown/remark-figures.mjs';
+import remarkImageAlt from './src/lib/markdown/remark-image-alt.mjs';
 import { rehypeBodyHeadings, rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from './src/lib/markdown/rehype-site.mjs';
 import { siteCodeTransformer } from './src/lib/markdown/shiki-transformer.mjs';
 
@@ -20,7 +21,7 @@ export default defineConfig({
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },
     // Astro 7 defaults to Satteri; the remark/rehype plugins in src/lib/markdown/ need the unified processor.
     processor: unified({
-      remarkPlugins: [remarkCallouts, remarkFigures],
+      remarkPlugins: [remarkImageAlt, remarkCallouts, remarkFigures],
       rehypePlugins: [rehypeHeadingIds, rehypeBodyHeadings, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     }),
   },

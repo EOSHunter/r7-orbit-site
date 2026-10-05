@@ -6,6 +6,7 @@
 // each block as `- type: <name>` followed by its fields, which is the shape the schema reads.
 import type { CmsCollection, CmsField } from 'decap-cms-core';
 import site from '../data/site.json';
+import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { seoTitleMax } from '../lib/seo';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
@@ -27,6 +28,8 @@ const pictureFields = (what: string): CmsField[] => [
     label: 'Image',
     widget: 'image',
     choose_url: false,
+    // The upload size limit (docs/IMAGES.md).
+    media_library: IMAGE_LIBRARY,
     hint: `${what} Your own image, not stock. Choose a file or upload one.`,
   }),
   field({
@@ -277,6 +280,10 @@ export const pagesCollection = {
   label_singular: 'Page',
   description: 'Pages made of blocks you can add, remove and re-order. Today that is the About page.',
   delete: false,
+  // Uploads for pages go to public/media/about/, written as /media/about/x.jpg (the same pair as mediaFolders('about') in
+  // config.ts, which imports this file, so it is spelled out here). docs/IMAGES.md.
+  media_folder: '/public/media/about',
+  public_folder: '/media/about',
   files: [
     {
       name: 'about',

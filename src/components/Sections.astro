@@ -62,6 +62,7 @@ const altOf = (s: ImageSection | PortraitSection) => (s.decorative ? '' : s.alt)
           <Figure
             src={row.block.image}
             alt={altOf(row.block)}
+            decorative={row.block.decorative}
             caption={row.block.caption || undefined}
             align={row.block.width === 'full' ? 'full' : 'center'}
             width={sizes.get(row.block)?.width}

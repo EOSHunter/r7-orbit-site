@@ -63,15 +63,19 @@ export type ResolveAsset = (path: string) => string;
 
 const caption = (c: unknown) => (text(c) ? `<figcaption>${escapeHtml(text(c))}</figcaption>` : '');
 
-function picture(src: unknown, alt: unknown, resolve: ResolveAsset): string {
+/** Shown under a picture that has no alt text yet. The admin refuses to save such a post (src/admin/image-rules.ts). */
+export const ALT_WARNING =
+  '<p class="admin-alt-warning" role="alert"><strong>No alt text.</strong> Add it in the image form, or tick "Decoration only". The post cannot be saved without it.</p>';
+
+function picture(src: unknown, alt: unknown, resolve: ResolveAsset, decorative: unknown = false): string {
   const url = text(src) ? resolve(text(src)) : '';
-  return url
-    ? `<img class="art-img" src="${escapeHtml(url)}" alt="${escapeHtml(text(alt))}" />`
-    : `<div class="media">${PLACEHOLDER}</div>`;
+  if (!url) return `<div class="media">${PLACEHOLDER}</div>`;
+  const missing = decorative !== true && !text(alt).trim();
+  return `<img class="art-img" src="${escapeHtml(url)}" alt="${escapeHtml(decorative === true ? '' : text(alt))}" />${missing ? ALT_WARNING : ''}`;
 }
 
 export function figureHtml(d: Record<string, unknown>, resolve: ResolveAsset): string {
-  return `<figure class="art-fig" data-align="${escapeHtml(text(d.align) || 'center')}" data-size="${escapeHtml(text(d.size) || 'lg')}">${picture(d.src, d.alt, resolve)}${caption(d.caption)}</figure>`;
+  return `<figure class="art-fig" data-align="${escapeHtml(text(d.align) || 'center')}" data-size="${escapeHtml(text(d.size) || 'lg')}">${picture(d.src, d.alt, resolve, d.decorative)}${caption(d.caption)}</figure>`;
 }
 
 const CALLOUT = {
@@ -96,7 +100,7 @@ export function quoteHtml(d: Record<string, unknown>): string {
 
 export function imageRowHtml(images: Record<string, unknown>[], resolve: ResolveAsset): string {
   const items = images
-    .map((i) => `<figure class="art-fig">${picture(i.src, i.alt, resolve)}${caption(i.caption)}</figure>`)
+    .map((i) => `<figure class="art-fig">${picture(i.src, i.alt, resolve, i.decorative)}${caption(i.caption)}</figure>`)
     .join('');
   return `<figure class="art-row" data-count="${images.length}"><div class="art-row-grid">${items}</div></figure>`;
 }

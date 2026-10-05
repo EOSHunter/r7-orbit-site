@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
-import { blocks, jsonAttr, parseAttrs, stringAttr, youtubeIdFrom, type BlockData } from './blocks';
+import { blocks, jsonAttr, markdownImage, parseAttrs, stringAttr, youtubeIdFrom, type BlockData } from './blocks';
 
 const byId = (id: string) => {
   const block = blocks.find((b) => b.id === id);
@@ -93,6 +93,61 @@ describe('blocks', () => {
     const one = block.toBlock({ type: 'info', body: 'One' });
     const two = block.toBlock({ type: 'tip', body: 'Two' });
     expect(block.pattern.exec(`${one}\n\n${two}`)?.[0]).toBe(one);
+  });
+});
+
+const fieldNames = (block: { fields?: unknown[] }) => (block.fields ?? []).map((f) => (f as { name: string }).name);
+
+describe('the Image blocks', () => {
+  it('labels the Figure block "Image" and offers image, alt, caption, decoration, placement and size', () => {
+    const figure = byId('Figure');
+    expect(figure.label).toBe('Image');
+    expect(fieldNames(figure)).toEqual(['src', 'alt', 'caption', 'decorative', 'align', 'size']);
+  });
+
+  it('writes a decorative Figure without alt text, and reads it back', () => {
+    const { written, read } = roundTrip('Figure', { src: '/src/assets/blog/a.jpg', decorative: true, alt: 'ignored' });
+    expect(written).toBe('<Figure src="/src/assets/blog/a.jpg" decorative={true} />');
+    expect(read).toEqual({ src: '/src/assets/blog/a.jpg', decorative: true });
+  });
+
+  it('replaces the built-in Markdown image block (same id) with one that asks for alt text and a caption', () => {
+    expect(markdownImage.id).toBe('image');
+    expect(fieldNames(markdownImage)).toEqual(['image', 'alt', 'caption', 'decorative']);
+  });
+
+  const md = (data: BlockData) => {
+    const written = markdownImage.toBlock(data);
+    const match = markdownImage.pattern.exec(`${written}\n\nText after.`);
+    return { written, match, read: match ? (markdownImage.fromBlock(match) as BlockData) : undefined };
+  };
+
+  it('writes ![alt](src) and an italic caption line, and reads them back', () => {
+    const { written, match, read } = md({ image: '/media/news/a.jpg', alt: 'A chart', caption: 'Figure 1', decorative: false });
+    expect(written).toBe('![A chart](/media/news/a.jpg)\n*Figure 1*');
+    expect(match?.[0]).toBe(written);
+    expect(read).toEqual({ image: '/media/news/a.jpg', alt: 'A chart', caption: 'Figure 1', decorative: false });
+  });
+
+  it('writes a picture with no caption as one line', () => {
+    expect(md({ image: '/media/a.jpg', alt: 'A' }).written).toBe('![A](/media/a.jpg)');
+  });
+
+  it('marks a decorative picture with the title the build understands', () => {
+    const { written, read } = md({ image: '/media/a.jpg', decorative: true });
+    expect(written).toBe('![](/media/a.jpg "decorative")');
+    expect(read).toMatchObject({ decorative: true, alt: '' });
+  });
+
+  it('keeps square brackets, asterisks and line breaks from breaking the Markdown', () => {
+    expect(md({ image: '/media/a.jpg', alt: 'A [chart]\nof *x*', caption: 'It *is*\nfine' }).written).toBe(
+      '![A chart of *x*](/media/a.jpg)\n*It is fine*',
+    );
+  });
+
+  it('reads a block inserted with empty fields, and a plain image the editor already holds', () => {
+    expect(md({}).match).not.toBeNull();
+    expect(markdownImage.pattern.exec('![Old](/media/a.jpg "A title")')?.[0]).toBe('![Old](/media/a.jpg "A title")');
   });
 });
 

@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Editing the About page is section 6. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page is section 7. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -12,8 +12,8 @@ For the author. Editing the About page is section 6. Plain steps, no coding need
    - **Author**: who the post is credited to. It starts as **Hunter Newton**. If an AI agent wrote the piece, pick **R7 · Orbit AI Agent** instead: it then shows an "AI-written" label under the title and the agent's note at the end. Never credit an AI-written piece to Hunter. Authors are the files in the **Authors** list; a new one appears in this menu after the site is next deployed.
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
-4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos.
-5. **Write the body.** Type normally. To add an article component (callout, quote, image row, video, two columns and so on), click **+** in the body and pick it from the list. Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component.
+4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos. Every step for pictures is in [section 6, Adding images](#6-adding-images).
+5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component.
 6. **Draft and scheduled.**
    - **Draft** on: the post is kept out of the live site, archives, search, feeds and sitemap, even after it is published to GitHub. Turn it off when you want the post public.
    - **Date in the future**: the post is **scheduled**. It stays hidden until that day (counted in UTC), then goes live at the next daily rebuild (section 2).
@@ -83,12 +83,89 @@ The live site keeps running the last good version, so there is no emergency. Fin
    | `use a date like 2026-10-03` / `Invalid date` | The date is empty or was typed in the wrong form. Pick it with the date picker, or write `2026-10-03` |
    | `coverAlt is required when cover is set` / `featuredImageAlt` | An image has no alt text. Fill in the alt text field next to the image (use a short description; leave it empty only for a purely decorative cover) |
    | `Could not find image` / `Cannot find …` an image path | The image file was deleted or the path was typed by hand. Choose the image again in the editor |
+   | `the image "…" has no alt text` | A picture in the post has no description. Open the post, click the picture's block, fill in **Alt text** (or tick **Decoration only**), save. [Section 6](#6-adding-images) says how to write it |
+   | `HEIC is the iPhone's default format` / `is not an image format this site accepts` / `still … MB after the build resized it` | A picture is in a format browsers cannot show, or is too heavy. Export it as JPG, upload that, remove the other ([section 6](#when-the-build-complains)) |
+   | `Figure: "/src/assets/…" is not in src/assets/` | The picture a block points at was deleted. Click the block and choose the image again |
    | `Expected a closing tag` / `Could not parse expression` in a blog post | A broken article component or an unclosed `<` or `{` in the text. Open the post in the editor, check the component, or see [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) |
    | `Cannot find package` / network errors at install | Rare and usually temporary. Open the failed deployment and choose **Retry deployment** |
 
 4. Fix the post in the editor, save, and publish again, or revert the post's commit (section 4) and try again later. If the log mentions something that is not in this table, copy the first error and ask for help; do not delete files to make the error go away.
 
-## 6. Editing the About page
+
+## 6. Adding images
+
+You do this in the editor, at <https://r7orbit.io/admin/>. You never type a folder name or a path: the editor puts each picture in the right place and names the file for you. Why it works this way, and what the build does to a picture, is in [`IMAGES.md`](IMAGES.md).
+
+**Before you start**
+
+1. **Format.** JPG for photos, PNG for a crisp screenshot or a drawing, WebP or AVIF if you already have one, SVG for a logo or line drawing. An iPhone photo saved as **HEIC** will not work: on the phone choose *Settings > Camera > Formats > Most Compatible*, or export it as JPG from the Photos app.
+2. **Size.** You do **not** need to shrink anything first. A photo straight from a phone is fine (the limit is 10 MB). When the site is built, every picture is resized to at most 2000 pixels across and compressed, and the camera's location is removed. Anything wider than about 2000px is wasted, so a picture 1600 to 2000px wide is ideal.
+3. **Shape.** Wide, 16:9, for a cover, poster or featured image (at least 1280px across; 1600px for a featured image). Pictures inside a post can be any shape.
+4. **Name.** Don't worry about spaces or capitals: `My Photo 1.PNG` is stored as `my-photo-1.png`.
+5. **Yours only.** Your own pictures, not stock photos.
+
+**How to write good alt text**
+
+Alt text is what a screen reader says in place of the picture, and what shows if it fails to load. The editor will not save a post whose picture has none.
+
+- Write one plain sentence about what the picture shows and why it is there: "Vesper Drift at stage 12: a black hole with a glowing ring and the game's menu". Skip "image of" and "screenshot of" unless that is the point.
+- If the picture shows text that matters, say what it says.
+- If it is purely decoration (a flourish, a background texture), tick **Decoration only** instead of leaving it empty.
+- The **caption** is separate: it is shown under the picture for everyone. A caption does not replace alt text.
+
+### Case 1: the featured image of a blog post
+
+1. Open (or create) the blog post.
+2. Find **Featured image**, click **Choose an image**, then **Upload** and pick the file. Click **Choose selected**.
+3. Fill in **Featured image alt text** right below it.
+4. Optional: **Cover image** is a separate, smaller picture used on cards and when the post is shared. If you leave it empty the featured image is used for sharing.
+5. Save. The preview on the right shows the picture behind the headline.
+
+### Case 2: a picture inside a post
+
+1. Click in the **Body** where the picture should go, then click **+** (Add Component) and pick **Image**.
+2. In the box that appears, click **Choose an image**, **Upload**, pick the file, **Choose selected**.
+3. Fill in **Alt text**. Add a **Caption** if you want one. Tick **Decoration only** only for a picture that is just decoration.
+4. Blog posts also have **Placement** (center, left, right, full width) and **Size** (large, medium, small). Left and right put the text beside the picture on a wide screen. News, vlogs, projects and repos have no placement or size: the picture is one column wide.
+5. For two or three pictures side by side in a blog post, pick **Image gallery** instead and fill in each picture.
+6. Check the preview (blog posts). A red **No alt text** band under a picture means it still needs a description. Save.
+
+### Case 3: a vlog poster or thumbnail
+
+1. Open the vlog. Find **Poster image**, click **Choose an image**, **Upload**, pick the file, **Choose selected**. This is the still shown before the video plays.
+2. If you leave it empty, the **Cover image** is used, and then the placeholder. Use 16:9, at least 1280px across.
+3. The **Cover image alt text** field is where you describe the cover (the cover is also what shows on cards and when the post is shared).
+4. Save.
+
+### Case 4: a picture on a page
+
+The About page is made of blocks ([section 7](#7-editing-the-about-page)), and its pictures work like the ones above.
+
+1. In the editor open **Pages**, then **About page**.
+2. Add an **Image** or **Portrait and text** block, or open an existing one.
+3. Click **Choose an image**, **Upload**, pick the file and **Choose selected**. Uploads go to their own folder for pages; you never type it.
+4. Fill in **Alt text**, or turn on **Decorative image** if the picture is only ornament. The page will not build without one or the other.
+5. Save. The preview on the right shows the picture.
+
+The small author photo that search engines read (the "Person" data) is a different thing: it is `author.photo` in `src/data/site.json` (today `public/media/about/hunter-newton.jpg`) and is changed by whoever maintains the site. Pictures **inside** the text of a blog post, news item, vlog, project or repo use Case 2.
+
+### When the build complains
+
+You will see the message in the editor when you press Save, or on the red check on the post's pull request ([section 5](#5-the-cloudflare-build-failed)). The messages name the post and the picture:
+
+| It says | What to do |
+| --- | --- |
+| `Not saved. … has no alt text` | Click the picture's block, fill in **Alt text** (or tick **Decoration only**), Save again |
+| `HEIC is the iPhone's default format` | Export the photo as JPG (see Before you start), remove the HEIC from the picture box, upload the JPG |
+| `is not an image format this site accepts` | Use JPG, PNG, WebP, AVIF or SVG |
+| `… is over the 10 MB limit` | Export a smaller copy, about 2000 pixels wide, and upload that |
+| `still … MB after the build resized it` | The picture is too heavy even after shrinking, usually a big PNG. Export it as a JPG or WebP, upload that, and delete this one |
+| `the file name has spaces, capitals or odd characters` | Only for a file added outside the editor. Rename it to lowercase and hyphens |
+| `… is not in src/assets/` | The picture was deleted. Choose it again in the block |
+
+To remove a picture you uploaded by mistake before saving: in the picture picker, select it and press **Delete**. A picture you no longer need after saving: delete its block in the body (or clear the field). The file stays in the repository, which is harmless.
+
+## 7. Editing the About page
 
 The About page is not a post. It is a list of **blocks** (a heading, some text, a picture, a quote and so on) that you add, re-order and remove. It lives under **Pages** in the editor and is saved, previewed and published like a post (sections 1 and 2). Its words are yours; nothing here writes them for you.
 

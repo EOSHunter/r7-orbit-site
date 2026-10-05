@@ -5,6 +5,7 @@
 import type { CmsCollection, CmsConfig, CmsField } from 'decap-cms-core';
 import site from '../data/site.json';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
+import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { seoTitleMax } from '../lib/seo';
 import { pageCollections } from './pages';
 import { authorOptions, DEFAULT_AUTHOR } from './authors';
@@ -32,15 +33,34 @@ export interface AdminEnv {
   authUrl?: string;
 }
 
-// Two homes for images, matching how the site uses them:
-// - the blog featured image is an Astro `image()` (optimised at build time), so it lives in src/assets/blog/ and is
-//   written as a path relative to the post;
-// - every other image (covers, posters, gallery shots, images in a body and in the article blocks) is a plain local file
-//   that the site serves as it is, so it lives in public/media/ and is written as /media/x.jpg.
-export const FEATURED_MEDIA_FOLDER = '/src/assets/blog';
-export const FEATURED_PUBLIC_FOLDER = '../../assets/blog';
+// ==== Images: where uploads go (docs/IMAGES.md) ===================================================================================
+// The author never types a folder: each image field and block writes to the folder for where it is used, and the file is
+// named by Decap's `slug` setting in buildConfig (lowercase, hyphens, no spaces or accents).
+// A collection-level folder must start with "/": without it Decap reads it relative to the post's own file.
+//
+// Two homes, matching how the site uses images:
+// - src/assets/blog/   optimised by Astro at build (several widths, AVIF and WebP). Blog featured image (written relative to the
+//                      post, because Astro's image() needs that) and every picture inside a blog body (Image, Image gallery
+//                      blocks: written /src/assets/blog/x.jpg, which Figure and ImageRow resolve).
+// - public/media/<kind>/  served as a plain file at /media/<kind>/x.jpg: covers, posters, gallery shots, pictures in the body of
+//                      news, vlogs, projects and repos. These are strings in the schema that cards, feeds and share images read
+//                      as they are, so they cannot be optimised by Astro; scripts/media.mjs resizes them in the build output.
+// The top-level media_folder (public/media) is the library the editor's "Media" tab opens.
 export const MEDIA_FOLDER = 'public/media';
 export const PUBLIC_FOLDER = '/media';
+export const FEATURED_MEDIA_FOLDER = '/src/assets/blog';
+export const FEATURED_PUBLIC_FOLDER = '../../assets/blog';
+/** Pictures inside a blog body: stored in src/assets/blog, written as /src/assets/blog/x.jpg. */
+export const BLOG_BODY_MEDIA_FOLDER = '/src/assets/blog';
+export const BLOG_BODY_PUBLIC_FOLDER = '/src/assets/blog';
+
+/** The upload folder of a content kind (or page group): `/public/media/<name>`, written as `/media/<name>/x.jpg`. */
+export const mediaFolders = (name: string) => ({
+  media_folder: `/${MEDIA_FOLDER}/${name}`,
+  public_folder: `${PUBLIC_FOLDER}/${name}`,
+});
+
+const IMAGE_FORMATS_HINT = 'JPG, PNG, WebP, AVIF or SVG. A large photo is fine: the site resizes it when it builds.';
 
 // The same rules as the checks in src/content.config.ts, as [regex, message] pairs for Decap's `pattern`.
 const TAG_PATTERN: [string, string] = [
@@ -83,8 +103,9 @@ const urlField = (name: string, label: string, hint: string, required = false) =
 const repoField = (name: string, label: string, hint: string, required: boolean) =>
   field({ name, label, widget: 'string', required, pattern: OWNER_NAME_PATTERN, hint });
 
+// `media_library` carries the upload size limit (src/lib/media-rules.mjs), which Decap only reads on the widget.
 const imageField = (name: string, label: string, hint: string, extra: Record<string, unknown> = {}) =>
-  field({ name, label, widget: 'image', choose_url: false, required: false, hint, ...extra });
+  field({ name, label, widget: 'image', choose_url: false, required: false, hint, media_library: IMAGE_LIBRARY, ...extra });
 
 // ---- Fields every collection has (the `common` block of the schema) -----------------------------------------------
 
@@ -128,11 +149,10 @@ const tags = field({
   hint: 'Up to six. Reuse an existing tag before inventing one.',
   field: { name: 'tag', label: 'Tag', widget: 'string', pattern: TAG_PATTERN },
 });
-const cover = imageField(
-  'cover',
-  'Cover image',
-  'Shown on the post and when it is shared. 16:9, at least 1280px across. Your own image, not stock. Without one the post shows the placeholder.',
-);
+const COVER_HINT = `Shown on the post and when it is shared. 16:9, at least 1280px across. Your own image, not stock. Without one the post shows the placeholder. ${IMAGE_FORMATS_HINT}`;
+const cover = imageField('cover', 'Cover image', COVER_HINT);
+// The blog's body and featured image live in src/assets/blog, so its cover (a plain file) names its own folder.
+const blogCover = imageField('cover', 'Cover image', COVER_HINT, mediaFolders('blog'));
 const coverAlt = field({
   name: 'coverAlt',
   label: 'Cover image alt text',
@@ -233,7 +253,7 @@ const blogFields: CmsField[] = [
   imageField(
     'featuredImage',
     'Featured image',
-    'The hero behind the headline. Wide (16:9) and at least 1600px across. Your own image, not stock.',
+    `The hero behind the headline. Wide (16:9) and at least 1600px across. Your own image, not stock. ${IMAGE_FORMATS_HINT}`,
     { media_folder: FEATURED_MEDIA_FOLDER, public_folder: FEATURED_PUBLIC_FOLDER },
   ),
   field({
@@ -244,7 +264,7 @@ const blogFields: CmsField[] = [
     default: '',
     hint: 'Describe the image. Leave empty only if it is purely decorative. Needed when there is a featured image.',
   }),
-  cover,
+  blogCover,
   coverAlt,
   field({
     name: 'series',
@@ -276,7 +296,8 @@ const blogFields: CmsField[] = [
   author,
   canonicalUrl,
   aiAssist,
-  body(['image', 'code-block', ...ARTICLE_COMPONENT_NAMES]),
+  // No built-in 'image' here: the Image block (Figure) asks for alt text, caption, placement and size.
+  body(['code-block', ...ARTICLE_COMPONENT_NAMES]),
 ];
 
 // ---- News ---------------------------------------------------------------------------------------------------------
@@ -343,7 +364,7 @@ const vlogFields: CmsField[] = [
   imageField(
     'poster',
     'Poster image',
-    'The still shown before play. Falls back to the cover image. Your own image, not stock.',
+    `The still shown before play. 16:9, at least 1280px across. Falls back to the cover image. Your own image, not stock. ${IMAGE_FORMATS_HINT}`,
   ),
   field({
     name: 'chapters',
@@ -494,9 +515,9 @@ const projectFields: CmsField[] = [
     required: false,
     default: [],
     summary: '{{fields.alt}}',
-    hint: 'Screenshots, opened full size from the project page. Every image needs alt text.',
+    hint: `Screenshots, opened full size from the project page. Every image needs alt text. ${IMAGE_FORMATS_HINT}`,
     fields: [
-      field({ name: 'src', label: 'Image', widget: 'image', choose_url: false }),
+      field({ name: 'src', label: 'Image', widget: 'image', choose_url: false, media_library: IMAGE_LIBRARY }),
       field({
         name: 'alt',
         label: 'Alt text',
@@ -607,6 +628,9 @@ export const blogCollection = collection({
   folder: 'src/content/blog',
   // `.mdx` so a body can hold the article components; existing `.md` posts keep working but are not listed here.
   extension: 'mdx',
+  // Pictures in a blog body go to src/assets/blog (optimised). Images fields name their own folders (cover, featuredImage).
+  media_folder: BLOG_BODY_MEDIA_FOLDER,
+  public_folder: BLOG_BODY_PUBLIC_FOLDER,
   // The preview pane renders the post with the site's own styles (src/admin/preview.ts).
   editor: { preview: true },
   fields: blogFields,
@@ -618,6 +642,7 @@ export const newsCollection = collection({
   label_singular: 'News item',
   folder: 'src/content/news',
   extension: 'md',
+  ...mediaFolders('news'),
   fields: newsFields,
 });
 
@@ -627,6 +652,7 @@ export const vlogsCollection = collection({
   label_singular: 'Vlog',
   folder: 'src/content/vlogs',
   extension: 'md',
+  ...mediaFolders('vlogs'),
   fields: vlogFields,
 });
 
@@ -636,6 +662,7 @@ export const projectsCollection = collection({
   label_singular: 'Project',
   folder: 'src/content/projects',
   extension: 'md',
+  ...mediaFolders('projects'),
   summary: '{{title}} · {{status}}',
   fields: projectFields,
 });
@@ -646,6 +673,7 @@ export const reposCollection = collection({
   label_singular: 'Repo',
   folder: 'src/content/repos',
   extension: 'md',
+  ...mediaFolders('repos'),
   summary: '{{title}} · {{repo}}',
   fields: repoFields,
 });
@@ -741,8 +769,14 @@ export function buildConfig(env: AdminEnv): CmsConfig {
     publish_mode: env.local ? undefined : 'editorial_workflow',
     // The config is this object, not an /admin/config.yml (which would be a 404).
     load_config_file: false,
+    // ---- Images (docs/IMAGES.md) -------------------------------------------------------------------------------------
+    // The global library (the "Media" tab). Each collection and field above has its own upload folder.
     media_folder: MEDIA_FOLDER,
     public_folder: PUBLIC_FOLDER,
+    // How an uploaded file is named: lowercase, accents dropped, anything but letters, digits, "-", "_" and "." becomes "-".
+    // "My Photo (1).JPG" is stored as my-photo-1-.jpg. The same setting names new posts' files, which are already hyphenated.
+    slug: { encoding: 'ascii', clean_accents: true, sanitize_replacement: '-' },
+    // ---- end images --------------------------------------------------------------------------------------------------
     // Only blog posts and the About page have a live preview (their collections turn it on).
     editor: { preview: false },
     // The five post collections, then the block-built pages (src/admin/pages.ts).

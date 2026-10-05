@@ -8,7 +8,9 @@
 // Decap rules for patterns (decap-cms-widget-markdown): anchored at the start, no `m` flag, and the match must end at
 // the end of the block, so each pattern stops at its closing `/>` or `</Tag>`.
 import type { BlockEditorComponentOptions, EditorComponentField } from 'decap-cms-core';
+import { bridgeGetAsset } from './asset-bridge';
 import type { ArticleComponentName } from '../lib/article-component-names';
+import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import {
   calloutHtml,
   dividerHtml,
@@ -25,10 +27,10 @@ export type BlockData = Record<string, unknown>;
 
 // ---- MDX attribute helpers ----------------------------------------------------------------------------------------
 
-// One attribute: `name="plain"`, `name={"json string"}` or `name={[json array]}`, all on a single line.
-const ATTR = String.raw`\s+[A-Za-z][\w-]*=(?:"[^"\n]*"|\{"(?:[^"\\\n]|\\.)*"\}|\{\[[^\n]*\]\})`;
+// One attribute: `name="plain"`, `name={"json string"}`, `name={[json array]}` or `name={true}`, all on a single line.
+const ATTR = String.raw`\s+[A-Za-z][\w-]*=(?:"[^"\n]*"|\{"(?:[^"\\\n]|\\.)*"\}|\{\[[^\n]*\]\}|\{true\})`;
 const ATTRS = String.raw`((?:${ATTR})*)\s*`;
-const ATTR_PARTS = /([A-Za-z][\w-]*)=(?:"([^"\n]*)"|\{("(?:[^"\\\n]|\\.)*")\}|\{(\[[^\n]*\])\})/g;
+const ATTR_PARTS = /([A-Za-z][\w-]*)=(?:"([^"\n]*)"|\{("(?:[^"\\\n]|\\.)*")\}|\{(\[[^\n]*\])\}|\{(true)\})/g;
 
 const text = (v: unknown): string => (typeof v === 'string' ? v : '');
 
@@ -46,6 +48,11 @@ export function optionAttr(name: string, value: unknown, fallback: string): stri
   return text(value) === fallback ? '' : stringAttr(name, value);
 }
 
+/** ` name={true}` when the box is ticked, nothing otherwise. */
+export function flagAttr(name: string, value: unknown): string {
+  return value === true ? ` ${name}={true}` : '';
+}
+
 /** ` name={[...]}` with the list as one line of JSON (which is valid JavaScript, so valid in MDX). */
 export function jsonAttr(name: string, value: unknown): string {
   return Array.isArray(value) && value.length ? ` ${name}={${JSON.stringify(value)}}` : '';
@@ -54,9 +61,9 @@ export function jsonAttr(name: string, value: unknown): string {
 /** The attributes of a matched tag, as an object. Unknown or malformed text is skipped rather than thrown on. */
 export function parseAttrs(source: string): BlockData {
   const out: BlockData = {};
-  for (const [, name, plain, quoted, array] of source.matchAll(ATTR_PARTS)) {
+  for (const [, name, plain, quoted, array, yes] of source.matchAll(ATTR_PARTS)) {
     try {
-      out[name] = plain ?? JSON.parse((quoted ?? array) as string);
+      out[name] = yes ? true : (plain ?? JSON.parse((quoted ?? array) as string));
     } catch {
       /* leave it out */
     }
@@ -85,7 +92,7 @@ const preview = (fn: Preview) => fn as unknown as BlockEditorComponentOptions['t
 function assetResolver(getAsset: GetAsset | undefined, field: unknown): ResolveAsset {
   return (path) => {
     try {
-      return String(getAsset?.(path, field) ?? '') || path;
+      return String((getAsset && bridgeGetAsset(getAsset))?.(path, field) ?? '') || path;
     } catch {
       return path;
     }
@@ -107,19 +114,35 @@ const altField = field({
   name: 'alt',
   label: 'Alt text',
   widget: 'string',
-  hint: 'Describe the image for someone who cannot see it.',
+  hint: 'Required. One plain sentence saying what the picture shows, for someone who cannot see it. Not "image of".',
 });
-const captionField = field({ name: 'caption', label: 'Caption', widget: 'string', required: false });
+const captionField = field({
+  name: 'caption',
+  label: 'Caption',
+  widget: 'string',
+  required: false,
+  hint: 'Optional. Shown under the picture.',
+});
+const decorativeField = field({
+  name: 'decorative',
+  label: 'Decoration only (no alt text needed)',
+  widget: 'boolean',
+  required: false,
+  default: false,
+  hint: 'Tick only if the picture adds nothing for someone who cannot see it, like a divider flourish.',
+});
 
 // ---- Blocks -------------------------------------------------------------------------------------------------------
 
+// The blog's "Image" block. It writes the Figure component, so the picture is optimised, captioned and placed.
 const figure: BlockEditorComponentOptions = {
   id: 'Figure',
-  label: 'Figure',
+  label: 'Image',
   fields: [
-    field({ name: 'src', label: 'Image', widget: 'image', choose_url: false }),
+    field({ name: 'src', label: 'Image', widget: 'image', choose_url: false, media_library: IMAGE_LIBRARY }),
     altField,
     captionField,
+    decorativeField,
     field({
       name: 'align',
       label: 'Placement',
@@ -135,7 +158,8 @@ const figure: BlockEditorComponentOptions = {
   toBlock: (d: BlockData) =>
     tag('Figure', [
       stringAttr('src', d.src),
-      stringAttr('alt', d.alt),
+      d.decorative === true ? '' : stringAttr('alt', d.alt),
+      flagAttr('decorative', d.decorative),
       stringAttr('caption', d.caption),
       optionAttr('align', d.align, 'center'),
       optionAttr('size', d.size, 'lg'),
@@ -189,7 +213,7 @@ const imageGallery: BlockEditorComponentOptions = {
       min: 2,
       max: 3,
       hint: 'Two or three images, side by side.',
-      fields: [field({ name: 'src', label: 'Image', widget: 'image', choose_url: false }), altField, captionField],
+      fields: [field({ name: 'src', label: 'Image', widget: 'image', choose_url: false, media_library: IMAGE_LIBRARY }), altField, captionField],
     }),
   ],
   pattern: selfClosing('ImageGallery'),
@@ -278,6 +302,41 @@ const divider: BlockEditorComponentOptions = {
   fromBlock: (m) => parseAttrs(m[1]),
   toBlock: (d: BlockData) => tag('Divider', [optionAttr('variant', d.variant, 'rule')]),
   toPreview: preview((d) => dividerHtml(d)),
+};
+
+// The "Image" block for the Markdown bodies (news, vlogs, projects, repos), which have no article components. It replaces
+// Decap's built-in image block (same id, registered after it), which let the alt text stay empty. Writes `![alt](src)` and,
+// when there is a caption, an italic line straight under it, which the site turns into a <figure> with a <figcaption>
+// (src/lib/markdown/remark-figures.mjs). A decorative picture is `![](src "decorative")`.
+export const markdownImage: BlockEditorComponentOptions = {
+  id: 'image',
+  label: 'Image',
+  fields: [
+    field({ name: 'image', label: 'Image', widget: 'image', choose_url: false, media_library: IMAGE_LIBRARY }),
+    altField,
+    captionField,
+    decorativeField,
+  ],
+  // ![alt](src "title"), then optionally a newline and *caption*. The match must end where the block ends.
+  pattern: /^!\[([^\]]*)\]\(([^)\s]*)(?:\s+"([^"]*)")?\)(?:\n\*([^\n]+)\*)?/,
+  fromBlock: (m) => {
+    const decorative = (m[3] ?? '').trim().toLowerCase() === 'decorative';
+    return { image: m[2], alt: m[1], decorative, caption: m[4] ?? '' };
+  },
+  toBlock: (d: BlockData) => {
+    const decorative = d.decorative === true;
+    // A square bracket or a line break in the alt text would end the Markdown early.
+    const alt = decorative ? '' : text(d.alt).trim().replace(/[[\]]/g, '').replace(/\s*\n\s*/g, ' ');
+    const caption = text(d.caption).trim().replace(/\s*\n\s*/g, ' ').replace(/\*/g, '');
+    const image = `![${alt}](${text(d.image)}${decorative ? ' "decorative"' : ''})`;
+    return caption ? `${image}\n*${caption}*` : image;
+  },
+  toPreview: preview((d, getAsset, fields) =>
+    figureHtml(
+      { src: d.image, alt: d.decorative === true ? '' : d.alt, caption: d.caption, decorative: d.decorative },
+      assetResolver(getAsset, fieldNamed(fields, 'image')),
+    ),
+  ),
 };
 
 export const blocks: BlockEditorComponentOptions[] = [

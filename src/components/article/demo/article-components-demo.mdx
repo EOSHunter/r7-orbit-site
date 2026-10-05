@@ -62,6 +62,28 @@ ever sits half beside a picture by accident.
 
 <ImageRow images={[{ alt: 'Placeholder left' }, { alt: 'Placeholder right' }]} />
 
+### Pictures from a file
+
+A `src` that starts with `/src/assets/` is an optimised picture: the build makes several widths in AVIF and WebP, so a large
+file reaches a reader as a few dozen kB. This is what the editor's Image block writes for blog posts. A `src` that starts with
+`/media/` is a file in `public/media/`, shown as it is. `decorative` replaces the alt text for a picture that is only decoration.
+
+<Figure
+  src="/src/assets/blog/screenshot-2026-10-03-195701.png"
+  alt="Vesper Drift's Evolution Branch Detected screen: four cards, each offering a different path for a dwarf planet"
+  caption="Optimised: /src/assets/blog/..."
+  size="md"
+/>
+
+<Figure
+  src="/media/projects/vesper-drift/poster.jpg"
+  alt="Vesper Drift at stage 12: a black hole with a lensed accretion disc and the HUD"
+  caption="As is: /media/projects/..."
+  size="md"
+/>
+
+<Figure src="/media/projects/vesper-drift/poster.jpg" decorative size="sm" />
+
 ## Callouts
 
 `Callout` takes `type` (`info`, `warn`, `tip`) and an optional `title`. The label says which kind it is, not just the colour.
