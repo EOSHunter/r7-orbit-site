@@ -20,6 +20,7 @@ workers/cms-auth/             Cloudflare Worker: GitHub OAuth for /admin (deploy
 src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, SubscribeBand, NewsletterForm, Icon + IconSprite, MediaPlaceholder, StatusMark,
+                              AuthorByline + AuthorAvatar + AgentChip + AuthorNote + AuthorPage (the /authors/<slug>/ page),
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               GamesSection + GameGrid + GameCard (the /games/ hub),
                               Sections + SectionBlock (a page built from blocks: About),
@@ -28,17 +29,18 @@ src/
   admin/                      Decap CMS for /admin: config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry);
                               pages.ts (the "Pages" file collection: the About page as typed blocks), about-preview.ts + sections-html.ts (its live preview). See README "Admin"
-  pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), games/ (hub of playable projects), tags/, about, subscribe,
+  pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), games/ (hub of playable projects), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
   data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
-  content/                    news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state), pages/about.md (the About page as blocks, also edited in /admin); site.json stays in src/data/
+  content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state), pages/about.md (the About page as blocks, also edited in /admin); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               page-sections.ts (the block schema and the row layout of a page; read by content.config.ts, Sections and the admin preview),
                               section-markdown.ts + section-images.ts (build-time Markdown and picture sizes for those blocks),
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
                               content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer),
+                              authors.ts + authors-queries.ts (authors: default, byline rules, JSON-LD; unit-tested),
                               games.ts + game-cards.ts (the /games/ hub: which projects are games, order, Play link; unit-tested),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging), feed.ts + feed-queries.ts,
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts, newsletter.ts
@@ -100,6 +102,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 ## Content rules
 
 - Follow `docs/CONTENT_MODEL.md`. Every post has `title`, `date`, `summary`; every image has alt text.
+- **Authors.** Every post has an `author` (a slug in `src/content/authors/`); absent means `hunter-newton`. AI-written pieces are credited to R7 (`author: r7`), never to Hunter. An agent's byline shows an "AI-written" label and its post ends with the agent's footer note; a person's post shows neither. Never write an agent's note, bio or label wording yourself: it is the author's text (`docs/VOICE_AND_COPY.md`, "Agent-authored footer note").
 - Voice: plain, specific, first person, calm. No hype words (list in `docs/VOICE_AND_COPY.md`). Never publish AI-written text as the author's without the author's review. Never invent quotes, sources, statistics or benchmarks. Mark sample/placeholder content as such.
 - Never invent the author's identity, bio, links, email, domain or social handles. Use the placeholders from `content-examples/site.json` and ask.
 - No stock photography and no generated images unless the author approves each one. Use the placeholder pattern.

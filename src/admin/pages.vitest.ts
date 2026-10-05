@@ -8,7 +8,13 @@ import { buildConfig } from './config';
 import { pageCollections, pagesCollection } from './pages';
 
 // The real schema, so a block field added or renamed in src/lib/page-sections.ts fails here until the admin follows.
-vi.mock('astro:content', () => ({ defineCollection: (c: unknown) => c }));
+vi.mock('astro:content', async () => {
+  const { z } = await import('astro/zod');
+  return {
+    defineCollection: (c: unknown) => c,
+    reference: (collection: string) => z.string().transform((id) => ({ collection, id })),
+  };
+});
 vi.mock('astro/loaders', () => ({ glob: () => ({}) }));
 
 type Field = Record<string, unknown>;
@@ -34,9 +40,9 @@ describe('the Pages collection', () => {
     expect((pagesCollection as unknown as { delete: boolean }).delete, 'the About page cannot be deleted from the editor').toBe(false);
   });
 
-  it('is in the editor after the five post collections, and only those are the posts', () => {
+  it('is in the editor after the post collections and the authors', () => {
     const { collections } = buildConfig({ repo: 'o/n', branch: 'main', local: true });
-    expect(collections.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos', 'pages']);
+    expect(collections.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos', 'authors', 'pages']);
     expect(pageCollections).toEqual([pagesCollection]);
   });
 

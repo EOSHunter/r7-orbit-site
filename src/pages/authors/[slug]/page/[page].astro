@@ -1,0 +1,24 @@
+---
+import AuthorPage from '../../../../components/AuthorPage.astro';
+import { postsByAuthor } from '../../../../lib/authors';
+import { getAuthors } from '../../../../lib/authors-queries';
+import { getAllPosts } from '../../../../lib/content-queries';
+import { pageCount } from '../../../../lib/listing';
+
+export async function getStaticPaths() {
+  const [authors, all] = await Promise.all([getAuthors(), getAllPosts()]);
+  return authors.flatMap((author) => {
+    const posts = postsByAuthor(all, author.slug);
+    const pages = pageCount(posts.length);
+    return Array.from({ length: pages - 1 }, (_, i) => ({
+      params: { slug: author.slug, page: String(i + 2) },
+      props: { author, posts, pages },
+    }));
+  });
+}
+
+const { author, posts, pages } = Astro.props;
+const page = Number(Astro.params.page);
+---
+
+<AuthorPage {author} {posts} {page} {pages} />

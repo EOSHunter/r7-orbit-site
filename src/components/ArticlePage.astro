@@ -3,6 +3,8 @@
 import type { ImageMetadata } from 'astro';
 import ArticleHero from './ArticleHero.astro';
 import ArticleJsonLd from './ArticleJsonLd.astro';
+import AuthorByline from './AuthorByline.astro';
+import AuthorNote from './AuthorNote.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import PrevNext from './PrevNext.astro';
@@ -14,6 +16,8 @@ import TableOfContents from './TableOfContents.astro';
 import { articleComponents } from './article/mdx';
 import { site } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { assistNote, authorSlugOf } from '../lib/authors';
+import { getAuthorMap } from '../lib/authors-queries';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
@@ -63,12 +67,8 @@ const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
 const related = relatedPosts(post, everything);
 const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string }) : undefined;
 
-const author = data.author ?? site.author.name;
-const ASSIST = {
-  edited: 'Written by me and edited with AI help.',
-  drafted: 'The first draft was written with AI help.',
-} as const;
-const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist] : undefined;
+const author = (await getAuthorMap()).get(authorSlugOf(post))!;
+const assist = assistNote(data.aiAssist, author);
 ---
 
 <BaseLayout
@@ -95,6 +95,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
     image={image}
     minutes={minutes}
     sourceUrl={news?.sourceUrl}
+    author={author}
   />
 
   <div class="reading-progress" aria-hidden="true"></div>
@@ -118,9 +119,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
       <p class="t-lead">{data.summary}</p>
       <div class="byline">
-        <span class="author">
-          <span class="avatar" aria-hidden="true"><img src="/assets/r7-mark.svg" alt="" /></span>{author}
-        </span>
+        <AuthorByline author={author} />
         <span class="meta-item"><Icon name="calendar" /><time datetime={isoDate(data.date)}>{longDate(data.date)}</time></span>
         <span class="meta-item"><Icon name="clock" />{minutes} min read</span>
         {data.updated && (
@@ -160,6 +159,8 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
         <article class="prose" id="article">
           <Content components={articleComponents} />
         </article>
+
+        <AuthorNote author={author} />
 
         {series && <SeriesNav series={series} />}
 

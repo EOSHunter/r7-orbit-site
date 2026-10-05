@@ -2,6 +2,7 @@
 import { escapeXml } from './feed';
 import { absoluteUrl, isoDate } from './text';
 import { GAMES_PATH, isGame } from './games';
+import { authorPath, postsByAuthor } from './authors';
 import { postUrl, tagCounts, tagsWithPages, type CollectionName, type Post } from './content';
 
 export interface SitemapEntry {
@@ -43,10 +44,11 @@ const newest = (posts: Post[]) =>
 
 /**
  * Every indexable URL: the static pages found in src/pages (minus noindex ones), `/latest/`, `/games/` once a game is
- * published, and the archive for each kind that has posts, `/tags/` once a post has a tag and each tag with two or more posts, and every published post. `posts`
- * must already exclude drafts and future-dated posts.
+ * published, and the archive for each kind that has posts, `/tags/` once a post has a tag and each tag with two or more posts, every published post,
+ * and the page of every author (it exists, with an empty state, even before the author has a post). `posts` must already exclude drafts and
+ * future-dated posts.
  */
-export function collectSitemapEntries(staticPaths: string[], posts: Post[]): SitemapEntry[] {
+export function collectSitemapEntries(staticPaths: string[], posts: Post[], authorSlugs: string[] = []): SitemapEntry[] {
   const entries = new Map<string, SitemapEntry>();
   const add = (path: string, lastmod?: Date) => {
     if (isExcluded(path)) return;
@@ -66,6 +68,7 @@ export function collectSitemapEntries(staticPaths: string[], posts: Post[]): Sit
   if (tagCounts(posts).length) add('/tags/', newest(posts));
   for (const tag of tags) add(`/tags/${tag}/`, newest(posts.filter((p) => p.data.tags.includes(tag))));
   for (const post of posts) add(postUrl(post), post.data.updated ?? post.data.date);
+  for (const slug of authorSlugs) add(authorPath(slug), newest(postsByAuthor(posts, slug)));
 
   return [...entries.values()].sort((a, b) => a.path.localeCompare(b.path));
 }

@@ -1,0 +1,89 @@
+---
+// One author's page: /authors/<slug>/ and its /page/N/ routes. Avatar, name, subtitle (and "AI-written" for an agent), bio, then every
+// published post by this author across all kinds, through the same ArchiveList (filters, paging, empty state) as the archives.
+import AgentChip from './AgentChip.astro';
+import ArchiveList from './ArchiveList.astro';
+import AuthorAvatar from './AuthorAvatar.astro';
+import SubscribeBand from './SubscribeBand.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+import { authorProfilePageLd, isAgent, type Author } from '../lib/authors';
+import type { Kind } from '../lib/cards';
+import { tagCounts } from '../lib/content';
+import { PAGE_SIZE, pageUrl } from '../lib/listing';
+import { toCards } from '../lib/post-cards';
+import type { SitePost } from '../lib/content-queries';
+import { breadcrumbLd, jsonLdString, profileUrls } from '../lib/seo';
+
+interface Props {
+  author: Author;
+  /** Every published post by this author, newest first. */
+  posts: SitePost[];
+  page: number;
+  pages: number;
+  /** The test fixture only: a real author page is always indexable, even with no posts yet. */
+  noindex?: boolean;
+}
+
+const { author, posts, page, pages, noindex = false } = Astro.props;
+const base = Astro.site?.href ?? site.url;
+
+const cards = await toCards(posts, { filterable: true });
+const kinds: Kind[] = (['news', 'blog', 'vlog', 'project', 'repo'] as const).filter((k) => cards.some((c) => c.kind === k));
+const tags = tagCounts(posts).map((t) => t.tag);
+const ld = [
+  authorProfilePageLd(author, base, profileUrls(site.links)),
+  breadcrumbLd(site, [{ name: author.name, path: author.path }, ...(page > 1 ? [{ name: `Page ${page}` }] : [])]),
+];
+---
+
+<BaseLayout
+  title={page > 1 ? `${author.name}, page ${page}` : author.name}
+  description={page > 1 ? `Page ${page} of ${pages}. ${author.bio}` : author.bio}
+  {noindex}
+>
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(ld)} />
+  {page > 1 && <link slot="head" rel="prev" href={pageUrl(author.path, page - 1)} />}
+  {page < pages && <link slot="head" rel="next" href={pageUrl(author.path, page + 1)} />}
+
+  <div class="container wide">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        {page > 1 ? <li><a href={author.path}>{author.name}</a></li> : <li aria-current="page">{author.name}</li>}
+        {page > 1 && <li aria-current="page">Page {page}</li>}
+      </ol>
+    </nav>
+
+    <header class="page-head author-head" data-author-page={author.slug} data-author-kind={author.kind}>
+      <AuthorAvatar author={author} large />
+      <div class="author-head-body">
+        <h1>{author.name}</h1>
+        {(author.subtitle || isAgent(author)) && (
+          <p class="author-meta">
+            {author.subtitle && <span class="author-sub">{author.subtitle}</span>}
+            {isAgent(author) && <AgentChip />}
+          </p>
+        )}
+        <p class="t-lead">{author.bio}</p>
+      </div>
+    </header>
+
+    <ArchiveList
+      cards={cards}
+      start={(page - 1) * PAGE_SIZE}
+      size={PAGE_SIZE}
+      {page}
+      {pages}
+      base={author.path}
+      {tags}
+      {kinds}
+      noun="posts"
+      nounOne="post"
+      empty={`Nothing by ${author.name} is posted yet.`}
+      what="posts"
+    />
+  </div>
+  <div class="archive-end"></div>
+  <SubscribeBand />
+</BaseLayout>

@@ -8,6 +8,8 @@ import {
   type Post,
   type PostData,
 } from './content';
+import { getAuthors } from './authors-queries';
+import { unknownAuthorErrors } from './authors';
 import { selectGames } from './games';
 
 type Entry<C extends CollectionName> = CollectionEntry<C>;
@@ -27,6 +29,9 @@ function toPost<C extends CollectionName>(collection: C, entry: Entry<C>): SiteP
 export async function getPosts<C extends CollectionName>(collection: C): Promise<SitePost<C>[]> {
   const entries = (await getCollection(collection)) as Entry<C>[];
   const posts = entries.map((entry) => toPost(collection, entry));
+  // Every entry, drafts included: a mistyped author is an error now, not the day the post goes live.
+  const problems = unknownAuthorErrors(posts, (await getAuthors()).map((a) => a.slug));
+  if (problems.length) throw new Error(problems.join('\n'));
   return sortByDateDesc(filterPublished(posts, { includeUnpublished: import.meta.env.DEV }));
 }
 

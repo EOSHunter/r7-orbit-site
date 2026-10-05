@@ -1,0 +1,11 @@
+---
+// Fixture for tests/authors.spec.js: an author page for a made-up person with no photo and no posts, so the empty state and the
+// initials avatar are tested without depending on published content. Sample content, not part of the site. Not linked from
+// anywhere and kept out of search engines, like the rest of the styleguide.
+import AuthorPage from '../../components/AuthorPage.astro';
+import { resolveAuthor } from '../../lib/authors';
+
+const author = resolveAuthor({ slug: 'fixture-author', kind: 'person' }, { name: 'Fixture Author', bio: 'A made-up author for the tests.', photo: null });
+---
+
+<AuthorPage author={author} posts={[]} page={1} pages={1} noindex />

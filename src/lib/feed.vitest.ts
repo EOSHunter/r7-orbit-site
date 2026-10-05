@@ -25,6 +25,17 @@ describe('escapeXml / cdata', () => {
   });
 });
 
+describe('buildRss creators', () => {
+  it("puts the author's name in dc:creator on each item, escaped, and declares the namespace", () => {
+    const xml = buildRss(channel, [item(1, { creator: 'R7' }), item(2, { creator: 'Tom & Jerry' }), item(3)]);
+    assertWellFormed(xml);
+    expect(xml).toContain('xmlns:dc="http://purl.org/dc/elements/1.1/"');
+    expect(xml).toContain('<dc:creator>R7</dc:creator>');
+    expect(xml).toContain('<dc:creator>Tom &amp; Jerry</dc:creator>');
+    expect(xml.match(/<dc:creator>/g)).toHaveLength(2);
+  });
+});
+
 describe('buildRss', () => {
   it('is well-formed RSS 2.0 with the channel metadata', () => {
     const xml = buildRss(channel, [item(1)]);

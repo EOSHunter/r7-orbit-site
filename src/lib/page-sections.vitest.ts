@@ -4,7 +4,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { layoutSections, SECTION_TYPES, sectionSchema, type Section } from './page-sections';
 
 // The real `pages` schema from src/content.config.ts: the two Astro modules it imports only exist inside Astro.
-vi.mock('astro:content', () => ({ defineCollection: (c: unknown) => c }));
+vi.mock('astro:content', async () => {
+  const { z } = await import('astro/zod');
+  return {
+    defineCollection: (c: unknown) => c,
+    reference: (collection: string) => z.string().transform((id) => ({ collection, id })),
+  };
+});
 vi.mock('astro/loaders', () => ({ glob: () => ({}) }));
 
 type Parsed = { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } };
