@@ -139,7 +139,7 @@ Pagefind UI styled with tokens, opened from the header icon or the `/` key. Resu
 
 ## About `/about/`
 
-The author's own text only (name and bio from `site.json`, then the R7 agent section). No portrait yet: the author will supply a photo, which goes in `.about-grid` in `src/pages/about.astro` (see `.portrait` in `site.css`). `Person` structured data.
+The author's own text only (name and bio from `site.json`, then the R7 agent section). The portrait is `author.photo` in `site.json` (file in `public/media/about/`); with no photo the page is one column. `Person` structured data.
 
 ## Subscribe `/subscribe/`
 

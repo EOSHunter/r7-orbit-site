@@ -4,6 +4,7 @@ import { site } from '../data/site';
 import { absoluteUrl } from '../lib/text';
 
 const description = site.author.bio.split('. ')[0] + '.';
+const photo = site.author.photo as string | null;
 const base = Astro.site ?? new URL(site.url);
 const pageUrl = absoluteUrl(Astro.url.pathname, base.href);
 
@@ -46,7 +47,12 @@ const jsonLd = {
       <h1>About</h1>
     </header>
 
-    <div class="about-body">
+    <div class={photo ? 'about-grid' : 'about-body'}>
+      {photo && (
+        <div class="portrait">
+          <img src={photo} alt={`Portrait of ${site.author.name}`} width="800" height="800" fetchpriority="high" />
+        </div>
+      )}
       <div class="prose">
         <h2>{site.author.name}</h2>
         <p>{site.author.bio}</p>
