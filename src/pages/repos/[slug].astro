@@ -12,6 +12,7 @@ import { toCard, type RepoData } from '../../components/detailCards';
 import { getAllPosts, getPosts, type SitePost } from '../../lib/content-queries';
 import { relatedPosts } from '../../lib/content';
 import { loadGitHubRepo } from '../../lib/github';
+import { headTitleFor } from '../../lib/seo';
 import { longDate } from '../../lib/text';
 import '../../styles/markdown.css';
 
@@ -46,7 +47,7 @@ const path = `/repos/${post.id}/`;
 ---
 
 <BaseLayout
-  title={data.repo}
+  title={headTitleFor(data.repo, data.seoTitle)}
   description={data.summary}
   current="Repos"
   published={data.date}

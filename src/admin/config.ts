@@ -3,7 +3,9 @@
 // the build, and a required schema field that is missing here makes every new post fail. Field names are the schema's
 // own, and config.vitest.ts reads the real schema to keep the two in step, so change them together.
 import type { CmsCollection, CmsConfig, CmsField } from 'decap-cms-core';
+import site from '../data/site.json';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
+import { seoTitleMax } from '../lib/seo';
 
 // ---- Where the live admin signs in (edit here; the Cloudflare steps are in docs/DEPLOY_CLOUDFLARE.md) -----------------------
 
@@ -44,6 +46,7 @@ const TAG_PATTERN: [string, string] = [
   'Lowercase words joined with hyphens, e.g. ai-agents',
 ];
 const TITLE_PATTERN: [string, string] = ['^.{1,90}$', 'Required, 90 characters at most'];
+const SEO_TITLE_MAX = seoTitleMax(site.name);
 const SUBTITLE_PATTERN: [string, string] = ['^.{1,140}$', '140 characters at most'];
 const SUMMARY_PATTERN: [string, string] = ['^.{1,180}$', 'Required, one line, 180 characters at most'];
 const URL_PATTERN: [string, string] = ['^https?://\\S+$', 'A full address, starting with https://'];
@@ -89,6 +92,14 @@ const title = field({
   widget: 'string',
   pattern: TITLE_PATTERN,
   hint: 'Sentence case. Put one phrase in *asterisks* for the italic brass accent.',
+});
+const seoTitle = field({
+  name: 'seoTitle',
+  label: 'Browser title',
+  widget: 'string',
+  required: false,
+  pattern: [`^.{1,${SEO_TITLE_MAX}}$`, `${SEO_TITLE_MAX} characters at most`],
+  hint: `Optional. Shorter title for browser tabs and search results. Max ${SEO_TITLE_MAX} characters.`,
 });
 const date = dateField('date', 'Date', {
   default: '{{now}}',
@@ -209,6 +220,7 @@ const plainBody = body(['image', 'code-block']);
 
 const blogFields: CmsField[] = [
   title,
+  seoTitle,
   field({ name: 'subtitle', label: 'Subtitle', widget: 'string', required: false, pattern: SUBTITLE_PATTERN }),
   date,
   summary,
@@ -266,6 +278,7 @@ const blogFields: CmsField[] = [
 
 const newsFields: CmsField[] = [
   title,
+  seoTitle,
   date,
   summary,
   urlField('sourceUrl', 'Source URL', 'Where the story was first reported. Required.', true),
@@ -299,6 +312,7 @@ const newsFields: CmsField[] = [
 
 const vlogFields: CmsField[] = [
   title,
+  seoTitle,
   date,
   summary,
   field({
@@ -424,6 +438,7 @@ const playFields: CmsField[] = [
 
 const projectFields: CmsField[] = [
   title,
+  seoTitle,
   date,
   summary,
   field({
@@ -506,6 +521,7 @@ const projectFields: CmsField[] = [
 
 const repoFields: CmsField[] = [
   title,
+  seoTitle,
   date,
   summary,
   repoField(

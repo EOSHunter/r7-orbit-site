@@ -17,6 +17,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
+import { headTitleFor } from '../lib/seo';
 import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import '../styles/markdown.css';
@@ -71,7 +72,7 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
 ---
 
 <BaseLayout
-  title={headTitle(data.title)}
+  title={data.seoTitle ? headTitleFor(data.title, data.seoTitle) : headTitle(data.title)}
   description={data.summary}
   ogType="article"
   image={image}

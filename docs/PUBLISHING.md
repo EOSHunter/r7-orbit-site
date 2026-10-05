@@ -8,6 +8,7 @@ For the author. Plain steps, no coding needed. Everything happens at <https://r7
 2. In the left list pick what you are writing (**Blog posts**, **News**, **Vlogs**, **Projects** or **Repos**) and click **New …**.
 3. Fill in the form. The required fields are marked. These are the ones that most often go wrong:
    - **Title**: up to 90 characters. **Summary**: one or two sentences, up to 180 characters.
+   - **Browser title** (optional): a shorter title for browser tabs and search results, up to 49 characters. Use it when the title would push the page title past 60 characters; the page itself keeps the full title.
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos.
