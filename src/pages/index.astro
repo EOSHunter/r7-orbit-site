@@ -1,11 +1,14 @@
 ---
+import GameGrid from '../components/GameGrid.astro';
 import Icon from '../components/Icon.astro';
 import PostCard from '../components/PostCard.astro';
 import SubscribeBand from '../components/SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { featuredPost } from '../lib/content';
-import { getAllPosts } from '../lib/content-queries';
+import { getAllPosts, getGames } from '../lib/content-queries';
+import { toGameCards } from '../lib/game-cards';
+import { GAMES_COPY, GAMES_PATH } from '../lib/games';
 import { countLabel } from '../lib/listing';
 import type { CardData, Kind } from '../lib/cards';
 import { toCard, toCards } from '../lib/post-cards';
@@ -34,7 +37,9 @@ const KIND_HREF: Record<Kind, string> = {
   repo: '/repos/',
 };
 
-const projectCards = await toCards(posts.filter((p) => p.collection === 'projects').slice(0, 3));
+// The Games teaser appears only once a game is published: at most three, in hub order.
+const gameCards = toGameCards((await getGames()).slice(0, 3));
+const projectCards =await toCards(posts.filter((p) => p.collection === 'projects').slice(0, 3));
 // Repos by most recent push; a repo without GitHub data falls back to the date of its entry.
 const repoCards = (await toCards(posts.filter((p) => p.collection === 'repos')))
   .sort((a, b) => {
@@ -153,6 +158,24 @@ const repoCards = (await toCards(posts.filter((p) => p.collection === 'repos')))
         <div class="grid-cards">
           {projectCards.map((post) => <PostCard {post} />)}
         </div>
+      </div>
+    </section>
+  )}
+
+  {gameCards.length > 0 && (
+    <section class="section ruled" aria-labelledby="games-h" data-games-teaser>
+      <div class="container wide">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">{GAMES_COPY.teaserEyebrow}</p>
+            <h2 class="section-title" id="games-h">Games</h2>
+          </div>
+          <a class="more-link" href={GAMES_PATH}>
+            All games
+            <Icon name="arrow" />
+          </a>
+        </div>
+        <GameGrid games={gameCards} level={3} />
       </div>
     </section>
   )}

@@ -10,6 +10,7 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /blog/                         Blog archive           /blog/<slug>/        Blog post
 /vlogs/                        Vlog archive           /vlogs/<slug>/       Vlog page
 /projects/                     Project archive        /projects/<slug>/    Project page
+/games/                        Games hub (playable projects; no pages of its own: each game is /projects/<slug>/)
 /repos/                        Repo archive           /repos/<slug>/       Repo page
 /tags/                         All tags               /tags/<tag>/         One tag
 /search/                       Search (or a dialog opened with "/")
@@ -20,7 +21,7 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /privacy/                      Privacy (when there is a form or analytics)
 ```
 
-Navigation (header): **Latest · News · Blog · Vlogs · Projects · Repos · About**, then search. A section whose archive has fewer than three items is not in the header.
+Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · Repos · About**, then search; the footer links to Games too. A section whose archive has fewer than three items is not in the header.
 
 ## Shared parts (build once, reuse)
 
@@ -43,8 +44,9 @@ Navigation (header): **Latest · News · Blog · Vlogs · Projects · Repos · A
 2. **Pinned:** the one `featured: true` post as a large horizontal card (media left, text right; stacked on mobile). Hidden if none.
 3. **Latest:** `.seg` filter (All · News · Blogs · Vlogs · Projects · Repos), then the 8 newest across kinds in the card grid; the newest has `.fresh`. "See everything" link to `/archive` (or the `All` archive).
 4. **Projects strip:** 3 newest projects (card with status mark). "All projects →".
-5. **Repos strip:** 3 repos by most recent push. "All repos →".
-6. **Subscribe band.**
+5. **Games strip** (only when a game is published): up to 3 `GameCard`s in hub order, "All games →" to `/games/`.
+6. **Repos strip:** 3 repos by most recent push. "All repos →".
+7. **Subscribe band.**
 
 States: filter with no results (can't happen on the home page since "All" is default; if a kind has no posts it isn't shown). Loading: none (static).
 
@@ -85,6 +87,21 @@ Structured data: `Article` (`NewsArticle` for news). Done when: headings are in 
 - Title, meta row (date · duration), description (`.prose`), **chapters** list (mono timestamps; clicking seeks and plays), links/resources, transcript in a `<details>` if present, "Subscribe on YouTube" and "Subscribe by email" buttons, related videos.
 
 Structured data: `VideoObject` (name, description, thumbnailUrl, uploadDate, duration as ISO 8601 `PT12M48S`, embedUrl). Done when: Lighthouse shows no third-party requests on first load; chapters work with the keyboard; the poster has no layout shift.
+
+## Games `/games/`
+
+**Purpose:** Find something to play, with nothing to install.
+
+- A game is a `projects` entry with a `playUrl` (no collection of its own). Only published games are listed: drafts and future-dated posts go through the same helper as every list (`selectGames` in `src/lib/games.ts`, which wraps `filterPublished`).
+- Order: the optional `order` number (lower first), then games without one, newest first.
+- Header: eyebrow (play icon + "Games"), `h1` "Games", one line: "Small games that run in your browser. No install."
+- `GameGrid` of `GameCard`s: 1 column on a phone, 2 from 640px, 3 from 1000px; with one or two cards it stays at 2 columns. Each card: poster (the project's `cover`, or the `MediaPlaceholder`), Playable badge, title, one line, platform chips, a solid **Play** button and a **Details** link. Play goes to `/projects/<slug>/#play` (where the game is embedded); with `playMode: link` it opens `playUrl` in a new tab. Details always goes to the project page. The first row (three cards) loads its posters at once, the rest are lazy; every poster sits in a 16:9 frame, so nothing shifts.
+- With exactly one game, a final dashed "More games coming" card (no links) follows it.
+- Empty state: "No games yet." with a link to the projects. The page is `noindex` and out of the sitemap while it is empty.
+- Structured data: `CollectionPage`, an `ItemList` of the games in the order shown (omitted when empty) and a `BreadcrumbList`. In the sitemap once a game is published.
+- Each playable project page ends with a "More games" strip (up to three other games, and "All games →"). Search results for a playable project are labelled **Game** (Pagefind meta `kind`, set on the project page header).
+
+Done when: the layouts for 0, 1, 2 and 5 games pass axe at 320 to 1480px (`tests/games.spec.js` runs them on the fixture `/styleguide/games/`).
 
 ## Project `/projects/<slug>/`
 

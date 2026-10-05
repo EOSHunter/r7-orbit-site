@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Gallery from '../../components/Gallery.astro';
+import GameGrid from '../../components/GameGrid.astro';
 import Icon from '../../components/Icon.astro';
 import PreviewBadge from '../../components/PreviewBadge.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
@@ -12,9 +13,11 @@ import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
 import StatusMark from '../../components/StatusMark.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import { localImage, toCard, type ProjectData, type RepoData } from '../../components/detailCards';
-import { getAllPosts, getPosts, type SitePost } from '../../lib/content-queries';
+import { getAllPosts, getGames, getPosts, type SitePost } from '../../lib/content-queries';
 import { relatedPosts } from '../../lib/content';
 import { loadGitHubRepo } from '../../lib/github';
+import { toGameCards } from '../../lib/game-cards';
+import { GAMES_PATH } from '../../lib/games';
 import { isPlayable } from '../../lib/play';
 import { headTitleFor } from '../../lib/seo';
 import { isoDate, longDate, plainTitle, titleParts } from '../../lib/text';
@@ -69,6 +72,8 @@ const playProps = data.playUrl
       platforms: data.platforms,
     }
   : undefined;
+// The other games, for the strip under a playable project (up to three; the link to /games/ shows even with none).
+const moreGames = playable ? toGameCards((await getGames()).filter((g) => g.id !== post.id).slice(0, 3)) : [];
 const hasBody = Boolean(post.body?.trim());
 const path = `/projects/${post.id}/`;
 ---
@@ -104,7 +109,7 @@ const path = `/projects/${post.id}/`;
     </nav>
 
     <header class="project-head">
-      <p class="eyebrow">
+      <p class="eyebrow" data-pagefind-meta={playable ? 'kind:Game' : undefined}>
         <span class="kind"><Icon name="project" />Project</span>
         {playable && <PlayableBadge />}
         <PreviewBadge post={post} />
@@ -268,6 +273,26 @@ const path = `/projects/${post.id}/`;
               <PostCard post={toCard(item)} />
             ))}
           </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    playable && (
+      <section class="section ruled" aria-labelledby="more-games-h" data-more-games>
+        <div class="container">
+          <div class:list={['section-head', moreGames.length === 0 && 'flush']}>
+            <div>
+              <p class="eyebrow">Play in the browser</p>
+              <h2 class="section-title" id="more-games-h">More games</h2>
+            </div>
+            <a class="more-link" href={GAMES_PATH}>
+              All games
+              <Icon name="arrow" />
+            </a>
+          </div>
+          {moreGames.length > 0 && <GameGrid games={moreGames} level={3} />}
         </div>
       </section>
     )

@@ -132,10 +132,15 @@ export const collections = {
       controls: z.array(z.object({ key: z.string().min(1), action: z.string().min(1) })).default([]),
       playNote: z.string().min(1).max(120).optional(),
       platforms: z.array(z.enum(['desktop', 'mobile'])).default([]),
+      // Where this game sits on /games/: lower comes first; games without it follow, newest first.
+      order: z.number().optional(),
     },
     (data, ctx) => {
       if (!data.playUrl) {
-        const orphan = ['controls', 'platforms'].find((k) => (data[k] as unknown[] | undefined)?.length) ?? (data.playNote ? 'playNote' : undefined);
+        const orphan =
+          ['controls', 'platforms'].find((k) => (data[k] as unknown[] | undefined)?.length) ??
+          (data.playNote ? 'playNote' : undefined) ??
+          (data.order !== undefined ? 'order' : undefined);
         if (orphan) ctx.addIssue({ code: 'custom', path: [orphan], message: `${orphan} needs playUrl: it only shows on a playable project` });
       }
     },

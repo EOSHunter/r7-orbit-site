@@ -52,6 +52,7 @@ const routes = [
   { path: '/latest/' },
   ...KINDS.flatMap((kind) => [{ path: `/${kind}/` }, ...postPaths(kind).map((path) => ({ path }))]),
   ...secondPages.map((dir) => ({ path: `/${dir}/page/2/` })),
+  { path: '/games/' }, // noindex while no game is published (empty state); the layout variants are tested on /styleguide/games/
   { path: '/tags/' },
   ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
   { path: '/about/' },
@@ -62,6 +63,7 @@ const routes = [
   { path: '/styleguide/', noindex: true },
   { path: '/styleguide/specimen/', noindex: true },
   { path: '/styleguide/article-components/', noindex: true },
+  { path: '/styleguide/games/', noindex: true }, // fixture for tests/games.spec.js: the games hub with 0, 1, 2 and 5 games
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
 ];
 

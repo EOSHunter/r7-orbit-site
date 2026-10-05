@@ -17,6 +17,6 @@
     "bluesky": "",
     "rss": "/rss.xml"
   },
-  "nav": ["Latest", "News", "Blog", "Vlogs", "Projects", "Repos", "About"],
+  "nav": ["Latest", "News", "Blog", "Vlogs", "Projects", "Games", "Repos", "About"],
   "newsletter": { "provider": "buttondown", "formAction": "" }
 }

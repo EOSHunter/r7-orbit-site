@@ -434,6 +434,14 @@ const playFields: CmsField[] = [
     default: [],
     hint: 'Where the game works, shown as small labels with it. Needs a Play URL.',
   }),
+  field({
+    name: 'order',
+    label: 'Order on the Games page',
+    widget: 'number',
+    value_type: 'int',
+    required: false,
+    hint: 'Optional. A lower number comes first on the Games page and the home page; games without one follow, newest first. Needs a Play URL.',
+  }),
 ];
 
 const projectFields: CmsField[] = [

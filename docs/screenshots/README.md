@@ -11,6 +11,8 @@ The posts are not named in the script: `tests/routes.js` finds them in `dist/`, 
 | `home-*` | 6 widths | Hero with the orbit, pinned post, header |
 | `latest-*` | 375, 1280 | Mixed archive with kind filter, tag chips, sort |
 | `news-*`, `blog-*`, `vlogs-*`, `projects-*`, `repos-*` | 375, 1280 | Archive pages: heading, toolbar, card grid (or the empty state) |
+| `games-*` | 375, 1280 | The games hub (the empty state until a game is published) |
+| `styleguide-games-*` | 375, 1280, whole page | The hub fixture: no games, one (with the "More games coming" card), two and five |
 | `<kind>-<slug>-*` | 375, 1280 (articles: see above) | One post of each kind that has one |
 | `tags-*`, `tags-<tag>-*` | 375, 1280 | Tag index and a tag page, when a tag has two posts |
 | `about-*`, `subscribe-*`, `privacy-*` | 375, 1280 | About, Subscribe, Privacy |

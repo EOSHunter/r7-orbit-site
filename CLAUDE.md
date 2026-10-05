@@ -21,11 +21,12 @@ src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, SubscribeBand, NewsletterForm, Icon + IconSprite, MediaPlaceholder, StatusMark,
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
+                              GamesSection + GameGrid + GameCard (the /games/ hub),
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
   admin/                      Decap CMS for /admin: config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry). See README "Admin"
-  pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), tags/, about, subscribe,
+  pages/                      index, latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), games/ (hub of playable projects), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
   data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
@@ -34,6 +35,7 @@ src/
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
                               content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer),
+                              games.ts + game-cards.ts (the /games/ hub: which projects are games, order, Play link; unit-tested),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging), feed.ts + feed-queries.ts,
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts, newsletter.ts
   styles/design-system/       tokens.css, components.css, tokens.json, DESIGN_SYSTEM.md (moved from design-system/; the source of truth for the look)
@@ -43,7 +45,7 @@ src/
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro)
 tests/                        routes.js (the fixed routes, plus the post and tag pages it finds in dist/: no slugs listed), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
-                              admin (noindex, out of robots/sitemap/feeds), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
+                              admin (noindex, out of robots/sitemap/feeds), games (the hub on the fixture /styleguide/games/: 0, 1, 2, 5 games), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
 public/                       served as-is: _headers + _redirects (Cloudflare Pages), fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest

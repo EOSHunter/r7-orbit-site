@@ -8,6 +8,7 @@ import {
   type Post,
   type PostData,
 } from './content';
+import { selectGames } from './games';
 
 type Entry<C extends CollectionName> = CollectionEntry<C>;
 /** A collection entry in the shape the pure helpers take; `entry` is what `render()` needs. */
@@ -37,4 +38,9 @@ export async function getAllPosts(): Promise<SitePost[]> {
     for (const warning of contentWarnings(all)) console.warn(`[content] ${warning}`);
   }
   return sortByDateDesc(all);
+}
+
+/** Published games (projects with a playUrl) in hub order: `order`, then newest. Goes through the same draft / scheduled rules as every list. */
+export async function getGames(): Promise<SitePost<'projects'>[]> {
+  return selectGames(await getPosts('projects'), { includeUnpublished: import.meta.env.DEV });
 }

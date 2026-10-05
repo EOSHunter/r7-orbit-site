@@ -99,13 +99,15 @@ Body: the written notes, links and resources mentioned in the video.
 | `playAspect` | string `w:h` | no | Default `16:9`. The shape of the game frame, e.g. `4:3`. Embed only |
 | `controls` | `{ key, action }[]` | no | The controls legend under the game, e.g. `{ key: 'Space', action: 'Fire' }` |
 | `playNote` | string, 120 characters at most | no | One line shown with the game, e.g. `Best on desktop with a mouse` |
-| `platforms` | `('desktop' | 'mobile')[]` | no | Shown as small labels with the game |
+| `platforms` | `('desktop' | 'mobile')[]` | no | Shown as small labels with the game, and on its card on `/games/` |
+| `order` | number | no | Position on `/games/` and the home Games strip: lower comes first; games without one follow, newest first. Needs `playUrl` |
 
-`controls`, `playNote` and `platforms` need `playUrl`: set without it, the build fails (they would show nowhere). All the play fields are optional, so existing projects are unchanged.
+`controls`, `playNote`, `platforms` and `order` need `playUrl`: set without it, the build fails (they would show nowhere). All the play fields are optional, so existing projects are unchanged.
 
 **Playable projects.** A project with a `playUrl` is a game people can play in the browser, hosted on its own address (a separate static site, e.g. `https://play.r7orbit.io/vesper-drift/`). The address is data: it lives in the project's front matter, not in code. What changes:
 
 - The page gets a **Play** section in place of the cover image: a click-to-load facade (the cover as poster, a Play button). Nothing is requested from the game until the button is pressed, so the iframe and the game's download stay out of the page load. Then a sandboxed iframe (`sandbox="allow-scripts allow-same-origin allow-pointer-lock"`, `allow="fullscreen; gamepad; autoplay"`) replaces it, keyboard focus moves into it, and a Fullscreen button appears. An "Open in a new tab" link, the controls legend, the note and the platform labels sit around it. Without JavaScript the facade is hidden and a plain link to the game takes its place. With `playMode: link` there is no facade and no iframe, only the Play button (a link that opens a new tab), plus the note, platforms and controls.
+- The game is listed on the **Games hub** (`/games/`, `docs/PAGES.md`): a card with the cover as poster, summary, `platforms`, a **Play** button (to this page's Play section, or straight to `playUrl` in a new tab with `playMode: link`) and a **Details** link. Only published games are listed (`draft` and a future `date` apply as everywhere), sorted by `order`, then newest first. There is no `games` collection: the hub is every project with a `playUrl`. A **More games** strip on this page links back to the hub.
 - The project card and the page header show a **Playable** badge (play icon and label, brass like every other accent).
 - The page's JSON-LD is a `VideoGame` and `SoftwareApplication` (`applicationCategory: Game`, `operatingSystem: Web browser`, `url` = the play address, `author`).
 - **Framing.** `public/_headers` lets `/projects/*` frame one origin through `frame-src` (`https://play.r7orbit.io`). An embedded game on any other origin is blocked by the browser: change the origin there too. `tests/playable.spec.js` fails when an embedded `playUrl` in `src/content/projects/` is not on that list. `playMode: link` needs no entry.
@@ -164,7 +166,7 @@ export const collections = {
     started: z.coerce.date().optional(), shipped: z.coerce.date().optional(), role: z.string().optional(),
     gallery: z.array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() })).default([]),
     timeline: z.array(z.object({ date: z.coerce.date(), text: z.string() })).default([]),
-    playUrl: z.url({ protocol: /^https$/ }).optional(), playMode: z.enum(['embed', 'link']).default('embed'),
+    playUrl: z.url({ protocol: /^https$/ }).optional(), playMode: z.enum(['embed', 'link']).default('embed'), order: z.number().optional(),
     playAspect: z.string().regex(/^[1-9]d{0,2}:[1-9]d{0,2}$/).default('16:9'),
     controls: z.array(z.object({ key: z.string().min(1), action: z.string().min(1) })).default([]),
     playNote: z.string().min(1).max(120).optional(), platforms: z.array(z.enum(['desktop', 'mobile'])).default([]),

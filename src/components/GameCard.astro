@@ -1,0 +1,77 @@
+---
+// One game on the hub, the home teaser and the "More games" strip: poster, name, one line, platforms, a Play button and a
+// Details link. Not one big link like PostCard, because it carries two actions. The kind is told by the Playable badge
+// (icon and label), never by colour.
+import Icon from './Icon.astro';
+import MediaPlaceholder from './MediaPlaceholder.astro';
+import PlayableBadge from './PlayableBadge.astro';
+import PreviewBadge from './PreviewBadge.astro';
+import type { GameCardData } from '../lib/cards';
+import { PLATFORM_LABEL } from '../lib/play';
+import { plainTitle } from '../lib/text';
+
+interface Props {
+  game: GameCardData;
+  /** Level of the title: 2 under the page's h1, 3 under a section heading. */
+  level?: 2 | 3;
+  /** Load the poster at once (the first row). Later cards are lazy-loaded. */
+  eager?: boolean;
+}
+
+const { game, level = 2, eager = false } = Astro.props;
+const Heading = `h${level}` as 'h2' | 'h3';
+const title = plainTitle(game.title);
+const { play } = game;
+---
+
+<article class="card game-card">
+  <div class="card-media">
+    {game.cover ? (
+      <img
+        src={game.cover.src}
+        alt={game.cover.alt}
+        width={game.cover.width}
+        height={game.cover.height}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    ) : (
+      <MediaPlaceholder />
+    )}
+  </div>
+  <div class="card-body">
+    <div class="cluster">
+      <PlayableBadge />
+      {game.preview && <PreviewBadge label={game.preview} />}
+    </div>
+    <Heading class="card-title">{title}</Heading>
+    <p class="card-text">{game.summary}</p>
+    {game.platforms.length > 0 && (
+      <ul class="game-platforms" aria-label="Works on">
+        {game.platforms.map((p) => (
+          <li class="chip mono">{PLATFORM_LABEL[p]}</li>
+        ))}
+      </ul>
+    )}
+    <div class="game-actions">
+      <a
+        class="btn solid"
+        href={play.href}
+        target={play.external ? '_blank' : undefined}
+        rel={play.external ? 'noopener' : undefined}
+      >
+        <Icon name="play" />
+        Play
+        <span class="visually-hidden">
+          {' '}
+          {title}
+          {play.external ? ' (opens in a new tab)' : ''}
+        </span>
+        {play.external && <Icon name="external" small />}
+      </a>
+      <a class="btn" href={game.href}>
+        Details<span class="visually-hidden"> for {title}</span>
+      </a>
+    </div>
+  </div>
+</article>

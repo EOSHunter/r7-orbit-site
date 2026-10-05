@@ -1,0 +1,15 @@
+---
+// What the hub shows under its heading: the grid of games, or the empty state when there are none. The page and its test fixture
+// both use it, so the fixture exercises the real branches.
+import GameGrid from './GameGrid.astro';
+import GamesEmpty from './GamesEmpty.astro';
+import type { GameCardData } from '../lib/cards';
+
+interface Props {
+  games: GameCardData[];
+}
+
+const { games } = Astro.props;
+---
+
+{games.length > 0 ? <GameGrid {games} soon /> : <GamesEmpty />}

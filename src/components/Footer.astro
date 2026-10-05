@@ -4,6 +4,7 @@ import { site } from '../data/site';
 
 // Only links the owner has filled in appear (empty strings in site.json are left out).
 const links = [
+  { label: 'Games', href: '/games/', icon: 'play', external: false },
   { label: 'RSS', href: site.links.rss, icon: 'rss', external: false },
   { label: 'GitHub', href: site.links.github, icon: 'github', external: true },
   { label: 'YouTube', href: site.links.youtube, icon: 'vlog', external: true },

@@ -1,0 +1,37 @@
+---
+// The games hub: every published project with a playUrl. No collection of its own (docs/CONTENT_MODEL.md, Playable projects).
+import GamesSection from '../../components/GamesSection.astro';
+import Icon from '../../components/Icon.astro';
+import SubscribeBand from '../../components/SubscribeBand.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site';
+import { getGames } from '../../lib/content-queries';
+import { toGameCards } from '../../lib/game-cards';
+import { GAMES_COPY, gamesPageLd } from '../../lib/games';
+import { jsonLdString } from '../../lib/seo';
+
+const games = await getGames();
+---
+
+<BaseLayout
+  title={GAMES_COPY.label}
+  description={GAMES_COPY.description}
+  current={GAMES_COPY.label}
+  noindex={games.length === 0}
+>
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, games))} />
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">
+        <Icon name="play" />
+        {GAMES_COPY.label}
+      </p>
+      <h1>{GAMES_COPY.title}</h1>
+      <p class="t-lead">{GAMES_COPY.lead}</p>
+    </header>
+
+    <GamesSection games={toGameCards(games)} />
+  </div>
+  <div class="archive-end"></div>
+  <SubscribeBand />
+</BaseLayout>

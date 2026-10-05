@@ -93,3 +93,17 @@ export const STATUS_MARK: Record<ProjectStatus, 'working' | 'done' | 'idle'> = {
   paused: 'idle',
   archived: 'idle',
 };
+
+/** What a GameCard needs (the /games/ hub, the home teaser and the "More games" strip). */
+export interface GameCardData {
+  /** The project page, where the game's details are. */
+  href: string;
+  /** Where Play goes: the project page's Play section, or the game itself in a new tab (`playMode: link`). */
+  play: { href: string; external: boolean };
+  title: string;
+  summary: string;
+  cover?: Cover;
+  platforms: ('desktop' | 'mobile')[];
+  /** Dev preview only: "Draft" or "Scheduled for <date>". Never set in a production build. */
+  preview?: string;
+}
