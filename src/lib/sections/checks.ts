@@ -1,7 +1,7 @@
 // What a schema cannot know: the checks that need something else the site has (the posts, the authors, public/_headers). Pure
 // functions over data handed in, so they run under Vitest; the Astro components load the data and throw what these return,
 // each message starting with where the block is ("about.md, block 4 (Latest posts): …").
-import { POST_KINDS } from './definitions';
+import { definitionOf, POST_KINDS } from './definitions';
 
 /** "about.md, block 4 (Latest posts)": the start of every build error about a block. Blocks are counted from 1, as the editor shows them. */
 export const whereOf = (source: string, index: number, label: string) => `${source}, block ${index + 1} (${label})`;
@@ -51,6 +51,23 @@ export function latestProblems(block: { kinds: readonly string[]; tag?: string; 
   if (block.author && !known.authors.includes(block.author)) {
     problems.push(`there is no author "${block.author}". Authors are: ${list(known.authors)}.`);
   }
+  return problems;
+}
+
+/**
+ * A block a page may hold once (`once` in its definition: the Latest feed, which carries the #latest anchor and the page's kind
+ * filter), found again: one problem per extra block, with its place in the list (from 0). Pure: the page throws them, the editor's
+ * preview lists them.
+ */
+export function onceProblems(types: readonly unknown[]): { index: number; message: string }[] {
+  const seen = new Set<string>();
+  const problems: { index: number; message: string }[] = [];
+  types.forEach((type, index) => {
+    const definition = definitionOf(String(type));
+    if (!definition?.once) return;
+    if (seen.has(definition.id)) problems.push({ index, message: `a page holds one ${definition.label} block at most: remove this one, or the other.` });
+    seen.add(definition.id);
+  });
   return problems;
 }
 

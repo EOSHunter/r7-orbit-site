@@ -23,6 +23,9 @@ import ButtonBlock from './ButtonBlock.astro';
 import TocBlock from './TocBlock.astro';
 import StatsBlock from './StatsBlock.astro';
 import LatestBlock from './LatestBlock.astro';
+import FeedBlock from './FeedBlock.astro';
+import PinnedBlock from './PinnedBlock.astro';
+import GamesBlock from './GamesBlock.astro';
 import AuthorBlock from './AuthorBlock.astro';
 import NewsletterBlock from './NewsletterBlock.astro';
 
@@ -48,6 +51,9 @@ export const renderers: Record<SectionType, AstroComponentFactory> = {
   toc: TocBlock,
   stats: StatsBlock,
   latest: LatestBlock,
+  feed: FeedBlock,
+  pinned: PinnedBlock,
+  games: GamesBlock,
   author: AuthorBlock,
   newsletter: NewsletterBlock,
 };

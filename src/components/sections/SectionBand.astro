@@ -1,0 +1,48 @@
+---
+// The frame of a section-style block (Pinned post, Games row, Latest posts in its section frame): a full-width `.section`, optionally
+// with a rule above, holding the eyebrow, the heading and an optional link at the end of the heading row, then the block's cards.
+// The markup the home page has always had for its Pinned, Projects, Games and Repos rows. Not a block itself.
+import Icon from '../Icon.astro';
+import { titleParts } from '../../lib/text';
+
+interface Props {
+  /** The heading's id: the section is labelled by it. */
+  headingId: string;
+  eyebrow?: string;
+  /** May carry one *phrase* in asterisks for the italic brass accent. */
+  heading?: string;
+  moreLabel?: string;
+  moreUrl?: string;
+  /** A hairline above the section (every row of the home page but the first). */
+  ruled?: boolean;
+  [attribute: `data-${string}`]: unknown;
+}
+
+const { headingId, eyebrow, heading, moreLabel, moreUrl, ruled = false, ...data } = Astro.props;
+---
+
+<section class:list={['section', ruled && 'ruled']} aria-labelledby={heading ? headingId : undefined} {...data}>
+  <div class="container wide">
+    {
+      (eyebrow || heading || (moreLabel && moreUrl)) && (
+        <div class="section-head">
+          <div>
+            {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+            {heading && (
+              <h2 class="section-title" id={headingId}>
+                {titleParts(heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}
+              </h2>
+            )}
+          </div>
+          {moreLabel && moreUrl && (
+            <a class="more-link" href={moreUrl}>
+              {moreLabel}
+              <Icon name="arrow" />
+            </a>
+          )}
+        </div>
+      )
+    }
+    <slot />
+  </div>
+</section>

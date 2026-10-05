@@ -1,0 +1,42 @@
+{
+  "path": "/projects/",
+  "posts": [
+    "blog/test",
+    "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "projects/vesper-drift"
+  ],
+  "head": [
+    "title: Projects · R7 Orbit",
+    "description: Projects I am building with AI: what they are, why I built them and what I learned.",
+    "p.eyebrow: Projects",
+    "h1: Things I am making",
+    "em: making",
+    "p.t-lead: What each project is, why I built it, how it works and what I learned."
+  ],
+  "lines": [
+    "title: Projects · R7 Orbit",
+    "description: Projects I am building with AI: what they are, why I built them and what I learned.",
+    "p.eyebrow: Projects",
+    "h1: Things I am making",
+    "em: making",
+    "p.t-lead: What each project is, why I built it, how it works and what I learned.",
+    "div aria-label: Filter and sort projects",
+    "label.visually-hidden: Search projects",
+    "div aria-label: Sort",
+    "button: Newest",
+    "button: Oldest",
+    "span.eyebrow: Tags",
+    "[content]",
+    "h2.visually-hidden: Projects",
+    "[content]",
+    "h2: Nothing matches that.",
+    "p: Try fewer words, or clear the filters.",
+    "button.btn: Clear filters",
+    "p.eyebrow: Newsletter",
+    "h2: One email when something new is worth reading",
+    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
+    "label: Email address",
+    "button.btn: Subscribe",
+    "p: "
+  ]
+}

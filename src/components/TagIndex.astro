@@ -1,0 +1,53 @@
+---
+// The tag index's list: the tags with a page (two posts or more) as links with their counts, the tags used once as plain chips,
+// or the empty state in the page's words (src/content/pages/tags.md) while no post has a tag.
+import type { TagCount } from '../lib/content';
+
+interface Props {
+  counts: TagCount[];
+  emptyHeading: string;
+  emptyText: string;
+}
+
+const { counts, emptyHeading, emptyText } = Astro.props;
+// A tag page exists once a tag has two posts; a tag used once is listed but not linked.
+const linked = counts.filter((t) => t.count >= 2);
+const single = counts.filter((t) => t.count < 2);
+---
+
+{counts.length === 0 ? (
+  <div class="empty">
+    <h2>{emptyHeading}</h2>
+    <p>{emptyText}</p>
+  </div>
+) : (
+  <>
+    {linked.length > 0 && (
+      <section class="block" aria-labelledby="tags-h">
+        <h2 class="visually-hidden" id="tags-h">Tags with a page</h2>
+        <ul class="tag-index">
+          {linked.map(({ tag, count }) => (
+            <li>
+              <a class="chip mono" href={`/tags/${tag}/`}>
+                {tag}
+                <span class="count">{count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+    {single.length > 0 && (
+      <section class="block" aria-labelledby="single-h">
+        <h2 class="eyebrow" id="single-h">Used once</h2>
+        <ul class="tag-index">
+          {single.map(({ tag }) => (
+            <li>
+              <span class="chip mono">{tag}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </>
+)}

@@ -1,37 +1,51 @@
 ---
 // The games hub: every published project with a playUrl. No collection of its own (docs/CONTENT_MODEL.md, Playable projects).
+// Its words are src/content/pages/games.md (edited in /admin, "Pages" > Games page): the heading, lead, browser title and
+// description, the empty state, the "more games coming" card, and blocks above and below the grid. The grid is code.
 import GamesSection from '../../components/GamesSection.astro';
 import Icon from '../../components/Icon.astro';
+import Sections from '../../components/Sections.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { site } from '../../data/site';
 import { getGames } from '../../lib/content-queries';
 import { toGameCards } from '../../lib/game-cards';
-import { GAMES_COPY, gamesPageLd } from '../../lib/games';
-import { jsonLdString } from '../../lib/seo';
+import { GAMES_LABEL, gamesPageLd } from '../../lib/games';
+import { headTitleFor, jsonLdString } from '../../lib/seo';
+import { gamesCopy, loadSitePage } from '../../lib/site-pages-queries';
+import { titleParts } from '../../lib/text';
 
 const games = await getGames();
+const entry = await loadSitePage('games');
+const { title, seoTitle, description, introSections, outroSections } = entry.data;
+const copy = gamesCopy(entry);
 ---
 
-<BaseLayout
-  title={GAMES_COPY.label}
-  description={GAMES_COPY.description}
-  current={GAMES_COPY.label}
-  noindex={games.length === 0}
->
-  <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, games))} />
+<BaseLayout title={headTitleFor(title, seoTitle)} {description} current={GAMES_LABEL} noindex={games.length === 0}>
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, games, description))} />
   <div class="container wide">
     <header class="page-head">
       <p class="eyebrow brass">
         <Icon name="play" />
-        {GAMES_COPY.label}
+        {GAMES_LABEL}
       </p>
-      <h1>{GAMES_COPY.title}</h1>
-      <p class="t-lead">{GAMES_COPY.lead}</p>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <p class="t-lead">{entry.text('lead')}</p>
     </header>
 
-    <GamesSection games={toGameCards(games)} />
+    {introSections.length === 0 && <GamesSection games={toGameCards(games)} {copy} />}
   </div>
+  {
+    introSections.length > 0 && (
+      <>
+        <Sections sections={introSections} source="games.md (introSections)" />
+        <div class="container wide">
+          <GamesSection games={toGameCards(games)} {copy} />
+        </div>
+      </>
+    )
+  }
+  {outroSections.length > 0 && <Sections sections={outroSections} source="games.md (outroSections)" />}
   <div class="archive-end"></div>
   <SubscribeBand />
 </BaseLayout>

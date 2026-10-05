@@ -335,3 +335,25 @@ describe('toc, stats, latest, author, newsletter', () => {
     bad({ type: 'newsletter', text: 'x'.repeat(221) });
   });
 });
+
+describe('the home page blocks', () => {
+  it('latest: reads a block written before its frame, order and link existed exactly as before (in the page, newest first, says when empty)', () => {
+    const block = sectionSchema.parse({ type: 'latest', heading: 'H', kinds: ['blog'], count: 3 });
+    expect(block).toMatchObject({ look: 'plain', order: 'newest', ifEmpty: 'say' });
+    ok({ type: 'latest', kinds: ['repo'], order: 'updated', look: 'section', ifEmpty: 'hide', eyebrow: 'Open source', moreLabel: 'All repos', moreUrl: '/repos/' });
+    bad({ type: 'latest', look: 'band' }, /Invalid option/);
+    bad({ type: 'latest', moreUrl: 'javascript:alert(1)' }, /"Link address"/);
+  });
+
+  it('feed: needs its heading and its words for an empty site; shows eight posts unless told otherwise', () => {
+    expect(sectionSchema.parse({ type: 'feed', heading: 'Latest', emptyHeading: 'E', emptyText: 'X' })).toMatchObject({ count: 8 });
+    bad({ type: 'feed', heading: 'Latest', emptyText: 'X' }, /"When nothing is posted: heading" is required/);
+    bad({ type: 'feed', heading: 'Latest', emptyHeading: 'E', emptyText: 'X', count: 13 }, /at most 12/);
+  });
+
+  it('pinned and games: a heading is needed; the eyebrow and link are optional', () => {
+    ok({ type: 'pinned', heading: 'Start here' });
+    bad({ type: 'pinned', eyebrow: 'Pinned' }, /"Heading" is required/);
+    expect(sectionSchema.parse({ type: 'games', heading: 'Games' })).toMatchObject({ count: 3 });
+  });
+});

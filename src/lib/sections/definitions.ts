@@ -61,6 +61,8 @@ interface BlockMeta {
   example: Record<string, unknown>;
   /** What the admin preview does differently from the page, for blocks where it differs. Left out when the preview is exact. */
   previewNote?: string;
+  /** At most one of these on a page (the block carries a fixed anchor or ships the page's filter script). checks.ts enforces it. */
+  once?: true;
 }
 
 function defineBlock<const Id extends string, Shape extends z.ZodRawShape>(
@@ -76,6 +78,15 @@ function defineBlock<const Id extends string, Shape extends z.ZodRawShape>(
 const MARKDOWN_HINT = 'Paragraphs, **bold**, *italic*, links and lists. Leave a blank line between paragraphs.';
 const ADDRESS_HINT = 'https://… for another site, or /subscribe/ for a page on this site.';
 
+// The parts the section-style blocks share (Latest posts in its section frame, Pinned post, Games row, Latest feed): the small line
+// over the heading and the link at the end of the heading row ("All projects" → /projects/), drawn when both its words and its
+// address are filled in (any one optional box may be left empty on its own: the library's rule, schema.vitest.ts).
+const eyebrowField = () =>
+  text({ label: 'Eyebrow', optional: true, max: 60, hint: 'Optional. A small line above the heading, e.g. "Open source".' });
+const moreFields = (example: string) => ({
+  moreLabel: text({ label: 'Link text', optional: true, max: 40, hint: `Optional. A link at the end of the heading row, e.g. "${example}". It shows only when both its text and its address are filled in.` }),
+  moreUrl: link('Link address', ADDRESS_HINT, true),
+});
 // ---- Text ---------------------------------------------------------------------------------------------------------------
 
 const heading = defineBlock(
@@ -609,13 +620,15 @@ const latest = defineBlock(
   {
     label: 'Latest posts',
     group: 'From the site',
-    description: 'The newest published posts as cards, filtered by kind, tag and/or author. Drafts and future-dated posts are left out, as everywhere else.',
-    summary: 'Latest posts: {{fields.count}} {{fields.kinds}} {{fields.tag}} {{fields.author}}',
-    placement: 'wide',
-    example: { heading: 'The *latest* posts', kinds: [], count: 3 },
+    description: 'The newest published posts as cards, filtered by kind, tag and/or author: in the page, or as a section of its own with a rule above it (the Projects and Repos rows of the home page). Drafts and future-dated posts are left out, as everywhere else.',
+    summary: 'Latest posts: {{fields.count}} {{fields.kinds}} {{fields.tag}} {{fields.author}} {{fields.heading}}',
+    placement: (d) => (d.look === 'section' ? 'band' : 'wide'),
+    placementNote: 'In a row of its own, the width of the page, when the frame is "In the page" (it ends a picture-beside-text row); a full-width section with its own spacing when the frame is "A section of its own".',
+    example: { heading: 'The *latest* posts', kinds: [], count: 3, moreLabel: 'Everything', moreUrl: '/latest/' },
     previewNote: 'The posts are chosen when the site is built, so the preview shows what the block will pick, not the cards.',
   },
   {
+    eyebrow: eyebrowField(),
     heading: text({ label: 'Heading', optional: true, max: 80, hint: 'Optional. Put one phrase in *asterisks* for the italic brass accent.' }),
     kinds: choices(POST_KINDS, { news: 'News', blog: 'Blog', vlog: 'Vlogs', project: 'Projects', repo: 'Repos' }, {
       label: 'Kinds',
@@ -637,6 +650,88 @@ const latest = defineBlock(
       hint: 'Optional. Only posts credited to this author.',
     }),
     count: count({ label: 'How many', min: 1, max: 12, fallback: 3, hint: 'Between 1 and 12.' }),
+    order: choice(['newest', 'updated'], { newest: 'Newest first', updated: 'Last updated first (a repo by its last push on GitHub)' }, {
+      label: 'Order',
+      hint: 'Last updated first suits repos: a repo with no GitHub data counts from the date of its entry.',
+    }),
+    look: choice(['plain', 'section'], { plain: 'In the page: a heading over the cards', section: 'A section of its own, with a rule above (as on the home page)' }, {
+      label: 'Frame',
+    }),
+    ...moreFields('All projects'),
+    ifEmpty: choice(['say', 'hide'], { say: 'Say "Nothing has been posted here yet."', hide: 'Leave the block out' }, {
+      label: 'When there is nothing to show',
+    }),
+  },
+);
+
+const feed = defineBlock(
+  'feed',
+  {
+    label: 'Latest feed',
+    group: 'From the site',
+    description: 'The newest posts of every kind with a filter by kind (links to each kind\'s archive when JavaScript is off) and a link to everything (the Latest section of the home page). Its anchor is #latest, so a button can point at it; one per page.',
+    summary: 'Latest feed: {{fields.count}} {{fields.heading}}',
+    placement: 'band',
+    example: {
+      heading: 'Latest',
+      count: 8,
+      emptyHeading: 'Nothing is posted yet.',
+      emptyText: 'Subscribe below and I will send an email when the first post is up.',
+      browseLabel: 'Browse by kind',
+      moreLabel: 'Browse everything',
+      moreUrl: '/latest/',
+    },
+    previewNote: 'The posts, the kind filter and the archive links are made from the posts when the site is built, so the preview shows a stand-in.',
+    once: true,
+  },
+  {
+    heading: text({ label: 'Heading', max: 80, hint: 'e.g. Latest. Put one phrase in *asterisks* for the italic brass accent.' }),
+    count: count({ label: 'How many', min: 1, max: 12, fallback: 8, hint: 'Between 1 and 12. The newest is marked New.' }),
+    emptyHeading: text({ label: 'When nothing is posted: heading', max: 100, hint: 'Shown instead of the cards while the site has no posts at all.' }),
+    emptyText: text({ label: 'When nothing is posted: text', widget: 'text', max: 300, hint: 'A sentence under that heading.' }),
+    browseLabel: text({
+      label: 'Archive links title',
+      optional: true,
+      max: 60,
+      hint: 'Optional. The small title over the links to each kind\'s archive (only kinds with posts get a link), e.g. Browse by kind. They stand in for the kind filter when JavaScript is off, so most readers never see them. Leave it empty for no links.',
+    }),
+    ...moreFields('Browse everything'),
+  },
+);
+
+const pinned = defineBlock(
+  'pinned',
+  {
+    label: 'Pinned post',
+    group: 'From the site',
+    description: 'The post marked Featured (the newest, if several are), as a large card. Left out when no post is featured, or when only one post is published (the latest posts already show it).',
+    summary: 'Pinned post: {{fields.heading}}',
+    placement: 'band',
+    example: { eyebrow: 'Pinned', heading: 'Start here' },
+    previewNote: 'The featured post is chosen when the site is built, so the preview shows a stand-in.',
+  },
+  {
+    eyebrow: eyebrowField(),
+    heading: text({ label: 'Heading', max: 80, hint: 'e.g. Start here. Put one phrase in *asterisks* for the italic brass accent.' }),
+  },
+);
+
+const gamesRow = defineBlock(
+  'games',
+  {
+    label: 'Games row',
+    group: 'From the site',
+    description: 'The first published games (projects with a Play address), in the order of the Games page, as game cards with a Play button. Left out while no game is published.',
+    summary: 'Games row: {{fields.count}} {{fields.heading}}',
+    placement: 'band',
+    example: { eyebrow: 'Play in the browser', heading: 'Games', count: 3, moreLabel: 'All games', moreUrl: '/games/' },
+    previewNote: 'The games are chosen when the site is built, so the preview shows a stand-in.',
+  },
+  {
+    eyebrow: eyebrowField(),
+    heading: text({ label: 'Heading', max: 80, hint: 'e.g. Games. Put one phrase in *asterisks* for the italic brass accent.' }),
+    count: count({ label: 'How many', min: 1, max: 12, fallback: 3, hint: 'Between 1 and 12.' }),
+    ...moreFields('All games'),
   },
 );
 
@@ -705,6 +800,9 @@ export const definitions = [
   toc,
   stats,
   latest,
+  feed,
+  pinned,
+  gamesRow,
   author,
   newsletter,
 ] as const;

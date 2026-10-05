@@ -20,6 +20,7 @@ import {
   type SectionOf,
   type SectionType,
 } from '../lib/sections';
+import { onceProblems } from '../lib/sections/checks';
 import { titleParts } from '../lib/text';
 import {
   blocksHtml,
@@ -109,6 +110,9 @@ export function looseSections(value: unknown): Section[] {
  */
 export function previewProblems(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
+  const repeated = onceProblems((value as Loose[]).map((raw) => raw?.type)).map(
+    ({ index, message }) => `Block ${index + 1} (${SECTION_LABELS[String((value as Loose[])[index]?.type) as SectionType]}): ${message}`,
+  );
   return (value as Loose[]).flatMap((raw, i) => {
     const type = String(raw?.type);
     if (!definitionOf(type)) return [`Block ${i + 1}: unknown block type "${type}".`];
@@ -119,7 +123,7 @@ export function previewProblems(value: unknown): string[] {
       const where = issue.path.length ? ` (${issue.path.join(' › ')})` : '';
       return `Block ${i + 1} (${label})${where}: ${issue.message}`;
     });
-  });
+  }).concat(repeated);
 }
 
 /** The warning box shown above the preview, or nothing when all is well. */
@@ -146,6 +150,26 @@ const pictureHtml = (path: string, alt: string, resolve: ResolveAsset) => {
 };
 
 const proseColumn = (markdown: string) => `<div class="art-col prose">${markdownHtml(markdown)}</div>`;
+
+/** The heading row of a section-style block (SectionBand.astro): eyebrow, heading, and the link at the end of the row. */
+function sectionHeadHtml(d: { eyebrow?: string; heading?: string; moreLabel?: string; moreUrl?: string }): string {
+  const more = d.moreLabel && d.moreUrl ? `<a class="more-link" href="${attr(safeLink(d.moreUrl))}">${escapeHtml(d.moreLabel)}${icon('arrow')}</a>` : '';
+  if (!d.eyebrow && !d.heading && !more) return halfLinkNote(d);
+  const eyebrow = d.eyebrow ? `<p class="eyebrow">${escapeHtml(d.eyebrow)}</p>` : '';
+  const heading = d.heading ? `<h2 class="section-title">${headingText(d.heading)}</h2>` : '';
+  return `<div class="section-head"><div>${eyebrow}${heading}</div>${more}</div>${halfLinkNote(d)}`;
+}
+
+/** A link with only its text or only its address is left out of the page: the preview says so, as the author is typing it. */
+const halfLinkNote = (d: { moreLabel?: string; moreUrl?: string }) =>
+  !d.moreLabel !== !d.moreUrl ? '<p class="admin-preview-note" role="note">The link is shown only when both its text and its address are filled in.</p>' : '';
+
+/** A section-style block as the page frames it (a full-width `.section`), around a stand-in for what the build fills in. */
+const sectionBandHtml = (head: string, body: string, ruled = true) =>
+  `<section class="section${ruled ? ' ruled' : ''}"><div class="container wide">${head}${body}</div></section>`;
+
+/** What a block that is made from the posts will show, in words, where the page has its cards. */
+const standIn = (what: string, when: string) => `<div class="empty"><p>${escapeHtml(what)}</p><p class="t-meta">${escapeHtml(when)}</p></div>`;
 
 const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => string } = {
   heading: (d) => `<h${d.level}>${headingText(d.text)}</h${d.level}>`,
@@ -241,10 +265,36 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
     `<div class="stats"><span class="lang">GitHub</span><span>${escapeHtml(d.repo || 'owner/name')}: stars, forks and the last update are fetched when the site is built</span></div>`,
   latest: (d) => {
     const kinds = d.kinds.length ? d.kinds.join(', ') : 'every kind';
-    const filters = [`${d.count} newest`, kinds, d.tag && `tagged ${d.tag}`, d.author && `by ${d.author}`].filter(Boolean).join(' · ');
-    const heading = d.heading ? `<h2 class="section-title">${headingText(d.heading)}</h2>` : '';
-    return `<div class="latest-posts">${heading}<div class="empty"><p>Latest posts: ${escapeHtml(filters)}.</p><p class="t-meta">The cards are chosen when the site is built.</p></div></div>`;
+    const filters = [`${d.count} ${d.order === 'updated' ? 'most recently updated' : 'newest'}`, kinds, d.tag && `tagged ${d.tag}`, d.author && `by ${d.author}`].filter(Boolean).join(' · ');
+    const empty = d.ifEmpty === 'hide' ? 'Left out of the page when there is nothing to show.' : 'With nothing to show it says so.';
+    const body = standIn(`Latest posts: ${filters}.`, `The cards are chosen when the site is built. ${empty}`);
+    if (d.look === 'section') return sectionBandHtml(sectionHeadHtml(d), body);
+    const head = d.eyebrow || (d.moreLabel && d.moreUrl) ? sectionHeadHtml(d) : d.heading ? `<h2 class="section-title">${headingText(d.heading)}</h2>` : '';
+    return `<div class="latest-posts">${head}${body}</div>`;
   },
+  feed: (d) => {
+    const head = `<div class="feed-head"><h2 class="section-title">${headingText(d.heading)}</h2><span class="spacer"></span></div>`;
+    const body = standIn(
+      `Latest feed: the ${d.count} newest posts of every kind, the newest marked New, with a filter by kind.`,
+      `The cards are chosen when the site is built. While nothing is posted, the page says: “${d.emptyHeading}” ${d.emptyText}`,
+    );
+    const browse = d.browseLabel
+      ? `<nav class="feed-kinds" aria-label="${attr(d.browseLabel)}"><span class="eyebrow">${escapeHtml(d.browseLabel)}</span><ul><li><span class="chip">A link to each kind's archive that has posts</span></li></ul></nav>`
+      : '';
+    const more = d.moreLabel && d.moreUrl ? `<p class="feed-more"><a class="more-link" href="${attr(safeLink(d.moreUrl))}">${escapeHtml(d.moreLabel)}${icon('arrow')}</a></p>` : halfLinkNote(d);
+    return `<section class="section ruled"><div class="container wide">${head}${body}${browse}${more}</div></section>`;
+  },
+  pinned: (d) =>
+    sectionBandHtml(
+      sectionHeadHtml(d),
+      standIn('Pinned post: the post marked Featured, as a large card.', 'Chosen when the site is built. Left out when no post is featured, or when only one post is published.'),
+      false,
+    ),
+  games: (d) =>
+    sectionBandHtml(
+      sectionHeadHtml(d),
+      standIn(`Games row: the first ${d.count} published games, in the order of the Games page.`, 'Chosen when the site is built. Left out while no game is published.'),
+    ),
   author: (d, env) => {
     const who = env.authors.find((a) => a.slug === d.author);
     if (!who) return `<aside class="author-note author-box"><div class="author-note-body"><p>${d.author ? `No author "${escapeHtml(d.author)}".` : 'Choose an author.'}</p></div></aside>`;

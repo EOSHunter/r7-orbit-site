@@ -27,13 +27,30 @@ interface Props {
   authors?: { slug: string; name: string }[];
   noun: string;
   nounOne: string;
-  /** Said when there is nothing at all in this listing. */
+  /** Said when there is nothing at all in this listing: the heading, and the sentence under it. The archives pass their page
+   *  entry's words (src/content/pages/); the author pages keep the sentence below. */
   empty: string;
+  emptyText?: string;
   /** Label for the search field and the results heading, e.g. "posts". */
   what: string;
 }
 
-const { cards, start, size, page, pages, base, tags, kinds = [], authors = [], noun, nounOne, empty, what } = Astro.props;
+const {
+  cards,
+  start,
+  size,
+  page,
+  pages,
+  base,
+  tags,
+  kinds = [],
+  authors = [],
+  noun,
+  nounOne,
+  empty,
+  emptyText = 'Check back soon, or subscribe below and I will send an email when something is posted.',
+  what,
+} = Astro.props;
 const shown = cards.slice(start, start + size);
 const before = cards.slice(0, start);
 const after = cards.slice(start + size);
@@ -43,7 +60,7 @@ const total = cards.length;
 {total === 0 ? (
   <div class="empty">
     <h2>{empty}</h2>
-    <p>Check back soon, or subscribe below and I will send an email when something is posted.</p>
+    <p>{emptyText}</p>
   </div>
 ) : (
   <div

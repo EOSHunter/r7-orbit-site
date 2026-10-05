@@ -3,17 +3,17 @@
 // two columns so a lone game is not stretched across the page. The poster has a fixed 16:9 frame, so nothing shifts as it loads.
 import GameCard from './GameCard.astro';
 import type { GameCardData } from '../lib/cards';
-import { GAMES_COPY } from '../lib/games';
 
 interface Props {
   games: GameCardData[];
   level?: 2 | 3;
-  /** Only the hub sets this: with exactly one game, a final "More games coming" card keeps the row from looking unfinished. */
-  soon?: boolean;
+  /** Only the hub sets this: with exactly one game, a final "More games coming" card keeps the row from looking unfinished. Its
+   *  words are the hub's (src/content/pages/games.md). */
+  soon?: { eyebrow: string; title: string; text: string };
 }
 
-const { games, level = 2, soon = false } = Astro.props;
-const showSoon = soon && games.length === 1;
+const { games, level = 2, soon } = Astro.props;
+const showSoon = !!soon && games.length === 1;
 const few = games.length + (showSoon ? 1 : 0) <= 2;
 const Heading = `h${level}` as 'h2' | 'h3';
 ---
@@ -28,9 +28,9 @@ const Heading = `h${level}` as 'h2' | 'h3';
   {showSoon && (
     <li>
       <div class="game-soon" data-games-soon>
-        <p class="eyebrow">Next up</p>
-        <Heading class="card-title">{GAMES_COPY.soonTitle}</Heading>
-        <p class="card-text">{GAMES_COPY.soonText}</p>
+        <p class="eyebrow">{soon.eyebrow}</p>
+        <Heading class="card-title">{soon.title}</Heading>
+        <p class="card-text">{soon.text}</p>
       </div>
     </li>
   )}

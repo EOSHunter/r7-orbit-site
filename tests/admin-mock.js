@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 // The admin under test: public/_headers read the way Cloudflare Pages reads it, and a pretend GitHub. Shared by headers.spec.js
 // (the CSP) and admin-images.spec.js (uploading pictures end to end).
@@ -35,9 +35,17 @@ export const PIXEL = Buffer.from(
 
 const GITHUB_STATUS = 'https://www.githubstatus.com';
 
-// The About page as it is in the repository: the real file, so the test follows it. Decap reads it from the blob API (base64).
-export const ABOUT_MD = readFileSync(new URL('../src/content/pages/about.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+// The pages as they are in the repository (About, the home page, the listing pages): the real files, so the tests follow them.
+// Decap reads each from the blob API (base64).
+const PAGES_DIR = new URL('../src/content/pages/', import.meta.url);
+export const PAGE_FILES = Object.fromEntries(
+  readdirSync(PAGES_DIR)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => [f, readFileSync(new URL(f, PAGES_DIR), 'utf8').replaceAll('\r\n', '\n')]),
+);
+export const ABOUT_MD = PAGE_FILES['about.md'];
 const ABOUT_SHA = 'aboutfilesha';
+const pageSha = (file) => (file === 'about.md' ? ABOUT_SHA : `page${file.replace(/\.md$/, '')}sha`);
 
 let nextSha = 1;
 
@@ -51,12 +59,15 @@ function githubApi(method, path) {
   if (path === repo) {
     return { owner: { login: 'EOSHunter' }, permissions: { pull: true, push: true }, default_branch: 'main' };
   }
-  // The About page file: Decap finds its blob in the folder's tree, then reads the blob as raw text.
+  // A page file: Decap finds its blob in the folder's tree, then reads the blob as raw text.
   if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/content/pages')) {
-    return { sha: sha(), tree: [{ path: 'about.md', type: 'blob', mode: '100644', sha: ABOUT_SHA, size: ABOUT_MD.length }], truncated: false };
+    const tree = Object.entries(PAGE_FILES).map(([file, text]) => ({ path: file, type: 'blob', mode: '100644', sha: pageSha(file), size: text.length }));
+    return { sha: sha(), tree, truncated: false };
   }
-  if (method === 'GET' && path === `${repo}/git/blobs/${ABOUT_SHA}`) {
-    return { sha: ABOUT_SHA, encoding: 'base64', content: Buffer.from(ABOUT_MD).toString('base64'), size: ABOUT_MD.length };
+  const page = method === 'GET' && Object.entries(PAGE_FILES).find(([file]) => path === `${repo}/git/blobs/${pageSha(file)}`);
+  if (page) {
+    const [file, text] = page;
+    return { sha: pageSha(file), encoding: 'base64', content: Buffer.from(text).toString('base64'), size: text.length };
   }
   if (path.startsWith(`${repo}/branches/`)) {
     return { name: 'main', commit: { sha: 'abc', commit: { tree: { sha: 'def' } } } };

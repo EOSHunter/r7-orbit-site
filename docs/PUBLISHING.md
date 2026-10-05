@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7; the home page and the listing pages (archives, Latest, Games, Tags) are section 8. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -139,7 +139,7 @@ Alt text is what a screen reader says in place of the picture, and what shows if
 
 ### Case 4: a picture on a page
 
-The About page is made of blocks ([section 7](#7-editing-the-about-page)), and its pictures work like the ones above.
+The About page is made of blocks ([section 7](#7-editing-the-about-page)), and its pictures work like the ones above. So are the home page's rows and the blocks above and below a listing ([section 8](#8-editing-the-home-page-and-listing-pages)): their pictures go to the same folder for pages.
 
 1. In the editor open **Pages**, then **About page**.
 2. Add an **Image** or **Portrait and text** block, or open an existing one.
@@ -187,3 +187,31 @@ The About page is not a post. It is a list of **blocks** (a heading, some text, 
 10. **Save**, then **Publish** exactly as for a post (section 1, steps 7 to 9). The check on the pull request builds the site. If it is red, open it and read the first error: it names the block ("Block 3 (Image)" is the third block, counting from 1; `sections.2` counts from 0) and what is wrong, usually missing alt text or an address that does not start with `https://` or `/`. The preview shows the same messages above the page while you type.
 
 Good to know: the details search engines read about you (name and bio, the "Person" data) come from `src/data/site.json`, not from this page. If you change your bio here and want search engines to see the change too, it has to be changed there as well.
+
+## 8. Editing the home page and listing pages
+
+The words of the home page, of **Latest**, of the five archives (News, Blog, Vlogs, Projects, Repos), of the **Games** page and of the **Tags** page are under **Pages** too, below the About page. They are saved, previewed and published like the About page (section 7). The posts on these pages are not written here: they come from the posts themselves, when the site is built.
+
+**The home page** (**Pages > Home page**):
+
+1. The top boxes are the hero: **Eyebrow** (the small brass line), **Headline** (the big heading; one phrase in `*asterisks*` is set in italic brass), **Lead paragraph**, and up to two **Buttons**. The first button is solid, the second outlined. A button's address can be a page (`/latest/`), another site (`https://…`), or a part of the home page: `#latest` goes to the Latest feed, `#subscribe` to the newsletter band at the end.
+2. **Description for search results**: as on About; not shown on the page. The browser tab of the home page reads the site name and tagline (site settings), not the headline.
+3. **Rows below the hero** are blocks, as on About (add, drag, open, remove). Today they are, in order:
+   - **Pinned post**: the post you marked **Featured**, as a large card, under the eyebrow and heading you write here. It is left out when no post is featured, or when only one post is published.
+   - **Latest feed**: the newest posts of every kind with a filter by kind, the links to each kind's archive (under the **Archive links title**; they replace the filter when a reader's JavaScript is off, so you rarely see them; leave it empty for no links), and a link to everything (**Link text** and **Link address**). Its two "When nothing is posted" boxes are what the page says while the site has no posts. A page holds one Latest feed.
+   - **Latest posts** twice: Projects and Repos. **Kinds** says which posts, **Order** whether newest first or last updated first (repos, by their last push on GitHub), **Frame** "A section of its own" gives them the home page's look, and **When there is nothing to show** "Leave the block out" hides the row until there is something.
+   - **Games row**: the first published games, in the order of the Games page. Left out while no game is published.
+   - A link at the end of a heading row (**Link text** and **Link address**, e.g. "All projects" and `/projects/`) shows only when both boxes are filled in. The preview says so if only one is.
+   - Any other block of the library can go between them (a callout, a picture, a button…).
+4. The newsletter band at the very end belongs to the site and is not in the list.
+
+**A listing page** (**Latest (every post)**, **News archive**, **Blog archive**, **Vlogs archive**, **Projects archive**, **Repos archive**, **Games page**, **Tags page**):
+
+1. **Page heading** (the big heading; one phrase in `*asterisks*` in brass), **Browser title** (today the kind's name, e.g. "Blog"; it is followed by "· R7 Orbit"), **Description for search results**, and **Lead paragraph** (under the heading).
+2. **Sections above the list** and **Sections below the list**: optional blocks before and after the list of posts (a note, a pinned link, a callout). Most pages leave them empty. Every numbered page (`/blog/page/2/`) repeats them.
+3. **When there is nothing to list**: the heading and the sentence shown while there is nothing in that list. On the Games page there is also the button under them (it goes to the projects) and the card shown beside a single game (**Beside a single game**: eyebrow, heading, text).
+4. Not here, because they are made from the posts or shared with the site's navigation: the list itself, its search, filters, counts and pagination, the small label and icon over the heading (the kind's name in the menu), the tag chips and "Used once" on the Tags page, and the messages of the filters ("Nothing matches that.").
+
+**What the preview shows.** The hero or the page head and your blocks, drawn with the site's styles. Whatever is made from the posts (the cards, the pinned post, the games, the tags) cannot be drawn in the editor: in its place a box says what goes there and when ("Stand-in. The posts are listed here…", "Pinned post: the post marked Featured…"), with a note under the block. On a listing page your words for an empty list follow the stand-in. The preview also lists, in a red "Fix before saving" box, what the build would stop on: a needed box left empty ("emptyHeading" is missing), a bad block (numbered from 1, "Above the list: Block 2 (Button)…"), or a second Latest feed. Open the Cloudflare preview link on the pull request to see the real page with its posts.
+
+**Changing the words on purpose.** These pages, like About, have a test that compares their words with a saved copy (`tests/fixtures/pages/`), so a change of words is never an accident. When you change them on purpose, the pull request's check fails on that test until the copy is refreshed; whoever maintains the site runs `npm run build && UPDATE_PAGE_TEXT=1 npx playwright test page-text` on the branch, reads the difference and commits it.
