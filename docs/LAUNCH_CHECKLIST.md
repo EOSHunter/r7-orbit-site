@@ -21,8 +21,7 @@ The sample posts are gone (2026-10-05). `src/content/` now holds only the author
 ## `src/data/site.json` placeholders
 
 - ~~`url`~~: done, `https://r7orbit.io` (it sets the canonical URLs, feeds, sitemap and `robots.txt`).
-- `author.name`: "Your Name".
-- `author.bio`: "Two or three sentences, in the first person."
+- ~~`author.name`~~, ~~`author.bio`~~: done (the author's own words, also the text of `/about/`).
 - `author.photo`: `null`.
 - `author.email`: `hello@example.com`.
 - `links.github`, `links.x`, `links.linkedin`, `links.bluesky`: empty. `links.youtube` points at `@R7Creatives`; confirm it is yours.
