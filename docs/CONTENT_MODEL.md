@@ -9,7 +9,8 @@ src/content/
   vlogs/      a-video-about-something.md
   projects/   a-project.md
   repos/      a-repo.md
-  authors/    hunter.json          (optional; one author to start)
+  pages/      about.md             (a page built from blocks: see "Pages" below)
+  authors/    hunter-newton.json, r7.json   (who a post is credited to: see "Authors")
   site.json                        (site name, tagline, links: see below)
 public/
   media/<kind>/...                 (covers, posters, gallery, Markdown-body pictures, one folder per kind; shrunk at build)
@@ -32,9 +33,25 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | `featured` | boolean | no | Pins to the top of the home page. **At most one at a time** (the build should warn if two) |
 | `draft` | boolean | no | Default `false`. `true` = hidden in production, shown in dev with a "Draft" badge. See "Drafts and scheduled posts" |
 | `readTime` | number (minutes) | no | Computed from the body if absent (≈ 220 words/min) |
-| `author` | string (author id) | no | Defaults to the site author |
+| `author` | string (author slug) | no | The slug of a file in `src/content/authors/`. Defaults to `hunter-newton`. A slug that does not exist fails the build, naming the post and listing the authors. AI-written pieces are credited to `r7`, never to Hunter |
 | `canonicalUrl` | URL | no | Only when the post was first published elsewhere |
 | `aiAssist` | `'none' \| 'edited' \| 'drafted'` | no | If the author wants the "How this was made" line (see `DECISIONS.md` §C). Shown as a quiet note under the byline |
+
+## Authors
+
+One JSON file per author in `src/content/authors/`, named by its slug (`hunter-newton.json`, `r7.json`). Editable in the admin (**Authors**). Every post names one through `author`; the byline, the author page `/authors/<slug>/`, the "By author" filter, the structured data and the feeds follow from it.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `slug` | string | yes | Must equal the file name (the build says so if not). The address is `/authors/<slug>/` |
+| `kind` | `'person' \| 'agent'` | yes | A person is marked up as a `Person`, an agent as an `Organization`, and an agent's posts get the **AI-written** label and the footer note |
+| `name` | string | agent | A person without one is named in `author.name` in `src/data/site.json` |
+| `subtitle` | string, 60 characters at most | no | Shown under the name, e.g. `Orbit AI Agent` |
+| `bio` | string | agent | A person without one uses `author.bio` in `site.json` |
+| `avatar` | path | no | A person without one uses `author.photo` in `site.json`, or initials when that is empty. An agent uses the R7 mark, `/assets/r7-mark.svg` |
+| `note` | string | no | Footer note, shown at the end of every post by this author. Used for agents, never shown on a person's post. R7's text is interim and lives in `docs/VOICE_AND_COPY.md` too |
+
+Hunter's name, bio and photo exist once, in `site.json`: the author file holds only `slug` and `kind`. The About page reads the same place.
 
 ## Drafts and scheduled posts
 
@@ -126,6 +143,41 @@ Body sections the template expects (as `##` headings): **Why I built it**, **How
 | `relatedProject` | string (project slug) | no | |
 
 **Fetched at build time from GitHub** (never typed by hand, never fetched in the visitor's browser): `description`, `language`, `stars`, `forks`, `license`, `topics`, `pushedAt`, `latestRelease`. The build must tolerate GitHub being unreachable or rate-limited: fall back to the last good data (cache it in `.cache/github.json`, not in git) and never fail the build because of it.
+
+## Pages (`src/content/pages/`)
+
+A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages > About page**). Only `about.md` exists; a later page reuses the same collection, schema and renderer (`src/components/Sections.astro`). The file is front matter only (no body).
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `title` | string | yes | The page's one `h1`. Up to 90 characters; one phrase may be wrapped in `*asterisks*` for italic brass, as in a post |
+| `seoTitle` | string | no | Same rule as on every post: at most 49 characters |
+| `description` | string | yes | The meta description (about 155 characters reads best; at most 180). Not shown on the page |
+| `sections` | block[] | no | The page, top to bottom |
+
+Each block is `- type: <name>` plus its own fields. Every field is checked by the schema (`src/lib/page-sections.ts`), strictly: an unknown field or type fails the build with the block's position (`sections.1.alt` is the second block, counting from `sections.0`).
+
+| `type` | Fields | What it draws |
+|---|---|---|
+| `heading` | `text`, `level` (2 or 3, default 2) | An `h2` or `h3` in the reading column |
+| `text` | `text` (Markdown) | Paragraphs, bold, italic, links, lists, code. Raw HTML is removed. Straight quotes stay straight |
+| `image` | `image`, `alt`, `decorative`, `caption`, `width` (`narrow` default, `wide`, `full`) | The `Figure` article component. Narrow sits in the text column; wide and full leave it and start a new row (full reaches both edges of the window) |
+| `portrait` | `image`, `alt`, `decorative`, `side` (`left` default, `right`), `text` (Markdown) | The picture in a side column (sticky on wide screens, above the text on a phone) with the text beside it |
+| `quote` | `text`, `attribution` | The `Quote` article component (brass rule, display italic) |
+| `callout` | `kind` (`info`, `tip`, `warn`), `title`, `text` | The `Callout` article component |
+| `links` | `items`: `label`, `url`, `note` | The `.link-list` panel; an external address gets the external icon |
+| `button` | `label`, `url` | A solid `.btn` |
+| `divider` | `style` (`rule` default, `dots`) | The `Divider` article component |
+
+Rules the build enforces (the form does too where Decap can):
+
+- **Alt text.** `image` and `portrait` need `alt`. An empty `alt` is allowed only when the block has `decorative: true`, and then the picture is drawn with `alt=""`.
+- **Addresses.** A button's or link's `url` is `https://…` or a page on this site starting with a single `/`. `http:`, `//host`, `mailto:` and `javascript:` are refused. A picture's `image` is a file of this site (`/media/x.jpg`, in `public/media/`); another site's picture is refused, as for `Figure`. The file must exist: the build reads its size so the page reserves the space (no layout shift).
+- **Which blocks sit beside a portrait.** A `portrait` starts a side-by-side row: the `heading` directly above it, the portrait's own text, and every block after it stay in the text column until a `divider`, a wide or full `image`, or the next `portrait` ends the row (`layoutSections`). That is how About keeps its picture beside both of its sections.
+
+The About page's text is fixed by a test: `tests/about.spec.js` compares the rendered page with `tests/fixtures/about-text.txt` line by line. Change the fixture in the same commit as a deliberate change to the words. The Person structured data on /about/ still reads the name and bio from `src/data/site.json` (the author's profile), not from the page text, so a change to the bio in both places is two edits.
+
+`/styleguide/sections/` (noindex, unlinked, in `tests/routes.js`) draws one of every block with the real renderer, for the axe and width checks.
 
 ## Typed schema (Astro content collections)
 

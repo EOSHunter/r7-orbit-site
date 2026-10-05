@@ -35,6 +35,10 @@ export const PIXEL = Buffer.from(
 
 const GITHUB_STATUS = 'https://www.githubstatus.com';
 
+// The About page as it is in the repository: the real file, so the test follows it. Decap reads it from the blob API (base64).
+export const ABOUT_MD = readFileSync(new URL('../src/content/pages/about.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+const ABOUT_SHA = 'aboutfilesha';
+
 let nextSha = 1;
 
 /** What GitHub answers to the calls the editor makes to list, read and save entries (just enough for it to carry on). */
@@ -46,6 +50,13 @@ function githubApi(method, path) {
   }
   if (path === repo) {
     return { owner: { login: 'EOSHunter' }, permissions: { pull: true, push: true }, default_branch: 'main' };
+  }
+  // The About page file: Decap finds its blob in the folder's tree, then reads the blob as raw text.
+  if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/content/pages')) {
+    return { sha: sha(), tree: [{ path: 'about.md', type: 'blob', mode: '100644', sha: ABOUT_SHA, size: ABOUT_MD.length }], truncated: false };
+  }
+  if (method === 'GET' && path === `${repo}/git/blobs/${ABOUT_SHA}`) {
+    return { sha: ABOUT_SHA, encoding: 'base64', content: Buffer.from(ABOUT_MD).toString('base64'), size: ABOUT_MD.length };
   }
   if (path.startsWith(`${repo}/branches/`)) {
     return { name: 'main', commit: { sha: 'abc', commit: { tree: { sha: 'def' } } } };

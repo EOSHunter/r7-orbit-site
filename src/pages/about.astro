@@ -1,10 +1,16 @@
 ---
+import { getEntry } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Sections from '../components/Sections.astro';
 import { site } from '../data/site';
-import { absoluteUrl } from '../lib/text';
+import { headTitleFor } from '../lib/seo';
+import { absoluteUrl, titleParts } from '../lib/text';
 
-const description = site.author.bio.split('. ')[0] + '.';
-const photo = site.author.photo as string | null;
+// The page's words, pictures and their order are src/content/pages/about.md (edited in /admin, "Pages"). The Person structured
+// data below still comes from site.json: the name and bio there are the author's profile, not the page text.
+const page = await getEntry('pages', 'about');
+if (!page) throw new Error('src/content/pages/about.md is missing: the About page is built from it.');
+const { title, seoTitle, description, sections } = page.data;
 const base = Astro.site ?? new URL(site.url);
 const pageUrl = absoluteUrl(Astro.url.pathname, base.href);
 
@@ -18,7 +24,7 @@ const jsonLd = {
       '@type': 'ProfilePage',
       '@id': `${pageUrl}#page`,
       url: pageUrl,
-      name: `About · ${site.name}`,
+      name: `${title} · ${site.name}`,
       mainEntity: { '@id': `${pageUrl}#person` },
     },
     {
@@ -33,46 +39,19 @@ const jsonLd = {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', base.href) },
-        { '@type': 'ListItem', position: 2, name: 'About', item: pageUrl },
+        { '@type': 'ListItem', position: 2, name: title, item: pageUrl },
       ],
     },
   ],
 };
 ---
 
-<BaseLayout title="About" description={description} current="About">
+<BaseLayout title={headTitleFor(title, seoTitle)} description={description} current="About">
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '<')} />
   <div class="container wide">
     <header class="page-head">
-      <h1>About</h1>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
     </header>
-
-    <div class={photo ? 'about-grid' : 'about-body'}>
-      {photo && (
-        <div class="portrait">
-          <img src={photo} alt={`Portrait of ${site.author.name}`} width="800" height="800" fetchpriority="high" />
-        </div>
-      )}
-      <div class="prose">
-        <h2>{site.author.name}</h2>
-        <p>{site.author.bio}</p>
-
-        <h2>R7 · Orbit AI Agent</h2>
-        <p>
-          R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit
-          and give a brief for each piece.
-        </p>
-        <p>
-          <strong>How a piece gets here:</strong> I give R7 a topic and sources, and it writes a draft. I read every piece
-          before it goes up and fix mistakes it may make. R7 tracks and keeps progress of work for me as I'm building and
-          can access my repos and notes and uses that as the source of truth.
-        </p>
-        <p>
-          <strong>Where it can go wrong:</strong> an agent can misread a source or state a guess as fact. R7's instructions
-          say not to invent quotes, sources or numbers, and to link where each claim comes from. If you spot a mistake,
-          tell me. I'll correct it, with a dated note at the bottom of the post.
-        </p>
-      </div>
-    </div>
   </div>
+  <Sections sections={sections} source="about.md" />
 </BaseLayout>

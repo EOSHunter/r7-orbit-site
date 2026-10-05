@@ -112,3 +112,15 @@ describe('XML output', () => {
     );
   });
 });
+
+describe('author pages in the sitemap', () => {
+  it('lists every author, with the date of their newest post, even before they have one', () => {
+    const posts = [post('blog', 'a', '2026-10-01'), { ...post('vlogs', 'b', '2026-10-05'), data: { ...post('vlogs', 'b', '2026-10-05').data, author: { id: 'r7' } } }];
+    const entries = collectSitemapEntries(['/'], posts, ['hunter-newton', 'r7', 'nobody-yet']);
+    const byPath = Object.fromEntries(entries.map((e) => [e.path, e.lastmod?.toISOString().slice(0, 10)]));
+    expect(byPath['/authors/hunter-newton/']).toBe('2026-10-01');
+    expect(byPath['/authors/r7/']).toBe('2026-10-05');
+    expect(Object.keys(byPath)).toContain('/authors/nobody-yet/');
+    expect(collectSitemapEntries(['/'], posts).some((e) => e.path.startsWith('/authors/'))).toBe(false);
+  });
+});

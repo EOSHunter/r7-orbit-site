@@ -1,6 +1,8 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AuthorByline from '../../components/AuthorByline.astro';
+import AuthorNote from '../../components/AuthorNote.astro';
 import Icon from '../../components/Icon.astro';
 import PreviewBadge from '../../components/PreviewBadge.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
@@ -12,6 +14,8 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { renderMarkdown, splitTranscript } from '../../components/vlog/renderNotes';
 import { site } from '../../data/site';
+import { authorSlugOf } from '../../lib/authors';
+import { getAuthorMap } from '../../lib/authors-queries';
 import type { VlogCardData } from '../../lib/cards';
 import { adjacentPosts, postUrl, relatedPosts } from '../../lib/content';
 import { getPosts, type SitePost } from '../../lib/content-queries';
@@ -45,6 +49,7 @@ const data = post.data as VlogData;
 const durationOf = (p: SitePost<'vlogs'>) => (p.data as VlogData).duration;
 const title = plainTitle(data.title);
 const base = Astro.site ?? new URL(site.url);
+const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 
 const { notes, transcript } = data.transcript
   ? splitTranscript(post.body ?? '')
@@ -101,6 +106,8 @@ const breadcrumbs = JSON.stringify({
     youtubeId={data.youtubeId}
     videoUrl={data.videoUrl}
     chapters={data.chapters}
+    author={author}
+    base={base.href}
   />
   <script slot="head" type="application/ld+json" set:html={breadcrumbs} />
 
@@ -120,6 +127,7 @@ const breadcrumbs = JSON.stringify({
       </p>
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
       <ul class="meta-row" aria-label="Video details">
+        <li><AuthorByline author={author} /></li>
         <li><Icon name="calendar" /><time datetime={isoDate(data.date)}>{longDate(data.date)}</time></li>
         <li><Icon name="clock" /><span>{data.duration}</span></li>
         {data.updated && <li>Updated <time datetime={isoDate(data.updated)}>{longDate(data.updated)}</time></li>}
@@ -170,6 +178,7 @@ const breadcrumbs = JSON.stringify({
             </section>
           )
         }
+        <AuthorNote author={author} />
       </div>
 
       <aside class="sticky">

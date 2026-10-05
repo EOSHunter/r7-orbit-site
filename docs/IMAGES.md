@@ -37,14 +37,15 @@ There are two homes, because the site reads pictures in two ways.
 | Vlog poster | vlogs | `public/media/vlogs/x.jpg` | `poster: /media/vlogs/x.jpg` (falls back to `cover`) | no, but shrunk at build |
 | Project gallery | projects | `public/media/projects/x.jpg` | `gallery: [{ src: /media/projects/x.jpg, alt, caption }]` | no, but shrunk at build |
 | Image in a body | news, vlogs, projects, repos | `public/media/<kind>/x.jpg` | `![alt](/media/<kind>/x.jpg)`, and `*caption*` on the next line for a caption | no, but shrunk at build |
-| About page photo | (site) | `public/media/about/hunter-newton.jpg` | `author.photo` in `src/data/site.json`: `/media/about/hunter-newton.jpg` | no |
+| Image / Portrait block on the About page | Pages > About page | `public/media/about/x.jpg` | `image: /media/about/x.jpg` in `src/content/pages/about.md` (alt text or `decorative: true` is required by that page's schema) | no, but shrunk at build |
+| Author photo for search engines | (site) | `public/media/about/hunter-newton.jpg` | `author.photo` in `src/data/site.json`; not editable in the admin | no |
 
 Older files keep working wherever they are: `public/media/vlogs/building-vesper-drift/poster.jpg`, `public/media/projects/vesper-drift/poster.jpg` and `public/media/screenshot-2026-10-03-195701.png` were put there by hand, in per-post folders, before the admin had per-collection folders. A path in a post is just a path; nothing moves or renames them.
 
 ### Folders in the admin (`src/admin/config.ts`)
 
 - `media_folder: public/media` / `public_folder: /media` is the global library, the **Media** tab in the editor's top bar.
-- Each collection has its own folder: `media_folder: /public/media/<kind>`, `public_folder: /media/<kind>`. The leading `/` matters: without it Decap reads the folder relative to the post's own file. `mediaFolders(name)` builds the pair; a future page group (About) gets `...mediaFolders('about')`.
+- Each collection has its own folder: `media_folder: /public/media/<kind>`, `public_folder: /media/<kind>`. The leading `/` matters: without it Decap reads the folder relative to the post's own file. `mediaFolders(name)` builds the pair; the About page's Pages collection spells out the same pair in `src/admin/pages.ts` (config.ts imports that file, so it cannot import `mediaFolders` back).
 - The blog collection's folder is `/src/assets/blog` for both (so the Image blocks write `/src/assets/blog/x.jpg`), and its `cover` field names `/public/media/blog` itself. `featuredImage` has `media_folder: /src/assets/blog` and `public_folder: ../../assets/blog`.
 - Inside one collection every image field and block shares one folder, so a picture uploaded for a poster can be picked again as the cover. Decap's picker shows one folder at a time, so **between** collections a picture is uploaded again (the build warns about identical files, below). The **Media** tab lists and uploads to the global folder.
 

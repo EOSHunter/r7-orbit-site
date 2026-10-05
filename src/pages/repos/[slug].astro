@@ -1,6 +1,8 @@
 ---
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AuthorByline from '../../components/AuthorByline.astro';
+import AuthorNote from '../../components/AuthorNote.astro';
 import Icon from '../../components/Icon.astro';
 import PreviewBadge from '../../components/PreviewBadge.astro';
 import PostCard from '../../components/PostCard.astro';
@@ -9,6 +11,8 @@ import ReadmeBlock from '../../components/ReadmeBlock.astro';
 import StatsRow from '../../components/StatsRow.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import { toCard, type RepoData } from '../../components/detailCards';
+import { authorSlugOf } from '../../lib/authors';
+import { getAuthorMap } from '../../lib/authors-queries';
 import { getAllPosts, getPosts, type SitePost } from '../../lib/content-queries';
 import { relatedPosts } from '../../lib/content';
 import { loadGitHubRepo } from '../../lib/github';
@@ -44,6 +48,7 @@ const readmeHtml = gh.status === 'ok' ? gh.readmeHtml : null;
 const all = await getAllPosts();
 const related = relatedPosts(post, all);
 const path = `/repos/${post.id}/`;
+const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 ---
 
 <BaseLayout
@@ -66,6 +71,7 @@ const path = `/repos/${post.id}/`;
     codeRepository={githubUrl}
     language={stats?.language}
     license={stats?.license}
+    author={author}
   />
   <div class="container">
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -83,6 +89,7 @@ const path = `/repos/${post.id}/`;
       </p>
       <h1 class="repo-name"><span class="owner">{owner}/</span><wbr />{name}</h1>
       <p class="t-lead">{data.summary}</p>
+      <p class="post-author"><AuthorByline author={author} /></p>
       {stats && <StatsRow language={stats.language} stars={stats.stars} forks={stats.forks} pushedAt={stats.pushedAt} />}
       <div class="cluster actions">
         <a class="btn solid" href={githubUrl} rel="noopener">
@@ -123,6 +130,8 @@ const path = `/repos/${post.id}/`;
             </section>
           )
         }
+
+        <AuthorNote author={author} />
       </div>
 
       <aside class="sticky" aria-label="Repository facts">

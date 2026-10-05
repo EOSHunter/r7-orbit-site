@@ -1,6 +1,7 @@
 // Maps published posts onto the shapes the cards take. Listing pages (home, archives, tags) use this.
 import type { CardData, Cover, ProjectStatus } from './cards';
 import { loadGitHubRepo } from './github';
+import { authorSlugOf } from './authors';
 import { postUrl, previewLabel, readTime } from './content';
 import type { SitePost } from './content-queries';
 import { isPlayable } from './play';
@@ -71,6 +72,7 @@ export async function toCard(post: SitePost, options: CardOptions = {}): Promise
     summary: (data as { summary?: string }).summary ?? '',
     date: data.date,
     tags: data.tags,
+    author: authorSlugOf(post),
     preview: previewLabel(post),
     ...options,
   };

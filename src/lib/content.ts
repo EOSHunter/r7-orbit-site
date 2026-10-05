@@ -12,6 +12,8 @@ export interface PostData {
   featured: boolean;
   draft: boolean;
   readTime?: number;
+  /** Reference to src/content/authors; absent means the default author (lib/authors.ts). */
+  author?: { id: string };
   series?: string;
   seriesOrder?: number;
 }

@@ -1,7 +1,7 @@
 ---
 // The toolbar, card grid, empty state and pagination of an archive. With JavaScript off it is the current page of cards and real
 // pagination links. With it on, the toolbar appears; the first filter loads the cards of the other pages from the two <template>s
-// (nothing is fetched), and tag / search / sort / kind state is kept in the URL query.
+// (nothing is fetched), and tag / search / sort / kind / author state is kept in the URL query.
 import Icon from './Icon.astro';
 import Pagination from './Pagination.astro';
 import PostCard from './PostCard.astro';
@@ -23,6 +23,8 @@ interface Props {
   tags: string[];
   /** Offer a kind filter (the mixed /latest/ archive). */
   kinds?: Kind[];
+  /** Offer a "By author" filter: the authors who have posts here (shown when there are two or more, like the kinds). */
+  authors?: { slug: string; name: string }[];
   noun: string;
   nounOne: string;
   /** Said when there is nothing at all in this listing. */
@@ -31,7 +33,7 @@ interface Props {
   what: string;
 }
 
-const { cards, start, size, page, pages, base, tags, kinds = [], noun, nounOne, empty, what } = Astro.props;
+const { cards, start, size, page, pages, base, tags, kinds = [], authors = [], noun, nounOne, empty, what } = Astro.props;
 const shown = cards.slice(start, start + size);
 const before = cards.slice(0, start);
 const after = cards.slice(start + size);
@@ -84,6 +86,19 @@ const total = cards.length;
           </div>
         </div>
       )}
+      {authors.length > 1 && (
+        <div class="toolbar-row">
+          <span class="eyebrow" id="authors-label">By author</span>
+          <div class="seg" role="group" aria-labelledby="authors-label" data-filter="author">
+            <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
+            {authors.map((a) => (
+              <button type="button" data-value={a.slug} aria-pressed="false">
+                {a.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {tags.length > 0 && (
         <div class="toolbar-row">
           <span class="eyebrow" id="tags-label">Tags</span>
@@ -125,6 +140,7 @@ const total = cards.length;
   interface Meta {
     index: number;
     kind: string;
+    author: string;
     tags: string[];
     hay: string;
   }
@@ -139,6 +155,7 @@ const total = cards.length;
     const search = root.querySelector<HTMLInputElement>('[data-search]');
     const sortBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-sort] button')];
     const kindBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-filter="kind"] button')];
+    const authorBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-filter="author"] button')];
     const tagBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-tags-filter] button')];
     const count = root.querySelector<HTMLElement>('[data-count]');
     const empty = root.querySelector<HTMLElement>('[data-empty]');
@@ -149,7 +166,7 @@ const total = cards.length;
     let items: HTMLElement[] = [];
     let expanded = false;
     let orderedBy: Sort = 'newest';
-    const state = { q: '', tags: [] as string[], sort: 'newest' as Sort, kind: 'all' };
+    const state = { q: '', tags: [] as string[], sort: 'newest' as Sort, kind: 'all', author: 'all' };
 
     function index(): void {
       items = [...grid!.querySelectorAll<HTMLElement>('[data-item]')];
@@ -158,6 +175,7 @@ const total = cards.length;
         meta.set(el, {
           index: i,
           kind: el.dataset.kind ?? '',
+          author: el.dataset.author ?? '',
           tags,
           hay: `${el.dataset.title ?? ''} ${el.dataset.text ?? ''} ${tags.join(' ')}`.toLowerCase(),
         });
@@ -191,6 +209,7 @@ const total = cards.length;
       if (state.tags.length) params.set('tag', state.tags.join(','));
       if (state.sort !== 'newest') params.set('sort', state.sort);
       if (state.kind !== 'all') params.set('kind', state.kind);
+      if (state.author !== 'all') params.set('author', state.author);
       const query = params.toString();
       try {
         history.replaceState(null, '', location.pathname + (query ? `?${query}` : '') + location.hash);
@@ -201,7 +220,7 @@ const total = cards.length;
 
     function render(): void {
       const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
-      const filtered = words.length > 0 || state.tags.length > 0 || state.sort !== 'newest' || state.kind !== 'all';
+      const filtered = words.length > 0 || state.tags.length > 0 || state.sort !== 'newest' || state.kind !== 'all' || state.author !== 'all';
       if (filtered) expand();
 
       if (orderedBy !== state.sort) {
@@ -218,6 +237,7 @@ const total = cards.length;
         const match =
           !!m &&
           (state.kind === 'all' || m.kind === state.kind) &&
+          (state.author === 'all' || m.author === state.author) &&
           state.tags.every((t) => m.tags.includes(t)) &&
           words.every((w) => m.hay.includes(w));
         const visible = filtered ? match : onThisPage.has(el);
@@ -236,6 +256,7 @@ const total = cards.length;
 
       press(sortBtns, (b) => (b.dataset.value ?? 'newest') === state.sort);
       press(kindBtns, (b) => (b.dataset.value ?? 'all') === state.kind);
+      press(authorBtns, (b) => (b.dataset.value ?? 'all') === state.author);
       press(tagBtns, (b) => state.tags.includes((b.dataset.tag ?? '').toLowerCase()));
       writeUrl();
     }
@@ -258,6 +279,12 @@ const total = cards.length;
       state.kind = b.dataset.value ?? 'all';
       render();
     });
+    root.querySelector('[data-filter="author"]')?.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest('button');
+      if (!b) return;
+      state.author = b.dataset.value ?? 'all';
+      render();
+    });
     root.querySelector('[data-tags-filter]')?.addEventListener('click', (e) => {
       const b = (e.target as Element).closest('button');
       const tag = b?.dataset.tag?.toLowerCase();
@@ -271,13 +298,14 @@ const total = cards.length;
         state.tags = [];
         state.sort = 'newest';
         state.kind = 'all';
+        state.author = 'all';
         if (search) search.value = '';
         render();
         search?.focus();
       }),
     );
 
-    // Start from the address: ?tag=evals,git&q=worktree&sort=oldest&kind=blog
+    // Start from the address: ?tag=evals,git&q=worktree&sort=oldest&kind=blog&author=r7
     const params = new URLSearchParams(location.search);
     state.q = params.get('q') ?? '';
     if (search) search.value = state.q;
@@ -289,6 +317,8 @@ const total = cards.length;
     state.sort = params.get('sort') === 'oldest' ? 'oldest' : 'newest';
     const kind = params.get('kind') ?? 'all';
     state.kind = kindBtns.some((b) => b.dataset.value === kind) ? kind : 'all';
+    const author = params.get('author') ?? 'all';
+    state.author = authorBtns.some((b) => b.dataset.value === author) ? author : 'all';
     if (location.hash === '#search') search?.focus();
     render();
   }

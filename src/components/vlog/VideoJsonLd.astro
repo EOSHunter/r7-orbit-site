@@ -1,5 +1,9 @@
 ---
-// VideoObject structured data. Only fields we know are written; empty ones are left out. Chapters become Clip parts.
+// VideoObject structured data, with the author as a Person or (for an agent) an Organization. Only fields we know are written; empty ones are left out. Chapters become Clip parts.
+import { site } from '../../data/site';
+import { authorLd, type Author } from '../../lib/authors';
+import { profileUrls, prune } from '../../lib/seo';
+
 interface Chapter {
   t: string;
   title: string;
@@ -16,9 +20,12 @@ interface Props {
   youtubeId?: string;
   videoUrl?: string;
   chapters?: Chapter[];
+  author: Author;
+  /** Site origin, for the author's page address. */
+  base: string;
 }
 
-const { name, description, uploadDate, duration, thumbnailUrl, youtubeId, videoUrl, chapters = [] } = Astro.props;
+const { name, description, uploadDate, duration, thumbnailUrl, youtubeId, videoUrl, chapters = [], author, base } = Astro.props;
 
 const seconds = (t: string) => t.split(':').reduce((total, part) => total * 60 + Number(part), 0);
 const total = seconds(duration);
@@ -47,6 +54,7 @@ const data = {
   description,
   ...(thumbnailUrl && { thumbnailUrl: [thumbnailUrl] }),
   uploadDate,
+  author: prune(authorLd(author, base, profileUrls(site.links))),
   duration: iso,
   ...(watch && { contentUrl: watch }),
   ...(youtubeId && { embedUrl: `https://www.youtube-nocookie.com/embed/${youtubeId}` }),

@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page is section 7. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -9,6 +9,7 @@ For the author. Plain steps, no coding needed. Everything happens at <https://r7
 3. Fill in the form. The required fields are marked. These are the ones that most often go wrong:
    - **Title**: up to 90 characters. **Summary**: one or two sentences, up to 180 characters.
    - **Browser title** (optional): a shorter title for browser tabs and search results, up to 49 characters. Use it when the title would push the page title past 60 characters; the page itself keeps the full title.
+   - **Author**: who the post is credited to. It starts as **Hunter Newton**. If an AI agent wrote the piece, pick **R7 · Orbit AI Agent** instead: it then shows an "AI-written" label under the title and the agent's note at the end. Never credit an AI-written piece to Hunter. Authors are the files in the **Authors** list; a new one appears in this menu after the site is next deployed.
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos. Every step for pictures is in [section 6, Adding images](#6-adding-images).
@@ -78,6 +79,7 @@ The live site keeps running the last good version, so there is no emergency. Fin
    | The log says (roughly) | Cause and fix |
    | --- | --- |
    | `Invalid frontmatter` / `Does not match schema` / `Unrecognized key` | A field is missing, too long or not allowed. Title is limited to 90 characters, summary to 180, tags to six lowercase hyphenated words. News needs a source URL and source name. Fix it in the editor and save again |
+   | `has author "x", but there is no author with that slug` | The **Author** is not one of the authors. Pick one from the menu again (or add the author under **Authors** first) |
    | `use a date like 2026-10-03` / `Invalid date` | The date is empty or was typed in the wrong form. Pick it with the date picker, or write `2026-10-03` |
    | `coverAlt is required when cover is set` / `featuredImageAlt` | An image has no alt text. Fill in the alt text field next to the image (use a short description; leave it empty only for a purely decorative cover) |
    | `Could not find image` / `Cannot find …` an image path | The image file was deleted or the path was typed by hand. Choose the image again in the editor |
@@ -137,7 +139,15 @@ Alt text is what a screen reader says in place of the picture, and what shows if
 
 ### Case 4: a picture on a page
 
-The About page photo is the author photo in the site settings. Until the editor has a form for the About page, it is changed by whoever maintains the site: the file is `public/media/about/hunter-newton.jpg` and `src/data/site.json` (`author.photo`) names it. Once the About page has its own form in the editor (a separate piece of work), its picture field works exactly like the poster above: **Choose an image**, **Upload**, **Choose selected**, then fill in the alt text. Pictures **inside** the text of any other page or post use Case 2.
+The About page is made of blocks ([section 7](#7-editing-the-about-page)), and its pictures work like the ones above.
+
+1. In the editor open **Pages**, then **About page**.
+2. Add an **Image** or **Portrait and text** block, or open an existing one.
+3. Click **Choose an image**, **Upload**, pick the file and **Choose selected**. Uploads go to their own folder for pages; you never type it.
+4. Fill in **Alt text**, or turn on **Decorative image** if the picture is only ornament. The page will not build without one or the other.
+5. Save. The preview on the right shows the picture.
+
+The small author photo that search engines read (the "Person" data) is a different thing: it is `author.photo` in `src/data/site.json` (today `public/media/about/hunter-newton.jpg`) and is changed by whoever maintains the site. Pictures **inside** the text of a blog post, news item, vlog, project or repo use Case 2.
 
 ### When the build complains
 
@@ -154,3 +164,25 @@ You will see the message in the editor when you press Save, or on the red check 
 | `… is not in src/assets/` | The picture was deleted. Choose it again in the block |
 
 To remove a picture you uploaded by mistake before saving: in the picture picker, select it and press **Delete**. A picture you no longer need after saving: delete its block in the body (or clear the field). The file stays in the repository, which is harmless.
+
+## 7. Editing the About page
+
+The About page is not a post. It is a list of **blocks** (a heading, some text, a picture, a quote and so on) that you add, re-order and remove. It lives under **Pages** in the editor and is saved, previewed and published like a post (sections 1 and 2). Its words are yours; nothing here writes them for you.
+
+1. Open <https://r7orbit.io/admin/>, sign in, and in the left list pick **Pages**, then **About page**.
+2. The top three boxes are the big heading of the page (**Page heading**), an optional **Browser title**, and the **Description for search results** (one or two sentences; it is not shown on the page).
+3. Under **Page sections** every block is one line. Click the small arrow on its left to open it and edit it; click it again to fold it. The preview on the right redraws as you type, using the site's own styles.
+4. **To add a block:** click **Add section** and choose its kind:
+   - **Heading**: a title for the part below it. Pick *Section heading* or the smaller *Sub-heading*.
+   - **Text**: paragraphs, with **bold**, links and lists. Leave a blank line between paragraphs.
+   - **Image**: a picture on its own, with an optional caption. **Width**: *Narrow* sits in line with the text, *Wide* is the width of the page, *Full* goes edge to edge of the window.
+   - **Portrait and text**: a picture beside some text (above it on a phone). Choose **Picture on the** left or right. The blocks you put after it stay beside the picture, until a **Divider**, a *Wide* or *Full* image, or another Portrait. A **Heading** placed directly above it also sits beside the picture.
+   - **Quote**, **Callout** (a note, a tip or a warning), **Links list** (one row per link), **Button** (a solid button that links somewhere) and **Divider** (a line or three dots between parts).
+5. **To re-order:** drag a block by the small handle (the two short lines) at the top of its box and drop it where it should go. Fold the block first if it is long: a tall block is hard to drop. The preview shows the new order straight away. Dragging needs a mouse or a finger; the editor has no keyboard way to move a block, so if you cannot drag, remove the block and add it again where you want it.
+6. **To remove a block:** click the cross at the top right of its box. Nothing is final until you publish, and the pull request keeps the old version.
+7. **To add an image:** add an **Image** (or **Portrait and text**) block, click **Choose an image**, then upload a file from your computer (or pick one already uploaded) and click **Choose selected**. Use your own picture, not stock. Then fill in **Alt text**: one plain sentence saying what the picture shows, for someone who cannot see it. The only exception is a picture that is purely decoration: turn on **Decorative image** and leave the alt text empty. If neither is done, the preview shows a red "Fix before saving" box and the build will stop.
+8. **Addresses** in a Button or Links list start with `https://` (another site) or with a single `/` (a page on this site, like `/subscribe/`). The editor refuses anything else and says why.
+9. **What the preview is not.** It is the page drawn with the site's real styles, so colours, type and spacing are right. It is not the real page: the header and footer are missing, the text is read by a simpler Markdown reader (headings, paragraphs, lists, bold, italic, code and links only), and the preview pane is narrower than a screen, so a portrait that sits beside the text on a computer may sit above it here. Open the Cloudflare preview link on the pull request (section 1, step 7) to see the real thing.
+10. **Save**, then **Publish** exactly as for a post (section 1, steps 7 to 9). The check on the pull request builds the site. If it is red, open it and read the first error: it names the block (`sections.2.alt` is the third block, counting from `sections.0`) and what is wrong, usually missing alt text or an address that does not start with `https://` or `/`.
+
+Good to know: the details search engines read about you (name and bio, the "Person" data) come from `src/data/site.json`, not from this page. If you change your bio here and want search engines to see the change too, it has to be changed there as well.

@@ -1,7 +1,9 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import site from './data/site.json';
+import { sectionSchema } from './lib/page-sections';
+import { DEFAULT_AUTHOR } from './lib/authors';
 import { seoTitleMax } from './lib/seo';
 
 // Schema from docs/CONTENT_MODEL.md. `.strict()` turns a misspelt field into a readable build error
@@ -13,14 +15,16 @@ const isoDate = z.coerce.date({ error: 'use a date like 2026-10-03' });
 
 const seoTitleLimit = seoTitleMax(site.name);
 
+// Optional shorter title for the browser tab, search results and og:title; the page headline and JSON-LD keep `title`.
+const seoTitle = z
+  .string()
+  .min(1)
+  .max(seoTitleLimit, `seoTitle is too long: at most ${seoTitleLimit} characters, so "· ${site.name}" still fits in 60`)
+  .optional();
+
 const common = {
   title: z.string().min(1).max(90),
-  // Optional shorter title for the browser tab, search results and og:title; the page headline and JSON-LD keep `title`.
-  seoTitle: z
-    .string()
-    .min(1)
-    .max(seoTitleLimit, `seoTitle is too long: at most ${seoTitleLimit} characters, so "· ${site.name}" still fits in 60`)
-    .optional(),
+  seoTitle,
   date: isoDate,
   updated: isoDate.optional(),
   summary: z.string().min(1).max(180),
@@ -30,7 +34,9 @@ const common = {
   featured: z.boolean().default(false),
   draft: z.boolean().default(false),
   readTime: z.number().int().positive().optional(),
-  author: z.string().optional(),
+  // Who the post is credited to: the slug of a file in src/content/authors/. `prefault` runs the default through `reference`, so an
+  // absent field reads as { collection: 'authors', id: 'hunter-newton' }. That the slug exists is checked in lib/content-queries.ts.
+  author: reference('authors').prefault(DEFAULT_AUTHOR),
   canonicalUrl: z.url().optional(),
   aiAssist: z.enum(['none', 'edited', 'drafted']).optional(),
 };
@@ -61,7 +67,47 @@ function collection(
   });
 }
 
+// Pages made of blocks (docs/CONTENT_MODEL.md "Pages"). Only About uses it so far; the file is src/content/pages/about.md.
+const pages = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
+  schema: z
+    .object({
+      title: z.string().min(1).max(90),
+      seoTitle,
+      // The meta description (docs/SEO_AND_SHARING.md): 155 characters reads best in search results.
+      description: z.string().min(1).max(180),
+      sections: z.array(sectionSchema).max(60).default([]),
+    })
+    .strict(),
+});
+
+// The people and agents a post can be credited to (docs/CONTENT_MODEL.md "Authors"). The file name is the slug; `slug` repeats it
+// so the editor can show it, and getAuthors() fails the build if the two differ. A person without `name`, `bio` or `avatar` is
+// read from `author` in src/data/site.json, so Hunter's text exists once.
+const authors = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/authors' }),
+  schema: () =>
+    z
+      .object({
+        slug,
+        kind: z.enum(['person', 'agent']),
+        name: z.string().min(1).optional(),
+        subtitle: z.string().min(1).max(60).optional(),
+        bio: z.string().min(1).optional(),
+        avatar: z.string().optional(),
+        note: z.string().min(1).optional(),
+      })
+      .strict()
+      .superRefine((data, ctx) => {
+        if (data.kind !== 'agent') return;
+        for (const key of ['name', 'bio'] as const) {
+          if (!data[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required for an agent (only a person is read from site.json)` });
+        }
+      }),
+});
+
 export const collections = {
+  authors,
   news: collection('news', {
     sourceUrl: z.url(),
     sourceName: z.string().min(1),
@@ -152,4 +198,5 @@ export const collections = {
     install: z.string().optional(),
     relatedProject: z.string().optional(),
   }),
+  pages,
 };

@@ -7,6 +7,8 @@ import site from '../data/site.json';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { seoTitleMax } from '../lib/seo';
+import { pageCollections } from './pages';
+import { authorOptions, DEFAULT_AUTHOR } from './authors';
 
 // ---- Where the live admin signs in (edit here; the Cloudflare steps are in docs/DEPLOY_CLOUDFLARE.md) -----------------------
 
@@ -183,12 +185,15 @@ const readTime = field({
   required: false,
   hint: 'Leave empty to have it worked out from the text.',
 });
+// ---- Author (authors block: the `author` select on every post; the authors collection is further down) ---------------
 const author = field({
   name: 'author',
   label: 'Author',
-  widget: 'string',
+  widget: 'select',
+  options: authorOptions,
+  default: DEFAULT_AUTHOR,
   required: false,
-  hint: 'Leave empty for the site author.',
+  hint: 'Who the post is credited to. Hunter Newton unless an AI agent wrote it: then pick R7. Never credit an AI-written post to Hunter.',
 });
 const canonicalUrl = urlField(
   'canonicalUrl',
@@ -673,12 +678,74 @@ export const reposCollection = collection({
   fields: repoFields,
 });
 
+// ---- Authors (authors block) --------------------------------------------------------------------------------------
+// One JSON file per author in src/content/authors/, named by its slug. Hunter's name, bio and photo are not repeated here:
+// they are read from site.json unless a field below is filled in. An agent needs a name and a bio (the build checks).
+
+const authorFields: CmsField[] = [
+  field({
+    name: 'slug',
+    label: 'Slug',
+    widget: 'string',
+    pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lowercase words joined with hyphens, e.g. hunter-newton'],
+    hint: 'The address of the author page (/authors/<slug>/) and the file name. It must match the file name: do not change it after posts use it.',
+  }),
+  field({
+    name: 'kind',
+    label: 'Kind',
+    widget: 'select',
+    options: [
+      { label: 'Person', value: 'person' },
+      { label: 'AI agent', value: 'agent' },
+    ],
+    default: 'person',
+  }),
+  field({
+    name: 'name',
+    label: 'Name',
+    widget: 'string',
+    required: false,
+    hint: 'Required for an agent. Leave empty for a person: the name comes from site.json.',
+  }),
+  field({ name: 'subtitle', label: 'Subtitle', widget: 'string', required: false, pattern: ['^.{1,60}$', '60 characters at most'] }),
+  field({
+    name: 'bio',
+    label: 'Bio',
+    widget: 'text',
+    required: false,
+    hint: 'Required for an agent. Leave empty for a person: the bio comes from site.json.',
+  }),
+  imageField('avatar', 'Avatar', 'Leave empty for a person to use the photo in site.json. An agent uses its mark, e.g. /assets/r7-mark.svg.'),
+  field({
+    name: 'note',
+    label: 'Footer note',
+    widget: 'text',
+    required: false,
+    hint: 'Shown at the end of every post by this author. Used for an AI agent; leave empty for a person.',
+  }),
+];
+
+export const authorsCollection = {
+  name: 'authors',
+  label: 'Authors',
+  label_singular: 'Author',
+  folder: 'src/content/authors',
+  extension: 'json',
+  format: 'json',
+  create: true,
+  slug: '{{slug}}',
+  identifier_field: 'slug',
+  summary: '{{slug}} · {{kind}}',
+  fields: authorFields,
+} as unknown as CmsCollection;
+
 export const collections: CmsCollection[] = [
   blogCollection,
   newsCollection,
   vlogsCollection,
   projectsCollection,
   reposCollection,
+  authorsCollection,
 ];
 
 export function buildConfig(env: AdminEnv): CmsConfig {
@@ -707,11 +774,12 @@ export function buildConfig(env: AdminEnv): CmsConfig {
     media_folder: MEDIA_FOLDER,
     public_folder: PUBLIC_FOLDER,
     // How an uploaded file is named: lowercase, accents dropped, anything but letters, digits, "-", "_" and "." becomes "-".
-    // "My Photo (1).JPG" is stored as my-photo-1.jpg. The same setting names new posts' files, which are already hyphenated.
+    // "My Photo (1).JPG" is stored as my-photo-1-.jpg. The same setting names new posts' files, which are already hyphenated.
     slug: { encoding: 'ascii', clean_accents: true, sanitize_replacement: '-' },
     // ---- end images --------------------------------------------------------------------------------------------------
-    // Only blog posts have a live preview (the blog collection turns it on).
+    // Only blog posts and the About page have a live preview (their collections turn it on).
     editor: { preview: false },
-    collections,
+    // The five post collections, then the block-built pages (src/admin/pages.ts).
+    collections: [...collections, ...pageCollections],
   };
 }

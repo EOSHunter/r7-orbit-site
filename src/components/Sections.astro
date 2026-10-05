@@ -1,0 +1,78 @@
+---
+// Draws a page built from blocks (the `pages` collection: src/lib/page-sections.ts). Each block is the author's own words and
+// pictures; this decides how they sit. Reading-column blocks (heading, text, quote, callout, links, button, divider, a narrow
+// image) share one `.prose` column; a portrait puts its picture in a side column beside the text; a wide or full image leaves the
+// column. The article components (Callout, Quote, Figure, Divider) draw what they already draw in blog posts.
+//
+// Used by src/pages/about.astro. The admin preview draws the same rows from strings (src/admin/sections-html.ts).
+import Figure from './article/Figure.astro';
+import SectionBlock from './SectionBlock.astro';
+import { layoutSections, SECTION_LABELS, type ImageSection, type PortraitSection, type Section } from '../lib/page-sections';
+import { imageSize, type ImageSize } from '../lib/section-images';
+import { renderSectionMarkdown } from '../lib/section-markdown';
+import '../styles/markdown.css';
+import '../styles/article.css';
+import '../styles/sections.css';
+
+interface Props {
+  sections: readonly Section[];
+  /** The page's file, for errors: "about.md". */
+  source: string;
+}
+
+const { sections, source } = Astro.props;
+
+// Everything the markup needs that takes a read or a render, done once up front: the Markdown of each text box (HTML,
+// sanitised) and the size of each picture (so the page reserves its space).
+const html = new Map<Section, string>();
+const sizes = new Map<Section, ImageSize>();
+for (const [i, section] of sections.entries()) {
+  const where = `${source}, block ${i + 1} (${SECTION_LABELS[section.type]})`;
+  if ('text' in section && section.type !== 'heading') html.set(section, await renderSectionMarkdown(section.text));
+  if (section.type === 'image' || section.type === 'portrait') sizes.set(section, await imageSize(section.image, where));
+}
+
+const rows = layoutSections(sections);
+const altOf = (s: ImageSection | PortraitSection) => (s.decorative ? '' : s.alt);
+---
+
+<div class="sections">
+  {
+    rows.map((row) => (
+      <div class={row.kind === 'picture' && row.block.width === 'full' ? 'sec-row sec-row-full' : 'container wide sec-row'}>
+        {row.kind === 'split' ? (
+          <div class="about-grid" data-side={row.portrait.side}>
+            <div class="portrait">
+              <img
+                src={row.portrait.image}
+                alt={altOf(row.portrait)}
+                width={sizes.get(row.portrait)?.width}
+                height={sizes.get(row.portrait)?.height}
+                fetchpriority="high"
+              />
+            </div>
+            <div class="prose">
+              {row.lead && (row.lead.level === 3 ? <h3>{row.lead.text}</h3> : <h2>{row.lead.text}</h2>)}
+              <Fragment set:html={html.get(row.portrait)} />
+              {row.blocks.map((block) => <SectionBlock block={block} html={html.get(block)} size={sizes.get(block)} />)}
+            </div>
+          </div>
+        ) : row.kind === 'picture' ? (
+          <Figure
+            src={row.block.image}
+            alt={altOf(row.block)}
+            decorative={row.block.decorative}
+            caption={row.block.caption || undefined}
+            align={row.block.width === 'full' ? 'full' : 'center'}
+            width={sizes.get(row.block)?.width}
+            height={sizes.get(row.block)?.height}
+          />
+        ) : (
+          <div class="prose">
+            {row.blocks.map((block) => <SectionBlock block={block} html={html.get(block)} size={sizes.get(block)} />)}
+          </div>
+        )}
+      </div>
+    ))
+  }
+</div>

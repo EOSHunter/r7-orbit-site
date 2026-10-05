@@ -1,0 +1,22 @@
+---
+// Who wrote it: avatar, name (a link to the author's page), the subtitle if there is one and, for an agent, the "AI-written" chip.
+// Used wherever a post's author is shown: the article byline, the vlog meta row, the project and repo headers.
+import AgentChip from './AgentChip.astro';
+import AuthorAvatar from './AuthorAvatar.astro';
+import { isAgent, type Author } from '../lib/authors';
+
+interface Props {
+  author: Author;
+}
+
+const { author } = Astro.props;
+---
+
+<span class="author" data-author={author.slug}>
+  <AuthorAvatar author={author} />
+  <span class="author-id">
+    <a class="author-name" href={author.path}>{author.name}</a>
+    {author.subtitle && <span class="author-sub">{author.subtitle}</span>}
+  </span>
+  {isAgent(author) && <AgentChip />}
+</span>

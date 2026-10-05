@@ -59,16 +59,18 @@ export interface PreviewOptions {
   /** The icon sprite markup (IconSprite.astro), so `<use href="#i-…">` resolves inside the preview frame. */
   sprite: string;
   authorName: string;
+  /** slug -> name of every author, so the preview shows a name and not the slug the form stores. */
+  authorNames?: Record<string, string>;
 }
 
-export function blogPreview({ sprite, authorName }: PreviewOptions) {
+export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOptions) {
   return function BlogPreview({ entry, widgetFor, getAsset, fields }: PreviewTemplateComponentProps) {
     const data = (entry.get('data')?.toJS() ?? {}) as Data;
     const body = str(data.body);
     const title = str(data.title) || 'Untitled post';
     const summary = str(data.summary);
     const tags = (Array.isArray(data.tags) ? data.tags : []).filter((t): t is string => typeof t === 'string' && !!t);
-    const author = str(data.author) || authorName;
+    const author = authorNames[str(data.author)] ?? (str(data.author) || authorName);
     const published = str(data.date);
     const updated = str(data.updated);
     const minutes = Number(data.readTime) > 0 ? Number(data.readTime) : Math.max(1, Math.ceil(countWords(body) / WORDS_PER_MINUTE));

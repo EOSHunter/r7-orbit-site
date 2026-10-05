@@ -1,0 +1,21 @@
+/* Pages built from blocks (src/components/Sections.astro, and the admin preview). Tokens only.
+   The portrait grid itself (.about-grid, .portrait) lives in site.css; the blocks' own looks come from the article components
+   (article.css) and .prose, .link-list and .btn. Only what a block needs on top of those is here. */
+
+/* One row per run of blocks. The page head above has no bottom padding of its own, so the first row opens the page body. */
+.sections > .sec-row { padding-block: var(--s-6); }
+.sections > .sec-row:first-child { padding-top: var(--s-7); }
+.sections > .sec-row:last-child { padding-bottom: var(--s-8); }
+.sec-row > .about-grid { padding-block: 0; }
+
+/* A full-width picture reaches both edges of the window, so it has no frame at the sides. */
+.sec-row-full .art-fig { border-inline: 0; }
+
+/* The portrait on the right: the picture still comes first in the page, so on a phone it stays on top. */
+@media (min-width: 900px) {
+  .about-grid[data-side='right'] { grid-template-columns: minmax(0, 1fr) 17rem; }
+  .about-grid[data-side='right'] .portrait { order: 2; }
+}
+
+/* A long address pasted into the text must wrap rather than push the page wider than the window. */
+.sections .prose { overflow-wrap: anywhere; }

@@ -55,6 +55,8 @@ const routes = [
   { path: '/games/' }, // noindex while no game is published (empty state); the layout variants are tested on /styleguide/games/
   { path: '/tags/' },
   ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
+  { path: '/authors/hunter-newton/' },
+  { path: '/authors/r7/' },
   { path: '/about/' },
   { path: '/subscribe/' },
   { path: '/privacy/' },
@@ -64,7 +66,9 @@ const routes = [
   { path: '/styleguide/specimen/', noindex: true },
   { path: '/styleguide/article-components/', noindex: true },
   { path: '/styleguide/games/', noindex: true }, // fixture for tests/games.spec.js: the games hub with 0, 1, 2 and 5 games
+  { path: '/styleguide/author-empty/', noindex: true }, // fixture for tests/authors.spec.js: an author with no posts
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
+  { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

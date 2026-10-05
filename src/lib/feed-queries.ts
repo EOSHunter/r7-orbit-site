@@ -6,6 +6,8 @@ import { render } from 'astro:content';
 import sanitizeHtml from 'sanitize-html';
 import { site } from '../data/site';
 import { articleComponents } from '../components/article/mdx';
+import { authorSlugOf, type Author } from './authors';
+import { getAuthorMap } from './authors-queries';
 import { getAllPosts, getPosts, type SitePost } from './content-queries';
 import type { CollectionName } from './content';
 import { postUrl } from './content';
@@ -46,7 +48,7 @@ function videoLink(post: SitePost): string | undefined {
   return data.youtubeId ? `https://www.youtube.com/watch?v=${data.youtubeId}` : data.videoUrl;
 }
 
-async function toItem(post: SitePost, container: AstroContainer): Promise<FeedItem> {
+async function toItem(post: SitePost, container: AstroContainer, authors: Map<string, Author>): Promise<FeedItem> {
   const link = absoluteUrl(postUrl(post), site.url);
   const summary = post.data.summary as string;
   const data = post.data as { sourceName?: string; sourceUrl?: string };
@@ -69,6 +71,7 @@ async function toItem(post: SitePost, container: AstroContainer): Promise<FeedIt
     description: descriptionFor(post, summary),
     contentHtml,
     categories: post.data.tags,
+    creator: authors.get(authorSlugOf(post))?.name,
   };
 }
 
@@ -83,7 +86,8 @@ export async function feedXml(kind?: CollectionName): Promise<string> {
   const posts = kind ? await getPosts(kind) : await getAllPosts();
   // The MDX renderer is what lets the container render a post that uses the article components.
   const container = await AstroContainer.create({ renderers: await loadRenderers([mdxRenderer()]) });
-  const items = await Promise.all(posts.slice(0, 50).map((post) => toItem(post, container)));
+  const authors = await getAuthorMap();
+  const items = await Promise.all(posts.slice(0, 50).map((post) => toItem(post, container, authors)));
   const path = kind ? `/${kind}/rss.xml` : '/rss.xml';
   return buildRss(
     {

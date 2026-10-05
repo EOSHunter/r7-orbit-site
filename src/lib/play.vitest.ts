@@ -24,7 +24,13 @@ describe('play helpers', () => {
 });
 
 // The projects schema, read the way src/admin/config.vitest.ts does: `defineCollection` returns what it is given.
-vi.mock('astro:content', () => ({ defineCollection: (c: unknown) => c }));
+vi.mock('astro:content', async () => {
+  const { z } = await import('astro/zod');
+  return {
+    defineCollection: (c: unknown) => c,
+    reference: (collection: string) => z.string().transform((id) => ({ collection, id })),
+  };
+});
 vi.mock('astro/loaders', () => ({ glob: () => ({}) }));
 
 describe('the projects schema', () => {
