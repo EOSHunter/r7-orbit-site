@@ -152,6 +152,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
       (options as (string | { value: string })[]).map((o) => (typeof o === 'string' ? o : o.value));
     for (const [collection, name] of [
       ['projects', 'status'],
+      ['projects', 'playMode'],
       ['repos', 'readme'],
       ['blog', 'aiAssist'],
     ]) {
@@ -166,6 +167,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
     for (const [collection, name] of [
       ['projects', 'gallery'],
       ['projects', 'timeline'],
+      ['projects', 'controls'],
       ['vlogs', 'chapters'],
     ]) {
       const element = inner(shapes[collection][name]).def.element;
@@ -190,6 +192,9 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
       ['projects', 'repo', ['owner/name', 'a.b/c-d_e'], ['owner', 'owner/name/extra', 'https://github.com/o/n']],
       ['projects', 'liveUrl', ['https://example.com/r7-orbit'], ['example.com']],
       ['projects', 'repoUrl', ['https://github.com/o/n'], ['github.com/o/n']],
+      ['projects', 'playUrl', ['https://play.r7orbit.io/vesper-drift/'], ['play.r7orbit.io', 'http://play.r7orbit.io/']],
+      ['projects', 'playAspect', ['16:9', '4:3', '21:9'], ['16/9', '16:0', 'wide', '16:9; x']],
+      ['projects', 'playNote', ['Best on desktop with a mouse'], ['', 'x'.repeat(121)]],
       ['repos', 'repo', ['EOSHunter/r7-orbit-site'], ['r7-orbit-site']],
       ['repos', 'homepage', ['https://example.com'], ['example.com']],
     ];
@@ -238,9 +243,25 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
       ['projects', 'stack'],
       ['projects', 'gallery'],
       ['projects', 'timeline'],
+      ['projects', 'controls'],
+      ['projects', 'platforms'],
     ]) {
       expect(fieldsOf(collection)[name].default, name).toEqual([]);
       expect(shapes[collection][name].safeParse(undefined).success, name).toBe(true);
+    }
+  });
+
+  it('offers the playable fields with the schema defaults, and the same platform choices', async () => {
+    const shapes = await schemaShapes();
+    const projects = fieldsOf('projects');
+    expect(projects.playMode).toMatchObject({ widget: 'select', default: 'embed' });
+    expect(shapes.projects.playMode.safeParse(undefined).success).toBe(true);
+    expect(projects.playAspect).toMatchObject({ default: '16:9' });
+    expect(shapes.projects.playAspect.safeParse(undefined).success).toBe(true);
+    expect(projects.platforms).toMatchObject({ widget: 'select', multiple: true });
+    expect(projects.platforms.options).toEqual(inner(inner(shapes.projects.platforms).def.element as Zod).options);
+    for (const name of ['playUrl', 'playMode', 'playAspect', 'controls', 'playNote', 'platforms']) {
+      expect(String(projects[name].hint), name).not.toBe('undefined');
     }
   });
 

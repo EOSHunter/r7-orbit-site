@@ -48,6 +48,9 @@ const SUBTITLE_PATTERN: [string, string] = ['^.{1,140}$', '140 characters at mos
 const SUMMARY_PATTERN: [string, string] = ['^.{1,180}$', 'Required, one line, 180 characters at most'];
 const URL_PATTERN: [string, string] = ['^https?://\\S+$', 'A full address, starting with https://'];
 const OWNER_NAME_PATTERN: [string, string] = ['^[\\w.-]+/[\\w.-]+$', 'Use the form owner/name, e.g. EOSHunter/r7-orbit-site'];
+const HTTPS_URL_PATTERN: [string, string] = ['^https://\\S+$', 'A full address starting with https://'];
+const PLAY_ASPECT_PATTERN: [string, string] = ['^[1-9]\\d{0,2}:[1-9]\\d{0,2}$', 'Use width:height, e.g. 16:9 or 4:3'];
+const PLAY_NOTE_PATTERN: [string, string] = ['^.{1,120}$', '120 characters at most'];
 const YOUTUBE_ID_PATTERN: [string, string] = [
   '^[\\w-]{11}$',
   'A YouTube id is exactly 11 characters (letters, digits, - and _), not the whole link',
@@ -357,6 +360,68 @@ const vlogFields: CmsField[] = [
 
 // ---- Projects -----------------------------------------------------------------------------------------------------
 
+// A playable project: a browser game hosted at its own address. Everything here is optional; without Play URL the project
+// is an ordinary one. An embedded game's address must be one that public/_headers lets the site frame (frame-src).
+const playFields: CmsField[] = [
+  field({
+    name: 'playUrl',
+    label: 'Play URL',
+    widget: 'string',
+    required: false,
+    pattern: HTTPS_URL_PATTERN,
+    hint: 'Where the game runs, e.g. https://play.r7orbit.io/vesper-drift/. Setting it makes this a Playable project: a Play section on the page and a Playable badge on cards. https only. To embed it, its origin must be listed in frame-src in public/_headers.',
+  }),
+  field({
+    name: 'playMode',
+    label: 'Play mode',
+    widget: 'select',
+    options: ['embed', 'link'],
+    default: 'embed',
+    required: false,
+    hint: 'embed: the game loads in the page when the visitor presses Play. link: only a button that opens it in a new tab.',
+  }),
+  field({
+    name: 'playAspect',
+    label: 'Game aspect ratio',
+    widget: 'string',
+    default: '16:9',
+    required: false,
+    pattern: PLAY_ASPECT_PATTERN,
+    hint: 'Width:height of the game frame, e.g. 16:9 or 4:3. Only used when the game is embedded.',
+  }),
+  field({
+    name: 'controls',
+    label: 'Controls',
+    widget: 'list',
+    required: false,
+    default: [],
+    summary: '{{fields.key}}: {{fields.action}}',
+    hint: 'The controls legend under the game, one row per input. Needs a Play URL.',
+    fields: [
+      field({ name: 'key', label: 'Key or input', widget: 'string', hint: 'e.g. Space, W / Up arrow, Mouse.' }),
+      field({ name: 'action', label: 'What it does', widget: 'string', hint: 'e.g. Fire, Steer, Pause.' }),
+    ],
+  }),
+  field({
+    name: 'playNote',
+    label: 'Play note',
+    widget: 'string',
+    required: false,
+    pattern: PLAY_NOTE_PATTERN,
+    hint: 'One short line shown with the game, e.g. Best on desktop with a mouse. Needs a Play URL.',
+  }),
+  field({
+    name: 'platforms',
+    label: 'Platforms',
+    widget: 'select',
+    multiple: true,
+    options: ['desktop', 'mobile'],
+    required: false,
+    default: [],
+    hint: 'Where the game works, shown as small labels with it. Needs a Play URL.',
+  }),
+];
+
 const projectFields: CmsField[] = [
   title,
   date,
@@ -423,6 +488,7 @@ const projectFields: CmsField[] = [
     hint: 'What changed and when. Newest first reads best.',
     fields: [dateField('date', 'Date'), field({ name: 'text', label: 'What happened', widget: 'string' })],
   }),
+  ...playFields,
   tags,
   cover,
   coverAlt,

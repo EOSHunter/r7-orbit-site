@@ -1,5 +1,5 @@
 ---
-// JSON-LD for the project page (SoftwareApplication) and the repo page (SoftwareSourceCode), plus a breadcrumb.
+// JSON-LD for the project page (SoftwareApplication; a playable project is also a VideoGame) and the repo page (SoftwareSourceCode), plus a breadcrumb.
 // Only fields that are known are written: no rating, price, category or author URL is made up.
 import { site } from '../data/site';
 import { isoDate, absoluteUrl, plainTitle } from '../lib/text';
@@ -15,6 +15,8 @@ interface Props {
   keywords?: string[];
   /** Project: the live site or app. */
   liveUrl?: string;
+  /** Project: the address of a game that can be played in the browser. Makes the project a VideoGame as well. */
+  playUrl?: string;
   /** Link to the code: the GitHub repo. */
   codeRepository?: string;
   language?: string | null;
@@ -28,15 +30,19 @@ const pageUrl = absoluteUrl(p.path, base);
 const section = p.kind === 'project' ? { name: 'Projects', path: '/projects/' } : { name: 'Repos', path: '/repos/' };
 const licenseUrl = p.license && /^[\w.+-]+$/.test(p.license) && p.license !== 'NOASSERTION' ? `https://spdx.org/licenses/${p.license}` : undefined;
 
+// url is the play address when there is one, so the live site (if it is another address) goes to sameAs with the code.
+const sameAs = [p.codeRepository, p.playUrl ? p.liveUrl : undefined].filter((u): u is string => Boolean(u));
+
 const main: Record<string, unknown> =
   p.kind === 'project'
     ? {
-        '@type': 'SoftwareApplication',
+        '@type': p.playUrl ? ['VideoGame', 'SoftwareApplication'] : 'SoftwareApplication',
         name: plainTitle(p.name),
         description: p.description,
         mainEntityOfPage: pageUrl,
-        ...(p.liveUrl ? { url: p.liveUrl } : {}),
-        ...(p.codeRepository ? { sameAs: [p.codeRepository] } : {}),
+        ...(p.playUrl || p.liveUrl ? { url: p.playUrl ?? p.liveUrl } : {}),
+        ...(p.playUrl ? { applicationCategory: 'Game', operatingSystem: 'Web browser' } : {}),
+        ...(sameAs.length ? { sameAs } : {}),
       }
     : {
         '@type': 'SoftwareSourceCode',

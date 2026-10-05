@@ -1,0 +1,63 @@
+---
+// Fixture for tests/playable.spec.js: a playable project drawn with the real components and a fake play address, so the
+// tests do not depend on published content. Sample content, not part of the site. Not linked from anywhere and kept out of
+// search engines, like the rest of the styleguide. Docs: docs/CONTENT_MODEL.md (Playable projects).
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PlayPanel from '../../components/PlayPanel.astro';
+import PostCard from '../../components/PostCard.astro';
+import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
+
+// The address is deliberately one that does not exist: the test answers requests to it itself.
+const FAKE_PLAY_URL = 'https://play.example.test/fixture-game/';
+
+const card = {
+  kind: 'project' as const,
+  href: '/styleguide/playable/',
+  title: 'Fixture game',
+  summary: 'A made-up playable project for the tests.',
+  date: '2026-10-01',
+  status: 'shipped' as const,
+  stack: ['Canvas'],
+};
+---
+
+<BaseLayout title="Playable fixture" description="A made-up playable project the tests use. Not part of the site." noindex>
+  <ProjectJsonLd
+    slot="head"
+    kind="project"
+    name="Fixture game"
+    description="A made-up playable project for the tests."
+    path="/styleguide/playable/"
+    playUrl={FAKE_PLAY_URL}
+  />
+  <section class="section" aria-labelledby="fx-h">
+    <div class="container">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1 class="t-h1" id="fx-h">Playable fixture</h1>
+
+      <h2 class="section-title">Cards</h2>
+      <div class="grid-cards" data-fixture="cards">
+        <PostCard post={{ ...card, playable: true }} />
+        <PostCard post={{ ...card, title: 'Fixture tool', playable: false }} />
+      </div>
+
+      <div data-fixture="embed">
+        <PlayPanel
+          playUrl={FAKE_PLAY_URL}
+          title="Fixture game"
+          playAspect="4:3"
+          controls={[
+            { key: 'W / Up arrow', action: 'Thrust' },
+            { key: 'Space', action: 'Fire' },
+          ]}
+          playNote="Best on desktop with a mouse"
+          platforms={['desktop']}
+        />
+      </div>
+
+      <div data-fixture="link">
+        <PlayPanel playUrl={FAKE_PLAY_URL} title="Link only game" playMode="link" playNote="Opens in a new tab" />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

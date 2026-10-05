@@ -99,18 +99,37 @@ export const collections = {
       }
     },
   ),
-  projects: collection('projects', {
-    status: z.enum(['idea', 'building', 'shipped', 'paused', 'archived']),
-    stack: z.array(z.string()).default([]),
-    liveUrl: z.url().optional(),
-    repoUrl: z.url().optional(),
-    repo: ownerName.optional(),
-    started: isoDate.optional(),
-    shipped: isoDate.optional(),
-    role: z.string().optional(),
-    gallery: z.array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() })).default([]),
-    timeline: z.array(z.object({ date: isoDate, text: z.string() })).default([]),
-  }),
+  projects: collection(
+    'projects',
+    {
+      status: z.enum(['idea', 'building', 'shipped', 'paused', 'archived']),
+      stack: z.array(z.string()).default([]),
+      liveUrl: z.url().optional(),
+      repoUrl: z.url().optional(),
+      repo: ownerName.optional(),
+      started: isoDate.optional(),
+      shipped: isoDate.optional(),
+      role: z.string().optional(),
+      gallery: z.array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() })).default([]),
+      timeline: z.array(z.object({ date: isoDate, text: z.string() })).default([]),
+      // Playable projects (a browser game hosted on its own address). All optional: without playUrl nothing changes.
+      playUrl: z.url({ protocol: /^https$/, error: 'use a full https:// address' }).optional(),
+      playMode: z.enum(['embed', 'link']).default('embed'),
+      playAspect: z
+        .string()
+        .regex(/^[1-9]\d{0,2}:[1-9]\d{0,2}$/, 'use width:height, e.g. "16:9"')
+        .default('16:9'),
+      controls: z.array(z.object({ key: z.string().min(1), action: z.string().min(1) })).default([]),
+      playNote: z.string().min(1).max(120).optional(),
+      platforms: z.array(z.enum(['desktop', 'mobile'])).default([]),
+    },
+    (data, ctx) => {
+      if (!data.playUrl) {
+        const orphan = ['controls', 'platforms'].find((k) => (data[k] as unknown[] | undefined)?.length) ?? (data.playNote ? 'playNote' : undefined);
+        if (orphan) ctx.addIssue({ code: 'custom', path: [orphan], message: `${orphan} needs playUrl: it only shows on a playable project` });
+      }
+    },
+  ),
   repos: collection('repos', {
     repo: ownerName,
     homepage: z.url().optional(),

@@ -51,6 +51,8 @@ export interface ProjectCardData extends CardBase {
   kind: 'project';
   status: ProjectStatus;
   stack?: string[];
+  /** The project has a game to play in the browser (playUrl): the card shows a Playable badge. */
+  playable?: boolean;
   cover?: Cover;
 }
 

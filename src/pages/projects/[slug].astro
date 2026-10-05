@@ -5,6 +5,8 @@ import Gallery from '../../components/Gallery.astro';
 import Icon from '../../components/Icon.astro';
 import PreviewBadge from '../../components/PreviewBadge.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
+import PlayableBadge from '../../components/PlayableBadge.astro';
+import PlayPanel from '../../components/PlayPanel.astro';
 import PostCard from '../../components/PostCard.astro';
 import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
 import StatusMark from '../../components/StatusMark.astro';
@@ -13,6 +15,7 @@ import { localImage, toCard, type ProjectData, type RepoData } from '../../compo
 import { getAllPosts, getPosts, type SitePost } from '../../lib/content-queries';
 import { relatedPosts } from '../../lib/content';
 import { loadGitHubRepo } from '../../lib/github';
+import { isPlayable } from '../../lib/play';
 import { isoDate, longDate, plainTitle, titleParts } from '../../lib/text';
 import '../../styles/markdown.css';
 
@@ -51,6 +54,20 @@ const cover = localImage(data.cover);
 const shots = data.gallery.map((shot) => ({ src: localImage(shot.src), alt: shot.alt, caption: shot.caption }));
 const timeline = [...data.timeline].sort((a, b) => b.date.getTime() - a.date.getTime());
 
+const playable = isPlayable(data);
+const embedded = playable && data.playMode !== 'link';
+const playProps = data.playUrl
+  ? {
+      playUrl: data.playUrl,
+      title: plainTitle(data.title),
+      poster: cover,
+      playMode: data.playMode,
+      playAspect: data.playAspect,
+      controls: data.controls,
+      playNote: data.playNote,
+      platforms: data.platforms,
+    }
+  : undefined;
 const hasBody = Boolean(post.body?.trim());
 const path = `/projects/${post.id}/`;
 ---
@@ -74,6 +91,7 @@ const path = `/projects/${post.id}/`;
     keywords={[...data.stack, ...data.tags]}
     liveUrl={data.liveUrl}
     codeRepository={githubUrl}
+    playUrl={data.playUrl}
   />
   <div class="container">
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -87,6 +105,7 @@ const path = `/projects/${post.id}/`;
     <header class="project-head">
       <p class="eyebrow">
         <span class="kind"><Icon name="project" />Project</span>
+        {playable && <PlayableBadge />}
         <PreviewBadge post={post} />
       </p>
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
@@ -102,15 +121,20 @@ const path = `/projects/${post.id}/`;
         )
       }
       {
-        (data.liveUrl || source) && (
+        (playable || data.liveUrl || source) && (
           <div class="cluster actions">
+            {playable && (
+              <a class="btn solid" href={embedded ? '#play' : data.playUrl} target={embedded ? undefined : '_blank'} rel={embedded ? undefined : 'noopener'}>
+                <Icon name="play" />Play
+              </a>
+            )}
             {data.liveUrl && (
-              <a class="btn solid" href={data.liveUrl} rel="noopener">
+              <a class={playable ? 'btn' : 'btn solid'} href={data.liveUrl} rel="noopener">
                 Live site<Icon name="external" />
               </a>
             )}
             {source && (
-              <a class={data.liveUrl ? 'btn' : 'btn solid'} href={source.href} rel={source.external ? 'noopener' : undefined}>
+              <a class={playable || data.liveUrl ? 'btn' : 'btn solid'} href={source.href} rel={source.external ? 'noopener' : undefined}>
                 <Icon name="github" />Source repo{source.external && <Icon name="external" />}
               </a>
             )}
@@ -119,9 +143,20 @@ const path = `/projects/${post.id}/`;
       }
     </header>
 
-    <div class="media framed">
-      {cover ? <img src={cover} alt={data.coverAlt ?? ''} width="1280" height="720" decoding="async" /> : <MediaPlaceholder />}
-    </div>
+    {
+      !embedded && (
+        <div class="media framed">
+          {cover ? <img src={cover} alt={data.coverAlt ?? ''} width="1280" height="720" decoding="async" /> : <MediaPlaceholder />}
+        </div>
+      )
+    }
+    {
+      playProps && (
+        <div id="play">
+          <PlayPanel {...playProps} />
+        </div>
+      )
+    }
 
     <div class="split">
       <div>

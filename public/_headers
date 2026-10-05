@@ -2,8 +2,9 @@
 # gets all of their headers, and a header set by two blocks is sent with both values joined. So a header that differs for
 # /admin/ (the Content-Security-Policy) is set only in the /admin/* block, and nothing here is set twice.
 #
-# No Content-Security-Policy on the public pages: Astro inlines its small scripts, so a policy that works would have to
-# allow 'unsafe-inline' scripts, which makes it decoration. The site makes no third-party requests anyway (CLAUDE.md).
+# No script-src (or any other) Content-Security-Policy on the public pages: Astro inlines its small scripts, so a policy that
+# works would have to allow 'unsafe-inline' scripts, which makes it decoration. The site makes no third-party requests anyway
+# (CLAUDE.md). The one policy there is, a frame-src, is on /projects/* below.
 # No Cross-Origin-Opener-Policy anywhere: the GitHub sign-in popup talks back to /admin/ through window.opener, and
 # `same-origin` would cut that link and break the login.
 
@@ -12,6 +13,15 @@
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Playable projects embed a game from its own address (the playUrl field, docs/CONTENT_MODEL.md). frame-src is the only
+# directive: this page may frame that one origin and no other, and nothing else about scripts or images is restricted. It is on
+# /projects/* and not on /*, because the YouTube player on vlog and blog pages is a frame too and would be blocked, and because
+# /admin/* sets its own policy (rules are cumulative: a second CSP there would be enforced as well as the admin's and break its
+# preview frame). If the game moves, change the origin here to match its playUrl: tests/headers.spec.js fails when an embedded
+# playUrl in src/content/projects/ is not covered by this line.
+/projects/*
+  Content-Security-Policy: frame-src https://play.r7orbit.io
 
 # Built assets have a content hash in the file name, so they never change under the same URL.
 /_astro/*

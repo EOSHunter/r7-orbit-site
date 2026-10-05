@@ -93,6 +93,22 @@ Body: the written notes, links and resources mentioned in the video.
 | `role` | string | no | "Solo", "Design + code", etc. |
 | `gallery` | `{ src, alt, caption? }[]` | no | Screenshots |
 | `timeline` | `{ date, text }[]` | no | Short changelog entries |
+| `playUrl` | https URL | no | Makes the project **playable** (see below). Anything but `https://` fails the build |
+| `playMode` | `'embed' | 'link'` | no | Default `embed`. `link` shows only a button that opens the game in a new tab |
+| `playAspect` | string `w:h` | no | Default `16:9`. The shape of the game frame, e.g. `4:3`. Embed only |
+| `controls` | `{ key, action }[]` | no | The controls legend under the game, e.g. `{ key: 'Space', action: 'Fire' }` |
+| `playNote` | string, 120 characters at most | no | One line shown with the game, e.g. `Best on desktop with a mouse` |
+| `platforms` | `('desktop' | 'mobile')[]` | no | Shown as small labels with the game |
+
+`controls`, `playNote` and `platforms` need `playUrl`: set without it, the build fails (they would show nowhere). All the play fields are optional, so existing projects are unchanged.
+
+**Playable projects.** A project with a `playUrl` is a game people can play in the browser, hosted on its own address (a separate static site, e.g. `https://play.r7orbit.io/vesper-drift/`). The address is data: it lives in the project's front matter, not in code. What changes:
+
+- The page gets a **Play** section in place of the cover image: a click-to-load facade (the cover as poster, a Play button). Nothing is requested from the game until the button is pressed, so the iframe and the game's download stay out of the page load. Then a sandboxed iframe (`sandbox="allow-scripts allow-same-origin allow-pointer-lock"`, `allow="fullscreen; gamepad; autoplay"`) replaces it, keyboard focus moves into it, and a Fullscreen button appears. An "Open in a new tab" link, the controls legend, the note and the platform labels sit around it. Without JavaScript the facade is hidden and a plain link to the game takes its place. With `playMode: link` there is no facade and no iframe, only the Play button (a link that opens a new tab), plus the note, platforms and controls.
+- The project card and the page header show a **Playable** badge (play icon and label, brass like every other accent).
+- The page's JSON-LD is a `VideoGame` and `SoftwareApplication` (`applicationCategory: Game`, `operatingSystem: Web browser`, `url` = the play address, `author`).
+- **Framing.** `public/_headers` lets `/projects/*` frame one origin through `frame-src` (`https://play.r7orbit.io`). An embedded game on any other origin is blocked by the browser: change the origin there too. `tests/playable.spec.js` fails when an embedded `playUrl` in `src/content/projects/` is not on that list. `playMode: link` needs no entry.
+- The game itself must allow being framed by this site (no `X-Frame-Options: DENY`, and a `frame-ancestors` that includes `https://r7orbit.io`).
 
 Body sections the template expects (as `##` headings): **Why I built it**, **How it works**, **What I learned**. Others are fine; these three get anchors in the page.
 
@@ -147,6 +163,10 @@ export const collections = {
     started: z.coerce.date().optional(), shipped: z.coerce.date().optional(), role: z.string().optional(),
     gallery: z.array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() })).default([]),
     timeline: z.array(z.object({ date: z.coerce.date(), text: z.string() })).default([]),
+    playUrl: z.url({ protocol: /^https$/ }).optional(), playMode: z.enum(['embed', 'link']).default('embed'),
+    playAspect: z.string().regex(/^[1-9]d{0,2}:[1-9]d{0,2}$/).default('16:9'),
+    controls: z.array(z.object({ key: z.string().min(1), action: z.string().min(1) })).default([]),
+    playNote: z.string().min(1).max(120).optional(), platforms: z.array(z.enum(['desktop', 'mobile'])).default([]),
   }),
   repos: col('repos', {
     repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/), homepage: z.string().url().optional(), readme: z.enum(['github', 'local']).default('github'),

@@ -62,6 +62,7 @@ const routes = [
   { path: '/styleguide/', noindex: true },
   { path: '/styleguide/specimen/', noindex: true },
   { path: '/styleguide/article-components/', noindex: true },
+  { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

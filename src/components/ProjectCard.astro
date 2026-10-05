@@ -1,6 +1,7 @@
 ---
 import CardMedia from './CardMedia.astro';
 import Icon from './Icon.astro';
+import PlayableBadge from './PlayableBadge.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import StatusMark from './StatusMark.astro';
 import { cardAttrs } from './cardAttrs';
@@ -18,11 +19,14 @@ const stack = post.stack ?? [];
 <a {...cardAttrs(post)}>
   <CardMedia cover={post.cover} />
   <div class="card-body">
-    <span class="kind">
-      <Icon name="project" />
-      Project
-    </span>
-    {post.preview && <PreviewBadge label={post.preview} />}
+    <div class="cluster">
+      <span class="kind">
+        <Icon name="project" />
+        Project
+      </span>
+      {post.playable && <PlayableBadge />}
+      {post.preview && <PreviewBadge label={post.preview} />}
+    </div>
     <h3 class="card-title">{plainTitle(post.title)}</h3>
     <p class="card-text">{post.summary}</p>
     {stack.length > 0 && (

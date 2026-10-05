@@ -3,6 +3,7 @@ import type { CardData, Cover, ProjectStatus } from './cards';
 import { loadGitHubRepo } from './github';
 import { postUrl, previewLabel, readTime } from './content';
 import type { SitePost } from './content-queries';
+import { isPlayable } from './play';
 
 /** Cover images are 16:9 by the content rules (docs/CONTENT_MODEL.md); the card crops to that anyway. */
 function coverOf(data: { cover?: string; coverAlt?: string }): Cover | undefined {
@@ -21,6 +22,7 @@ interface VlogFields {
 interface ProjectFields {
   status: ProjectStatus;
   stack: string[];
+  playUrl?: string;
 }
 interface RepoFields {
   repo: string;
@@ -89,7 +91,7 @@ export async function toCard(post: SitePost, options: CardOptions = {}): Promise
     }
     case 'projects': {
       const project = { data: data as unknown as ProjectFields };
-      return { ...base, kind: 'project', status: project.data.status, stack: project.data.stack, cover };
+      return { ...base, kind: 'project', status: project.data.status, stack: project.data.stack, playable: isPlayable(project.data), cover };
     }
     case 'repos': {
       const repo = (data as unknown as RepoFields).repo;
