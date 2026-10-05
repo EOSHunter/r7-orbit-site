@@ -232,10 +232,28 @@ a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
 .share { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); padding-block: var(--s-5); border-block: var(--bw) solid var(--line); }
 .share .eyebrow { margin-right: var(--s-3); }
 
+/* Reading progress (blog and news): a brass hairline fixed to the top edge, filled as the article scrolls past. CSS only:
+   browsers without scroll-driven animations never show it, and it takes no space, so nothing shifts. */
+.reading-progress { display: none; }
+@supports (animation-timeline: view()) {
+  /* The bar is not inside the article, so the timeline is scoped up to body */
+  body { timeline-scope: --article; }
+  #article { view-timeline: --article block; }
+  .reading-progress {
+    display: block; position: fixed; inset: 0 0 auto 0; z-index: var(--z-overlay); height: calc(var(--bw) * 3); pointer-events: none;
+    background: var(--brass); transform: scaleX(0); transform-origin: left center;
+    animation: reading-progress linear both; animation-timeline: --article; animation-range: cover 0% exit 0%;
+  }
+  @media (prefers-reduced-motion: reduce) { .reading-progress { display: none; } }
+  @media (forced-colors: active) { .reading-progress { background: Highlight; } }
+}
+@keyframes reading-progress { to { transform: scaleX(1); } }
+
 /* Previous / next */
 .post-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
-.post-nav a { display: grid; gap: var(--s-2); padding: var(--s-5); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); color: var(--text); transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease); }
-.post-nav a:hover { border-color: var(--line-strong); background: var(--surface-2); color: var(--text); }
+.post-nav a { display: grid; gap: var(--s-2); padding: var(--s-5); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); color: var(--text); transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease); }
+/* Same hover as .card, so the related cards and the previous/next links read as one family */
+.post-nav a:hover { border-color: var(--line-strong); background: var(--surface-2); box-shadow: var(--shadow-raise); transform: translateY(-2px); color: var(--text); }
 .post-nav .label-row { display: inline-flex; align-items: center; gap: var(--s-2); font: var(--fs-2xs) var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-3); }
 .post-nav .title { font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); }
 .post-nav .next { justify-items: end; text-align: right; }
@@ -441,7 +459,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 /* Print: the article alone, on paper. System colour keywords so the dark theme never prints ivory on white. */
 @media print {
   .site-header, .site-footer, .skip-link, .breadcrumb, .toc, .toc-inline, .share, .series-steps, .band, .post-nav-wrap,
-  .related, .byline .tags, .codeblock-bar button, .heading-anchor, .media-ph { display: none !important; }
+  .related, .reading-progress, .byline .tags, .codeblock-bar button, .heading-anchor, .media-ph { display: none !important; }
   *, *::before, *::after { color: CanvasText !important; background: transparent !important; box-shadow: none !important; text-shadow: none !important; }
   html { color-scheme: light !important; }
   html, body { background: Canvas !important; }
