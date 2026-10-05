@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import site from './data/site.json';
+import { sectionSchema } from './lib/page-sections';
 import { seoTitleMax } from './lib/seo';
 
 // Schema from docs/CONTENT_MODEL.md. `.strict()` turns a misspelt field into a readable build error
@@ -13,14 +14,16 @@ const isoDate = z.coerce.date({ error: 'use a date like 2026-10-03' });
 
 const seoTitleLimit = seoTitleMax(site.name);
 
+// Optional shorter title for the browser tab, search results and og:title; the page headline and JSON-LD keep `title`.
+const seoTitle = z
+  .string()
+  .min(1)
+  .max(seoTitleLimit, `seoTitle is too long: at most ${seoTitleLimit} characters, so "· ${site.name}" still fits in 60`)
+  .optional();
+
 const common = {
   title: z.string().min(1).max(90),
-  // Optional shorter title for the browser tab, search results and og:title; the page headline and JSON-LD keep `title`.
-  seoTitle: z
-    .string()
-    .min(1)
-    .max(seoTitleLimit, `seoTitle is too long: at most ${seoTitleLimit} characters, so "· ${site.name}" still fits in 60`)
-    .optional(),
+  seoTitle,
   date: isoDate,
   updated: isoDate.optional(),
   summary: z.string().min(1).max(180),
@@ -60,6 +63,20 @@ function collection(
         }),
   });
 }
+
+// Pages made of blocks (docs/CONTENT_MODEL.md "Pages"). Only About uses it so far; the file is src/content/pages/about.md.
+const pages = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
+  schema: z
+    .object({
+      title: z.string().min(1).max(90),
+      seoTitle,
+      // The meta description (docs/SEO_AND_SHARING.md): 155 characters reads best in search results.
+      description: z.string().min(1).max(180),
+      sections: z.array(sectionSchema).max(60).default([]),
+    })
+    .strict(),
+});
 
 export const collections = {
   news: collection('news', {
@@ -152,4 +169,5 @@ export const collections = {
     install: z.string().optional(),
     relatedProject: z.string().optional(),
   }),
+  pages,
 };

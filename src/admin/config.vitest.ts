@@ -37,6 +37,8 @@ async function schemaShapes(): Promise<Record<string, Record<string, Zod>>> {
   const { collections: defined } = await import('../content.config');
   const out: Record<string, Record<string, Zod>> = {};
   for (const [name, c] of Object.entries(defined)) {
+    // The block-built pages (About) are not posts: src/admin/pages.vitest.ts reads their schema.
+    if (name === 'pages') continue;
     const { schema } = c as unknown as { schema: (ctx: { image: () => unknown }) => Zod };
     // `image()` is Astro's own helper; a string stands in for it.
     out[name] = schema({ image: () => z.string() }).shape ?? {};
@@ -135,7 +137,8 @@ describe('admin config', () => {
 describe('every collection mirrors its schema in src/content.config.ts', () => {
   it('has one collection per content kind, each writing into its own folder', () => {
     expect(collections.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos']);
-    expect(buildConfig({ ...env, local: true }).collections).toBe(collections);
+    // The editor lists them first and then the block-built pages (src/admin/pages.ts).
+    expect(buildConfig({ ...env, local: true }).collections.slice(0, collections.length)).toEqual(collections);
     for (const c of collections) expect(c).toMatchObject({ folder: `src/content/${c.name}`, create: true });
     for (const c of collections.filter((x) => x.name !== 'blog')) expect(c.extension, c.name).toBe('md');
   });

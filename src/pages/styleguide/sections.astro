@@ -1,0 +1,60 @@
+---
+// Fixture for the tests: every block a page can be made of (src/lib/page-sections.ts), drawn by the real Sections component,
+// so the checks (axe, widths 320-1480, overflow) cover all of them without depending on what the About page holds. Sample
+// content, not part of the site. Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
+// Docs: docs/CONTENT_MODEL.md (Pages).
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Sections from '../../components/Sections.astro';
+import type { Section } from '../../lib/page-sections';
+
+// Pictures are files that already ship with the site: the portrait of the About page and the brand image.
+const sections: Section[] = [
+  { type: 'heading', level: 2, text: 'A row of text' },
+  {
+    type: 'text',
+    text: 'Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/subscribe/).\n\n- a list item\n- another list item\n\nA second paragraph with a long unbroken address: https://example.com/a/very/long/path/that/keeps/going/and/going/and/going/for/a/while',
+  },
+  { type: 'heading', level: 3, text: 'A smaller heading' },
+  { type: 'image', image: '/media/about/hunter-newton.jpg', alt: 'A portrait, narrow', caption: 'A narrow image has a caption.', width: 'narrow', decorative: false },
+  { type: 'quote', text: 'A short quotation, set in the display face.', attribution: 'Someone Specific' },
+  { type: 'callout', kind: 'info', title: undefined, text: 'A note. It has **bold** in it.' },
+  { type: 'callout', kind: 'tip', title: 'A tip with a title', text: 'Tips are brass.' },
+  { type: 'callout', kind: 'warn', title: undefined, text: 'A warning.' },
+  {
+    type: 'links',
+    items: [
+      { label: 'A page on this site', url: '/subscribe/', note: undefined },
+      { label: 'Another site, with a note', url: 'https://example.com/', note: 'video' },
+    ],
+  },
+  { type: 'button', label: 'A button to a page', url: '/subscribe/' },
+  { type: 'button', label: 'A button to another site', url: 'https://example.com/' },
+  { type: 'divider', style: 'rule' },
+  { type: 'image', image: '/og-default.png', alt: 'The brand image, wide', caption: 'A wide image.', width: 'wide', decorative: false },
+  { type: 'image', image: '/og-default.png', alt: 'The brand image, full width', width: 'full', decorative: false },
+  { type: 'heading', level: 2, text: 'A portrait on the right' },
+  {
+    type: 'portrait',
+    image: '/media/about/hunter-newton.jpg',
+    alt: 'A portrait, on the right',
+    decorative: false,
+    side: 'right',
+    text: 'The text beside the picture. The blocks after it stay in this column.',
+  },
+  { type: 'heading', level: 2, text: 'More beside the portrait' },
+  { type: 'text', text: 'Until a divider, a wide or full image, or another portrait ends the row.' },
+  { type: 'divider', style: 'dots' },
+  { type: 'image', image: '/og-default.png', alt: '', decorative: true, width: 'narrow' },
+  { type: 'text', text: 'The last row.' },
+];
+---
+
+<BaseLayout title="Sections fixture" description="Every page block, for the tests. Not part of the site." noindex>
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1>Page <em>blocks</em></h1>
+    </header>
+  </div>
+  <Sections sections={sections} source="styleguide/sections.astro" />
+</BaseLayout>

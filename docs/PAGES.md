@@ -139,7 +139,9 @@ Pagefind UI styled with tokens, opened from the header icon or the `/` key. Resu
 
 ## About `/about/`
 
-The author's own text only (name and bio from `site.json`, then the R7 agent section). The portrait is `author.photo` in `site.json` (file in `public/media/about/`); with no photo the page is one column. `Person` structured data.
+The author's own text only, written in /admin (**Pages > About page**) and stored in `src/content/pages/about.md`: the page heading, then an ordered list of blocks (heading, text, image, portrait and text, quote, callout, links list, button, divider; see `CONTENT_MODEL.md`, "Pages"). Today: "Hunter Newton" with the portrait beside the bio, then "R7 · Orbit AI Agent" in the same column. The portrait is a block with its own picture and alt text (file in `public/media/about/`), not `author.photo`. `Person` structured data and the meta description keep their values: the name and bio come from `site.json`, the description from `about.md`.
+
+Layout: the page head, then one row per run of blocks (`Sections.astro`): a reading column (`.prose`, 68ch) for text-like blocks, a side column for a portrait, and a wider or edge-to-edge row for a wide or full image. At 375px and 1280px it looks exactly as it did before the page became editable (checked by comparing element positions and full-page screenshots). Done when: the text matches `tests/fixtures/about-text.txt`, axe passes, there is no horizontal scroll from 320 to 1480px and no layout shift.
 
 ## Subscribe `/subscribe/`
 
