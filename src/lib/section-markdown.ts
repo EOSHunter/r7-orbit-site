@@ -19,3 +19,10 @@ export async function renderSectionMarkdown(markdown: string): Promise<string> {
   const { code } = await (await processor).render(markdown);
   return sanitizeHtml(code, ALLOWED);
 }
+
+/** One paragraph's worth of Markdown as inline HTML (no wrapping `<p>`): for a lead paragraph, which the page sets in its own `<p>`. */
+export async function renderInlineMarkdown(markdown: string): Promise<string> {
+  const html = (await renderSectionMarkdown(markdown)).trim();
+  const one = /^<p>([\s\S]*)<\/p>$/.exec(html);
+  return one && !one[1].includes('</p>') ? one[1] : html.replace(/<\/?p>/g, ' ').trim();
+}

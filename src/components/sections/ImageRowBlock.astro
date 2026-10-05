@@ -1,0 +1,22 @@
+---
+// Two or three pictures side by side: the ImageRow article component. Each picture is given with its size so the row reserves
+// its space before the pictures load.
+import ImageRow from '../article/ImageRow.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'image-row'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const images = block.images.map((item) => ({
+  src: { src: item.image, width: ctx.sizes.get(item.image)?.width, height: ctx.sizes.get(item.image)?.height },
+  alt: item.decorative ? '' : item.alt,
+  decorative: item.decorative,
+  caption: item.caption || undefined,
+}));
+---
+
+<ImageRow images={images} caption={block.caption || undefined} />

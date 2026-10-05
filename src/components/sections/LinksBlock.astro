@@ -1,0 +1,28 @@
+---
+// The `.link-list` panel; an address on another site gets the external icon.
+import Icon from '../Icon.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'links'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+const external = (url: string) => url.startsWith('https://');
+---
+
+<ul class="link-list">
+  {
+    block.items.map((item) => (
+      <li>
+        <a href={item.url} rel={external(item.url) ? 'noopener' : undefined}>
+          {item.label}
+          {item.note && <span class="where">{item.note}</span>}
+          <Icon name={external(item.url) ? 'external' : 'arrow'} />
+        </a>
+      </li>
+    ))
+  }
+</ul>

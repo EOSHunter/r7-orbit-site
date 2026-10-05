@@ -1,0 +1,27 @@
+---
+// A picture: the Figure article component. Narrow sits in the reading column (centred, or floated left or right at a size); wide
+// and full leave it (Sections.astro puts them in a row of their own), and full reaches both edges of the window.
+import Figure from '../article/Figure.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'image'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const size = ctx.sizes.get(block.image);
+const narrow = block.width === 'narrow';
+---
+
+<Figure
+  src={block.image}
+  alt={block.decorative ? '' : block.alt}
+  decorative={block.decorative}
+  caption={block.caption || undefined}
+  align={block.width === 'full' ? 'full' : narrow ? block.align : 'center'}
+  size={narrow ? block.size : 'lg'}
+  width={size?.width}
+  height={size?.height}
+/>

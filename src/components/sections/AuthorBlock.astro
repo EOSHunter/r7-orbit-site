@@ -1,0 +1,22 @@
+---
+// An author's box: avatar, name (a link to their page), the "AI-written" label for an agent, and their bio, all read from the
+// authors list (src/content/authors), so the words are the author's own and are written once.
+import AuthorBox from '../AuthorBox.astro';
+import { getAuthorMap } from '../../lib/authors-queries';
+import { authorProblem } from '../../lib/sections/checks';
+import { loadKnown } from '../../lib/sections/known';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'author'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const problem = authorProblem(block.author, await loadKnown());
+if (problem) throw new Error(`${ctx.where}: ${problem}`);
+const author = (await getAuthorMap()).get(block.author)!;
+---
+
+<AuthorBox author={author} />

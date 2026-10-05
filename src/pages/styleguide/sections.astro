@@ -1,14 +1,16 @@
 ---
-// Fixture for the tests: every block a page can be made of (src/lib/page-sections.ts), drawn by the real Sections component,
-// so the checks (axe, widths 320-1480, overflow) cover all of them without depending on what the About page holds. Sample
+// Fixture for the tests: every block of the shared library (src/lib/sections/definitions.ts, docs/SECTIONS.md), drawn by the real
+// Sections component, so the checks (axe, widths 320-1480, overflow) cover all of them without depending on what the About page
+// holds. The first part is written out (the About page's own blocks, in the shapes the tests look for); every block the list
+// does not use yet follows with its definition's own example, so a block added to the library appears here by itself. Sample
 // content, not part of the site. Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
-// Docs: docs/CONTENT_MODEL.md (Pages).
+// Docs: docs/SECTIONS.md and docs/CONTENT_MODEL.md (Pages).
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Sections from '../../components/Sections.astro';
-import type { Section } from '../../lib/page-sections';
+import { definitions, sectionsSchema, type SectionInput } from '../../lib/sections';
 
 // Pictures are files that already ship with the site: the portrait of the About page and the brand image.
-const sections: Section[] = [
+const written: SectionInput[] = [
   { type: 'heading', level: 2, text: 'A row of *text*' },
   {
     type: 'text',
@@ -47,6 +49,12 @@ const sections: Section[] = [
   { type: 'image', image: '/og-default.png', alt: '', decorative: true, width: 'narrow' },
   { type: 'text', text: 'The last row.' },
 ];
+
+// The rest of the library, each block once, from its example. The schema fills in the defaults and would stop the build on a
+// bad example, which sections.vitest.ts also checks.
+const used = new Set(written.map((block) => block.type));
+const rest = definitions.filter((d) => !used.has(d.id)).map((d) => ({ type: d.id, ...d.example }));
+const sections = sectionsSchema.parse([...written, { type: 'heading', level: 2, text: 'Every *other* block' }, ...rest]);
 ---
 
 <BaseLayout title="Sections fixture" description="Every page block, for the tests. Not part of the site." noindex>

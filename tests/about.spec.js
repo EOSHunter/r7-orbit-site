@@ -28,21 +28,29 @@ test('the Person structured data still comes from site.json, and the page head i
   await expect(page.locator('nav [aria-current="page"]').first()).toContainText('About');
 });
 
-test('the portrait sits beside the text on a wide screen and above it on a phone', async ({ page }) => {
+test('each portrait sits beside its text on a wide screen and above it on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/about/');
-  const portrait = (await page.locator('.portrait').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
-  const prose = (await page.locator('.about-grid .prose').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
-  expect(portrait.x + portrait.width, 'portrait is left of the text').toBeLessThanOrEqual(prose.x);
-  expect(Math.abs(portrait.y - prose.y), 'the two start level').toBeLessThanOrEqual(1);
-  // The second section is in the same column as the first, beside the portrait (the layout the page has always had).
-  const second = (await page.getByRole('heading', { level: 2, name: /Orbit AI Agent/ }).boundingBox()) ?? { x: 0 };
-  expect(second.x).toBeGreaterThanOrEqual(prose.x);
+  // The page is two rows, each a portrait with its text (the author added the second, the R7 logo, after the first).
+  const rows = page.locator('.about-grid');
+  await expect(rows).toHaveCount(2);
+  for (const row of await rows.all()) {
+    const portrait = (await row.locator('.portrait').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+    const prose = (await row.locator('.prose').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+    expect(portrait.x + portrait.width, 'portrait is left of the text').toBeLessThanOrEqual(prose.x);
+    expect(Math.abs(portrait.y - prose.y), 'the two start level').toBeLessThanOrEqual(1);
+  }
+  // The heading above the first portrait is in the text column beside it, not above the row.
+  const prose = (await rows.first().locator('.prose').boundingBox()) ?? { x: 0 };
+  const lead = (await page.getByRole('heading', { level: 2, name: /R7 Orbit Creator/ }).boundingBox()) ?? { x: 0 };
+  expect(lead.x).toBeGreaterThanOrEqual(prose.x);
 
   await page.setViewportSize({ width: 375, height: 800 });
-  const small = (await page.locator('.portrait').boundingBox()) ?? { y: 0, height: 0 };
-  const smallProse = (await page.locator('.about-grid .prose').boundingBox()) ?? { y: 0 };
-  expect(small.y + small.height, 'portrait is above the text').toBeLessThanOrEqual(smallProse.y);
+  for (const row of await rows.all()) {
+    const small = (await row.locator('.portrait').boundingBox()) ?? { y: 0, height: 0 };
+    const smallProse = (await row.locator('.prose').boundingBox()) ?? { y: 0 };
+    expect(small.y + small.height, 'portrait is above the text').toBeLessThanOrEqual(smallProse.y);
+  }
 });
 
 // Same as post titles: one *phrase* in a heading is italic brass (CSS: h1 em, h2 em, h3 em); **bold** is plain bold.

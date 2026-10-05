@@ -1,0 +1,29 @@
+---
+// The StatsRow of the repository pages, for any public repository: stars, forks, language and last update, fetched from GitHub
+// at build time (src/lib/github.ts: cached, and the build passes with the network off). Without data the row is a plain link.
+import Icon from '../Icon.astro';
+import StatsRow from '../StatsRow.astro';
+import { loadGitHubRepo } from '../../lib/github';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'stats'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+const result = await loadGitHubRepo(block.repo);
+---
+
+{
+  result.status === 'ok' ? (
+    <StatsRow language={result.stats.language} stars={result.stats.stars} forks={result.stats.forks} pushedAt={result.stats.pushedAt} />
+  ) : (
+    <div class="stats">
+      <a href={`https://github.com/${block.repo}`} rel="noopener">
+        {block.repo} on GitHub<Icon name="external" small />
+      </a>
+    </div>
+  )
+}

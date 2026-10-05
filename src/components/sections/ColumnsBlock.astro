@@ -1,0 +1,19 @@
+---
+// Two Markdown columns: the TwoColumn article component (stacked below 720px). Each column is `.prose`, so its text is set as
+// in the reading column, narrower.
+import TwoColumn from '../article/TwoColumn.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'columns'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+---
+
+<TwoColumn ratio={block.ratio} reverse={block.reverse}>
+  <div slot="left" class="prose"><Fragment set:html={ctx.html.left} /></div>
+  <div slot="right" class="prose"><Fragment set:html={ctx.html.right} /></div>
+</TwoColumn>

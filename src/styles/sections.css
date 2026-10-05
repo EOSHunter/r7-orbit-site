@@ -19,3 +19,20 @@
 
 /* A long address pasted into the text must wrap rather than push the page wider than the window. */
 .sections .prose { overflow-wrap: anywhere; }
+
+/* A band (the newsletter) has its own spacing, so its row adds none; two bands in a row would touch, which is the page's business. */
+.sections > .sec-row-band { padding-block: 0; }
+
+/* Spacer: empty space between two blocks. In the reading column it adds to the usual gap between blocks. */
+.sec-spacer { height: var(--s-6); }
+.sec-spacer[data-size='sm'] { height: var(--s-4); }
+.sec-spacer[data-size='lg'] { height: var(--s-8); }
+
+/* The newsletter form inside the text (the `form` style) and the heading over the latest posts. */
+.sec-newsletter > h2 { margin-top: 0; }
+.sec-newsletter > p { margin-bottom: var(--s-4); }
+.latest-posts .section-title { margin-bottom: var(--s-5); }
+
+/* An author box in the reading column: the margin the post footer's note has would be too much between two blocks. */
+.sections .prose > * + .author-box { margin-top: 1.15em; }
+.sections .prose > .author-box:first-child { margin-top: 0; }

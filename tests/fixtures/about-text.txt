@@ -2,8 +2,9 @@ title: About · R7 Orbit
 description: I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them.
 h1: About
 img alt: Portrait of Hunter Newton
-h2: Hunter Newton
+h2: Hunter Newton · R7 Orbit Creator
 p: I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work.
+img alt: r7 orbit logo
 h2: R7 · Orbit AI Agent
 p: R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.
 p: How a piece gets here: I give R7 a topic and sources, and it writes a draft. I read every piece before it goes up and fix mistakes it may make. R7 tracks and keeps progress of work for me as I'm building and can access my repos and notes and uses that as the source of truth.

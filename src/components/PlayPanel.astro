@@ -14,16 +14,20 @@ interface Props extends PlayFields {
   title: string;
   /** A local image path for the poster. Omit it for the placeholder plate. */
   poster?: string;
+  /** Names the panel's ids. Left out, they are made from the title; pass one when two panels on a page may share a title. */
+  id?: string;
+  /** Draw the "Play" heading (default). A page of blocks hides it (the panel keeps it for screen readers): the author's own headings lead. */
+  showHeading?: boolean;
 }
 
-const { playUrl, title, poster, playMode = 'embed', playAspect, controls = [], playNote, platforms = [] } = Astro.props;
+const { playUrl, title, poster, playMode = 'embed', playAspect, controls = [], playNote, platforms = [], id: idProp, showHeading = true } = Astro.props;
 const embed = playMode !== 'link';
 // Ids are made from the title so two panels on one page (the fixture page) never share one.
-const id = 'play-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const id = idProp ? `play-${idProp}` : 'play-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 ---
 
 <section class="block play-section" aria-labelledby={`${id}-h`} data-play data-play-url={playUrl} data-play-title={title}>
-  <h2 class="section-title" id={`${id}-h`}>Play</h2>
+  <h2 class:list={['section-title', !showHeading && 'visually-hidden']} id={`${id}-h`}>Play</h2>
 
   {
     embed ? (

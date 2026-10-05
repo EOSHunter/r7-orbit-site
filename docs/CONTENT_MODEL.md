@@ -153,31 +153,30 @@ A page that is not a post, made of **blocks** the author adds, removes and re-or
 | `title` | string | yes | The page's one `h1`. Up to 90 characters; one phrase may be wrapped in `*asterisks*` for italic brass, as in a post |
 | `seoTitle` | string | no | Same rule as on every post: at most 49 characters |
 | `description` | string | yes | The meta description (about 155 characters reads best; at most 180). Not shown on the page |
-| `sections` | block[] | no | The page, top to bottom |
+| `sections` | block[] | no | The page, top to bottom. An absent list is an empty one; at most 60 blocks |
 
-Each block is `- type: <name>` plus its own fields. Every field is checked by the schema (`src/lib/page-sections.ts`), strictly: an unknown field or type fails the build with the block's position (`sections.1.alt` is the second block, counting from `sections.0`).
+**The blocks are the shared library** in `src/lib/sections/` (one definition per block: its fields, schema, label and where it sits), documented with every field and an example in [`SECTIONS.md`](SECTIONS.md). Each block is `- type: <id>` plus its own fields, checked strictly by `sectionsSchema`: an unknown field or type fails the build with the block's position (`sections.1.alt: Block 2 (Image): ...`). The library is built to attach to any collection (`sections: sectionsSchema`), so posts and other pages can use it later; today only `pages` does.
 
-| `type` | Fields | What it draws |
-|---|---|---|
-| `heading` | `text`, `level` (2 or 3, default 2) | An `h2` or `h3` in the reading column. One phrase may be wrapped in `*asterisks*` for italic brass, as in a title (it also works in the heading above a portrait and in a `##` heading inside a `text` block). `**bold**` stays plain bold, as in posts |
-| `text` | `text` (Markdown) | Paragraphs, bold, italic, links, lists, code. Raw HTML is removed. Straight quotes stay straight |
-| `image` | `image`, `alt`, `decorative`, `caption`, `width` (`narrow` default, `wide`, `full`) | The `Figure` article component. Narrow sits in the text column; wide and full leave it and start a new row (full reaches both edges of the window) |
-| `portrait` | `image`, `alt`, `decorative`, `side` (`left` default, `right`), `text` (Markdown) | The picture in a side column (sticky on wide screens, above the text on a phone) with the text beside it |
-| `quote` | `text`, `attribution` | The `Quote` article component (brass rule, display italic) |
-| `callout` | `kind` (`info`, `tip`, `warn`), `title`, `text` | The `Callout` article component |
-| `links` | `items`: `label`, `url`, `note` | The `.link-list` panel; an external address gets the external icon |
-| `button` | `label`, `url` | A solid `.btn` |
-| `divider` | `style` (`rule` default, `dots`) | The `Divider` article component |
+| `type` | What it draws |
+|---|---|
+| `heading`, `lead`, `text`, `quote`, `pullquote`, `callout`, `code` | Headings (one *phrase* in asterisks is italic brass), a lead paragraph, Markdown text, a quotation, a pull quote, a note/tip/warning box, a highlighted code block |
+| `image`, `image-row`, `gallery`, `portrait`, `video`, `game` | A picture (narrow, wide or full), two or three pictures in a row, a lightbox gallery, a picture beside text, a YouTube video behind a click-to-load player, a playable game behind a Play button |
+| `columns`, `divider`, `spacer` | Two Markdown columns, a hairline or three dots, empty space |
+| `links`, `button` | A list of links, a solid button |
+| `toc`, `stats`, `latest`, `author`, `newsletter` | A contents list of the page's headings, a GitHub repository's numbers (fetched at build time), the newest posts by kind, tag and/or author (drafts and future-dated posts left out), an author's box, the newsletter sign-up |
+
+The nine blocks About already used (`heading`, `text`, `image`, `portrait`, `quote`, `callout`, `links`, `button`, `divider`) keep their names and fields; the new fields on `image` (`align`, `size`) are optional.
 
 Rules the build enforces (the form does too where Decap can):
 
-- **Alt text.** `image` and `portrait` need `alt`. An empty `alt` is allowed only when the block has `decorative: true`, and then the picture is drawn with `alt=""`.
-- **Addresses.** A button's or link's `url` is `https://…` or a page on this site starting with a single `/`. `http:`, `//host`, `mailto:` and `javascript:` are refused. A picture's `image` is a file of this site (`/media/x.jpg`, in `public/media/`); another site's picture is refused, as for `Figure`. The file must exist: the build reads its size so the page reserves the space (no layout shift).
-- **Which blocks sit beside a portrait.** A `portrait` starts a side-by-side row: the `heading` directly above it, the portrait's own text, and every block after it stay in the text column until a `divider`, a wide or full `image`, or the next `portrait` ends the row (`layoutSections`). That is how About keeps its picture beside both of its sections.
+- **Alt text.** Every picture needs `alt`. An empty `alt` is allowed only when the block has `decorative: true` (image, portrait and the pictures of an image row); a gallery picture always needs alt text.
+- **Addresses.** A button's or link's `url` is `https://...` or a page on this site starting with a single `/`. `http:`, `//host`, `mailto:` and `javascript:` are refused. A game's `playUrl` is `https://...` only. A picture's `image` is a file of this site (`/media/x.jpg`, in `public/media/`); another site's picture is refused, as for `Figure`. The file must exist: the build reads its size so the page reserves the space (no layout shift).
+- **Things the site has.** A `latest` block's `tag` must be carried by some post and its `author` must be an author; an `author` block's author must exist; an embedded `game`'s origin must be in the `frame-src` of `public/_headers`. Each fails the build with the block's number and what exists.
+- **Which blocks sit beside a portrait.** A `portrait` starts a side-by-side row: the `heading` directly above it, the portrait's own text, and every block after it stay in the text column until a `divider`, a block that leaves the column (a wide or full `image`, an `image-row`, `gallery`, `game`, `columns`, `latest`, the newsletter band) or the next `portrait` ends it (`layoutSections`). That is how About keeps its picture beside both of its sections.
 
 The About page's text is fixed by a test: `tests/about.spec.js` compares the rendered page with `tests/fixtures/about-text.txt` line by line. Change the fixture in the same commit as a deliberate change to the words. The Person structured data on /about/ still reads the name and bio from `src/data/site.json` (the author's profile), not from the page text, so a change to the bio in both places is two edits.
 
-`/styleguide/sections/` (noindex, unlinked, in `tests/routes.js`) draws one of every block with the real renderer, for the axe and width checks.
+`/styleguide/sections/` (noindex, unlinked, in `tests/routes.js`) draws every block with the real renderer, for the axe and width checks; a block added to the library appears there by itself.
 
 ## Typed schema (Astro content collections)
 

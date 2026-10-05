@@ -1,0 +1,33 @@
+---
+// A playable game: the PlayPanel the project pages use, with its click-to-load facade and sandboxed frame (src/scripts/play-facade.js).
+// An embedded game's address has to be one public/_headers lets the site frame (the same rule tests/playable.spec.js holds
+// projects to), so the build stops here, naming the block, when it is not.
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import PlayPanel from '../PlayPanel.astro';
+import { frameSrcOrigins, gameProblem } from '../../lib/sections/checks';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'game'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const problem = gameProblem(block, frameSrcOrigins(await readFile(join(process.cwd(), 'public', '_headers'), 'utf8')));
+if (problem) throw new Error(`${ctx.where}: ${problem}`);
+---
+
+<PlayPanel
+  id={`game-${ctx.index + 1}`}
+  showHeading={false}
+  playUrl={block.playUrl}
+  title={block.title}
+  poster={block.poster || undefined}
+  playMode={block.playMode}
+  playAspect={block.playAspect}
+  controls={block.controls}
+  playNote={block.playNote || undefined}
+  platforms={block.platforms}
+/>

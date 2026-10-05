@@ -1,0 +1,22 @@
+---
+// Thumbnails that open full size in a dialog: the Gallery component the project pages use (src/scripts/gallery.js).
+import Gallery from '../Gallery.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'gallery'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const shots = block.shots.map((shot) => ({
+  src: shot.image,
+  alt: shot.alt,
+  caption: shot.caption || undefined,
+  width: ctx.sizes.get(shot.image)?.width,
+  height: ctx.sizes.get(shot.image)?.height,
+}));
+---
+
+<Gallery shots={shots} label={block.label || undefined} />

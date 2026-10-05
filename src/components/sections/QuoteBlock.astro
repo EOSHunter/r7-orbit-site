@@ -1,0 +1,15 @@
+---
+// The Quote article component: brass rule, display italic.
+import Quote from '../article/Quote.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'quote'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+---
+
+<Quote cite={block.attribution || undefined}><Fragment set:html={ctx.html.text} /></Quote>

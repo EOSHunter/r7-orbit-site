@@ -1,0 +1,60 @@
+// What a schema cannot know: the checks that need something else the site has (the posts, the authors, public/_headers). Pure
+// functions over data handed in, so they run under Vitest; the Astro components load the data and throw what these return,
+// each message starting with where the block is ("about.md, block 4 (Latest posts): …").
+import { POST_KINDS } from './definitions';
+
+/** "about.md, block 4 (Latest posts)": the start of every build error about a block. Blocks are counted from 1, as the editor shows them. */
+export const whereOf = (source: string, index: number, label: string) => `${source}, block ${index + 1} (${label})`;
+
+/** The hosts public/_headers lets the site frame: the `frame-src` of its /projects/* block. */
+export function frameSrcOrigins(headers: string): string[] {
+  const lines = headers.split(/\r?\n/);
+  const at = lines.findIndex((l) => l.trim() === '/projects/*');
+  if (at < 0) return [];
+  const csp = lines[at + 1]?.split(':').slice(1).join(':').trim() ?? '';
+  return /^frame-src\s/.test(csp) ? csp.replace(/^frame-src/, '').trim().split(/\s+/) : [];
+}
+
+/** What is wrong with an embedded game's address, or undefined. A link-mode game is only a button, so it needs no frame permission. */
+export function gameProblem(block: { playUrl: string; playMode: string }, allowed: readonly string[]): string | undefined {
+  if (block.playMode === 'link') return undefined;
+  let origin: string;
+  try {
+    origin = new URL(block.playUrl).origin;
+  } catch {
+    return `"${block.playUrl}" is not an address.`;
+  }
+  if (allowed.includes(origin)) return undefined;
+  return (
+    `the game's address ${origin} is not in frame-src in public/_headers, so a browser would refuse to frame it. ` +
+    `Add that host there (the /projects/* block: explicit host, no wildcard), or set Play mode to Link.`
+  );
+}
+
+/** What the site has that a block can point at. */
+export interface Known {
+  /** Every tag some post (draft or scheduled included) carries. */
+  tags: readonly string[];
+  /** Every author slug. */
+  authors: readonly string[];
+}
+
+const list = (items: readonly string[]) => (items.length ? items.join(', ') : '(none yet)');
+
+/** The tag and author of a Latest posts block must exist. (An unknown kind is refused by the schema.) */
+export function latestProblems(block: { kinds: readonly string[]; tag?: string; author?: string }, known: Known): string[] {
+  const problems: string[] = [];
+  for (const kind of block.kinds) {
+    if (!(POST_KINDS as readonly string[]).includes(kind)) problems.push(`there is no kind "${kind}". The kinds are: ${POST_KINDS.join(', ')}.`);
+  }
+  if (block.tag && !known.tags.includes(block.tag)) problems.push(`no post has the tag "${block.tag}". Tags in use: ${list(known.tags)}.`);
+  if (block.author && !known.authors.includes(block.author)) {
+    problems.push(`there is no author "${block.author}". Authors are: ${list(known.authors)}.`);
+  }
+  return problems;
+}
+
+/** An Author box must name an author who exists. */
+export function authorProblem(slug: string, known: Known): string | undefined {
+  return known.authors.includes(slug) ? undefined : `there is no author "${slug}". Authors are: ${list(known.authors)}.`;
+}
