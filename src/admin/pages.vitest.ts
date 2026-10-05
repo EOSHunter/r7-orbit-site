@@ -24,7 +24,7 @@ describe('the Pages collection', () => {
 
   it('is in the editor after the post collections and the authors', () => {
     const { collections } = buildConfig({ repo: 'o/n', branch: 'main', local: true });
-    expect(collections.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos', 'authors', 'pages']);
+    expect(collections.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos', 'authors', 'pages', 'settings']);
     expect(pageCollections).toEqual([pagesCollection]);
   });
 

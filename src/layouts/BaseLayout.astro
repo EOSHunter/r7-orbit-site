@@ -3,8 +3,11 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import IconSprite from '../components/IconSprite.astro';
 import Search from '../components/Search.astro';
+import type { NavItem } from '../data/nav';
 import { site } from '../data/site';
 import { resolveSeo } from '../lib/seo';
+import { footerLinks } from '../lib/site-settings';
+import { checkSiteLinks } from '../lib/site-routes';
 import { isoDate, plainTitle } from '../lib/text';
 import '../styles/design-system/tokens.css';
 import '../styles/design-system/components.css';
@@ -27,8 +30,10 @@ interface Props {
   tags?: string[];
   /** Keeps the page out of search engines (the styleguide, search, thin tag pages). */
   noindex?: boolean;
-  /** The nav label of the section this page belongs to. */
+  /** The address of the nav item for the section this page belongs to (e.g. "/blog/"), never its label. */
   current?: string;
+  /** Another nav than the site settings' one. Only the styleguide fixture uses it (tests/site-settings.spec.js). */
+  nav?: NavItem[];
 }
 
 const {
@@ -43,7 +48,11 @@ const {
   tags = [],
   noindex = false,
   current,
+  nav,
 } = Astro.props;
+
+// Every link in the site settings goes to a page or file that exists (once per build; src/lib/site-routes.ts).
+checkSiteLinks(site);
 
 const pageTitle = home ? `${site.name} · ${site.tagline}` : `${plainTitle(title)} · ${site.name}`;
 const base = Astro.site ?? new URL(site.url);
@@ -55,7 +64,8 @@ const seo = resolveSeo({
   fallbackDescription: site.description,
   image,
   imageAlt,
-  fallbackImageAlt: `${site.name}: the R7 mark inside a ring with one orbiting dot, beside the words "News, builds and the things in between."`,
+  fallbackImage: site.defaultOgImage,
+  fallbackImageAlt: site.defaultOgImageAlt,
 });
 const { canonical, imageUrl } = seo;
 ---
@@ -115,11 +125,11 @@ const { canonical, imageUrl } = seo;
     <a class="skip-link" href="#main">
       Skip to content
     </a>
-    <Header current={current} />
+    <Header current={current} items={nav} />
     <main id="main" tabindex="-1">
       <slot />
     </main>
-    <Footer />
+    <Footer links={nav && footerLinks({ ...site, nav })} />
     <!-- search: the dialog opened by "/" and the header button -->
     <Search />
     <script>

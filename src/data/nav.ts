@@ -1,23 +1,10 @@
+import { footerLinks, type FooterLink, type NavItem } from '../lib/site-settings';
 import { site } from './site';
 
-/** Where each label in site.json `nav` goes. The section pages arrive in phase 4 (docs/BUILD_PLAN.md). */
-const HREFS: Record<string, string> = {
-  Latest: '/#latest',
-  News: '/news/',
-  Blog: '/blog/',
-  Vlogs: '/vlogs/',
-  Projects: '/projects/',
-  Games: '/games/',
-  Repos: '/repos/',
-  About: '/about/',
-};
+export type { FooterLink, NavItem };
 
-export interface NavItem {
-  label: string;
-  href: string;
-}
+/** The header nav, in order: each item's label and address come from site.json `nav` (Site settings in /admin). */
+export const navItems: NavItem[] = site.nav;
 
-export const navItems: NavItem[] = site.nav.map((label) => ({
-  label,
-  href: HREFS[label] ?? `/${label.toLowerCase()}/`,
-}));
+/** The footer links, in order (see `footerLinks`). */
+export const footerItems: FooterLink[] = footerLinks(site);

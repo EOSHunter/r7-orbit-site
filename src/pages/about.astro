@@ -46,7 +46,7 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout title={headTitleFor(title, seoTitle)} description={description} current="About">
+<BaseLayout title={headTitleFor(title, seoTitle)} description={description} current="/about/">
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '<')} />
   <div class="container wide">
     <header class="page-head">

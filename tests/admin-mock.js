@@ -46,6 +46,9 @@ const PAGE_BLOBS = Object.fromEntries(
     { path: `${name}.md`, text: pageFile(name) },
   ]),
 );
+// The site settings as they are in the repository (src/data/site.json), for the Site settings collection.
+export const SITE_JSON = readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+const SITE_SHA = 'sitefilesha';
 
 let nextSha = 1;
 
@@ -63,6 +66,12 @@ function githubApi(method, path) {
   if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/content/pages')) {
     const tree = Object.entries(PAGE_BLOBS).map(([blob, f]) => ({ path: f.path, type: 'blob', mode: '100644', sha: blob, size: f.text.length }));
     return { sha: sha(), tree, truncated: false };
+  }
+  if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/data')) {
+    return { sha: sha(), tree: [{ path: 'site.json', type: 'blob', mode: '100644', sha: SITE_SHA, size: SITE_JSON.length }], truncated: false };
+  }
+  if (method === 'GET' && path === `${repo}/git/blobs/${SITE_SHA}`) {
+    return { sha: SITE_SHA, encoding: 'base64', content: Buffer.from(SITE_JSON).toString('base64'), size: SITE_JSON.length };
   }
   const blob = method === 'GET' && path.startsWith(`${repo}/git/blobs/`) && PAGE_BLOBS[path.slice(`${repo}/git/blobs/`.length)];
   if (blob) {
