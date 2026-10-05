@@ -1,23 +1,28 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import PageBlocks from '../components/PageBlocks.astro';
+import { lostSlots } from '../lib/page-copy';
+import { loadPage } from '../lib/page-copy-queries';
+import { headTitleFor } from '../lib/seo';
+import { titleParts } from '../lib/text';
+
+// The words are src/content/pages/404.md (edited in /admin, "Pages"). The orbit, the search box and the two buttons are the
+// page's frame. The host serves this file with a 404 status for any unknown address, and the page is noindex.
+const { title, seoTitle, description, sections, contexts } = await loadPage('404');
+const { lead, body } = lostSlots(sections);
 ---
 
-<BaseLayout
-  title="Page not found"
-  description="That page has drifted out of orbit. It may have moved, or it never existed."
-  noindex
->
+<BaseLayout title={headTitleFor(title, seoTitle)} description={description} noindex>
   <section class="plate-grid">
     <div class="container wide">
       <div class="lost">
         <!-- A quiet orbit: the dot drifts, nothing is working. -->
         <div class="orbit" data-orbit></div>
         <p class="eyebrow brass">Error 404</p>
-        <h1 class="t-display">
-          That page has drifted <em>out of orbit</em>.
-        </h1>
-        <p class="t-lead">It may have moved, or it never existed. Try search, or go back to the latest.</p>
+        <h1 class="t-display">{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+        <PageBlocks blocks={lead} contexts={contexts} lead="t-lead" />
+        <PageBlocks blocks={body} contexts={contexts} />
         <form class="search-form" role="search" action="/search/" method="get" aria-label="Search the site">
           <div class="search">
             <Icon name="search" />

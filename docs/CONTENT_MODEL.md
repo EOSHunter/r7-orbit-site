@@ -147,7 +147,7 @@ Body sections the template expects (as `##` headings): **Why I built it**, **How
 
 ## Pages (`src/content/pages/`)
 
-A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages > About page**). Only `about.md` exists; a later page reuses the same collection, schema and renderer (`src/components/Sections.astro`). The file is front matter only (no body).
+A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`) and `subscribe.md`, `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All five use the same schema. Each file is front matter only (no body).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -178,6 +178,23 @@ Rules the build enforces (the form does too where Decap can):
 The About page's text is fixed by a test: `tests/about.spec.js` compares the rendered page with `tests/fixtures/about-text.txt` line by line. Change the fixture in the same commit as a deliberate change to the words. The Person structured data on /about/ still reads the name and bio from `src/data/site.json` (the author's profile), not from the page text, so a change to the bio in both places is two edits.
 
 `/styleguide/sections/` (noindex, unlinked, in `tests/routes.js`) draws every block with the real renderer, for the axe and width checks; a block added to the library appears there by itself.
+
+### Pages with a fixed frame: subscribe, privacy, 404, search
+
+`src/content/pages/subscribe.md`, `privacy.md`, `404.md` and `search.md` hold the **words** of those pages; the frame (eyebrow, newsletter form, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Subscribe", "Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
+
+| Page | Blocks |
+|---|---|
+| `subscribe.md` | Leading `lead` under the heading; blocks up to the first `newsletter` block beside the form (that block only marks the place: its `heading`/`text` are unused here); blocks after it under the box, `text` as small print |
+| `privacy.md` | Leading `lead` under the heading; the rest in one `.prose` column; a `text` block at the very end as small print ("Last updated ...") |
+| `404.md` | Leading `lead` under the heading; anything else after it, above the search box |
+| `search.md` | Every block is the note shown only without JavaScript (inside `<noscript>`, `text` paragraphs as `.search-note`) |
+
+**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{author.email}`, `{links.rss}` or `{newsletter.provider}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
+
+**Newsletter condition.** A block whose text starts with the line `{if newsletter connected}` is kept only when `newsletter.formAction` is set; `{if newsletter not connected}` only when it is empty. The line is removed; any other `{if ...}` fails the build. This is how `privacy.md` keeps its two newsletter variants.
+
+Tests: `tests/pages.spec.js` compares the built pages with `tests/fixtures/pages/<page>.txt` (captured before the move), `src/lib/page-copy.vitest.ts` covers tokens, conditions, slots and the "connected" privacy wording, `tests/admin-pages.spec.js` opens each file in the real editor.
 
 ## Typed schema (Astro content collections)
 

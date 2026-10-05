@@ -15,7 +15,9 @@ import { withAssetBridge } from './asset-bridge';
 import { authorNames } from './authors';
 import { blocks, markdownImage } from './blocks';
 import { buildConfig, CMS_AUTH_URL, CMS_BRANCH, CMS_REPO } from './config';
+import { framedPreview } from './framed-preview';
 import { imageSaveCheck } from './image-rules';
+import { FRAMED_PAGES } from './pages';
 import { blogPreview } from './preview';
 import { globalStyleOf, spriteOf } from './preview-assets';
 import previewCss from './preview.css?inline';
@@ -47,6 +49,8 @@ for (const css of [tokensCss, componentsCss, siteCss, markdownCss, articleCss, s
 CMS.registerPreviewTemplate('blog', blogPreview({ sprite: spriteOf(spriteSource), authorName: site.author.name, authorNames }));
 // A file collection's template is named after the file: the About page is the `about` file of the Pages collection.
 CMS.registerPreviewTemplate('about', aboutPreview({ sprite: spriteOf(spriteSource) }));
+// Subscribe, privacy, 404 and search: the same preview, with the site settings filled in (framed-preview.ts).
+for (const name of FRAMED_PAGES) CMS.registerPreviewTemplate(name, framedPreview(name, { sprite: spriteOf(spriteSource) }));
 
 CMS.init({
   config: buildConfig({

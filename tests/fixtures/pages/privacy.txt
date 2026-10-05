@@ -1,0 +1,23 @@
+title: Privacy · R7 Orbit
+description: What R7 Orbit collects about you (nothing by itself), where the newsletter form goes, and how to unsubscribe.
+robots: 
+p: Privacy
+h1: What this site knows about you
+em: knows about you
+p: Almost nothing. This page says what, and why.
+h2: The short version
+p: This site has no analytics, no advertising, no comments and no cookies. Pages don't load anything from other companies: the fonts, icons and scripts all come from this site. I don't know who reads it or how many do.
+h2: What stays on your device
+p: This site does not save anything in your browser's local storage or cookies.
+h2: The newsletter
+p: The newsletter isn't connected yet. The sign-up form on this site does not send your address anywhere, and nothing is stored. When it is connected, this page will name the service that holds the list.
+p: Until then, you can follow by RSS, which needs no address at all.
+a: RSS -> /rss.xml
+h2: Videos and links to other sites
+p: A video on this site shows a still image first and loads from YouTube only after you press play. Links to other sites, including YouTube, take you away from this one, and their own privacy rules apply there.
+h2: Server logs
+p: Like any website, whatever serves these pages can see the address and browser details of each request. I don't use those logs to follow anyone.
+h2: Contact
+p: Questions, or a request to remove your address: hello@example.com.
+a: hello@example.com -> mailto:hello@example.com
+p: Last updated Oct 3, 2026.
