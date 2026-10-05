@@ -1,6 +1,8 @@
 ---
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import AuthorByline from '../../components/AuthorByline.astro';
+import AuthorNote from '../../components/AuthorNote.astro';
 import Gallery from '../../components/Gallery.astro';
 import GameGrid from '../../components/GameGrid.astro';
 import Icon from '../../components/Icon.astro';
@@ -13,6 +15,8 @@ import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
 import StatusMark from '../../components/StatusMark.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import { localImage, toCard, type ProjectData, type RepoData } from '../../components/detailCards';
+import { authorSlugOf } from '../../lib/authors';
+import { getAuthorMap } from '../../lib/authors-queries';
 import { getAllPosts, getGames, getPosts, type SitePost } from '../../lib/content-queries';
 import { relatedPosts } from '../../lib/content';
 import { loadGitHubRepo } from '../../lib/github';
@@ -35,6 +39,7 @@ interface Props {
 const { post } = Astro.props;
 const data = post.entry.data as unknown as ProjectData;
 const { Content } = await render(post.entry);
+const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 
 const all = await getAllPosts();
 const repos = all.filter((p): p is SitePost<'repos'> => p.collection === 'repos');
@@ -98,6 +103,7 @@ const path = `/projects/${post.id}/`;
     liveUrl={data.liveUrl}
     codeRepository={githubUrl}
     playUrl={data.playUrl}
+    author={author}
   />
   <div class="container">
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -116,6 +122,7 @@ const path = `/projects/${post.id}/`;
       </p>
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
       <p class="t-lead">{data.summary}</p>
+      <p class="post-author"><AuthorByline author={author} /></p>
       <p class="status-line"><StatusMark status={data.status} /></p>
       {
         data.stack.length > 0 && (
@@ -200,6 +207,8 @@ const path = `/projects/${post.id}/`;
             </section>
           )
         }
+
+        <AuthorNote author={author} />
       </div>
 
       <aside class="sticky" aria-label="Project facts">

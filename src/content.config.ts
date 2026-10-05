@@ -1,7 +1,8 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import site from './data/site.json';
+import { DEFAULT_AUTHOR } from './lib/authors';
 import { seoTitleMax } from './lib/seo';
 
 // Schema from docs/CONTENT_MODEL.md. `.strict()` turns a misspelt field into a readable build error
@@ -30,7 +31,9 @@ const common = {
   featured: z.boolean().default(false),
   draft: z.boolean().default(false),
   readTime: z.number().int().positive().optional(),
-  author: z.string().optional(),
+  // Who the post is credited to: the slug of a file in src/content/authors/. `prefault` runs the default through `reference`, so an
+  // absent field reads as { collection: 'authors', id: 'hunter-newton' }. That the slug exists is checked in lib/content-queries.ts.
+  author: reference('authors').prefault(DEFAULT_AUTHOR),
   canonicalUrl: z.url().optional(),
   aiAssist: z.enum(['none', 'edited', 'drafted']).optional(),
 };
@@ -61,7 +64,33 @@ function collection(
   });
 }
 
+// The people and agents a post can be credited to (docs/CONTENT_MODEL.md "Authors"). The file name is the slug; `slug` repeats it
+// so the editor can show it, and getAuthors() fails the build if the two differ. A person without `name`, `bio` or `avatar` is
+// read from `author` in src/data/site.json, so Hunter's text exists once.
+const authors = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/authors' }),
+  schema: () =>
+    z
+      .object({
+        slug,
+        kind: z.enum(['person', 'agent']),
+        name: z.string().min(1).optional(),
+        subtitle: z.string().min(1).max(60).optional(),
+        bio: z.string().min(1).optional(),
+        avatar: z.string().optional(),
+        note: z.string().min(1).optional(),
+      })
+      .strict()
+      .superRefine((data, ctx) => {
+        if (data.kind !== 'agent') return;
+        for (const key of ['name', 'bio'] as const) {
+          if (!data[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required for an agent (only a person is read from site.json)` });
+        }
+      }),
+});
+
 export const collections = {
+  authors,
   news: collection('news', {
     sourceUrl: z.url(),
     sourceName: z.string().min(1),

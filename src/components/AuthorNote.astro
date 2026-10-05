@@ -1,0 +1,25 @@
+---
+// The footer block at the end of a post whose author is an agent: the agent's own `note`. Nothing on a person's post.
+import AgentChip from './AgentChip.astro';
+import AuthorAvatar from './AuthorAvatar.astro';
+import { isAgent, type Author } from '../lib/authors';
+
+interface Props {
+  author: Author;
+}
+
+const { author } = Astro.props;
+---
+
+{isAgent(author) && author.note && (
+  <aside class="author-note" aria-label={`About ${author.name}`} data-author-note={author.slug}>
+    <AuthorAvatar author={author} />
+    <div class="author-note-body">
+      <p class="author-note-head">
+        <a class="author-name" href={author.path}>{author.name}</a>
+        <AgentChip />
+      </p>
+      <p>{author.note}</p>
+    </div>
+  </aside>
+)}

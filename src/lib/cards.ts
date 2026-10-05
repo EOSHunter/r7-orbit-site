@@ -15,6 +15,8 @@ interface CardBase {
   date: Date | string;
   /** Tag slugs, used for filtering. */
   tags?: string[];
+  /** Author slug, used by the "By author" filter. */
+  author?: string;
   /** The newest item in a feed: gets the brass rail. */
   fresh?: boolean;
   /** Large horizontal card for the one pinned post. */

@@ -1,5 +1,5 @@
 # Pagefind indexes the built site (dist/) after `astro build`; see the `build` script in package.json.
-# Only the five content kinds and About are indexed. Archives, tags, /search/, 404 and /styleguide/ are left out.
+# Only the five content kinds and About are indexed. Archives, tags, author pages, /search/, 404 and /styleguide/ are left out.
 site: dist
 output_subdir: pagefind
 glob: "{news,blog,vlogs,projects,repos}/*/index.html"

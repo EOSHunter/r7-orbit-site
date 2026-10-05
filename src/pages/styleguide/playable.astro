@@ -6,6 +6,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PlayPanel from '../../components/PlayPanel.astro';
 import PostCard from '../../components/PostCard.astro';
 import ProjectJsonLd from '../../components/ProjectJsonLd.astro';
+import { DEFAULT_AUTHOR } from '../../lib/authors';
+import { getAuthorMap } from '../../lib/authors-queries';
+
+const author = (await getAuthorMap()).get(DEFAULT_AUTHOR)!;
 
 // The address is deliberately one that does not exist: the test answers requests to it itself.
 const FAKE_PLAY_URL = 'https://play.example.test/fixture-game/';
@@ -29,6 +33,7 @@ const card = {
     description="A made-up playable project for the tests."
     path="/styleguide/playable/"
     playUrl={FAKE_PLAY_URL}
+    author={author}
   />
   <section class="section" aria-labelledby="fx-h">
     <div class="container">

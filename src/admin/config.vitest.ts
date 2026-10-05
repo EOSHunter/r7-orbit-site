@@ -16,7 +16,14 @@ import {
 
 // The real schema, so a field added or renamed in src/content.config.ts fails here until the admin follows. The two Astro
 // modules it imports only exist inside Astro, so they are stood in for: `defineCollection` returns what it is given.
-vi.mock('astro:content', () => ({ defineCollection: (c: unknown) => c }));
+vi.mock('astro:content', async () => {
+  const { z } = await import('astro/zod');
+  return {
+    defineCollection: (c: unknown) => c,
+    // Astro's own reference() only wraps the id; that the author exists is checked in lib/content-queries.ts.
+    reference: (collection: string) => z.string().transform((id) => ({ collection, id })),
+  };
+});
 vi.mock('astro/loaders', () => ({ glob: () => ({}) }));
 
 const env = { repo: 'owner/name', branch: 'main' };
@@ -51,6 +58,8 @@ function inner(t: Zod): Zod {
 
 const byName = (fields: readonly unknown[] | undefined): Record<string, Field> =>
   Object.fromEntries((fields ?? []).map((f) => [(f as { name: string }).name, f as Field]));
+/** The five kinds of post. `authors` is a collection too, but not a post: no date, tags, draft switch or body. */
+const posts = collections.filter((c) => c.name !== 'authors');
 const fieldsOf = (collection: string) => byName(collections.find((c) => c.name === collection)?.fields);
 const pattern = (f: Field) => ((f.pattern as [string, string] | undefined) ?? [''])[0];
 
@@ -58,7 +67,7 @@ describe('seoTitle', () => {
   it('is optional on every collection, limited so the <title> fits 60 characters, and in the admin under the same name', async () => {
     const shapes = await schemaShapes();
     const limit = 60 - ' · '.length - site.name.length;
-    for (const [name, shape] of Object.entries(shapes)) {
+    for (const [name, shape] of Object.entries(shapes).filter(([n]) => n !== 'authors')) {
       const seo = shape.seoTitle;
       expect(seo, `${name} schema`).toBeDefined();
       expect(seo.isOptional(), `${name} optional`).toBe(true);
@@ -134,15 +143,15 @@ describe('admin config', () => {
 
 describe('every collection mirrors its schema in src/content.config.ts', () => {
   it('has one collection per content kind, each writing into its own folder', () => {
-    expect(collections.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos']);
+    expect(posts.map((c) => c.name)).toEqual(['blog', 'news', 'vlogs', 'projects', 'repos']);
     expect(buildConfig({ ...env, local: true }).collections).toBe(collections);
     for (const c of collections) expect(c).toMatchObject({ folder: `src/content/${c.name}`, create: true });
-    for (const c of collections.filter((x) => x.name !== 'blog')) expect(c.extension, c.name).toBe('md');
+    for (const c of posts.filter((x) => x.name !== 'blog')) expect(c.extension, c.name).toBe('md');
   });
 
   it('has exactly the schema fields (same names) plus the body: nothing missing, nothing extra', async () => {
     const shapes = await schemaShapes();
-    for (const c of collections) {
+    for (const c of posts) {
       expect(Object.keys(byName(c.fields)).sort(), c.name).toEqual([...Object.keys(shapes[c.name]), 'body'].sort());
     }
   });
@@ -160,7 +169,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
 
   it('gives every collection a draft switch that defaults to off, like the schema', async () => {
     const shapes = await schemaShapes();
-    for (const c of collections) {
+    for (const c of posts) {
       expect(byName(c.fields).draft, c.name).toMatchObject({ widget: 'boolean', default: false, required: false });
       expect(shapes[c.name].draft.safeParse(undefined).success, c.name).toBe(true);
     }
@@ -258,7 +267,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
 
   it('caps tags at six, and lists that default to empty in the schema default to empty here', async () => {
     const shapes = await schemaShapes();
-    for (const c of collections) expect(byName(c.fields).tags.max, c.name).toBe(6);
+    for (const c of posts) expect(byName(c.fields).tags.max, c.name).toBe(6);
     for (const [collection, name] of [
       ['projects', 'stack'],
       ['projects', 'gallery'],
@@ -305,7 +314,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
   });
 
   it('turns the live preview on for blog posts only, and only blog bodies get the article blocks', () => {
-    for (const c of collections) {
+    for (const c of posts) {
       expect((c as { editor?: { preview?: boolean } }).editor?.preview ?? false, c.name).toBe(c.name === 'blog');
       const components = (byName(c.fields).body.editor_components ?? []) as string[];
       expect(
@@ -321,5 +330,51 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
       collection: 'projects',
       value_field: '{{slug}}',
     });
+  });
+});
+
+describe('authors in the admin', () => {
+  it('has an authors collection of JSON files with exactly the schema fields, and the same requirements', async () => {
+    const shapes = await schemaShapes();
+    const authors = collections.find((c) => c.name === 'authors');
+    expect(authors).toMatchObject({ folder: 'src/content/authors', extension: 'json', format: 'json', create: true });
+    expect(Object.keys(byName(authors?.fields)).sort()).toEqual(Object.keys(shapes.authors).sort());
+    expect(inner(shapes.authors.kind).options).toEqual(
+      ((fieldsOf('authors').kind.options as { value: string }[]) ?? []).map((o) => o.value),
+    );
+  });
+
+  it('checks the slug the way the schema does', async () => {
+    const shapes = await schemaShapes();
+    const re = new RegExp(pattern(fieldsOf('authors').slug));
+    for (const v of ['r7', 'hunter-newton']) {
+      expect(re.test(v), v).toBe(true);
+      expect(shapes.authors.slug.safeParse(v).success, v).toBe(true);
+    }
+    for (const v of ['R7', 'hunter newton', '-r7', '']) {
+      expect(re.test(v), v).toBe(false);
+      expect(shapes.authors.slug.safeParse(v).success, v).toBe(false);
+    }
+  });
+
+  it('puts an author select on every post collection, named like the schema field, defaulting to Hunter Newton', async () => {
+    const shapes = await schemaShapes();
+    for (const c of posts) {
+      const field = byName(c.fields).author;
+      expect(field, c.name).toMatchObject({ widget: 'select', required: false, default: 'hunter-newton' });
+      // Every author file is an option, named in words and stored as its slug.
+      expect(field.options, c.name).toEqual([
+        { label: 'Hunter Newton', value: 'hunter-newton' },
+        { label: 'R7 · Orbit AI Agent', value: 'r7' },
+      ]);
+      expect(shapes[c.name].author.safeParse(undefined).success, c.name).toBe(true);
+      expect(shapes[c.name].author.safeParse('r7').success, c.name).toBe(true);
+    }
+  });
+
+  it('parses an absent author as the default author, and a slug as a reference to that author', async () => {
+    const shapes = await schemaShapes();
+    expect(shapes.blog.author.safeParse(undefined)).toMatchObject({ success: true, data: { collection: 'authors', id: 'hunter-newton' } });
+    expect(shapes.vlogs.author.safeParse('r7')).toMatchObject({ success: true, data: { collection: 'authors', id: 'r7' } });
   });
 });

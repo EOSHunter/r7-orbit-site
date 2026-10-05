@@ -3,6 +3,8 @@ import Icon from '../../components/Icon.astro';
 import PostCard from '../../components/PostCard.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { authorsWithPosts } from '../../lib/authors';
+import { getAuthors } from '../../lib/authors-queries';
 import { postsWithTag, tagsWithPages } from '../../lib/content';
 import { getAllPosts } from '../../lib/content-queries';
 import { breadcrumbLd, collectionPageLd, jsonLdString } from '../../lib/seo';
@@ -17,7 +19,8 @@ export async function getStaticPaths() {
 
 const { tag } = Astro.params;
 const { posts } = Astro.props;
-const cards = await toCards(posts);
+const cards = await toCards(posts, { filterable: true });
+const authors = authorsWithPosts(await getAuthors(), posts);
 const description = `${countLabel(posts.length, 'post', 'posts')} tagged ${tag}: news, writing, videos, projects and repos, newest first.`;
 const ld = [
   collectionPageLd(site, { path: `/tags/${tag}/`, name: `Posts tagged ${tag}`, description }),
@@ -47,8 +50,25 @@ const groups = KINDS.map((info) => ({
       <p class="t-lead">{countLabel(posts.length, 'post', 'posts')}, newest first within each kind.</p>
     </header>
 
+    {authors.length > 1 && (
+      <div class="toolbar" role="group" aria-label="Filter posts" data-author-filter>
+        <div class="toolbar-row">
+          <span class="eyebrow" id="authors-label">By author</span>
+          <div class="seg" role="group" aria-labelledby="authors-label" data-filter="author">
+            <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
+            {authors.map((a) => (
+              <button type="button" data-value={a.slug} aria-pressed="false">
+                {a.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p class="t-meta toolbar-count" data-count data-total={posts.length} aria-live="polite">{countLabel(posts.length, 'post', 'posts')}</p>
+      </div>
+    )}
+
     {groups.map(({ info, cards: group }) => (
-      <section class="block" aria-labelledby={`${info.collection}-h`}>
+      <section class="block" aria-labelledby={`${info.collection}-h`} data-group>
         <h2 class="section-title tag-group" id={`${info.collection}-h`}>
           <span class="kind">
             <Icon name={info.icon} />
@@ -72,3 +92,42 @@ const groups = KINDS.map((info) => ({
   <div class="archive-end"></div>
   <SubscribeBand />
 </BaseLayout>
+
+<script>
+  // The "By author" filter: hides the cards of other authors, and a kind's heading once none of its cards is left. The choice is kept
+  // in the address (?author=r7). Without JavaScript the toolbar is hidden and every card shows, like the archive toolbars.
+  const bar = document.querySelector<HTMLElement>('[data-author-filter]');
+  if (bar) {
+    const buttons = [...bar.querySelectorAll<HTMLButtonElement>('[data-filter="author"] button')];
+    const count = bar.querySelector<HTMLElement>('[data-count]');
+    const items = [...document.querySelectorAll<HTMLElement>('[data-item]')];
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')];
+    const apply = (author: string): void => {
+      let shown = 0;
+      for (const el of items) {
+        el.hidden = author !== 'all' && el.dataset.author !== author;
+        if (!el.hidden) shown++;
+      }
+      for (const group of groups) group.hidden = !group.querySelector('[data-item]:not([hidden])');
+      for (const b of buttons) {
+        const on = (b.dataset.value ?? 'all') === author;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      }
+      const total = Number(count?.dataset.total) || items.length;
+      if (count) count.textContent = author === 'all' ? `${total} ${total === 1 ? 'post' : 'posts'}` : `${shown} of ${total} posts`;
+      const query = author === 'all' ? '' : `?author=${encodeURIComponent(author)}`;
+      try {
+        history.replaceState(null, '', location.pathname + query + location.hash);
+      } catch {
+        /* a sandboxed frame: the filter still works, it just is not shareable */
+      }
+    };
+    bar.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest('button');
+      if (b) apply(b.dataset.value ?? 'all');
+    });
+    const wanted = new URLSearchParams(location.search).get('author') ?? 'all';
+    apply(buttons.some((b) => b.dataset.value === wanted) ? wanted : 'all');
+  }
+</script>

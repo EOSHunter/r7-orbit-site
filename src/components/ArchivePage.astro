@@ -5,6 +5,8 @@ import Icon from './Icon.astro';
 import SubscribeBand from './SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import type { CollectionName } from '../lib/content';
+import { authorsWithPosts } from '../lib/authors';
+import { getAuthors } from '../lib/authors-queries';
 import { tagCounts } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import type { Kind } from '../lib/cards';
@@ -37,6 +39,7 @@ const kinds: Kind[] = collection
   ? []
   : (['news', 'blog', 'vlog', 'project', 'repo'] as const).filter((k) => cards.some((c) => c.kind === k));
 const tags = tagCounts(posts).map((t) => t.tag);
+const authors = authorsWithPosts(await getAuthors(), posts);
 const first = (page - 1) * PAGE_SIZE;
 const ld = [
   collectionPageLd(site, { path: pageUrl(base, page), name: label, description }),
@@ -75,6 +78,7 @@ const ld = [
       {base}
       {tags}
       {kinds}
+      {authors}
       noun={info?.noun ?? 'posts'}
       nounOne={info?.nounOne ?? 'post'}
       empty={info?.empty ?? 'Nothing is posted yet.'}

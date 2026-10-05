@@ -1,7 +1,9 @@
 ---
 // JSON-LD for the project page (SoftwareApplication; a playable project is also a VideoGame) and the repo page (SoftwareSourceCode), plus a breadcrumb.
-// Only fields that are known are written: no rating, price, category or author URL is made up.
+// Only fields that are known are written: no rating, price or category is made up. The author is a Person, or an Organization for an agent.
 import { site } from '../data/site';
+import { authorLd, type Author } from '../lib/authors';
+import { profileUrls, prune } from '../lib/seo';
 import { isoDate, absoluteUrl, plainTitle } from '../lib/text';
 
 interface Props {
@@ -22,6 +24,7 @@ interface Props {
   language?: string | null;
   /** SPDX id, when GitHub reports one. */
   license?: string | null;
+  author: Author;
 }
 
 const p = Astro.props;
@@ -56,7 +59,7 @@ const main: Record<string, unknown> =
 if (p.published) main.datePublished = isoDate(p.published);
 if (p.modified) main.dateModified = isoDate(p.modified);
 if (p.keywords?.length) main.keywords = p.keywords.join(', ');
-main['author'] = { '@type': 'Person', name: site.author.name };
+main['author'] = prune(authorLd(p.author, base, profileUrls(site.links)));
 
 const jsonLd = {
   '@context': 'https://schema.org',
