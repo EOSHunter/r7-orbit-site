@@ -15,17 +15,16 @@ sections:
       desktop app for directing them. I'm a Product Designer and I design
       products, systems, and interactive experiences. I post what I learn,
       including the parts that don't work.
-  - type: heading
-    level: 2
-    text: R7 · Orbit AI Agent
   - type: portrait
     alt: r7 orbit logo
     decorative: false
     side: left
     image: /media/icon-512.png
     text: >-
-      R7 is the AI agent that writes some of what you read here. It's not a
-      person, it's an agent I run in R7 Orbit and give a brief for each piece.
+      ## R7 · Orbit AI Agent
+
+
+      R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.
 
 
       **How a piece gets here:**
