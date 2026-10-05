@@ -28,8 +28,15 @@
 #                        'unsafe-eval': Decap checks its config with Ajv, which builds validators with new Function(). No
 #                        inline scripts are allowed, and connect-src below stops anything from sending the token elsewhere
 #   style-src 'unsafe-inline'  Decap writes its styles at run time (emotion), and so does the live preview
-#   img-src              the author's avatar and images read from the repository come from GitHub or from blob: URLs
-#   connect-src          the GitHub API, which is the editor's backend
+#   img-src              blob: for an image that is chosen or uploaded and not yet saved (Decap holds it as a blob: URL),
+#                        avatars.githubusercontent.com for the signed-in author's avatar, raw.githubusercontent.com in case
+#                        the editor shows a repository file by its raw address
+#   connect-src          api.github.com, the editor's backend; blob: because Decap reads an uploaded image back with fetch()
+#                        to keep a local draft backup and to build the commit (without it Save fails with "Failed to
+#                        fetch"); www.githubstatus.com, which Decap polls every 5 minutes to warn when GitHub is down.
+#                        Neither blob: nor the status page can carry the token anywhere: a blob: URL is local to this tab
+#   media-src, worker-src  not set on purpose: the editor has no audio, video or file widgets and starts no workers, so
+#                        they fall back to default-src 'self'
 #   frame-ancestors      nobody may embed the editor
 # The sign-in popup (workers/cms-auth/) is a window of its own, so it needs no entry here. If the editor ever needs
 # another address (a different backend, an image host), add it here or the browser blocks it and the console says so.
@@ -37,4 +44,4 @@
 /admin/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://avatars.githubusercontent.com https://raw.githubusercontent.com; font-src 'self' data:; connect-src 'self' blob: https://api.github.com https://www.githubstatus.com; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
