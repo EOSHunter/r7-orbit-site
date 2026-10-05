@@ -1,12 +1,11 @@
 ---
 eyebrow: "{site.tagline}"
-title: Plain notes on building with *AI agents*.
-lead: "{site.description}"
+title: Building with *AI agents*.
+lead: "News, builds and the things in between: videos, projects, code and
+  building with AI."
 buttons:
   - label: Start with the latest
     url: "#latest"
-  - label: Subscribe
-    url: "#subscribe"
 description: "{site.description}"
 sections:
   - type: pinned
