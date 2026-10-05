@@ -1,11 +1,18 @@
 ---
-import { GAMES_COPY } from '../lib/games';
+// The hub with no game published: the words are the page's (src/content/pages/games.md), the button goes to the projects.
+interface Props {
+  heading: string;
+  text: string;
+  linkLabel: string;
+}
+
+const { heading, text, linkLabel } = Astro.props;
 ---
 
 <div class="empty" data-games-empty>
-  <h2>{GAMES_COPY.empty}</h2>
-  <p>{GAMES_COPY.emptyText}</p>
+  <h2>{heading}</h2>
+  <p>{text}</p>
   <a class="btn" href="/projects/">
-    See the projects
+    {linkLabel}
   </a>
 </div>

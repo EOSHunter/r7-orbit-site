@@ -20,8 +20,12 @@
 /* A long address pasted into the text must wrap rather than push the page wider than the window. */
 .sections .prose { overflow-wrap: anywhere; }
 
-/* A band (the newsletter) has its own spacing, so its row adds none; two bands in a row would touch, which is the page's business. */
-.sections > .sec-row-band { padding-block: 0; }
+/* A band (the newsletter, and the section-style blocks of the home page: Latest feed, Pinned post, Games row, Latest posts in its
+   section frame) has its own spacing, so its row adds none, first and last included; two bands in a row would touch, which is the
+   page's business. */
+.sections > .sec-row-band,
+.sections > .sec-row-band:first-child,
+.sections > .sec-row-band:last-child { padding-block: 0; }
 
 /* Spacer: empty space between two blocks. In the reading column it adds to the usual gap between blocks. */
 .sec-spacer { height: var(--s-6); }
@@ -32,6 +36,7 @@
 .sec-newsletter > h2 { margin-top: 0; }
 .sec-newsletter > p { margin-bottom: var(--s-4); }
 .latest-posts .section-title { margin-bottom: var(--s-5); }
+.latest-posts .section-head .section-title { margin-bottom: 0; }
 
 /* An author box in the reading column: the margin the post footer's note has would be too much between two blocks. */
 .sections .prose > * + .author-box { margin-top: 1.15em; }

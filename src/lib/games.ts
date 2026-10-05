@@ -6,18 +6,9 @@ import { breadcrumbLd, collectionPageLd, itemListLd, type JsonLd, type SiteInfo 
 
 export const GAMES_PATH = '/games/';
 
-/** The copy of the hub page and its teaser, in one place so the page, the home teaser and the docs say the same. */
-export const GAMES_COPY = {
-  label: 'Games',
-  title: 'Games',
-  lead: 'Small games that run in your browser. No install.',
-  description: 'Small games I built that run in your browser. No install: pick one and press Play.',
-  empty: 'No games yet.',
-  emptyText: 'Nothing here is playable yet. The first game will appear on this page when it is ready.',
-  soonTitle: 'More games coming',
-  soonText: 'This is the only one so far. The next is still being built, and it will show up here when it is ready.',
-  teaserEyebrow: 'Play in the browser',
-} as const;
+/** The hub's name: the nav label, the eyebrow over its heading, and its name in structured data. Its words (heading, lead,
+ *  description, empty state, the "more games coming" card) are src/content/pages/games.md, edited in /admin. */
+export const GAMES_LABEL = 'Games';
 
 type GamePost = Post & { data: Post['data'] & PlayFields & { order?: number } };
 
@@ -55,18 +46,19 @@ export function playLink(game: Pick<Post, 'collection' | 'id'> & { data: PlayFie
   return { href: `${postUrl(game)}#play`, external: false };
 }
 
-/** The structured data of the hub: the page, the games in the order shown (an ItemList, only when there are any) and the breadcrumb. */
-export function gamesPageLd(site: SiteInfo, games: Pick<Post, 'collection' | 'id' | 'data'>[]): JsonLd[] {
+/** The structured data of the hub: the page, the games in the order shown (an ItemList, only when there are any) and the breadcrumb.
+ *  `description` is the page's (src/content/pages/games.md). */
+export function gamesPageLd(site: SiteInfo, games: Pick<Post, 'collection' | 'id' | 'data'>[], description: string): JsonLd[] {
   return [
-    collectionPageLd(site, { path: GAMES_PATH, name: GAMES_COPY.label, description: GAMES_COPY.description }),
+    collectionPageLd(site, { path: GAMES_PATH, name: GAMES_LABEL, description }),
     ...(games.length
       ? [
           itemListLd(site, {
-            name: GAMES_COPY.label,
+            name: GAMES_LABEL,
             items: games.map((g) => ({ name: g.data.title, path: postUrl(g) })),
           }),
         ]
       : []),
-    breadcrumbLd(site, [{ name: GAMES_COPY.label, path: GAMES_PATH }]),
+    breadcrumbLd(site, [{ name: GAMES_LABEL, path: GAMES_PATH }]),
   ];
 }

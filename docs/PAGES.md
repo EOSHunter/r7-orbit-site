@@ -37,9 +37,24 @@ Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · R
 | **Media placeholder** | Plate gradient + dot grid + ivory mark at 10% opacity |
 | **Skip link** | First focusable element; jumps to `#main` |
 
+## Pages whose words are edited in /admin
+
+The home page, `/latest/`, the five archives, `/games/` and `/tags/` take their words from `src/content/pages/<id>.md` (the `pages` collection, edited in /admin under **Pages**; fields in `CONTENT_MODEL.md`, "Pages"; the author's steps in `PUBLISHING.md`, section 11). What is made from the posts stays in code: the listing with its filters, counts and pagination, the games grid, the tag chips, the kind labels and icons (shared with the navigation). The numbered pages (`/blog/page/2/`) repeat their archive's words.
+
+| Page | File | What the file holds |
+|---|---|---|
+| `/` | `home.md` | The hero (headline = the page's `h1`, eyebrow, lead, up to two buttons), the meta description, and the rows below the hero as blocks (`sections`): Pinned post, Latest feed, Latest posts (Projects), Games row, Latest posts (Repos) |
+| `/latest/`, `/news/`, `/blog/`, `/vlogs/`, `/projects/`, `/repos/` | `latest.md`, `news.md`, … | `h1`, browser title (`seoTitle`, today the kind's name), description, lead, the empty state (heading and text), blocks above and below the list (`introSections`, `outroSections`, empty today) |
+| `/games/` | `games.md` | As an archive, plus the empty state's button and the "More games coming" card (eyebrow, heading, text) |
+| `/tags/` | `tags.md` | As an archive. "Used once" stays in code |
+
+The browser title of the home page is still `{site name} · {tagline}` from `src/data/site.json`. The newsletter band at the foot of these pages is the site's (`SubscribeBand`), not a block. The words were moved without a change: `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`, captured from the pages before they became editable, and the pages were compared pixel for pixel at 375px and 1280px before and after.
+
 ## Home `/`
 
 **Purpose:** In five seconds, say what this is and show what's newest.
+
+Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each data row is a block of the shared library (`SECTIONS.md`): Pinned post (`pinned`), Latest feed (`feed`, one per page; its anchor is `#latest`), Latest posts with a section frame (`latest`, Projects newest first, Repos by last push), Games row (`games`).
 
 1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, two buttons ("Start with the latest" solid, "Subscribe" outline). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
 2. **Pinned:** the one `featured: true` post as a large horizontal card (media left, text right; stacked on mobile). Hidden if none.
@@ -56,6 +71,8 @@ Done when: LCP element is the hero headline or the pinned card media (not the or
 ## Archive `/<kind>/`
 
 **Purpose:** Find something in one kind.
+
+Words: `src/content/pages/<kind>.md` (`latest.md` for `/latest/`): the `h1`, lead, browser title, description, empty state, and optional blocks between the lead and the list (`introSections`) and between the list and the newsletter band (`outroSections`). The eyebrow (icon and label) is the kind's name in code. With no blocks above the list, the markup is the one the page always had. The fixture `/styleguide/listing/` draws an archive with blocks on both sides.
 
 - Header: eyebrow (kind icon + label), `h1` (e.g. "Blog"), one-sentence lead, count.
 - Toolbar: search field (filters in place), tag chips (toggle, multi-select = AND), sort `.seg` (Newest · Oldest), result count (`aria-live="polite"`).
@@ -96,7 +113,7 @@ Structured data: `VideoObject` (name, description, thumbnailUrl, uploadDate, dur
 
 - A game is a `projects` entry with a `playUrl` (no collection of its own). Only published games are listed: drafts and future-dated posts go through the same helper as every list (`selectGames` in `src/lib/games.ts`, which wraps `filterPublished`).
 - Order: the optional `order` number (lower first), then games without one, newest first.
-- Header: eyebrow (play icon + "Games"), `h1` "Games", one line: "Small games that run in your browser. No install."
+- Header: eyebrow (play icon + "Games"), `h1` "Games", one line: "Small games that run in your browser. No install." The `h1`, the line, the browser title and description, the empty state and the "More games coming" card are `src/content/pages/games.md`.
 - `GameGrid` of `GameCard`s: 1 column on a phone, 2 from 640px, 3 from 1000px; with one or two cards it stays at 2 columns. Each card: poster (the project's `cover`, or the `MediaPlaceholder`), Playable badge, title, one line, platform chips, a solid **Play** button and a **Details** link. Play goes to `/projects/<slug>/#play` (where the game is embedded); with `playMode: link` it opens `playUrl` in a new tab. Details always goes to the project page. The first row (three cards) loads its posters at once, the rest are lazy; every poster sits in a 16:9 frame, so nothing shifts.
 - With exactly one game, a final dashed "More games coming" card (no links) follows it.
 - Empty state: "No games yet." with a link to the projects. The page is `noindex` and out of the sitemap while it is empty.
@@ -143,7 +160,7 @@ Done when: both authors' pages pass axe at 320 to 1480px, and an author with no 
 
 ## Tags `/tags/` and `/tags/<tag>/`
 
-A list of tags with counts, and for each tag the filtered archive (all kinds mixed, newest first, grouped by kind with `.kind` labels).
+A list of tags with counts, and for each tag the filtered archive (all kinds mixed, newest first, grouped by kind with `.kind` labels). The index's heading, lead, browser title, description and empty state are `src/content/pages/tags.md`; the tag pages' words are still in `src/pages/tags/[tag].astro`.
 
 **By author filter.** The archives (`/news/`, `/blog/`, `/vlogs/`, `/projects/`, `/repos/`, `/latest/`) and a tag page have a "By author" row of buttons (All, then each author who has posts there), like the Kind row: a client filter, hidden without JavaScript, state in `?author=r7`. It shows only when two or more authors have posts in that list.
 

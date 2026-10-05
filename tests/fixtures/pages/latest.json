@@ -1,0 +1,46 @@
+{
+  "path": "/latest/",
+  "posts": [
+    "blog/test",
+    "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "projects/vesper-drift"
+  ],
+  "head": [
+    "title: Latest · R7 Orbit",
+    "description: News, builds and the things in between: writing, videos, projects and code about building with AI.",
+    "p.eyebrow: Latest",
+    "h1: Everything, newest first",
+    "em: newest first",
+    "p.t-lead: News, writing, videos, projects and repos in one list. Filter by kind or tag, or search."
+  ],
+  "lines": [
+    "title: Latest · R7 Orbit",
+    "description: News, builds and the things in between: writing, videos, projects and code about building with AI.",
+    "p.eyebrow: Latest",
+    "h1: Everything, newest first",
+    "em: newest first",
+    "p.t-lead: News, writing, videos, projects and repos in one list. Filter by kind or tag, or search.",
+    "div aria-label: Filter and sort posts",
+    "label.visually-hidden: Search posts",
+    "div aria-label: Sort",
+    "button: Newest",
+    "button: Oldest",
+    "span.eyebrow: Kind",
+    "[content]",
+    "span.eyebrow: By author",
+    "[content]",
+    "span.eyebrow: Tags",
+    "[content]",
+    "h2.visually-hidden: Posts",
+    "[content]",
+    "h2: Nothing matches that.",
+    "p: Try fewer words, or clear the filters.",
+    "button.btn: Clear filters",
+    "p.eyebrow: Newsletter",
+    "h2: One email when something new is worth reading",
+    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
+    "label: Email address",
+    "button.btn: Subscribe",
+    "p: "
+  ]
+}

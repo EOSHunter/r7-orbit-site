@@ -5,6 +5,7 @@ import site from './data/site.json';
 import { sectionsSchema } from './lib/sections';
 import { DEFAULT_AUTHOR } from './lib/authors';
 import { seoTitleMax } from './lib/seo';
+import { sitePageFields } from './lib/site-pages';
 
 // Schema from docs/CONTENT_MODEL.md. `.strict()` turns a misspelt field into a readable build error
 // instead of silently dropping it.
@@ -71,7 +72,8 @@ function collection(
   });
 }
 
-// Pages made of blocks (docs/CONTENT_MODEL.md "Pages"). Only About uses it so far; the file is src/content/pages/about.md. The
+// Pages made of blocks (docs/CONTENT_MODEL.md "Pages"): About (src/content/pages/about.md), and the home page, the archives, the
+// Games hub and the tag index (`sitePageFields`, src/lib/site-pages.ts, which also says which page needs which field). The
 // blocks are the shared library in src/lib/sections/ (docs/SECTIONS.md): `sectionsSchema` is what any collection attaches to take a `sections` list.
 const pages = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
@@ -82,6 +84,7 @@ const pages = defineCollection({
       // The meta description (docs/SEO_AND_SHARING.md): 155 characters reads best in search results.
       description: z.string().min(1).max(180),
       sections: sectionsSchema,
+      ...sitePageFields,
     })
     .strict(),
 });

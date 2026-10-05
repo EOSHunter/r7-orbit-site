@@ -1,4 +1,5 @@
-// What the listing pages share: the five kinds and their copy, page URLs, and paging. Pure, so it runs under Vitest.
+// What the listing pages share: the five kinds (their names and the words of their counts), page URLs, and paging. Pure, so it
+// runs under Vitest.
 import type { CollectionName } from './content';
 
 export const PAGE_SIZE = 12;
@@ -13,69 +14,15 @@ export interface KindInfo {
   /** Words for "N ___" in the live count. */
   noun: string;
   nounOne: string;
-  /** h1 with the one italic-brass phrase marked by asterisks. */
-  title: string;
-  lead: string;
-  description: string;
-  empty: string;
 }
 
+// The archives' own words (heading, lead, description, empty state) are their entries in src/content/pages/, edited in /admin.
 export const KINDS: KindInfo[] = [
-  {
-    collection: 'news',
-    label: 'News',
-    icon: 'news',
-    noun: 'items',
-    nounOne: 'item',
-    title: 'News, with my *take* on it',
-    lead: 'Short items on what happened in AI and what I would do about it. Each one links to its source.',
-    description: 'Short news items on AI, each with a link to the source and my take on what it means.',
-    empty: 'No news items yet.',
-  },
-  {
-    collection: 'blog',
-    label: 'Blog',
-    icon: 'blog',
-    noun: 'posts',
-    nounOne: 'post',
-    title: 'Writing about *building with agents*',
-    lead: 'Longer posts about the things I make and how they went. Filter by tag, search the titles, or read from the top.',
-    description: 'Longer posts about building with AI agents: what I tried, what happened and what I would do again.',
-    empty: 'No posts yet.',
-  },
-  {
-    collection: 'vlogs',
-    label: 'Vlogs',
-    icon: 'vlog',
-    noun: 'videos',
-    nounOne: 'video',
-    title: 'Videos, with the *notes* underneath',
-    lead: 'Builds and walkthroughs on video, each with chapters, links and the notes the video cannot show.',
-    description: 'Videos about building with AI, each with chapters, links and written notes.',
-    empty: 'No videos yet.',
-  },
-  {
-    collection: 'projects',
-    label: 'Projects',
-    icon: 'project',
-    noun: 'projects',
-    nounOne: 'project',
-    title: 'Things I am *making*',
-    lead: 'What each project is, why I built it, how it works and what I learned.',
-    description: 'Projects I am building with AI: what they are, why I built them and what I learned.',
-    empty: 'No projects yet.',
-  },
-  {
-    collection: 'repos',
-    label: 'Repos',
-    icon: 'repo',
-    noun: 'repos',
-    nounOne: 'repo',
-    title: 'Code you can *use*',
-    lead: 'Open-source repositories, with stats from GitHub refreshed daily.',
-    description: 'Open-source repositories from my work with AI, with stats from GitHub.',
-    empty: 'No repos yet.',
-  },
+  { collection: 'news', label: 'News', icon: 'news', noun: 'items', nounOne: 'item' },
+  { collection: 'blog', label: 'Blog', icon: 'blog', noun: 'posts', nounOne: 'post' },
+  { collection: 'vlogs', label: 'Vlogs', icon: 'vlog', noun: 'videos', nounOne: 'video' },
+  { collection: 'projects', label: 'Projects', icon: 'project', noun: 'projects', nounOne: 'project' },
+  { collection: 'repos', label: 'Repos', icon: 'repo', noun: 'repos', nounOne: 'repo' },
 ];
 
 export function kindInfo(collection: CollectionName): KindInfo {

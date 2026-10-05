@@ -9,7 +9,7 @@ A page (today the About page; later every other page) and the body of any post c
 | The page | `src/components/Sections.astro` and `src/components/sections/<Id>Block.astro` | The layout rows come from the definitions' `placement` |
 | The live preview in the editor | `src/admin/sections-html.ts` | Same rows (`layoutSections`), same field list, and the real schema for its warnings |
 
-Phase 1 built the library and moved the About page onto it. Phase 2 attached it to **every kind of post** (blog, news, vlogs, projects, repos) as an optional body: see "Posts" below. The other pages do not use it yet; "Attaching the library to a collection" says how a later task does that.
+Phase 1 built the library and moved the About page onto it. Phase 2 attached it to **every kind of post** (blog, news, vlogs, projects, repos) as an optional body: see "Posts" below. It also put the home page and the listing pages on it: the home page's rows are blocks (`feed`, `pinned`, `games`, and `latest` in its section frame), and every archive, `/games/` and `/tags/` can hold blocks above and below its list (`introSections`, `outroSections`; `CONTENT_MODEL.md`, "The home page and the listing pages"). "Attaching the library to a collection" says how a later task attaches it elsewhere.
 
 Related: [`CONTENT_MODEL.md`](CONTENT_MODEL.md#pages-srccontentpages) (the `pages` collection), [`PUBLISHING.md`](PUBLISHING.md#7-editing-the-about-page) (the author's steps), [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) (the article components most blocks wrap), [`IMAGES.md`](IMAGES.md).
 
@@ -80,7 +80,9 @@ Each definition has a `placement`, and `layoutSections` (`src/lib/sections/layou
 - **GitHub stats** use the build-time loader (`src/lib/github.ts`): cached, never fetched in the reader's browser, and the build passes with the network off (the row then falls back to a plain link).
 - **Newsletter** draws `SubscribeBand` (band) or `NewsletterForm` (form); it sends nothing until the provider is connected in `src/data/site.json`.
 - **Author box** shows the author's bio from `src/content/authors`; it never writes an agent's note or label wording itself (CLAUDE.md, "Content rules").
-- **Not blocks**, because they are page chrome, one-per-page, or built from a route's own data: the header and footer, the archive list with its filters and pagination, the post-page pieces (share row, previous/next, related posts, series navigation, hero), the `/games/` hub, and the README block (it needs a repository per page). A later task can add one if a page needs it.
+- **The home page's rows are blocks** that hold configuration (which posts, how many, the words around them) and query the posts when the site is built (so, like Latest posts, they add nothing to a post's reading time or feed item: `sections-to-content.ts`): **Latest feed** (`feed`), **Pinned post** (`pinned`), **Games row** (`games`), and **Latest posts** with its section frame, order and "leave out when empty" (`latest`, the Projects and Repos rows). A Latest feed carries the page's `#latest` anchor and its kind filter, so a page holds one (`once` in the definition; `onceProblems` in `checks.ts` stops the build on a second one, and the preview warns). A link at the end of a heading row shows only when both its text and its address are filled in: any optional box may be left empty on its own (the library's rule), so a half-filled link is left out rather than refused, and the preview says so.
+- **The home hero is not a block.** Its headline is the page's `h1`, and a block could put a second `h1` on another page; the hero is the home entry's own fields (`title`, `eyebrow`, `lead`, `buttons`), like a listing page's head. There is no "browse by kind" block either: the links to each kind's archive are part of the Latest feed, as on the page.
+- **Not blocks**, because they are page chrome, one-per-page, or built from a route's own data: the header and footer, the archive list with its filters and pagination, the post-page pieces (share row, previous/next, related posts, series navigation, hero), the `/games/` hub's grid with its "More games coming" card, the newsletter band at the foot of the listing pages, and the README block (it needs a repository per page). A later task can add one if a page needs it.
 
 ## What the editor preview approximates
 
@@ -88,7 +90,7 @@ The preview draws the page with the site's own stylesheets, the same classes and
 
 - the header and footer are not drawn, and the pane is narrower than a screen, so a portrait beside the text may sit above it;
 - text is read by a simplified Markdown reader (headings, paragraphs, lists, bold, italic, code, links): the page reads all of Markdown;
-- blocks that need the built site show a stand-in, and say so under themselves (`previewNote` in the definition): Latest posts, GitHub stats row, Playable game, Video embed, Code block (no syntax colours), Lightbox gallery (no full-size window), Table of contents, Newsletter (no working form).
+- blocks that need the built site show a stand-in, and say so under themselves (`previewNote` in the definition): Latest posts, Latest feed, Pinned post, Games row, GitHub stats row, Playable game, Video embed, Code block (no syntax colours), Lightbox gallery (no full-size window), Table of contents, Newsletter (no working form).
 
 ## The catalogue
 
@@ -547,17 +549,23 @@ sections:
 
 #### Latest posts (`latest`)
 
-The newest published posts as cards, filtered by kind, tag and/or author. Drafts and future-dated posts are left out, as everywhere else.
+The newest published posts as cards, filtered by kind, tag and/or author: in the page, or as a section of its own with a rule above it (the Projects and Repos rows of the home page). Drafts and future-dated posts are left out, as everywhere else.
 
-Sits: In a row of its own, the width of the page. It ends a picture-beside-text row. In the editor preview: The posts are chosen when the site is built, so the preview shows what the block will pick, not the cards.
+Sits: In a row of its own, the width of the page, when the frame is "In the page" (it ends a picture-beside-text row); a full-width section with its own spacing when the frame is "A section of its own". In the editor preview: The posts are chosen when the site is built, so the preview shows what the block will pick, not the cards.
 
 | Field | Box | Required | Notes |
 | --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
 | `heading` | One line | no | Optional. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
 | `kinds` | Several choices | no | Which kinds of post. Choose none for every kind. Choices: `news`, `blog`, `vlog`, `project`, `repo`. |
 | `tag` | One line (checked) | no | Optional. Only posts with this tag, written as the posts write it, e.g. ai-agents. The build stops if no post has it. |
 | `author` | Menu of the authors | no | Optional. Only posts credited to this author. |
 | `count` | Number | no | Between 1 and 12. Default `3`. 1 to 12. |
+| `order` | Menu | no | Last updated first suits repos: a repo with no GitHub data counts from the date of its entry. Choices: `newest`, `updated`. Default `newest`. |
+| `look` | Menu | no | Choices: `plain`, `section`. Default `plain`. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All projects". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /subscribe/ for a page on this site. |
+| `ifEmpty` | Menu | no | Choices: `say`, `hide`. Default `say`. |
 
 ```yaml
 sections:
@@ -565,6 +573,78 @@ sections:
     heading: "The *latest* posts"
     kinds: []
     count: 3
+    moreLabel: Everything
+    moreUrl: /latest/
+```
+
+#### Latest feed (`feed`)
+
+The newest posts of every kind with a filter by kind (links to each kind's archive when JavaScript is off) and a link to everything (the Latest section of the home page). Its anchor is #latest, so a button can point at it; one per page.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The posts, the kind filter and the archive links are made from the posts when the site is built, so the preview shows a stand-in.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `heading` | One line | yes | e.g. Latest. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `count` | Number | no | Between 1 and 12. The newest is marked New. Default `8`. 1 to 12. |
+| `emptyHeading` | One line | yes | Shown instead of the cards while the site has no posts at all. At most 100 characters. |
+| `emptyText` | Several lines | yes | A sentence under that heading. At most 300 characters. |
+| `browseLabel` | One line | no | Optional. The small title over the links to each kind's archive (only kinds with posts get a link), e.g. Browse by kind. They stand in for the kind filter when JavaScript is off, so most readers never see them. Leave it empty for no links. At most 60 characters. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "Browse everything". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /subscribe/ for a page on this site. |
+
+```yaml
+sections:
+  - type: feed
+    heading: Latest
+    count: 8
+    emptyHeading: Nothing is posted yet.
+    emptyText: Subscribe below and I will send an email when the first post is up.
+    browseLabel: Browse by kind
+    moreLabel: Browse everything
+    moreUrl: /latest/
+```
+
+#### Pinned post (`pinned`)
+
+The post marked Featured (the newest, if several are), as a large card. Left out when no post is featured, or when only one post is published (the latest posts already show it).
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The featured post is chosen when the site is built, so the preview shows a stand-in.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `heading` | One line | yes | e.g. Start here. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+
+```yaml
+sections:
+  - type: pinned
+    eyebrow: Pinned
+    heading: Start here
+```
+
+#### Games row (`games`)
+
+The first published games (projects with a Play address), in the order of the Games page, as game cards with a Play button. Left out while no game is published.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The games are chosen when the site is built, so the preview shows a stand-in.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `heading` | One line | yes | e.g. Games. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `count` | Number | no | Between 1 and 12. Default `3`. 1 to 12. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All games". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /subscribe/ for a page on this site. |
+
+```yaml
+sections:
+  - type: games
+    eyebrow: Play in the browser
+    heading: Games
+    count: 3
+    moreLabel: All games
+    moreUrl: /games/
 ```
 
 #### Author box (`author`)
@@ -626,6 +706,6 @@ UPDATE_SECTIONS_DOC=1 npx vitest run src/lib/sections/sections-docs
 - **Schema**: `import { sectionsSchema } from './lib/sections'` and add `sections: sectionsSchema` to the collection's schema. It is optional (a file without it reads as an empty list).
 - **Form**: `import { sectionsField } from './sections-config'` (in `src/admin/`) and put `sectionsField()` in the collection's fields (`name`, `label` and `hint` can be set).
 - **Page**: `<Sections sections={entry.data.sections} source="the-file.md" />`.
-- **Preview**: `aboutPreview` in `src/admin/about-preview.ts` is the page preview; register it under the collection's preview name in `src/admin/main.ts`. (Posts already have theirs: `preview.ts` and `post-preview.ts`.)
+- **Preview**: `aboutPreview` in `src/admin/about-preview.ts` is the page preview; register it under the collection's preview name in `src/admin/main.ts`. The home page and the listing pages use `pagePreview` (`src/admin/page-previews.ts`), which draws the hero or page head and puts a labelled stand-in where the list goes. (Posts already have theirs: `preview.ts` and `post-preview.ts`.)
 - **Anything that reads the body** (a word count, a heading list, an export) goes through `src/lib/sections-to-content.ts`, not the Markdown.
 - **Tests**: add the route to `tests/routes.js`; `/styleguide/sections/` already covers every block.

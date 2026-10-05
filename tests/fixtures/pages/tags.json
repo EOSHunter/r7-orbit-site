@@ -1,0 +1,34 @@
+{
+  "path": "/tags/",
+  "posts": [
+    "blog/test",
+    "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "projects/vesper-drift"
+  ],
+  "head": [
+    "title: Tags · R7 Orbit",
+    "description: Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.",
+    "p.eyebrow: Tags",
+    "h1: Browse by topic",
+    "em: topic",
+    "p.t-lead: Every tag in use, with the number of posts that carry it. A tag gets its own page once two posts share it."
+  ],
+  "lines": [
+    "title: Tags · R7 Orbit",
+    "description: Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.",
+    "p.eyebrow: Tags",
+    "h1: Browse by topic",
+    "em: topic",
+    "p.t-lead: Every tag in use, with the number of posts that carry it. A tag gets its own page once two posts share it.",
+    "h2.visually-hidden: Tags with a page",
+    "[content]",
+    "h2.eyebrow: Used once",
+    "[content]",
+    "p.eyebrow: Newsletter",
+    "h2: One email when something new is worth reading",
+    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
+    "label: Email address",
+    "button.btn: Subscribe",
+    "p: "
+  ]
+}

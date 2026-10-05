@@ -1,7 +1,12 @@
 ---
-// One archive page: /news/, /blog/, /vlogs/, /projects/, /repos/ and /latest/, and their /page/N/ routes.
+// One archive page: /news/, /blog/, /vlogs/, /projects/, /repos/ and /latest/, and their /page/N/ routes. The words are the page's
+// entry, src/content/pages/<kind or latest>.md (edited in /admin, "Pages"): the heading, the lead, the browser title and
+// description, the empty state, and blocks above and below the list (`introSections`, `outroSections`). Every numbered page
+// repeats them. The list itself (filters, cards, pagination, counts) is ArchiveList; the label over the heading is the kind's
+// name in code (src/lib/listing.ts), shared with the navigation.
 import ArchiveList from './ArchiveList.astro';
 import Icon from './Icon.astro';
+import Sections from './Sections.astro';
 import SubscribeBand from './SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import type { CollectionName } from '../lib/content';
@@ -13,7 +18,8 @@ import type { Kind } from '../lib/cards';
 import { PAGE_SIZE, kindInfo, pageUrl } from '../lib/listing';
 import { toCards } from '../lib/post-cards';
 import { site } from '../data/site';
-import { breadcrumbLd, collectionPageLd, jsonLdString } from '../lib/seo';
+import { breadcrumbLd, collectionPageLd, headTitleFor, jsonLdString } from '../lib/seo';
+import { loadSitePage, type LoadedPage } from '../lib/site-pages-queries';
 import { titleParts } from '../lib/text';
 
 interface Props {
@@ -23,16 +29,19 @@ interface Props {
   posts: SitePost[];
   page: number;
   pages: number;
+  /** The page's words. Left out, they are read from its entry (src/content/pages/); the fixture /styleguide/listing/ passes its own. */
+  entry?: LoadedPage;
 }
 
-const { collection, posts, page, pages } = Astro.props;
+const { collection, posts, page, pages, entry: given } = Astro.props;
 const info = collection ? kindInfo(collection) : undefined;
 
 const base = collection ? `/${collection}/` : '/latest/';
-const label = info?.label ?? 'Latest';
-const heading = info?.title ?? 'Everything, *newest first*';
-const lead = info?.lead ?? 'News, writing, videos, projects and repos in one list. Filter by kind or tag, or search.';
-const description = info?.description ?? site.description;
+const entry = given ?? (await loadSitePage(collection ?? 'latest'));
+const { label } = entry;
+const { title: heading, seoTitle, description, introSections, outroSections } = entry.data;
+const headTitle = headTitleFor(heading, seoTitle);
+const source = `${entry.id}.md`;
 
 const cards = await toCards(posts, { filterable: true });
 const kinds: Kind[] = collection
@@ -41,6 +50,22 @@ const kinds: Kind[] = collection
 const tags = tagCounts(posts).map((t) => t.tag);
 const authors = authorsWithPosts(await getAuthors(), posts);
 const first = (page - 1) * PAGE_SIZE;
+const list = {
+  cards,
+  start: first,
+  size: PAGE_SIZE,
+  page,
+  pages,
+  base,
+  tags,
+  kinds,
+  authors,
+  noun: info?.noun ?? 'posts',
+  nounOne: info?.nounOne ?? 'post',
+  empty: entry.text('emptyHeading'),
+  emptyText: entry.text('emptyText'),
+  what: info ? info.noun : 'posts',
+};
 const ld = [
   collectionPageLd(site, { path: pageUrl(base, page), name: label, description }),
   breadcrumbLd(site, [{ name: label, path: base }, ...(page > 1 ? [{ name: `Page ${page}` }] : [])]),
@@ -48,7 +73,7 @@ const ld = [
 ---
 
 <BaseLayout
-  title={page > 1 ? `${label}, page ${page}` : label}
+  title={page > 1 ? `${headTitle}, page ${page}` : headTitle}
   description={page > 1 ? `Page ${page} of ${pages}. ${description}` : description}
   current={collection ? base : undefined}
   noindex={posts.length === 0}
@@ -66,25 +91,22 @@ const ld = [
       <h1>
         {titleParts(heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}
       </h1>
-      <p class="t-lead">{lead}</p>
+      <p class="t-lead">{entry.text('lead')}</p>
     </header>
 
-    <ArchiveList
-      cards={cards}
-      start={first}
-      size={PAGE_SIZE}
-      {page}
-      {pages}
-      {base}
-      {tags}
-      {kinds}
-      {authors}
-      noun={info?.noun ?? 'posts'}
-      nounOne={info?.nounOne ?? 'post'}
-      empty={info?.empty ?? 'Nothing is posted yet.'}
-      what={info ? info.noun : 'posts'}
-    />
+    {introSections.length === 0 && <ArchiveList {...list} />}
   </div>
+  {
+    introSections.length > 0 && (
+      <>
+        <Sections sections={introSections} source={`${source} (introSections)`} />
+        <div class="container wide">
+          <ArchiveList {...list} />
+        </div>
+      </>
+    )
+  }
+  {outroSections.length > 0 && <Sections sections={outroSections} source={`${source} (outroSections)`} />}
   <div class="archive-end"></div>
   <SubscribeBand />
 </BaseLayout>

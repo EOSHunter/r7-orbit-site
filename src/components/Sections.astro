@@ -5,10 +5,13 @@
 // leaves the column (a wide or full image, a gallery, the latest posts, a game, the newsletter band) gets a row of its own. Where
 // each block sits is its definition's `placement`; the rows come from `layoutSections`, which the admin preview uses too.
 //
-// Used by src/pages/about.astro and the fixture page (`layout="page"`: rows the width of the window), and by the post pages for a post
-// written as sections (`layout="column"`: the rows sit in the post's text column, beside its contents list or facts, so nothing reaches
-// the window's edges and a Full image is as wide as the column). The admin preview draws the same rows from strings (src/admin/sections-html.ts).
-import { layoutSections, type Section, type SectionOf } from '../lib/sections';
+// Used by src/pages/about.astro and the fixture page (`layout="page"`: rows the width of the window), by the home page (its rows), the
+// archives, /games/ and /tags/ (the blocks above and below their list), also with `layout="page"`, and by the post pages for a post
+// written as sections (`layout="column"`: the rows sit in the post's text column, beside its contents list or facts, so nothing
+// reaches the window's edges and a Full image is as wide as the column). The admin preview draws the same rows from strings
+// (src/admin/sections-html.ts).
+import { layoutSections, SECTION_LABELS, type Section, type SectionOf } from '../lib/sections';
+import { onceProblems, whereOf } from '../lib/sections/checks';
 import { prepareSections } from '../lib/sections/prepare';
 import HeadingBlock from './sections/HeadingBlock.astro';
 import PortraitBlock from './sections/PortraitBlock.astro';
@@ -29,6 +32,10 @@ interface Props {
 
 const { sections, source, layout = 'page', headingIds = false } = Astro.props;
 const rowClass = layout === 'page' ? 'container wide sec-row' : 'sec-row';
+
+// A block a page may hold once (the Latest feed: one #latest anchor, one kind filter), found twice, stops the build.
+const [repeated] = onceProblems(sections.map((s) => s.type));
+if (repeated) throw new Error(`${whereOf(source, repeated.index, SECTION_LABELS[sections[repeated.index].type])}: ${repeated.message}`);
 
 // Everything the markup needs that takes a read or a render, done once up front: the Markdown of each text box (HTML,
 // sanitised), the size of each picture (so the page reserves its space) and, with a table of contents, the headings.

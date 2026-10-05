@@ -52,6 +52,9 @@ const EXPECTED: Record<SectionType, { text: string[]; markdown: string[]; notInM
   toc: { text: [], markdown: [] },
   stats: { text: [], markdown: ['[EOSHunter/r7-orbit-site on GitHub](<https://github.com/EOSHunter/r7-orbit-site>)'] },
   latest: { text: [], markdown: [], notInMarkdown: ['latest'] },
+  feed: { text: [], markdown: [], notInMarkdown: ['Nothing is posted yet', 'Browse everything'] },
+  pinned: { text: [], markdown: [], notInMarkdown: ['Start here'] },
+  games: { text: [], markdown: [], notInMarkdown: ['Play in the browser', 'All games'] },
   author: { text: [], markdown: [], notInMarkdown: ['hunter-newton'] },
   newsletter: { text: [], markdown: [], notInMarkdown: ['One email'] },
 };

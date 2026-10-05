@@ -1,4 +1,5 @@
-// The "Pages" collection of /admin: the About page (src/content/pages/about.md), then subscribe, privacy, 404 and search. Its page fields mirror the `pages` schema in
+// The "Pages" collection of /admin: the About page (src/content/pages/about.md), then the home page and the listing pages (their files
+// are src/admin/site-page-files.ts, kept apart), then subscribe, privacy, 404 and search. About's page fields mirror the `pages` schema in
 // src/content.config.ts (pages.vitest.ts reads that to keep the two in step: change the names together). Its `sections` list is the shared
 // block library, generated from the block definitions in src/lib/sections/ (sections-config.ts), so no block or block field is
 // written here. Kept in its own file, away from config.ts, which holds the post collections.
@@ -6,6 +7,7 @@ import type { CmsCollection, CmsField } from 'decap-cms-core';
 import site from '../data/site.json';
 import { seoTitleMax } from '../lib/seo';
 import { sectionsField } from './sections-config';
+import { sitePageFiles } from './site-page-files';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
 
@@ -110,7 +112,7 @@ export const pagesCollection = {
   label: 'Pages',
   label_singular: 'Page',
   description:
-    'Pages made of blocks you can add, remove and re-order: About, and the words of Subscribe, Privacy, the 404 page and Search.',
+    'Pages made of blocks you can add, remove and re-order: About, the home page, the words of the archives, the Games page and the Tags page, and the words of Subscribe, Privacy, the 404 page and Search.',
   delete: false,
   // Uploads for pages go to public/media/about/, written as /media/about/x.jpg (the same pair as mediaFolders('about') in
   // config.ts, which imports this file, so it is spelled out here). docs/IMAGES.md.
@@ -126,6 +128,8 @@ export const pagesCollection = {
       editor: { preview: true },
       fields: aboutFields,
     },
+    // The home page, the archives, Latest, Games and Tags (src/admin/site-page-files.ts).
+    ...sitePageFiles,
     ...framedPageFiles,
   ],
 } as unknown as CmsCollection;

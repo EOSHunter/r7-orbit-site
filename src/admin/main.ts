@@ -17,12 +17,14 @@ import { blocks, markdownImage } from './blocks';
 import { buildConfig, CMS_AUTH_URL, CMS_BRANCH, CMS_REPO } from './config';
 import { framedPreview } from './framed-preview';
 import { imageSaveCheck } from './image-rules';
+import { pagePreview } from './page-previews';
 import { FRAMED_PAGES } from './pages';
 import { bodyOrSectionsCheck } from './post-body';
 import { POST_PREVIEW_KINDS, postPreview, type PreviewKind } from './post-preview';
 import { blogPreview } from './preview';
 import { globalStyleOf, spriteOf } from './preview-assets';
 import previewCss from './preview.css?inline';
+import { SITE_PAGES } from '../lib/site-pages';
 
 // The defaults are the constants in config.ts. A build can override each with a PUBLIC_ variable; those are readable in the
 // browser, so never put a secret in one.
@@ -57,6 +59,8 @@ for (const kind of Object.keys(POST_PREVIEW_KINDS) as PreviewKind[]) {
 }
 // A file collection's template is named after the file: the About page is the `about` file of the Pages collection.
 CMS.registerPreviewTemplate('about', aboutPreview({ sprite: spriteOf(spriteSource) }));
+// The home page and the listing pages, each under its file's name in the Pages collection (src/admin/site-page-files.ts).
+for (const page of SITE_PAGES) CMS.registerPreviewTemplate(page.admin.name, pagePreview(page, { sprite: spriteOf(spriteSource) }));
 // Subscribe, privacy, 404 and search: the same preview, with the site settings filled in (framed-preview.ts).
 for (const name of FRAMED_PAGES) CMS.registerPreviewTemplate(name, framedPreview(name, { sprite: spriteOf(spriteSource) }));
 

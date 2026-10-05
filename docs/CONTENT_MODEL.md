@@ -175,7 +175,7 @@ Body sections the template expects (as `##` headings): **Why I built it**, **How
 
 ## Pages (`src/content/pages/`)
 
-A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`) and `subscribe.md`, `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All five use the same schema. Each file is front matter only (no body).
+A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`), the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `games.md`, `tags.md` (see "The home page and the listing pages" below), and `subscribe.md`, `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All of them use the same schema. Each file is front matter only (no body).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -184,7 +184,7 @@ A page that is not a post, made of **blocks** the author adds, removes and re-or
 | `description` | string | yes | The meta description (about 155 characters reads best; at most 180). Not shown on the page |
 | `sections` | block[] | no | The page, top to bottom. An absent list is an empty one; at most 60 blocks |
 
-**The blocks are the shared library** in `src/lib/sections/` (one definition per block: its fields, schema, label and where it sits), documented with every field and an example in [`SECTIONS.md`](SECTIONS.md). Each block is `- type: <id>` plus its own fields, checked strictly by `sectionsSchema`: an unknown field or type fails the build with the block's position (`sections.1.alt: Block 2 (Image): ...`). The same library is attached to every kind of post (see "Body: Markdown or sections" above); other pages can use it later.
+**The blocks are the shared library** in `src/lib/sections/` (one definition per block: its fields, schema, label and where it sits), documented with every field and an example in [`SECTIONS.md`](SECTIONS.md). Each block is `- type: <id>` plus its own fields, checked strictly by `sectionsSchema`: an unknown field or type fails the build with the block's position (`sections.1.alt: Block 2 (Image): ...`). The same library is attached to every kind of post (see "Body: Markdown or sections" above) and draws the home page's rows and the blocks around a listing ("The home page and the listing pages" below).
 
 | `type` | What it draws |
 |---|---|
@@ -192,7 +192,8 @@ A page that is not a post, made of **blocks** the author adds, removes and re-or
 | `image`, `image-row`, `gallery`, `portrait`, `video`, `game` | A picture (narrow, wide or full), two or three pictures in a row, a lightbox gallery, a picture beside text, a YouTube video behind a click-to-load player, a playable game behind a Play button |
 | `columns`, `divider`, `spacer` | Two Markdown columns, a hairline or three dots, empty space |
 | `links`, `button` | A list of links, a solid button |
-| `toc`, `stats`, `latest`, `author`, `newsletter` | A contents list of the page's headings, a GitHub repository's numbers (fetched at build time), the newest posts by kind, tag and/or author (drafts and future-dated posts left out), an author's box, the newsletter sign-up |
+| `toc`, `stats`, `latest`, `author`, `newsletter` | A contents list of the page's headings, a GitHub repository's numbers (fetched at build time), the newest posts by kind, tag and/or author (drafts and future-dated posts left out; in the page, or as a ruled section with an eyebrow and an "All …" link; newest or last updated first; it can leave itself out when empty), an author's box, the newsletter sign-up |
+| `feed`, `pinned`, `games` | The home page's Latest feed (the newest posts with a kind filter, links to each kind's archive when JavaScript is off, a link to everything; one per page, anchor `#latest`), the featured post as a large card (left out with no featured post or only one post), the first published games as game cards (left out with none) |
 
 The nine blocks About already used (`heading`, `text`, `image`, `portrait`, `quote`, `callout`, `links`, `button`, `divider`) keep their names and fields; the new fields on `image` (`align`, `size`) are optional.
 
@@ -207,6 +208,30 @@ The About page's text is fixed by a test: `tests/about.spec.js` compares the ren
 
 `/styleguide/sections/` (noindex, unlinked, in `tests/routes.js`) draws every block with the real renderer, for the axe and width checks; a block added to the library appears there by itself.
 
+### The home page and the listing pages
+
+These files add the fields of `sitePageFields` (`src/lib/site-pages.ts`). The schema accepts them on any page; which page **needs** which, and which it **draws**, is checked when the page is built (`pageProblems`): a needed field that is missing or empty, or a filled-in field the page does not draw, stops the build with the file and the field (`src/content/pages/blog.md: "emptyHeading" is missing (the heading shown when there is nothing to list).`). An optional box left empty in the editor arrives as `""` and means "not set".
+
+| Field | Type | Home | Listings | Games | Notes |
+|---|---|---|---|---|---|
+| `title` | string | yes | yes | yes | The page's one `h1` (on the home page, the hero headline). One `*phrase*` in asterisks is italic brass |
+| `seoTitle` | string | no (not drawn) | no | no | The browser title, "· {site name}" is added. Today the kind's name ("Blog"). Empty: the heading. The home page's browser title is `{site name} · {tagline}` from `site.json` |
+| `description` | string | yes | yes | yes | Meta description |
+| `eyebrow` | string | no | | | Hero: the brass line over the headline. At most 80 characters |
+| `lead` | string | no | yes | yes | The sentence under the heading (plain text). At most 300 |
+| `buttons` | `{label, url}[]` | no | | | Hero: up to two; the first solid. `url` is `https://…`, `/page/` or `#anchor` (`#latest` is the Latest feed, `#subscribe` the newsletter band) |
+| `sections` | block[] | yes (the rows) | | | The rows under the hero |
+| `introSections`, `outroSections` | block[] | | no | no | Blocks between the lead and the list, and between the list and the newsletter band. Every numbered page repeats them |
+| `emptyHeading`, `emptyText` | string | | yes | yes | Said when there is nothing to list (at most 100 and 300) |
+| `emptyLinkLabel` | string | | | yes | The empty state's button (it goes to `/projects/`) |
+| `soonEyebrow`, `soonTitle`, `soonText` | string | | | yes | The card beside a single game ("Next up", "More games coming", …) |
+
+"Listings" are `latest`, `news`, `blog`, `vlogs`, `projects`, `repos` and `tags`. A blank cell means the page does not draw the field (and the build refuses it). What is made from the posts stays in code and is not a field: the list, its filters, counts and pagination, the games grid, the tag chips, the kind's label and icon over the heading (the nav label), "Used once" on `/tags/`, and the filters' "Nothing matches that." messages.
+
+The words in these files were moved from code unchanged (`KINDS` in `src/lib/listing.ts`, `GAMES_COPY` in `src/lib/games.ts`, the literals in `index.astro`, `ArchivePage.astro`, `ArchiveList.astro` and `tags/index.astro`). `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`: change the fixture in the same commit as a deliberate change of words (`npm run build && UPDATE_PAGE_TEXT=1 npx playwright test page-text`, then read the diff). When the published posts differ from the ones a fixture was captured with, only the page head is compared.
+
+The settings tokens of the next section work in these files too: `home.md` writes the hero's eyebrow and lead and its description as `{site.tagline}` and `{site.description}`, and `latest.md` its description as `{site.description}`, so the tagline and description stay in Site settings. `loadSitePage` (`src/lib/site-pages-queries.ts`) fills them; a unit test checks that no page file types a settings value out.
+
 ### Pages with a fixed frame: subscribe, privacy, 404, search
 
 `src/content/pages/subscribe.md`, `privacy.md`, `404.md` and `search.md` hold the **words** of those pages; the frame (eyebrow, newsletter form, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Subscribe", "Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
@@ -218,7 +243,7 @@ The About page's text is fixed by a test: `tests/about.spec.js` compares the ren
 | `404.md` | Leading `lead` under the heading; anything else after it, above the search box |
 | `search.md` | Every block is the note shown only without JavaScript (inside `<noscript>`, `text` paragraphs as `.search-note`) |
 
-**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{author.email}`, `{links.rss}` or `{newsletter.provider}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
+**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}` or `{newsletter.provider}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
 
 **Newsletter condition.** A block whose text starts with the line `{if newsletter connected}` is kept only when `newsletter.formAction` is set; `{if newsletter not connected}` only when it is empty. The line is removed; any other `{if ...}` fails the build. This is how `privacy.md` keeps its two newsletter variants.
 

@@ -1,76 +1,55 @@
 ---
+// Every tag in use. Its words are src/content/pages/tags.md (edited in /admin, "Pages" > Tags page): the heading, lead, browser
+// title and description, the empty state, and blocks above and below the list. The chips and "Used once" are code.
+import Sections from '../../components/Sections.astro';
+import TagIndex from '../../components/TagIndex.astro';
 import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { tagCounts } from '../../lib/content';
 import { getAllPosts } from '../../lib/content-queries';
-import { breadcrumbLd, collectionPageLd, jsonLdString } from '../../lib/seo';
+import { breadcrumbLd, collectionPageLd, headTitleFor, jsonLdString } from '../../lib/seo';
+import { loadSitePage } from '../../lib/site-pages-queries';
+import { titleParts } from '../../lib/text';
 import { site } from '../../data/site';
 
 const posts = await getAllPosts();
 const counts = tagCounts(posts);
-// A tag page exists once a tag has two posts; a tag used once is listed but not linked.
-const linked = counts.filter((t) => t.count >= 2);
-const single = counts.filter((t) => t.count < 2);
-const description =
-  'Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.';
+const entry = await loadSitePage('tags');
+const { label } = entry;
+const { title, seoTitle, description, introSections, outroSections } = entry.data;
+const list = { counts, emptyHeading: entry.text('emptyHeading'), emptyText: entry.text('emptyText') };
 const ld = [
-  collectionPageLd(site, { path: '/tags/', name: 'Tags', description }),
-  breadcrumbLd(site, [{ name: 'Tags' }]),
+  collectionPageLd(site, { path: '/tags/', name: label, description }),
+  breadcrumbLd(site, [{ name: label }]),
 ];
 ---
 
 <BaseLayout
-  title="Tags"
+  title={headTitleFor(title, seoTitle)}
   {description}
   noindex={counts.length === 0}
 >
   <script slot="head" type="application/ld+json" set:html={jsonLdString(ld)} />
   <div class="container wide">
     <header class="page-head">
-      <p class="eyebrow brass">Tags</p>
-      <h1>Browse by <em>topic</em></h1>
-      <p class="t-lead">
-        Every tag in use, with the number of posts that carry it. A tag gets its own page once two posts share it.
-      </p>
+      <p class="eyebrow brass">{label}</p>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <p class="t-lead">{entry.text('lead')}</p>
     </header>
 
-    {counts.length === 0 ? (
-      <div class="empty">
-        <h2>No tags yet.</h2>
-        <p>Tags appear here once a post uses one.</p>
-      </div>
-    ) : (
-      <>
-        {linked.length > 0 && (
-          <section class="block" aria-labelledby="tags-h">
-            <h2 class="visually-hidden" id="tags-h">Tags with a page</h2>
-            <ul class="tag-index">
-              {linked.map(({ tag, count }) => (
-                <li>
-                  <a class="chip mono" href={`/tags/${tag}/`}>
-                    {tag}
-                    <span class="count">{count}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-        {single.length > 0 && (
-          <section class="block" aria-labelledby="single-h">
-            <h2 class="eyebrow" id="single-h">Used once</h2>
-            <ul class="tag-index">
-              {single.map(({ tag }) => (
-                <li>
-                  <span class="chip mono">{tag}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </>
-    )}
+    {introSections.length === 0 && <TagIndex {...list} />}
   </div>
+  {
+    introSections.length > 0 && (
+      <>
+        <Sections sections={introSections} source="tags.md (introSections)" />
+        <div class="container wide">
+          <TagIndex {...list} />
+        </div>
+      </>
+    )
+  }
+  {outroSections.length > 0 && <Sections sections={outroSections} source="tags.md (outroSections)" />}
   <div class="archive-end"></div>
   <SubscribeBand />
 </BaseLayout>

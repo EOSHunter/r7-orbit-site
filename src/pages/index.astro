@@ -1,204 +1,47 @@
 ---
-import GameGrid from '../components/GameGrid.astro';
-import Icon from '../components/Icon.astro';
-import PostCard from '../components/PostCard.astro';
+// The home page. Its words and the order of its rows are src/content/pages/home.md (edited in /admin, "Pages" > Home page): the
+// hero is the entry's own fields (the headline is the page's h1), and every row below it is a block (the shared library,
+// docs/SECTIONS.md): Pinned post, Latest feed, Latest posts (Projects, Repos), Games row. The blocks query the posts when the site
+// is built. The newsletter band at the end is the site's, as on every listing page.
+import Sections from '../components/Sections.astro';
 import SubscribeBand from '../components/SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
-import { featuredPost } from '../lib/content';
-import { getAllPosts, getGames } from '../lib/content-queries';
-import { toGameCards } from '../lib/game-cards';
-import { GAMES_COPY, GAMES_PATH } from '../lib/games';
-import { countLabel } from '../lib/listing';
-import type { CardData, Kind } from '../lib/cards';
-import { toCard, toCards } from '../lib/post-cards';
+import { loadSitePage } from '../lib/site-pages-queries';
 import { jsonLdString, websiteLd } from '../lib/seo';
+import { titleParts } from '../lib/text';
 
-const posts = await getAllPosts();
-
-const featured = featuredPost(posts);
-// With one post, Latest already shows it: a pinned copy above would be the same card twice.
-const pinned = featured && posts.length > 1 ? await toCard(featured, { pinned: true }) : undefined;
-
-const latest = await toCards(posts.slice(0, 8), { filterable: true });
-if (latest[0]) latest[0] = { ...latest[0], fresh: true };
-
-const kindOrder: Kind[] = ['news', 'blog', 'vlog', 'project', 'repo'];
-const kinds = kindOrder.filter((kind) => latest.some((card) => card.kind === kind));
-// Links to the archives of every kind that has something, not only the kinds among the latest eight.
-const KIND_COLLECTION: Record<Kind, string> = { news: 'news', blog: 'blog', vlog: 'vlogs', project: 'projects', repo: 'repos' };
-const browseKinds = kindOrder.filter((kind) => posts.some((post) => post.collection === KIND_COLLECTION[kind]));
-const KIND_PLURAL: Record<Kind, string> = { news: 'News', blog: 'Blogs', vlog: 'Vlogs', project: 'Projects', repo: 'Repos' };
-const KIND_HREF: Record<Kind, string> = {
-  news: '/news/',
-  blog: '/blog/',
-  vlog: '/vlogs/',
-  project: '/projects/',
-  repo: '/repos/',
-};
-
-// The Games teaser appears only once a game is published: at most three, in hub order.
-const gameCards = toGameCards((await getGames()).slice(0, 3));
-const projectCards =await toCards(posts.filter((p) => p.collection === 'projects').slice(0, 3));
-// Repos by most recent push; a repo without GitHub data falls back to the date of its entry.
-const repoCards = (await toCards(posts.filter((p) => p.collection === 'repos')))
-  .sort((a, b) => {
-    const when = (c: CardData) => String(c.kind === 'repo' ? (c.updated ?? c.date) : c.date);
-    return when(b).localeCompare(when(a));
-  })
-  .slice(0, 3);
+const home = await loadSitePage('home');
+const { title, description, sections, buttons = [] } = home.data;
+const eyebrow = home.text('eyebrow');
+const lead = home.text('lead');
 ---
 
-<BaseLayout title={site.name} description={site.description} home current="/#latest">
+<BaseLayout title={title} {description} home current="/#latest">
   <script slot="head" type="application/ld+json" set:html={jsonLdString(websiteLd(site))} />
   <section class="hero plate-grid" aria-labelledby="hero-h">
     <div class="container wide">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow brass">{site.tagline}</p>
-          <h1 class="t-display" id="hero-h">Plain notes on building with <em>AI agents</em>.</h1>
-          <p class="t-lead">{site.description}</p>
-          <div class="cluster">
-            <a class="btn solid lg" href="#latest">Start with the latest</a>
-            <a class="btn lg" href="#subscribe">Subscribe</a>
-          </div>
+          {eyebrow && <p class="eyebrow brass">{eyebrow}</p>}
+          <h1 class="t-display" id="hero-h">{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+          {lead && <p class="t-lead">{lead}</p>}
+          {buttons.length > 0 && (
+            <div class="cluster">
+              {buttons.map((button, i) => (
+                <a class:list={['btn', i === 0 && 'solid', 'lg']} href={button.url}>
+                  {button.label}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
         <div class="orbit" data-orbit="busy"></div>
       </div>
     </div>
   </section>
 
-  {pinned && (
-    <section class="section" aria-labelledby="pinned-h">
-      <div class="container wide">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Pinned</p>
-            <h2 class="section-title" id="pinned-h">Start here</h2>
-          </div>
-        </div>
-        <PostCard post={pinned} />
-      </div>
-    </section>
-  )}
-
-  <section class="section ruled" id="latest" aria-labelledby="latest-h" data-list>
-    <div class="container wide">
-      <div class="feed-head">
-        <h2 class="section-title" id="latest-h">Latest</h2>
-        <span class="spacer"></span>
-        {kinds.length > 1 && (
-          <div class="seg" role="group" aria-label="Filter by kind" data-filter="kind">
-            <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
-            {kinds.map((kind) => (
-              <button type="button" data-value={kind} aria-pressed="false">
-                {KIND_PLURAL[kind]}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      {latest.length > 0 ? (
-        <>
-          <p class="t-meta feed-count" data-count data-noun="posts" data-noun-one="post" aria-live="polite">{countLabel(latest.length, 'post', 'posts')}</p>
-          <div class="grid-cards" data-items>
-            {latest.map((post) => <PostCard {post} />)}
-          </div>
-          <div class="empty" data-empty hidden>
-            <h3 class="t-h3">Nothing matches that.</h3>
-            <p>None of the latest posts are of this kind. Try another kind, or see everything.</p>
-            <button class="btn" type="button" data-clear>Show all posts</button>
-          </div>
-        </>
-      ) : (
-        <div class="empty">
-          <h3 class="t-h3">Nothing is posted yet.</h3>
-          <p>Subscribe below and I will send an email when the first post is up.</p>
-        </div>
-      )}
-      {browseKinds.length > 0 && (
-        <nav class="feed-kinds" aria-label="Browse by kind">
-          <span class="eyebrow">Browse by kind</span>
-          <ul>
-            {browseKinds.map((kind) => (
-              <li>
-                <a class="chip" href={KIND_HREF[kind]}>
-                  <Icon name={kind} />
-                  {KIND_PLURAL[kind]}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-      {latest.length > 0 && (
-        <p class="feed-more">
-          <a class="more-link" href="/latest/">
-            Browse everything
-            <Icon name="arrow" />
-          </a>
-        </p>
-      )}
-    </div>
-  </section>
-
-  {projectCards.length > 0 && (
-    <section class="section ruled" aria-labelledby="projects-h">
-      <div class="container wide">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Things I am making</p>
-            <h2 class="section-title" id="projects-h">Projects</h2>
-          </div>
-          <a class="more-link" href="/projects/">
-            All projects
-            <Icon name="arrow" />
-          </a>
-        </div>
-        <div class="grid-cards">
-          {projectCards.map((post) => <PostCard {post} />)}
-        </div>
-      </div>
-    </section>
-  )}
-
-  {gameCards.length > 0 && (
-    <section class="section ruled" aria-labelledby="games-h" data-games-teaser>
-      <div class="container wide">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">{GAMES_COPY.teaserEyebrow}</p>
-            <h2 class="section-title" id="games-h">Games</h2>
-          </div>
-          <a class="more-link" href={GAMES_PATH}>
-            All games
-            <Icon name="arrow" />
-          </a>
-        </div>
-        <GameGrid games={gameCards} level={3} />
-      </div>
-    </section>
-  )}
-
-  {repoCards.length > 0 && (
-    <section class="section ruled" aria-labelledby="repos-h">
-      <div class="container wide">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Open source</p>
-            <h2 class="section-title" id="repos-h">Repos</h2>
-          </div>
-          <a class="more-link" href="/repos/">
-            All repos
-            <Icon name="arrow" />
-          </a>
-        </div>
-        <div class="grid-cards">
-          {repoCards.map((post) => <PostCard {post} />)}
-        </div>
-      </div>
-    </section>
-  )}
+  <Sections {sections} source="home.md" />
 
   <SubscribeBand />
 </BaseLayout>

@@ -1,0 +1,32 @@
+{
+  "path": "/repos/",
+  "posts": [
+    "blog/test",
+    "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "projects/vesper-drift"
+  ],
+  "head": [
+    "title: Repos · R7 Orbit",
+    "description: Open-source repositories from my work with AI, with stats from GitHub.",
+    "p.eyebrow: Repos",
+    "h1: Code you can use",
+    "em: use",
+    "p.t-lead: Open-source repositories, with stats from GitHub refreshed daily."
+  ],
+  "lines": [
+    "title: Repos · R7 Orbit",
+    "description: Open-source repositories from my work with AI, with stats from GitHub.",
+    "p.eyebrow: Repos",
+    "h1: Code you can use",
+    "em: use",
+    "p.t-lead: Open-source repositories, with stats from GitHub refreshed daily.",
+    "h2: No repos yet.",
+    "p: Check back soon, or subscribe below and I will send an email when something is posted.",
+    "p.eyebrow: Newsletter",
+    "h2: One email when something new is worth reading",
+    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
+    "label: Email address",
+    "button.btn: Subscribe",
+    "p: "
+  ]
+}

@@ -151,6 +151,10 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   stats: { text: () => [], markdown: (d) => mdLink(`${d.repo} on GitHub`, `https://github.com/${d.repo}`) },
   // Built from the site at build time (other posts, an author's bio, the sign-up form): not this post's words.
   latest: nothing,
+  // The home page's rows: made from the posts when the site is built, like the latest posts; nothing of their own to read or send.
+  feed: nothing,
+  pinned: nothing,
+  games: nothing,
   author: nothing,
   newsletter: nothing,
 };

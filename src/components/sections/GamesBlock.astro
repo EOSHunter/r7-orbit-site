@@ -1,0 +1,34 @@
+---
+// The first published games (projects with a playUrl), in the order of the /games/ hub, as GameCards. Left out while there is no
+// game. The hub itself (every game, its empty state and its "More games coming" card) is src/pages/games/index.astro.
+import GameGrid from '../GameGrid.astro';
+import SectionBand from './SectionBand.astro';
+import { getGames } from '../../lib/content-queries';
+import { toGameCards } from '../../lib/game-cards';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'games'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const games = toGameCards((await getGames()).slice(0, block.count));
+---
+
+{
+  games.length > 0 && (
+    <SectionBand
+      headingId={`sec-${ctx.index + 1}-h`}
+      eyebrow={block.eyebrow || undefined}
+      heading={block.heading}
+      moreLabel={block.moreLabel || undefined}
+      moreUrl={block.moreUrl || undefined}
+      ruled
+      data-games-teaser
+    >
+      <GameGrid {games} level={3} />
+    </SectionBand>
+  )
+}

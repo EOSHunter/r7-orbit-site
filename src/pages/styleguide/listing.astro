@@ -1,0 +1,28 @@
+---
+// Fixture for tests/site-pages.spec.js: an archive drawn by the real ArchivePage with words of its own, so the parts no real page
+// uses yet are tested: blocks above the list (`introSections`), blocks below it (`outroSections`) and the empty state's words.
+// The page's entry is the real blog archive's (src/content/pages/blog.md) with those fields replaced. No posts, so it is the empty
+// state, and noindex like every empty archive. Sample content, not part of the site; not linked from anywhere.
+import ArchivePage from '../../components/ArchivePage.astro';
+import { sectionsSchema } from '../../lib/sections';
+import { loadSitePage } from '../../lib/site-pages-queries';
+
+const blog = await loadSitePage('blog');
+const data = {
+  ...blog.data,
+  title: 'A listing *fixture*',
+  seoTitle: 'Listing fixture',
+  description: 'An archive with blocks above and below its list, for the tests. Not part of the site.',
+  lead: 'Blocks sit between this lead and the list, and after the list.',
+  introSections: sectionsSchema.parse([
+    { type: 'heading', text: 'Above the *list*' },
+    { type: 'text', text: 'An intro block, from `introSections`.' },
+  ]),
+  outroSections: sectionsSchema.parse([{ type: 'callout', kind: 'tip', text: 'An outro block, from `outroSections`.' }]),
+  emptyHeading: 'Nothing in the fixture.',
+  emptyText: 'The fixture has no posts, so its own empty words show.',
+};
+const entry = { ...blog, data, text: (field: Parameters<typeof blog.text>[0]) => data[field] ?? '' };
+---
+
+<ArchivePage collection="blog" posts={[]} page={1} pages={1} {entry} />

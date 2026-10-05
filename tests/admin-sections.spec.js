@@ -40,6 +40,9 @@ const SHOWS = {
   toc: '.art-toc li',
   stats: '.stats',
   latest: '.latest-posts',
+  feed: '.sec-row-band .feed-head h2',
+  pinned: '.sec-row-band section.section:not(.ruled) .section-head',
+  games: '.sec-row-band section.section.ruled .section-head',
   author: '.author-box',
   newsletter: '.sec-row-band .band, .sec-newsletter',
 };

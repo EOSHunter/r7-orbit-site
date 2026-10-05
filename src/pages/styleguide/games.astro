@@ -1,7 +1,8 @@
 ---
 // Fixture for tests/games.spec.js: the games hub drawn with the real components over made-up projects, so the tests do not
 // depend on published content. It runs the same helpers as /games/ (selectGames, toGameCards, gamesPageLd) over a mix that
-// includes a draft, a future-dated game, a project that is not a game, and `order` values, for zero, one, two and many games.
+// includes a draft, a future-dated game, a project that is not a game, and `order` values, for zero, one, two and many games. The
+// words (empty state, "more games coming" card) are the real hub's, from src/content/pages/games.md.
 // Sample content, not part of the site. Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
 import GamesSection from '../../components/GamesSection.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -10,6 +11,7 @@ import type { Post } from '../../lib/content';
 import { toGameCards } from '../../lib/game-cards';
 import { gamesPageLd, selectGames } from '../../lib/games';
 import { jsonLdString } from '../../lib/seo';
+import { gamesCopy, loadSitePage } from '../../lib/site-pages-queries';
 
 const URL = 'https://play.example.test/';
 
@@ -51,6 +53,9 @@ const pool: Post[] = [
   project('fixture-not-a-game', '2026-09-15', { playUrl: undefined, order: 0 }),
 ];
 
+const hub = await loadSitePage('games');
+const copy = gamesCopy(hub);
+
 const NOW = new Date('2026-10-05T12:00:00Z');
 const many = selectGames(pool, { now: NOW });
 // One, two and none: the first published games of the same selection, so a change in the rules shows in every variant.
@@ -63,7 +68,7 @@ const variants = [
 ---
 
 <BaseLayout title="Games fixture" description="A made-up games hub the tests use. Not part of the site." noindex>
-  <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, many))} />
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, many, hub.data.description))} />
   <div class="container wide">
     <header class="page-head">
       <p class="eyebrow brass">Not part of the site</p>
@@ -71,7 +76,7 @@ const variants = [
     </header>
     {variants.map((variant) => (
       <section class="section" data-fixture={variant.name} aria-label={`Fixture: ${variant.name}`}>
-        <GamesSection games={toGameCards(variant.games)} />
+        <GamesSection games={toGameCards(variant.games)} {copy} />
       </section>
     ))}
   </div>

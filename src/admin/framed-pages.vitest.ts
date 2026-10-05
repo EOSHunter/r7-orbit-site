@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { SITE_PAGES } from '../lib/site-pages';
 import { FRAMED_PAGES, pagesCollection } from './pages';
 
 // Subscribe, privacy, 404 and search in the Pages collection: one file entry each, the About page's four fields under the
@@ -13,7 +14,8 @@ const sectionsOf = (file: Field) => fieldsOf(file).find((f) => f.name === 'secti
 
 describe('the fixed-frame pages in the Pages collection', () => {
   it('come after About, one entry per page file, each written to the file the site reads', () => {
-    expect(files.map((f) => f.name)).toEqual(['about', 'subscribe', 'privacy', '404', 'search']);
+    // About first, then the home page and the listing pages (site-page-files.ts), then these four.
+    expect(files.map((f) => f.name)).toEqual(['about', ...SITE_PAGES.map((p) => p.admin.name), 'subscribe', 'privacy', '404', 'search']);
     expect(FRAMED_PAGES).toEqual(['subscribe', 'privacy', '404', 'search']);
     for (const name of FRAMED_PAGES) {
       expect(named(name)).toMatchObject({

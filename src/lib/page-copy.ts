@@ -2,8 +2,8 @@
 // docs/CONTENT_MODEL.md "Pages"). Their words are blocks of the shared library, edited in /admin; their frame (the eyebrow, the
 // newsletter form, the search box, the orbit) stays code. This module is what those pages do with the blocks before drawing them:
 //
-// - Settings tokens. `{site.name}`, `{author.email}`, `{links.rss}` and `{newsletter.provider}` in any text are replaced with the
-//   values of src/data/site.json, so changing the email in the settings changes the privacy page. An unknown `{x.y}` stops the
+// - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}` and
+//   `{newsletter.provider}` in any text are replaced with the values of src/data/site.json, so changing the email in the settings changes the privacy page. An unknown `{x.y}` stops the
 //   build, so a typo never reaches the page as braces.
 // - The newsletter switch. A block whose text starts with the line `{if newsletter connected}` is shown only when the newsletter
 //   is connected (`newsletter.formAction` is set); `{if newsletter not connected}` only when it is not. The line itself is removed.
@@ -16,6 +16,8 @@ import { SECTION_LABELS, type Section } from './sections';
 /** The site settings a page's text can print. */
 export interface PageSettings {
   siteName: string;
+  siteTagline: string;
+  siteDescription: string;
   authorEmail: string;
   rss: string;
   newsletterProvider: string;
@@ -24,6 +26,8 @@ export interface PageSettings {
 
 interface SiteLike {
   name: string;
+  tagline: string;
+  description: string;
   author: { email: string };
   links: { rss: string };
   newsletter: { provider: string; formAction: string };
@@ -33,6 +37,8 @@ interface SiteLike {
 export function pageSettingsOf(site: SiteLike): PageSettings {
   return {
     siteName: site.name,
+    siteTagline: site.tagline,
+    siteDescription: site.description,
     authorEmail: site.author.email,
     rss: site.links.rss,
     newsletterProvider: site.newsletter.provider,
@@ -43,6 +49,8 @@ export function pageSettingsOf(site: SiteLike): PageSettings {
 
 const TOKENS: Record<string, (s: PageSettings) => string> = {
   'site.name': (s) => s.siteName,
+  'site.tagline': (s) => s.siteTagline,
+  'site.description': (s) => s.siteDescription,
   'author.email': (s) => s.authorEmail,
   'links.rss': (s) => s.rss,
   'newsletter.provider': (s) => s.newsletterProvider,
@@ -74,7 +82,8 @@ export function fillTokens(text: string, settings: PageSettings, where: string):
   });
 }
 
-const fillValue = (value: unknown, settings: PageSettings, where: string): unknown => {
+/** Replaces every settings token in every string of a value (an entry's data, a block, a list of blocks). Throws like fillTokens. */
+export const fillValue = (value: unknown, settings: PageSettings, where: string): unknown => {
   if (typeof value === 'string') return fillTokens(value, settings, where);
   if (Array.isArray(value)) return value.map((v) => fillValue(v, settings, where));
   if (value && typeof value === 'object') {

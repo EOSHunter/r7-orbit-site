@@ -173,8 +173,10 @@ describe('structured data', () => {
 
   it('puts the page, the list and the breadcrumb on the hub, and no list when there are no games', () => {
     const types = (list: object[]) => list.map((n) => (n as { '@type': string })['@type']);
-    expect(types(gamesPageLd(info, games))).toEqual(['CollectionPage', 'ItemList', 'BreadcrumbList']);
-    expect(types(gamesPageLd(info, []))).toEqual(['CollectionPage', 'BreadcrumbList']);
+    expect(types(gamesPageLd(info, games, 'The hub.'))).toEqual(['CollectionPage', 'ItemList', 'BreadcrumbList']);
+    expect(types(gamesPageLd(info, [], 'The hub.'))).toEqual(['CollectionPage', 'BreadcrumbList']);
+    // The page's own description (src/content/pages/games.md), not a copy in code.
+    expect((gamesPageLd(info, [], 'The hub.')[0] as { description: string }).description).toBe('The hub.');
   });
 });
 

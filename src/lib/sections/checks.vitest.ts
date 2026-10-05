@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { authorProblem, frameSrcOrigins, gameProblem, latestProblems, whereOf, type Known } from './checks';
+import { authorProblem, frameSrcOrigins, gameProblem, latestProblems, onceProblems, whereOf, type Known } from './checks';
 import { headingsInHtml, headingsOfMarkdown, SlugBook, withHeadingIds } from './headings';
 import { prepareSections } from './prepare';
 import type { Section } from './schema';
@@ -151,5 +151,16 @@ describe('prepareSections', () => {
       { depth: 3, slug: 'deeper', text: 'Deeper' },
       { depth: 3, slug: 'a-brass-one', text: 'A brass one' },
     ]);
+  });
+});
+
+describe('onceProblems', () => {
+  it('lets a page hold one Latest feed (it carries the #latest anchor and the kind filter), and names every extra one by its place', () => {
+    expect(onceProblems(['heading', 'feed', 'latest', 'latest', 'pinned', 'pinned'])).toEqual([]);
+    expect(onceProblems(['feed', 'text', 'feed', 'feed'])).toEqual([
+      { index: 2, message: 'a page holds one Latest feed block at most: remove this one, or the other.' },
+      { index: 3, message: 'a page holds one Latest feed block at most: remove this one, or the other.' },
+    ]);
+    expect(onceProblems([undefined, null, 'no-such-block', 'feed'])).toEqual([]);
   });
 });

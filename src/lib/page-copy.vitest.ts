@@ -15,6 +15,8 @@ import { sectionsSchema, type Section } from './sections';
 
 const settings: PageSettings = {
   siteName: 'Site',
+  siteTagline: 'A tagline',
+  siteDescription: 'A description.',
   authorEmail: 'me@site.test',
   rss: '/rss.xml',
   newsletterProvider: 'buttondown',

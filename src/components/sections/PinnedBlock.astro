@@ -1,0 +1,29 @@
+---
+// The pinned post: the post marked `featured` (the newest of them), as the large pinned card. Left out with no featured post, and
+// when only one post is published: the latest posts already show it, and the same card twice would be noise.
+import PostCard from '../PostCard.astro';
+import SectionBand from './SectionBand.astro';
+import { featuredPost } from '../../lib/content';
+import { getAllPosts } from '../../lib/content-queries';
+import { toCard } from '../../lib/post-cards';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'pinned'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const posts = await getAllPosts();
+const featured = featuredPost(posts);
+const pinned = featured && posts.length > 1 ? await toCard(featured, { pinned: true }) : undefined;
+---
+
+{
+  pinned && (
+    <SectionBand headingId={`sec-${ctx.index + 1}-h`} eyebrow={block.eyebrow || undefined} heading={block.heading} data-pinned>
+      <PostCard post={pinned} />
+    </SectionBand>
+  )
+}

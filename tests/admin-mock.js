@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 // The admin under test: public/_headers read the way Cloudflare Pages reads it, and a pretend GitHub. Shared by headers.spec.js
 // (the CSP) and admin-images.spec.js (uploading pictures end to end).
@@ -35,16 +35,18 @@ export const PIXEL = Buffer.from(
 
 const GITHUB_STATUS = 'https://www.githubstatus.com';
 
-// The About page as it is in the repository: the real file, so the test follows it. Decap reads it from the blob API (base64).
-const pageFile = (name) => readFileSync(new URL(`../src/content/pages/${name}.md`, import.meta.url), 'utf8').replaceAll('\r\n', '\n');
-export const ABOUT_MD = pageFile('about');
+// The pages as they are in the repository (About, the home page, the listing pages, subscribe, privacy, 404, search): the real
+// files, so the tests follow them. Decap reads each from the blob API (base64), by blob sha (About keeps its own).
+const PAGES_DIR = new URL('../src/content/pages/', import.meta.url);
+export const PAGE_FILES = Object.fromEntries(
+  readdirSync(PAGES_DIR)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => [f, readFileSync(new URL(f, PAGES_DIR), 'utf8').replaceAll('\r\n', '\n')]),
+);
+export const ABOUT_MD = PAGE_FILES['about.md'];
 const ABOUT_SHA = 'aboutfilesha';
-// Every file of the Pages collection, as it is in the repository, by blob sha (About keeps its own).
 const PAGE_BLOBS = Object.fromEntries(
-  ['about', 'subscribe', 'privacy', '404', 'search'].map((name) => [
-    name === 'about' ? ABOUT_SHA : `page-${name}-sha`,
-    { path: `${name}.md`, text: pageFile(name) },
-  ]),
+  Object.entries(PAGE_FILES).map(([file, text]) => [file === 'about.md' ? ABOUT_SHA : `page-${file.replace(/\.md$/, '')}-sha`, { path: file, text }]),
 );
 // The site settings as they are in the repository (src/data/site.json), for the Site settings collection.
 export const SITE_JSON = readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
