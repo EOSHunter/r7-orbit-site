@@ -1,33 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Icon from '../components/Icon.astro';
-import NewsletterForm from '../components/NewsletterForm.astro';
-import MediaPlaceholder from '../components/MediaPlaceholder.astro';
-import type { IconName } from '../components/icons';
 import { site } from '../data/site';
 import { absoluteUrl } from '../lib/text';
 
-const description = `Who writes ${site.name}, what the site is for, and how to follow along.`;
+const description = site.author.bio.split('. ')[0] + '.';
 const base = Astro.site ?? new URL(site.url);
 const pageUrl = absoluteUrl(Astro.url.pathname, base.href);
-const photo = site.author.photo as string | null;
 
-// Profiles the owner has filled in. An empty URL in site.json leaves the row out, with no gap.
-const profiles = (
-  [
-    { label: 'YouTube', href: site.links.youtube, icon: 'vlog' },
-    { label: 'GitHub', href: site.links.github, icon: 'github' },
-    { label: 'X', href: site.links.x, icon: 'link' },
-    { label: 'LinkedIn', href: site.links.linkedin, icon: 'link' },
-    { label: 'Bluesky', href: site.links.bluesky, icon: 'link' },
-  ] as { label: string; href: string; icon: IconName }[]
-).filter((p) => p.href);
-
-/** `@handle` or the last path segment of a profile URL, for the mono hint at the end of the row. */
-function where(href: string): string {
-  const last = new URL(href).pathname.split('/').filter(Boolean).pop() ?? '';
-  return decodeURIComponent(last) || new URL(href).hostname;
-}
+// Profiles the owner has filled in (structured data only; none is shown on the page). Empty URLs are left out.
+const profiles = [site.links.youtube, site.links.github, site.links.x, site.links.linkedin, site.links.bluesky].filter(Boolean);
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -45,7 +26,7 @@ const jsonLd = {
       name: site.author.name,
       description: site.author.bio,
       url: pageUrl,
-      ...(profiles.length ? { sameAs: profiles.map((p) => p.href) } : {}),
+      ...(profiles.length ? { sameAs: profiles } : {}),
     },
     {
       '@type': 'BreadcrumbList',
@@ -59,79 +40,33 @@ const jsonLd = {
 ---
 
 <BaseLayout title="About" description={description} current="About">
-  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\u003c')} />
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '<')} />
   <div class="container wide">
     <header class="page-head">
-      <p class="eyebrow brass">About</p>
-      <h1>
-        About this <em>site</em>
-      </h1>
-      <p class="t-lead">{site.description}</p>
+      <h1>About</h1>
     </header>
 
-    <div class="about-grid">
-      <div class="portrait">
-        {photo ? (
-          <img src={photo} alt={`Portrait of ${site.author.name}`} />
-        ) : (
-          <div role="img" aria-label="Portrait placeholder">
-            <MediaPlaceholder />
-          </div>
-        )}
-      </div>
-
+    <div class="about-body">
       <div class="prose">
-        <h2>Who writes it</h2>
-        <p>
-          <strong>{site.author.name}</strong>
-        </p>
+        <h2>{site.author.name}</h2>
         <p>{site.author.bio}</p>
 
-        <h2>How to follow</h2>
-        <ul class="link-list">
-          <li>
-            <a href={site.links.rss}>
-              <Icon name="rss" />
-              RSS<span class="where">{site.links.rss.replace(/^\//, '')}</span>
-            </a>
-          </li>
-          <li>
-            <a href="/subscribe/">
-              <Icon name="mail" />
-              Newsletter<span class="where">by email</span>
-            </a>
-          </li>
-          {profiles.map((p) => (
-            <li>
-              <a href={p.href} rel="noopener">
-                <Icon name={p.icon} />
-                {p.label}
-                <span class="where">{where(p.href)}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Get in touch</h2>
+        <h2>R7 · Orbit AI Agent</h2>
         <p>
-          The easiest way is email: <a href={`mailto:${site.author.email}`}>{site.author.email}</a>.
+          R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit
+          and give a brief for each piece.
+        </p>
+        <p>
+          <strong>How a piece gets here:</strong> I give R7 a topic and sources, and it writes a draft. I read every piece
+          before it goes up and fix mistakes it may make. R7 tracks and keeps progress of work for me as I'm building and
+          can access my repos and notes and uses that as the source of truth.
+        </p>
+        <p>
+          <strong>Where it can go wrong:</strong> an agent can misread a source or state a guess as fact. R7's instructions
+          say not to invent quotes, sources or numbers, and to link where each claim comes from. If you spot a mistake,
+          tell me. I'll correct it, with a dated note at the bottom of the post.
         </p>
       </div>
     </div>
   </div>
-
-  <section class="band" id="subscribe" aria-labelledby="subscribe-h">
-    <div class="container wide">
-      <div class="subscribe">
-        <div>
-          <p class="eyebrow">Newsletter</p>
-          <h2 id="subscribe-h" style="margin-top: var(--s-3)">
-            Follow along by email
-          </h2>
-          <p>New posts and videos, a few times a month, and you can leave in one click.</p>
-        </div>
-        <NewsletterForm id="about-sub" />
-      </div>
-    </div>
-  </section>
 </BaseLayout>

@@ -139,7 +139,7 @@ Pagefind UI styled with tokens, opened from the header icon or the `/` key. Resu
 
 ## About `/about/`
 
-Intro in first person, a portrait (or the brand mark on the plate), what the site is, what the author is working on, how to follow (RSS, newsletter, YouTube, GitHub), contact. `Person` structured data.
+The author's own text only (name and bio from `site.json`, then the R7 agent section). No portrait yet: the author will supply a photo, which goes in `.about-grid` in `src/pages/about.astro` (see `.portrait` in `site.css`). `Person` structured data.
 
 ## Subscribe `/subscribe/`
 

@@ -360,6 +360,7 @@ button.play { width: 100%; padding: 0; background: none; border: 0; color: inher
 
 /* ------------------------------------------------------------------------------------------------------- About */
 .about-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); padding-block: var(--s-7) var(--s-8); }
+.about-body { padding-block: var(--s-7) var(--s-8); }
 .portrait { position: relative; aspect-ratio: 4 / 5; max-width: 20rem; background: var(--plate-gradient); border: var(--bw) solid var(--line); border-radius: var(--r-xl); overflow: hidden; --mark-size: 34%; }
 .portrait .media-ph img { opacity: 0.9; }
 @media (min-width: 900px) {
