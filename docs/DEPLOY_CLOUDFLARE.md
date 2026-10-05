@@ -246,7 +246,7 @@ The Client ID or secret is wrong (a stray space, or an old secret after generati
 **A CORS error in the browser console**
 Look at which address the message names.
 - `cms-auth.r7orbit.io`: the admin should never fetch the Worker (the popup talks to it); if you see this, `CMS_AUTH_URL` is probably wrong, or ends with a slash or a path. It must be just `https://cms-auth.r7orbit.io`.
-- `api.github.com`: the admin's Content-Security-Policy only allows `api.github.com`. A *CORS* message there usually means the request was blocked by a proxy, VPN or ad blocker; try a private window with extensions off.
+- `api.github.com`: the admin's Content-Security-Policy allows `api.github.com` (plus `www.githubstatus.com` and `blob:`, see `public/_headers`). A *CORS* message there usually means the request was blocked by a proxy, VPN or ad blocker; try a private window with extensions off.
 - Anything else: the console line starts with "Refused to connect/load … Content Security Policy". Another address is needed by the editor; add it to the `/admin/*` policy in `public/_headers` (the test `tests/headers.spec.js` runs the editor under that policy).
 
 **Login works but the editor shows an error, "not found", or no entries**
@@ -255,6 +255,9 @@ Look at which address the message names.
 - **Wrong repository or branch.** `CMS_REPO` and `CMS_BRANCH` in `src/admin/config.ts` must match the repository and its default branch.
 - **Private repository.** The Worker asks for the `repo` scope, which covers private repositories. A fine-grained setup is not supported by OAuth Apps.
 - To start over, click your avatar in the editor → **Log out**, or clear the site's local storage, and sign in again.
+
+**Saving fails with "Failed to persist entry: TypeError: Failed to fetch"**
+Open the console. If it says `Fetch API cannot load blob:https://r7orbit.io/…` and "Content Security Policy", `connect-src` in the `/admin/*` block of `public/_headers` has lost `blob:`. Decap reads an uploaded image back from its temporary `blob:` address when it saves. `blob:` addresses are local to the tab, so allowing them does not open a path to any other site. Put `blob:` back (`connect-src 'self' blob: https://api.github.com https://www.githubstatus.com`); `tests/headers.spec.js` saves a post with an uploaded image under the real policy and fails when it is missing.
 
 **A saved post does not appear on the live site**
 Saving only opens a pull request; the post goes live when you **Publish** (merge) it. After that, check **Deployments** in Cloudflare for a build on `main`. If the post is dated in the future or has **Draft** on, it is left out on purpose (section 7). If the build failed, the log names the field the strict content schema rejected (for example a cover image without alt text).
