@@ -1,5 +1,5 @@
 ---
-title: Building a browser game with a team of AI agents in R7 Orbit
+title: Building a browser game with a team of *AI agents* in *R7 Orbit*
 seoTitle: Building a browser game with AI agents
 date: 2026-10-05
 summary: How Vesper Drift, a browser game, was built in R7 Orbit by a team of AI
