@@ -55,15 +55,19 @@ What Pages does for you, and why nothing else is configured: static files are se
 2. Type `r7orbit.io` and click **Continue**, then **Activate domain**. Because the zone is on Cloudflare, it creates the DNS record (a proxied CNAME to `r7-orbit-site.pages.dev`) for you. Wait until the status says **Active** (a few minutes; the certificate is issued automatically).
 3. Add `www` and send it to the bare domain:
    1. Add a DNS record: **Websites** → `r7orbit.io` → **DNS** → **Records** → **Add record**. Type `CNAME`, name `www`, target `r7orbit.io`, **Proxy status: Proxied** (orange cloud). Save. (Its target is never reached; the redirect below answers first.)
-   2. Go to **Rules** → **Redirect Rules** → **Create rule** (use the *Redirect from WWW to root* template if it is offered). Set:
-      - **When incoming requests match**: *Hostname* equals `www.r7orbit.io`
-      - **Then**: *Dynamic* URL redirect, expression `concat("https://r7orbit.io", http.request.uri.path)`, status **301**, and **Preserve query string** on.
-   3. Click **Deploy**.
-4. Make HTTPS the only way in: **SSL/TLS** → **Edge Certificates** → turn on **Always Use HTTPS**. Leave **SSL/TLS** → **Overview** on **Full** (or **Full (strict)**).
-5. Check, in a terminal:
+   2. Go to **Rules** → **Overview**. In the current dashboard this page has **Rule templates** and **+ Create rule** (there is no separate "Redirect Rules" menu item). Use the *Redirect from WWW to root* template, or **+ Create rule** → **Redirect Rule**. The form offers a wildcard pattern; set:
+      - **Rule name**: `www to root`
+      - **If incoming requests match**: **Wildcard pattern**, Request URL `https://www.*`
+      - **Then**: Target URL `https://${1}`, status **301**, and **Preserve query string** on (a toggle at the bottom, easy to miss).
+
+      The older form with a custom expression does the same thing: *Hostname* equals `www.r7orbit.io`, *Dynamic* redirect to `concat("https://r7orbit.io", http.request.uri.path)`.
+   3. Click **Deploy** (not *Save as draft*). The dashboard may warn "This rule may not apply to your traffic" because it thinks `www` is not proxied. If the `www` record has an orange cloud, choose **Ignore and deploy rule anyway**.
+4. Make HTTPS the only way in: **SSL/TLS** → **Edge Certificates** → turn on **Always Use HTTPS**. This is required, not optional: the rule above only matches `https://`, so without it `http://www.r7orbit.io` returns a 522 error. Leave **SSL/TLS** → **Overview** on **Full** (or **Full (strict)**; both work).
+5. Check, in a terminal (your computer may cache "no such domain" for a few minutes after a record is created; `ipconfig /flushdns` on Windows clears it):
 
    ```
    curl -I http://r7orbit.io/about          # 301 to https, then 308 to https://r7orbit.io/about/
+   curl -I http://www.r7orbit.io/about/     # 301 to https://www..., then 301 to https://r7orbit.io/about/
    curl -I https://www.r7orbit.io/about/    # 301 to https://r7orbit.io/about/
    curl -I https://r7orbit.io/admin/        # x-robots-tag: noindex, nofollow; content-security-policy: ...
    ```
@@ -131,6 +135,8 @@ To change a secret later, run `wrangler secret put` again (no new deploy is need
    - `https://cms-auth.r7orbit.io/` shows one line of text.
    - `https://cms-auth.r7orbit.io/auth?provider=github&site_id=r7orbit.io` jumps to GitHub's "Authorize" page.
    - `https://cms-auth.r7orbit.io/auth?provider=github&site_id=example.com` says "This site is not allowed". That is correct.
+
+   From a terminal, use a GET and print only the headers: `curl -s -D - -o NUL "https://cms-auth.r7orbit.io/auth?provider=github&site_id=r7orbit.io"` (on macOS/Linux use `-o /dev/null`) shows `302` and a `Location` on `github.com`. `curl -I` sends HEAD, which the Worker rejects with 405; that is expected.
 
 If you use a different address, change it in three places: `routes` in `workers/cms-auth/wrangler.toml`, the callback URL of the OAuth App (step 3), and `CMS_AUTH_URL` in `src/admin/config.ts` (then commit and let Pages rebuild).
 
@@ -203,7 +209,7 @@ The file in the repository is the one that runs; the copy above is for reading. 
 
 **d. Test it**
 
-1. Repository → **Actions** → **Scheduled deploy** → **Run workflow**. The run should be green, and a new deployment appears in Cloudflare under **Deployments**.
+1. Repository → **Actions** → click **Scheduled deploy** in the left sidebar → **Run workflow** (the button is on the workflow's page, not on a single run's page, which only offers *Re-run all jobs*). The run should be green, and a new deployment appears in Cloudflare under **Deployments**.
 2. To see a scheduled post appear: publish a post dated tomorrow. It is absent today. The next morning after 00:05 UTC it is live without you touching anything.
 
 Notes: GitHub runs scheduled workflows on a best-effort basis, often a few minutes late. On a public repository GitHub **pauses scheduled workflows after 60 days with no repository activity**; opening **Actions** and enabling the workflow again fixes it. Each rebuild counts against Cloudflare's monthly build allowance (500 on the free plan; one a day is about 30).
