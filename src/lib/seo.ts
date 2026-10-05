@@ -36,6 +36,8 @@ export interface SeoInput {
   /** Path or absolute URL of a 1200x630 image. */
   image?: string;
   imageAlt?: string;
+  /** The image a page without its own gets (site.json `defaultOgImage`). Default: /og-default.png. */
+  fallbackImage?: string;
   fallbackImageAlt: string;
 }
 
@@ -50,7 +52,7 @@ export interface SeoResolved {
 /** Canonical URL (absolute, trailing slash) and the Open Graph image with its fallback to the brand image. */
 export function resolveSeo(input: SeoInput): SeoResolved {
   const own = input.image?.trim();
-  const imageUrl = new URL(own || DEFAULT_IMAGE, input.base).href;
+  const imageUrl = new URL(own || input.fallbackImage?.trim() || DEFAULT_IMAGE, input.base).href;
   const alt = input.imageAlt?.trim();
   return {
     canonical: absoluteUrl(input.path, input.base),
@@ -98,6 +100,8 @@ export interface SiteInfo {
   name: string;
   url: string;
   description?: string;
+  /** The share image for anything without its own (site.json). Default: /og-default.png. */
+  defaultOgImage?: string;
   author: { name: string; photo?: string | null };
   links: Record<string, string | undefined>;
 }
@@ -179,7 +183,7 @@ export function articleLd(site: SiteInfo, a: ArticleInput): JsonLd {
     dateModified: isoDate(a.updated ?? a.date),
     author: personLd(site),
     publisher: { '@type': 'Organization', name: site.name, url: absoluteUrl('/', site.url) },
-    image: [new URL(a.image || DEFAULT_IMAGE, site.url).href],
+    image: [new URL(a.image || site.defaultOgImage || DEFAULT_IMAGE, site.url).href],
     mainEntityOfPage: { '@type': 'WebPage', '@id': a.canonicalUrl || url },
     keywords: a.tags,
     isBasedOn: a.type === 'NewsArticle' ? a.sourceUrl : undefined,
@@ -213,7 +217,7 @@ export function videoObjectLd(site: SiteInfo, v: VideoInput): JsonLd {
     '@type': 'VideoObject',
     name: plainTitle(v.title),
     description: v.summary,
-    thumbnailUrl: [new URL(v.thumbnail || DEFAULT_IMAGE, site.url).href],
+    thumbnailUrl: [new URL(v.thumbnail || site.defaultOgImage || DEFAULT_IMAGE, site.url).href],
     uploadDate: isoDate(v.date),
     duration: v.duration ? isoDuration(v.duration) : undefined,
     embedUrl: v.youtubeId ? `https://www.youtube-nocookie.com/embed/${v.youtubeId}` : v.videoUrl,

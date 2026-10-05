@@ -27,13 +27,14 @@ src/
                               Sections + sections/ (a page built from blocks: About; one <Id>Block.astro per block and registry.ts) + AuthorBox,
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
-  admin/                      Decap CMS for /admin: config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
+  admin/                      Decap CMS for /admin: settings.ts (the "Site settings" file collection over src/data/site.json), config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry);
                               pages.ts (the "Pages" file collection: the About page), sections-config.ts (the Decap block list, generated from the block definitions; `sectionsField()` attaches it to any collection), about-preview.ts + sections-html.ts (the live preview of a page of blocks). See README "Admin" and docs/SECTIONS.md
   pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), games/ (hub of playable projects), tags/, about, subscribe,
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
-  data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
+  data/site.json              the site settings: name, tagline, description, default share image, author, profile links, nav (label + href), footer links + note, newsletter;
+                              edited in /admin as "Site settings" (admin/settings.ts) except `url` and `links.rss`. site.ts parses it with siteSchema (lib/site-settings.ts) and every reader imports site.ts; nav.ts gives navItems + footerItems
   content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state), pages/about.md (the About page as blocks, also edited in /admin); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
@@ -42,6 +43,7 @@ src/
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
                               content-queries.ts (getPosts/getAllPosts over astro:content), markdown/ (remark/rehype plugins, Shiki transformer),
                               authors.ts + authors-queries.ts (authors: default, byline rules, JSON-LD; unit-tested),
+                              site-settings.ts (site.json schema, footer links, isCurrent/searchKinds: nav matched by href; unit-tested) + site-routes.ts (build-only: every site path in the settings exists),
                               games.ts + game-cards.ts (the /games/ hub: which projects are games, order, Play link; unit-tested),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging), feed.ts + feed-queries.ts,
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts, newsletter.ts
@@ -107,6 +109,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 - **Authors.** Every post has an `author` (a slug in `src/content/authors/`); absent means `hunter-newton`. AI-written pieces are credited to R7 (`author: r7`), never to Hunter. An agent's byline shows an "AI-written" label and its post ends with the agent's footer note; a person's post shows neither. Never write an agent's note, bio or label wording yourself: it is the author's text (`docs/VOICE_AND_COPY.md`, "Agent-authored footer note").
 - Voice: plain, specific, first person, calm. No hype words (list in `docs/VOICE_AND_COPY.md`). Never publish AI-written text as the author's without the author's review. Never invent quotes, sources, statistics or benchmarks. Mark sample/placeholder content as such.
 - Never invent the author's identity, bio, links, email, domain or social handles. Use the placeholders from `content-examples/site.json` and ask.
+- **Site settings and the nav.** Site-wide values come from `src/data/site.ts` (never hard-code the name, links or nav in a component). A page names its nav section by the item's address: `current="/blog/"`, never `current="Blog"`; labels are the author's to rename in /admin. A new setting goes in `siteSchema` (`src/lib/site-settings.ts`) and the form (`src/admin/settings.ts`) together; `url`, the CMS backend settings and anything secret stay out of the admin. `tests/fixtures/site-chrome.txt` is the head, header and footer of every page type: rewrite it (`UPDATE_SITE_CHROME=1`, see `tests/site-chrome.js`) only for a deliberate change.
 - No stock photography and no generated images unless the author approves each one. Use the placeholder pattern.
 
 ## Engineering rules

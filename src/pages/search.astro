@@ -2,8 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Search from '../components/Search.astro';
 import { navItems } from '../data/nav';
+import { searchKinds } from '../lib/site-settings';
 
-const kinds = navItems.filter((item) => ['News', 'Blog', 'Vlogs', 'Projects', 'Repos'].includes(item.label));
+// The archives, found by address (a label renamed in /admin keeps its chip), labelled and ordered as the nav has them.
+const kinds = searchKinds(navItems);
 ---
 
 <BaseLayout title="Search" description="Search every post, video, project and repo on this site." noindex>

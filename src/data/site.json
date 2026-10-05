@@ -3,6 +3,8 @@
   "tagline": "Field notes on building with AI",
   "description": "News, builds and the things in between: writing, videos, projects and code about building with AI.",
   "url": "https://r7orbit.io",
+  "defaultOgImage": "/og-default.png",
+  "defaultOgImageAlt": "R7 Orbit: the R7 mark inside a ring with one orbiting dot, beside the words \"News, builds and the things in between.\"",
   "author": {
     "name": "Hunter Newton",
     "bio": "I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work.",
@@ -17,6 +19,24 @@
     "bluesky": "",
     "rss": "/rss.xml"
   },
-  "nav": ["Latest", "News", "Blog", "Vlogs", "Projects", "Games", "Repos", "About"],
+  "nav": [
+    { "label": "Latest", "href": "/#latest" },
+    { "label": "News", "href": "/news/" },
+    { "label": "Blog", "href": "/blog/" },
+    { "label": "Vlogs", "href": "/vlogs/" },
+    { "label": "Projects", "href": "/projects/" },
+    { "label": "Games", "href": "/games/", "footer": true, "icon": "play" },
+    { "label": "Repos", "href": "/repos/" },
+    { "label": "About", "href": "/about/" }
+  ],
+  "footer": {
+    "links": [
+      { "label": "RSS", "social": "rss", "icon": "rss" },
+      { "label": "GitHub", "social": "github", "icon": "github" },
+      { "label": "YouTube", "social": "youtube", "icon": "vlog" },
+      { "label": "Subscribe", "href": "/subscribe/", "icon": "mail" }
+    ],
+    "note": "Made with R7 Orbit"
+  },
   "newsletter": { "provider": "buttondown", "formAction": "" }
 }

@@ -16,7 +16,7 @@ const games = await getGames();
 <BaseLayout
   title={GAMES_COPY.label}
   description={GAMES_COPY.description}
-  current={GAMES_COPY.label}
+  current="/games/"
   noindex={games.length === 0}
 >
   <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, games))} />

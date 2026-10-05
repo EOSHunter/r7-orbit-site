@@ -1,0 +1,36 @@
+---
+// Fixture for tests/site-settings.spec.js: the site's own nav with every label renamed, the way an author could rename them in
+// /admin (Site settings). The page says it is in the Blog section by address (current="/blog/"), so the header must still mark the
+// renamed Blog link as current, every link must still go where it did, and the search page's archive chips (searchKinds) must still
+// find the archives. Sample content, not part of the site. Not linked from anywhere and kept out of search engines, like the rest of
+// the styleguide.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { navItems } from '../../data/nav';
+import { searchKinds } from '../../lib/site-settings';
+
+const nav = navItems.map((item) => ({ ...item, label: `Renamed ${item.label.toLowerCase()}` }));
+---
+
+<BaseLayout
+  title="Nav fixture"
+  description="The site nav with every label renamed, for the tests. Not part of the site."
+  noindex
+  current="/blog/"
+  {nav}
+>
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1>Nav fixture</h1>
+    </header>
+    <ul class="search-kinds" aria-label="Browse by kind">
+      {searchKinds(nav).map((item) => (
+        <li>
+          <a class="chip" href={item.href}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>

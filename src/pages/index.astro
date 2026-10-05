@@ -49,7 +49,7 @@ const repoCards = (await toCards(posts.filter((p) => p.collection === 'repos')))
   .slice(0, 3);
 ---
 
-<BaseLayout title={site.name} description={site.description} home current="Latest">
+<BaseLayout title={site.name} description={site.description} home current="/#latest">
   <script slot="head" type="application/ld+json" set:html={jsonLdString(websiteLd(site))} />
   <section class="hero plate-grid" aria-labelledby="hero-h">
     <div class="container wide">

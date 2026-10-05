@@ -38,6 +38,9 @@ const GITHUB_STATUS = 'https://www.githubstatus.com';
 // The About page as it is in the repository: the real file, so the test follows it. Decap reads it from the blob API (base64).
 export const ABOUT_MD = readFileSync(new URL('../src/content/pages/about.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
 const ABOUT_SHA = 'aboutfilesha';
+// The site settings as they are in the repository (src/data/site.json), for the Site settings collection.
+export const SITE_JSON = readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+const SITE_SHA = 'sitefilesha';
 
 let nextSha = 1;
 
@@ -54,6 +57,12 @@ function githubApi(method, path) {
   // The About page file: Decap finds its blob in the folder's tree, then reads the blob as raw text.
   if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/content/pages')) {
     return { sha: sha(), tree: [{ path: 'about.md', type: 'blob', mode: '100644', sha: ABOUT_SHA, size: ABOUT_MD.length }], truncated: false };
+  }
+  if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/data')) {
+    return { sha: sha(), tree: [{ path: 'site.json', type: 'blob', mode: '100644', sha: SITE_SHA, size: SITE_JSON.length }], truncated: false };
+  }
+  if (method === 'GET' && path === `${repo}/git/blobs/${SITE_SHA}`) {
+    return { sha: SITE_SHA, encoding: 'base64', content: Buffer.from(SITE_JSON).toString('base64'), size: SITE_JSON.length };
   }
   if (method === 'GET' && path === `${repo}/git/blobs/${ABOUT_SHA}`) {
     return { sha: ABOUT_SHA, encoding: 'base64', content: Buffer.from(ABOUT_MD).toString('base64'), size: ABOUT_MD.length };
