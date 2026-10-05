@@ -1,0 +1,19 @@
+title: Search · R7 Orbit
+description: Search every post, video, project and repo on this site.
+robots: noindex
+p: Search
+h1: Find a post
+em: post
+input: search "Search posts"
+p: Type to search…
+p: ↑ ↓ move · Enter opens · Esc closes
+li: News
+a: News -> /news/
+li: Blog
+a: Blog -> /blog/
+li: Vlogs
+a: Vlogs -> /vlogs/
+li: Projects
+a: Projects -> /projects/
+li: Repos
+a: Repos -> /repos/

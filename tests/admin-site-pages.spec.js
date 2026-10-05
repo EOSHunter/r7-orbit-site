@@ -2,7 +2,7 @@ import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect } from '@playwright/test';
 import { sectionsSchema } from '../src/lib/sections/schema.ts';
 import { pageProblems, SITE_PAGES, sitePage } from '../src/lib/site-pages.ts';
-import { openAdmin, PAGE_FILES } from './admin-mock.js';
+import { openAdmin, PAGE_FILES, SITE_JSON } from './admin-mock.js';
 
 // The home page and the listing pages in the real editor, under its Content-Security-Policy, with GitHub stood in for
 // (tests/admin-mock.js serves the real files of src/content/pages/): each is listed under Pages, opens with today's words, draws
@@ -43,12 +43,15 @@ test('the Pages collection lists About, then the home page and every listing pag
 test('home page: opens with today\'s words, previews the hero and stand-ins for the rows made from posts, and saves a valid page', async ({ page }) => {
   const seen = await openEntry(page, 'home');
   await expect(page.getByLabel('Headline')).toHaveValue('Plain notes on building with *AI agents*.', { timeout: 15_000 });
-  await expect(page.getByLabel(/^Eyebrow/).first()).toHaveValue('Field notes on building with AI');
+  // The tagline is the Site settings' (a token); the preview prints it.
+  await expect(page.getByLabel(/^Eyebrow/).first()).toHaveValue('{site.tagline}');
 
   const preview = page.locator('iframe').first().contentFrame();
   await expect(preview.locator('section.hero h1')).toHaveText('Plain notes on building with AI agents.', { timeout: 15_000 });
   await expect(preview.locator('section.hero h1 em')).toHaveText('AI agents');
   await expect(preview.locator('.hero .cluster a.btn')).toHaveText(['Start with the latest', 'Subscribe']);
+  await expect(preview.locator('.hero .eyebrow')).toHaveText(JSON.parse(SITE_JSON).tagline);
+  await expect(preview.locator('.hero .t-lead')).toHaveText(JSON.parse(SITE_JSON).description);
   // Every row made from the posts says so: a stand-in in its frame, and the note under it.
   await expect(preview.getByText('Pinned post: the post marked Featured, as a large card.')).toBeVisible();
   await expect(preview.getByText(/^Latest feed: the 8 newest posts of every kind/)).toBeVisible();

@@ -16,7 +16,7 @@ const { games, copy } = Astro.props;
 
 {
   games.length > 0 ? (
-    <GameGrid {games} soon={{ eyebrow: copy.soonEyebrow, title: copy.soonTitle, text: copy.soonText }} />
+    <GameGrid {games} soon={{ eyebrow: copy.soonEyebrow, title: copy.soonTitle, text: copy.soonText }} eager />
   ) : (
     <GamesEmpty heading={copy.emptyHeading} text={copy.emptyText} linkLabel={copy.emptyLinkLabel} />
   )

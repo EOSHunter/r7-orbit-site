@@ -54,7 +54,7 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 <BaseLayout
   title={headTitleFor(data.repo, data.seoTitle)}
   description={data.summary}
-  current="Repos"
+  current="/repos/"
   published={data.date}
   modified={data.updated}
   tags={data.tags}

@@ -17,7 +17,7 @@ const eyebrow = home.text('eyebrow');
 const lead = home.text('lead');
 ---
 
-<BaseLayout title={title} {description} home current="Latest">
+<BaseLayout title={title} {description} home current="/#latest">
   <script slot="head" type="application/ld+json" set:html={jsonLdString(websiteLd(site))} />
   <section class="hero plate-grid" aria-labelledby="hero-h">
     <div class="container wide">

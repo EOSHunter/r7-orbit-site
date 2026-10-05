@@ -1,14 +1,17 @@
 ---
 import Icon from './Icon.astro';
-import { navItems } from '../data/nav';
+import { navItems, type NavItem } from '../data/nav';
 import { site } from '../data/site';
+import { isCurrent } from '../lib/site-settings';
 
 interface Props {
-  /** The nav label of the section you are in (e.g. "Blog"). Gets aria-current="page". */
+  /** The address of the nav item for the section you are in (e.g. "/blog/"), never its label. Gets aria-current="page". */
   current?: string;
+  /** The nav to draw. Default: the one in the site settings. Only the styleguide fixture passes another. */
+  items?: NavItem[];
 }
 
-const { current } = Astro.props;
+const { current, items = navItems } = Astro.props;
 ---
 
 <header class="site-header">
@@ -18,8 +21,8 @@ const { current } = Astro.props;
       {site.name}
     </a>
     <nav class="site-nav" id="site-nav" aria-label="Primary">
-      {navItems.map((item) => (
-        <a href={item.href} aria-current={item.label === current ? 'page' : undefined}>
+      {items.map((item) => (
+        <a href={item.href} aria-current={isCurrent(item, current) ? 'page' : undefined}>
           {item.label}
         </a>
       ))}

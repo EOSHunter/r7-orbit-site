@@ -1,0 +1,12 @@
+title: Page not found · R7 Orbit
+description: That page has drifted out of orbit. It may have moved, or it never existed.
+robots: noindex
+p: Error 404
+h1: That page has drifted out of orbit.
+em: out of orbit
+p: It may have moved, or it never existed. Try search, or go back to the latest.
+label: Search posts
+input: search "Search posts"
+button: Search
+a: Back home -> /
+a: See the latest -> /#latest

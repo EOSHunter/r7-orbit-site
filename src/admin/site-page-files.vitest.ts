@@ -11,6 +11,8 @@ import { sectionsDrift } from './sections-config';
 
 type Field = Record<string, unknown>;
 const files = (pagesCollection as unknown as { files: (Field & { fields: Field[] })[] }).files;
+/** The home page and the listing pages: the Pages collection also holds About and the fixed-frame pages (pages.ts). */
+const siteFiles = files.filter((f) => SITE_PAGES.some((p) => p.admin.name === f.name));
 const named = (fields: Field[], name: string) => fields.find((f) => f.name === name) as Field;
 /** The longest a box allows, read from its pattern (`^.{1,90}$` or `^[\s\S]{1,300}$`). */
 const maxOf = (f: Field) => Number(/\{1,(\d+)\}\$$/.exec((f.pattern as string[] | undefined)?.[0] ?? '')?.[1]);
@@ -23,8 +25,10 @@ const schemaMax = (name: string) => {
 describe('the site pages in the Pages collection', () => {
   it('follow the About page, one file each, written to the file the site reads', () => {
     expect(files[0].name).toBe('about');
-    expect(files.slice(1).map((f) => [f.name, f.file])).toEqual(SITE_PAGES.map((p) => [p.admin.name, `src/content/pages/${p.id}.md`]));
-    for (const f of files.slice(1)) expect(f).toMatchObject({ format: 'frontmatter', editor: { preview: true } });
+    expect(files.slice(1, 1 + SITE_PAGES.length).map((f) => [f.name, f.file])).toEqual(SITE_PAGES.map((p) => [p.admin.name, `src/content/pages/${p.id}.md`]));
+    for (const f of siteFiles) expect(f).toMatchObject({ format: 'frontmatter', editor: { preview: true } });
+    // Every file of the collection has a name of its own.
+    expect(new Set(files.map((f) => f.name)).size).toBe(files.length);
   });
 
   it('are named so their previews cannot be another collection\'s (Decap names a file\'s template after the file)', () => {
@@ -46,7 +50,7 @@ describe('the site pages in the Pages collection', () => {
   });
 
   it('allow what the schema allows: the same length limits, and the hero button addresses', () => {
-    for (const f of files.slice(1).flatMap((file) => file.fields)) {
+    for (const f of siteFiles.flatMap((file) => file.fields)) {
       if (f.name === 'title') expect(maxOf(f)).toBe(90);
       else if (f.name === 'description') expect(maxOf(f)).toBe(180);
       else if (f.widget === 'string' || f.widget === 'text') {
@@ -59,7 +63,7 @@ describe('the site pages in the Pages collection', () => {
   });
 
   it('take their block lists from the library: every block, the same fields as the schema', () => {
-    for (const file of files.slice(1)) {
+    for (const file of siteFiles) {
       for (const list of file.fields.filter((f) => f.typeKey === 'type')) {
         const types = list.types as { name: string }[];
         expect(types.map((t) => t.name), `${String(file.name)}.${String(list.name)}`).toEqual(definitions.map((d) => d.id));
@@ -73,6 +77,6 @@ describe('the site pages in the Pages collection', () => {
   });
 
   it('say in plain words what each box is for', () => {
-    for (const f of files.slice(1).flatMap((file) => file.fields)) expect(String(f.hint ?? ''), String(f.name)).toMatch(/\S/);
+    for (const f of siteFiles.flatMap((file) => file.fields)) expect(String(f.hint ?? ''), String(f.name)).toMatch(/\S/);
   });
 });

@@ -60,6 +60,7 @@ const routes = [
   { path: '/about/' },
   { path: '/subscribe/' },
   { path: '/privacy/' },
+  { path: '/search/', noindex: true },
   // Any unknown path: `astro preview` serves dist/404.html with HTTP 404.
   { path: '/no-such-page/', status: 404, noindex: true, lighthouse: '/404.html' },
   { path: '/styleguide/', noindex: true },
@@ -70,6 +71,7 @@ const routes = [
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
   { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
   { path: '/styleguide/listing/', noindex: true }, // fixture for tests/site-pages.spec.js: an archive with blocks above and below its list
+  { path: '/styleguide/nav/', noindex: true }, // fixture for tests/site-settings.spec.js: the nav with every label renamed
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

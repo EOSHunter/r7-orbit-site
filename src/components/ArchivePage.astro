@@ -75,7 +75,7 @@ const ld = [
 <BaseLayout
   title={page > 1 ? `${headTitle}, page ${page}` : headTitle}
   description={page > 1 ? `Page ${page} of ${pages}. ${description}` : description}
-  current={info?.label}
+  current={collection ? base : undefined}
   noindex={posts.length === 0}
 >
   <script slot="head" type="application/ld+json" set:html={jsonLdString(ld)} />

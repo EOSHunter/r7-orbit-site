@@ -21,7 +21,7 @@ const { title, seoTitle, description, introSections, outroSections } = entry.dat
 const copy = gamesCopy(entry);
 ---
 
-<BaseLayout title={headTitleFor(title, seoTitle)} {description} current={GAMES_LABEL} noindex={games.length === 0}>
+<BaseLayout title={headTitleFor(title, seoTitle)} {description} current="/games/" noindex={games.length === 0}>
   <script slot="head" type="application/ld+json" set:html={jsonLdString(gamesPageLd(site, games, description))} />
   <div class="container wide">
     <header class="page-head">

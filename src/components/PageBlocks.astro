@@ -1,0 +1,37 @@
+---
+// Blocks of the shared library drawn in place, inside a page's own markup: for the pages that keep a fixed frame around their
+// words (subscribe, privacy, 404, search; src/lib/page-copy.ts). Each block is drawn by its own component (src/components/sections/),
+// with no rows or wrappers added, so the page's markup and spacing stay its own. A page that is only blocks uses Sections.astro.
+//
+// `lead` draws Lead paragraphs as the page head's line (`<p class="t-lead">`) instead of the article lead. `paragraphs` sets a
+// class on the paragraphs of Text blocks, for small print (`t-meta`) and notes.
+import type { Section } from '../lib/sections';
+import type { BlockContext } from '../lib/sections/prepare';
+import { renderers } from './sections/registry';
+import '../styles/markdown.css';
+import '../styles/article.css';
+import '../styles/sections.css';
+
+interface Props {
+  blocks: readonly Section[];
+  /** From prepareSections over the page's whole list. */
+  contexts: Map<Section, BlockContext>;
+  lead?: string;
+  paragraphs?: string;
+}
+
+const { blocks, contexts, lead, paragraphs } = Astro.props;
+// The Markdown is sanitised with no attributes allowed on <p> (src/lib/section-markdown.ts), so every paragraph opens as `<p>`.
+const classed = (html: string) => (paragraphs ? html.replaceAll('<p>', `<p class="${paragraphs}">`) : html);
+const draw = blocks.map((block) => ({ block, ctx: contexts.get(block)!, Block: renderers[block.type] }));
+---
+
+{draw.map(({ block, ctx, Block }) =>
+  lead && block.type === 'lead' ? (
+    <p class={lead} set:html={ctx.html.text} />
+  ) : paragraphs && block.type === 'text' ? (
+    <Fragment set:html={classed(ctx.html.text)} />
+  ) : (
+    <Block block={block} ctx={ctx} />
+  ),
+)}

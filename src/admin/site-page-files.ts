@@ -48,18 +48,18 @@ const description = () =>
     'description',
     'Description for search results',
     180,
-    'One or two sentences shown under the page title in search results and when the page is shared. Around 155 characters reads best. It is not shown on the page itself.',
+    'One or two sentences shown under the page title in search results and when the page is shared. Around 155 characters reads best. It is not shown on the page itself. {site.description} prints the description from Site settings.',
   );
 
 const homeFields: CmsField[] = [
-  line('eyebrow', 'Eyebrow', 80, 'Optional. The small brass line over the headline.', false),
+  line('eyebrow', 'Eyebrow', 80, 'Optional. The small brass line over the headline. Today {site.tagline}: the tagline from Site settings, so it changes with it.', false),
   line(
     'title',
     'Headline',
     90,
     'The big heading of the home page (its h1). Put one phrase in *asterisks* for the italic brass accent. The browser tab of the home page reads the site name and tagline (site settings), not this.',
   ),
-  paragraph('lead', 'Lead paragraph', 300, 'Optional. The sentence or two under the headline.', false),
+  paragraph('lead', 'Lead paragraph', 300, 'Optional. The sentence or two under the headline. Today {site.description}: the description from Site settings.', false),
   field({
     name: 'buttons',
     label: 'Buttons',

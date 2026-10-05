@@ -11,7 +11,8 @@ src/content/
   repos/      a-repo.md
   pages/      about.md             (a page built from blocks: see "Pages" below)
   authors/    hunter-newton.json, r7.json   (who a post is credited to: see "Authors")
-  site.json                        (site name, tagline, links: see below)
+src/data/
+  site.json                        (site settings: name, tagline, author, links, nav, footer; see "Site settings" below)
 public/
   media/<kind>/...                 (covers, posters, gallery, Markdown-body pictures, one folder per kind; shrunk at build)
 ```
@@ -146,7 +147,7 @@ Body sections the template expects (as `##` headings): **Why I built it**, **How
 
 ## Pages (`src/content/pages/`)
 
-A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files: `about.md`, and the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `games.md`, `tags.md` (below, "The home page and the listing pages"). They share one collection, schema and renderer (`src/components/Sections.astro`). A file is front matter only (no body).
+A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`), the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `games.md`, `tags.md` (see "The home page and the listing pages" below), and `subscribe.md`, `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All of them use the same schema. Each file is front matter only (no body).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -201,6 +202,25 @@ These files add the fields of `sitePageFields` (`src/lib/site-pages.ts`). The sc
 
 The words in these files were moved from code unchanged (`KINDS` in `src/lib/listing.ts`, `GAMES_COPY` in `src/lib/games.ts`, the literals in `index.astro`, `ArchivePage.astro`, `ArchiveList.astro` and `tags/index.astro`). `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`: change the fixture in the same commit as a deliberate change of words (`npm run build && UPDATE_PAGE_TEXT=1 npx playwright test page-text`, then read the diff). When the published posts differ from the ones a fixture was captured with, only the page head is compared.
 
+The settings tokens of the next section work in these files too: `home.md` writes the hero's eyebrow and lead and its description as `{site.tagline}` and `{site.description}`, and `latest.md` its description as `{site.description}`, so the tagline and description stay in Site settings. `loadSitePage` (`src/lib/site-pages-queries.ts`) fills them; a unit test checks that no page file types a settings value out.
+
+### Pages with a fixed frame: subscribe, privacy, 404, search
+
+`src/content/pages/subscribe.md`, `privacy.md`, `404.md` and `search.md` hold the **words** of those pages; the frame (eyebrow, newsletter form, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Subscribe", "Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
+
+| Page | Blocks |
+|---|---|
+| `subscribe.md` | Leading `lead` under the heading; blocks up to the first `newsletter` block beside the form (that block only marks the place: its `heading`/`text` are unused here); blocks after it under the box, `text` as small print |
+| `privacy.md` | Leading `lead` under the heading; the rest in one `.prose` column; a `text` block at the very end as small print ("Last updated ...") |
+| `404.md` | Leading `lead` under the heading; anything else after it, above the search box |
+| `search.md` | Every block is the note shown only without JavaScript (inside `<noscript>`, `text` paragraphs as `.search-note`) |
+
+**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}` or `{newsletter.provider}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
+
+**Newsletter condition.** A block whose text starts with the line `{if newsletter connected}` is kept only when `newsletter.formAction` is set; `{if newsletter not connected}` only when it is empty. The line is removed; any other `{if ...}` fails the build. This is how `privacy.md` keeps its two newsletter variants.
+
+Tests: `tests/pages.spec.js` compares the built pages with `tests/fixtures/pages/<page>.txt` (captured before the move), `src/lib/page-copy.vitest.ts` covers tokens, conditions, slots and the "connected" privacy wording, `tests/admin-pages.spec.js` opens each file in the real editor.
+
 ## Typed schema (Astro content collections)
 
 If using Astro, `src/content.config.ts`. This is a starting point written from this document; it has not been run, so expect to adjust import paths to the installed Astro version.
@@ -252,22 +272,55 @@ export const collections = {
 };
 ```
 
-## Site-level data: `src/content/site.json`
+## Site settings: `src/data/site.json`
+
+One file holds the site-wide settings, and it is edited in /admin under **Site settings** (`src/admin/settings.ts`, a Decap file collection pointing at this same file). Every reader goes through `src/data/site.ts`, which checks the file against `siteSchema` in `src/lib/site-settings.ts` when it is imported: a bad edit fails the build with the field named (`src/data/site.json (Site settings in /admin) has a problem: links.x: use a full address that starts with https://`). `astro.config.mjs`, `src/content.config.ts` and the admin's `seoTitleMax` still import the JSON directly, so it stays plain JSON.
 
 ```json
 {
   "name": "R7 Orbit",
   "tagline": "Field notes on building with AI",
-  "description": "News, builds and the things in between: writing, videos, projects and code about building with AI.",
-  "url": "https://example.com",
-  "author": { "name": "Your Name", "bio": "Two or three sentences.", "photo": null, "email": "hello@example.com" },
-  "links": { "github": "https://github.com/EOSHunter", "youtube": "", "x": "", "linkedin": "", "bluesky": "", "rss": "/rss.xml" },
-  "nav": ["Latest", "News", "Blog", "Vlogs", "Projects", "Repos", "About"],
+  "description": "News, builds and the things in between: …",
+  "url": "https://r7orbit.io",
+  "defaultOgImage": "/og-default.png",
+  "defaultOgImageAlt": "R7 Orbit: the R7 mark inside a ring …",
+  "author": { "name": "…", "bio": "…", "photo": "/media/about/hunter-newton.jpg", "email": "hello@example.com" },
+  "links": { "github": "", "youtube": "https://www.youtube.com/@R7Creatives", "x": "", "linkedin": "", "bluesky": "", "rss": "/rss.xml" },
+  "nav": [
+    { "label": "Latest", "href": "/#latest" },
+    { "label": "Games", "href": "/games/", "footer": true, "icon": "play" }
+  ],
+  "footer": {
+    "links": [
+      { "label": "RSS", "social": "rss", "icon": "rss" },
+      { "label": "Subscribe", "href": "/subscribe/", "icon": "mail" }
+    ],
+    "note": "Made with R7 Orbit"
+  },
   "newsletter": { "provider": "buttondown", "formAction": "" }
 }
 ```
 
-Everything in the templates marked as placeholder (name, tagline, URL, author, links) must come from this file. Nothing about the author is hard-coded in components.
+| Field | In /admin | Rules (checked by the build) |
+|---|---|---|
+| `name` | yes | 1-30 characters. It is added to every browser title, so it also sets the longest `seoTitle` a post may have |
+| `tagline`, `description` | yes | required; description one line, 180 characters at most |
+| `url` | **no** | the canonical address of every page, feed and sitemap entry; changing it is a domain move (`docs/DEPLOY_CLOUDFLARE.md`) |
+| `defaultOgImage`, `defaultOgImageAlt` | yes | the share image (and its alt text) for any page without its own; a path on this site that exists |
+| `author.name`, `bio`, `photo`, `email` | yes | the person's profile: posts, the author page and the About page's Person data read it. `photo` is a path that exists; `email` an address. The example.com placeholder prints a build warning |
+| `links.github`, `youtube`, `x`, `linkedin`, `bluesky` | yes | empty, or `https://…` only. Empty leaves the link out everywhere (footer, share row, JSON-LD `sameAs`) |
+| `links.rss` | **no** | the feed the site builds (`/rss.xml`); the page head links it directly |
+| `nav[]`: `label`, `href`, `footer`, `icon` | yes | the header links in order. `href` is a page of this site (`/blog/`, `/#latest`) or `https://…`; a site path must exist under `src/pages` or `public` (the build names the item and the address if not); no two items with the same `href`. `footer: true` also lists it in the footer, first, with `icon` (required then) |
+| `footer.links[]`: `label`, `icon`, `href` or `social` | yes | after the nav items marked `footer`. Either an `href` (same rules as nav) or `social`, one of the profile links or `rss`, which is left out while that link is empty. Not both. No two footer links to the same address |
+| `footer.note` | yes | the line after the year; empty shows nothing |
+| `newsletter.provider` | yes | the service's name, as the Privacy page prints it |
+| `newsletter.formAction` | yes | empty (the sample form that sends nothing) or the provider's `https://` form address. It is public (it is in every page's HTML), not a secret |
+
+**The nav is matched by address, never by label.** A page says which section it belongs to with `current="/blog/"` (the `href` of the nav item), and `Header.astro` marks the item whose `href` equals it (`isCurrent` in `src/lib/site-settings.ts`). The search page picks its archive chips by address too (`searchKinds`). So renaming "Blog" in /admin keeps the highlight and the chips; changing an item's `href` is what moves it. `/styleguide/nav/` (noindex, unlinked) draws the nav with every label renamed, and `tests/site-settings.spec.js` checks it.
+
+Not settings: the CMS repository, branch and sign-in address (`CMS_REPO`, `CMS_BRANCH`, `CMS_AUTH_URL` in `src/admin/config.ts`), any token or secret, the game hosts in `public/_headers`, `public/site.webmanifest` (it repeats the name and description: change it by hand if the name changes), and the words of the subscribe band, header controls and post-page chrome.
+
+Nothing about the author is hard-coded in components: it comes from this file.
 
 ## Markdown the site understands
 

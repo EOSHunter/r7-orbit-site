@@ -25,8 +25,10 @@ interface Props {
   updated?: Date | string;
   tags?: string[];
   author?: string;
-  /** Small label above the title, and the nav item that is marked current. */
+  /** Small label above the title. */
   label?: string;
+  /** The address of the nav item marked current, e.g. "/blog/". None by default. */
+  current?: string;
   /** Minutes to read, if you want it shown. */
   minutes?: number;
   /** Headings for the table of contents (from render() or an MDX module's getHeadings()). Leave out for no contents list. */
@@ -48,6 +50,7 @@ const {
   tags = [],
   author = site.author.name,
   label = 'Blog',
+  current,
   minutes,
   headings = [],
   toc,
@@ -60,7 +63,7 @@ const {
 const showToc = toc ?? headings.filter((h) => h.depth === 2).length >= 3;
 ---
 
-<BaseLayout title={title} description={summary} ogType="article" published={date} modified={updated} tags={tags} noindex={noindex} current={label}>
+<BaseLayout title={title} description={summary} ogType="article" published={date} modified={updated} tags={tags} noindex={noindex} current={current}>
   <div class="container art-template">
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <ol>

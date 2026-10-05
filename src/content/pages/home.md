@@ -1,8 +1,8 @@
 ---
 title: Plain notes on building with *AI agents*.
-description: "News, builds and the things in between: writing, videos, projects and code about building with AI."
-eyebrow: Field notes on building with AI
-lead: "News, builds and the things in between: writing, videos, projects and code about building with AI."
+description: "{site.description}"
+eyebrow: "{site.tagline}"
+lead: "{site.description}"
 buttons:
   - label: Start with the latest
     url: "#latest"

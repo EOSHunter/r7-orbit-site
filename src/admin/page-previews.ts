@@ -1,9 +1,13 @@
 // The previews of the home page and the listing pages (archives, Latest, Games, Tags) in the editor, the same approach as the About
 // preview (about-preview.ts): the page with the site's own CSS (main.ts loads it into the preview pane), drawn from the entry as
 // the author types. What comes from the posts (the cards, the pinned post, the games, the tags) cannot be drawn in the editor, so
-// each such part is a stand-in that says what goes there (page-preview-html.ts, and the blocks' `previewNote`).
+// each such part is a stand-in that says what goes there (page-preview-html.ts, and the blocks' `previewNote`). Settings tokens
+// (`{site.tagline}`, …) are filled from src/data/site.json with the functions the pages use (src/lib/page-copy.ts); one that does
+// not exist is shown as typed, with the build's message above the page.
 import { createElement as h, type MouseEvent } from 'react';
 import type { PreviewTemplateComponentProps } from 'decap-cms-core';
+import site from '../data/site.json';
+import { fillValue, pageSettingsOf } from '../lib/page-copy';
 import type { SitePage } from '../lib/site-pages';
 import type { GetAsset } from './preview-html';
 import { adminAuthors } from './authors';
@@ -30,8 +34,16 @@ export interface PagePreviewOptions {
 
 /** The preview of one site page (`page` says which, and its shape: home, a listing, or the Games hub). */
 export function pagePreview(page: SitePage, { sprite }: PagePreviewOptions) {
+  const settings = pageSettingsOf(site);
   return function PagePreview({ entry, getAsset, fields }: PreviewTemplateComponentProps) {
-    const data = (entry.get('data')?.toJS() ?? {}) as Record<string, unknown>;
+    const raw = (entry.get('data')?.toJS() ?? {}) as Record<string, unknown>;
+    let data = raw;
+    let tokenProblem: string[] = [];
+    try {
+      data = fillValue(raw, settings, `${page.id}.md`) as Record<string, unknown>;
+    } catch (error) {
+      tokenProblem = [error instanceof Error ? error.message : String(error)];
+    }
     // Pictures chosen but not saved yet are blob: URLs that only Decap can turn into something the frame can load.
     const resolverFor = (name: string) => {
       const field = fields?.find((f) => f.get('name') === name);
@@ -59,7 +71,7 @@ export function pagePreview(page: SitePage, { sprite }: PagePreviewOptions) {
       },
       h('div', { dangerouslySetInnerHTML: { __html: sprite } }),
       h('p', { className: 'admin-preview-note' }, NOTE[page.shape]),
-      h('div', { className: 'container wide', dangerouslySetInnerHTML: { __html: problemsHtml(pagePreviewProblems(page, data)) } }),
+      h('div', { className: 'container wide', dangerouslySetInnerHTML: { __html: problemsHtml([...tokenProblem, ...pagePreviewProblems(page, data)]) } }),
       h('div', { dangerouslySetInnerHTML: { __html: html } }),
     );
   };

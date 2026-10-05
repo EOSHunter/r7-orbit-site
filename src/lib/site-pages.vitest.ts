@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { z } from 'astro/zod';
 import { describe, expect, it } from 'vitest';
+import site from '../data/site.json';
 import { alwaysHasValue, definitionOf, describeShape, sectionsSchema } from './sections';
 import { BUTTON_PATTERN, fieldsOf, pageProblems, SITE_PAGES, sitePage, sitePageFields } from './site-pages';
 
@@ -60,8 +61,18 @@ describe('the site pages', () => {
     }
   });
 
+  it('prints the site settings through tokens, never by typing their values (the settings stay the one place for them)', () => {
+    const typed = [site.tagline, site.description, site.author.email];
+    for (const page of SITE_PAGES) {
+      const text = readFileSync(`src/content/pages/${page.id}.md`, 'utf8');
+      for (const value of typed) expect(text, `${page.id}.md types "${value}"`).not.toContain(value);
+    }
+    expect(read('home').description).toBe('{site.description}');
+    expect(read('latest').description).toBe('{site.description}');
+  });
+
   it('holds the copy the pages had in code, moved over unchanged (a few anchors; tests/page-text.spec.js compares every word)', () => {
-    expect(read('home')).toMatchObject({ title: 'Plain notes on building with *AI agents*.', eyebrow: 'Field notes on building with AI' });
+    expect(read('home')).toMatchObject({ title: 'Plain notes on building with *AI agents*.', eyebrow: '{site.tagline}', lead: '{site.description}' });
     expect(read('blog')).toMatchObject({ title: 'Writing about *building with agents*', seoTitle: 'Blog', emptyHeading: 'No posts yet.' });
     expect(read('games')).toMatchObject({ soonTitle: 'More games coming', emptyLinkLabel: 'See the projects', soonEyebrow: 'Next up' });
     expect(read('tags')).toMatchObject({ title: 'Browse by *topic*', emptyHeading: 'No tags yet.' });

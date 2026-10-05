@@ -1,6 +1,9 @@
-// Reads a site page's entry (src/content/pages/<id>.md) for the page that draws it, and stops the build with a readable message
-// when the file is missing or lacks a field its page needs (site-pages.ts). Build time only.
+// Reads a site page's entry (src/content/pages/<id>.md) for the page that draws it, with the settings tokens (`{site.tagline}`,
+// `{site.description}`, …: src/lib/page-copy.ts) filled from src/data/site.json, and stops the build with a readable message when
+// the file is missing or lacks a field its page needs (site-pages.ts). Build time only.
 import { getEntry, type CollectionEntry } from 'astro:content';
+import { site } from '../data/site';
+import { fillValue, pageSettingsOf } from './page-copy';
 import { pageProblems, sitePage, type SitePage } from './site-pages';
 
 export type PageData = CollectionEntry<'pages'>['data'];
@@ -18,7 +21,8 @@ export async function loadSitePage(id: string): Promise<LoadedPage> {
   if (!entry) throw new Error(`src/content/pages/${id}.md is missing: ${page.path} is built from it (docs/CONTENT_MODEL.md, "Pages").`);
   const problems = pageProblems(page, entry.data as unknown as Record<string, unknown>);
   if (problems.length) throw new Error(problems.join('\n'));
-  return { ...page, data: entry.data, text: (field) => entry.data[field] ?? '' };
+  const data = fillValue(entry.data, pageSettingsOf(site), `${id}.md`) as PageData;
+  return { ...page, data, text: (field) => data[field] ?? '' };
 }
 
 /** The words of the Games hub's empty state and its "more games coming" card (GamesSection). */
