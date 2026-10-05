@@ -32,10 +32,37 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | `coverAlt` | string | if `cover` | Describe what is in the image. Empty string only if purely decorative |
 | `featured` | boolean | no | Pins to the top of the home page. **At most one at a time** (the build should warn if two) |
 | `draft` | boolean | no | Default `false`. `true` = hidden in production, shown in dev with a "Draft" badge. See "Drafts and scheduled posts" |
-| `readTime` | number (minutes) | no | Computed from the body if absent (≈ 220 words/min) |
+| `readTime` | number (minutes) | no | Computed from the body if absent (≈ 220 words/min): the Markdown body, or the words of the `sections` |
 | `author` | string (author slug) | no | The slug of a file in `src/content/authors/`. Defaults to `hunter-newton`. A slug that does not exist fails the build, naming the post and listing the authors. AI-written pieces are credited to `r7`, never to Hunter |
 | `canonicalUrl` | URL | no | Only when the post was first published elsewhere |
 | `aiAssist` | `'none' \| 'edited' \| 'drafted'` | no | If the author wants the "How this was made" line (see `DECISIONS.md` §C). Shown as a quiet note under the byline |
+| `sections` | block[] | no | The body written as blocks instead of Markdown (see "Body: Markdown or sections" below). Absent or `[]`: the Markdown under the front matter is the body |
+
+## Body: Markdown or sections
+
+Every kind's body is written **one of two ways**, chosen per post:
+
+- **Markdown** under the front matter (MDX for blog posts written in the admin), as before. All existing posts are written this way and keep working unchanged.
+- **`sections`** in the front matter: an ordered list of blocks from the shared block library (`src/lib/sections/`, catalogue in [`SECTIONS.md`](SECTIONS.md)), the same blocks, schema and renderer as the About page. The file then has **no Markdown body**. This works for every kind, `.md` files included, because the blocks live in the front matter.
+
+**Never both.** A post with a non-empty `sections` list and a non-empty Markdown body stops the build with a message naming its file (`bodyConflict` in `src/lib/content.ts`, checked by `getPosts` for every entry, drafts included); the admin refuses to save one too. Nothing converts a Markdown body into sections automatically.
+
+What a sections body changes, and what it does not:
+
+| | With a Markdown body | With `sections` |
+|---|---|---|
+| Where it is drawn | the reading column (`.prose`) | the same column, by `Sections.astro` with `layout="column"`: rows stay inside the post's column (a *Full* image is as wide as the column), and every heading gets an anchor |
+| Blog/news/vlog/project/repo page chrome | breadcrumb, byline, source box, player, play section, facts, gallery, changelog, author note, share row, series, related posts, previous/next | unchanged |
+| Reading time | words of the Markdown | words of the blocks (`sectionsToText`, `src/lib/sections-to-content.ts`): headings, text, quotes, captions, link and button labels; not code, alt text or pull quotes |
+| Blog contents list | `##`/`###` of the rendered body, shown at 3+ `h2` (or `toc`) | Heading blocks plus `##`/`###` inside Markdown boxes (`sectionsHeadings`), same rule |
+| Feed item (`content:encoded`) | blog: the rendered body; news/vlog: source or summary; project/repo: none | every kind: the blocks as Markdown (`sectionsToMarkdown`) rendered to sanitised HTML with absolute addresses; a news item still starts with its source and a vlog still ends with the video link |
+| Search (Pagefind) | indexes the built page | the same: the blocks are in `<main>` |
+| JSON-LD | from the front matter; `timeRequired` from the reading time | the same (there is no `articleBody`; `description` is always the required `summary`) |
+| Vlog transcript | the body's `## Transcript` part, with `transcript: true` | the `transcriptText` field (Markdown), shown folded the same way |
+| Repo `readme: local` | the body replaces the README | the sections replace the README |
+| Drafts, scheduling, related posts, series, sitemap | front matter only | unchanged |
+
+Fixtures: `tests/fixtures/posts/<kind>/` holds one post per kind written as sections. They are read through the real schema (the `fixture*` collections in `src/content.config.ts`) and drawn by the real page components at `/styleguide/posts/<kind>/` (noindex, unlinked; feed at `/styleguide/posts/rss.xml`). They are never in an archive, a site feed, the sitemap or the site's search.
 
 ## Authors
 
@@ -93,9 +120,10 @@ Body: Markdown/MDX. Headings from `##` down (the title is the `h1`). See "Markdo
 | `duration` | string (`m:ss` or `h:mm:ss`) | yes | Shown on the poster and in structured data |
 | `poster` | image path | no | Falls back to `cover`, then to YouTube's thumbnail (downloaded at build, not hotlinked) |
 | `chapters` | `{ t: string, title: string }[]` | no | `t` is `m:ss`. Rendered as a list that seeks the video when clicked |
-| `transcript` | boolean | no | `true` if the body contains a `## Transcript` section; it is placed in a `<details>` |
+| `transcript` | boolean | no | `true` if the body contains a `## Transcript` section; it is placed in a `<details>`. Not allowed with `sections` |
+| `transcriptText` | Markdown | no | Only with `sections`: the transcript, shown in the same `<details>`. The build refuses it on a vlog with a Markdown body |
 
-Body: the written notes, links and resources mentioned in the video.
+Body: the written notes, links and resources mentioned in the video (Markdown, or `sections`).
 
 ### Project (`src/content/projects/`)
 
@@ -155,7 +183,7 @@ A page that is not a post, made of **blocks** the author adds, removes and re-or
 | `description` | string | yes | The meta description (about 155 characters reads best; at most 180). Not shown on the page |
 | `sections` | block[] | no | The page, top to bottom. An absent list is an empty one; at most 60 blocks |
 
-**The blocks are the shared library** in `src/lib/sections/` (one definition per block: its fields, schema, label and where it sits), documented with every field and an example in [`SECTIONS.md`](SECTIONS.md). Each block is `- type: <id>` plus its own fields, checked strictly by `sectionsSchema`: an unknown field or type fails the build with the block's position (`sections.1.alt: Block 2 (Image): ...`). The library is built to attach to any collection (`sections: sectionsSchema`), so posts and other pages can use it later; today only `pages` does.
+**The blocks are the shared library** in `src/lib/sections/` (one definition per block: its fields, schema, label and where it sits), documented with every field and an example in [`SECTIONS.md`](SECTIONS.md). Each block is `- type: <id>` plus its own fields, checked strictly by `sectionsSchema`: an unknown field or type fails the build with the block's position (`sections.1.alt: Block 2 (Image): ...`). The same library is attached to every kind of post (see "Body: Markdown or sections" above); other pages can use it later.
 
 | `type` | What it draws |
 |---|---|

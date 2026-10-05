@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6, editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7, and writing a post as blocks instead of one Markdown text is section 8. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -13,7 +13,7 @@ For the author. Adding pictures is section 6 and editing the About page (and wha
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos. Every step for pictures is in [section 6, Adding images](#6-adding-images).
-5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component.
+5. **Write the body.** Type normally. To add a picture or an article component (callout, quote, image gallery, video, two columns and so on), click **+** in the body and pick it from the list (**Image** for a picture). Blog posts show a live preview beside the form. [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) describes each component. Or build the body from blocks under **Sections** instead, as on the About page: [section 8](#8-write-a-post-with-sections). Use one or the other, not both.
 6. **Draft and scheduled.**
    - **Draft** on: the post is kept out of the live site, archives, search, feeds and sitemap, even after it is published to GitHub. Turn it off when you want the post public.
    - **Date in the future**: the post is **scheduled**. It stays hidden until that day (counted in UTC), then goes live at the next daily rebuild (section 2).
@@ -187,3 +187,19 @@ The About page is not a post. It is a list of **blocks** (a heading, some text, 
 10. **Save**, then **Publish** exactly as for a post (section 1, steps 7 to 9). The check on the pull request builds the site. If it is red, open it and read the first error: it names the block ("Block 3 (Image)" is the third block, counting from 1; `sections.2` counts from 0) and what is wrong, usually missing alt text or an address that does not start with `https://` or `/`. The preview shows the same messages above the page while you type.
 
 Good to know: the details search engines read about you (name and bio, the "Person" data) come from `src/data/site.json`, not from this page. If you change your bio here and want search engines to see the change too, it has to be changed there as well.
+
+## 8. Write a post with sections
+
+Any post (a blog post, news item, vlog, project or repo) can be written as **sections**: a list of blocks you add, re-order and remove, the same blocks as the About page (section 7), instead of the one Markdown text in **Body**. Use sections when the layout matters (a picture beside text, a gallery, a button, two columns, a video in the middle); keep the Body for a long essay that is mostly text. Nothing changes for posts you already wrote: a post with a Body stays as it is.
+
+1. Open or create the post as in section 1 and fill in the fields as usual (title, summary, date, tags, author, the source of a news item, the video of a vlog, the status of a project, the repository of a repo). Those still come from the form, whichever way the body is written.
+2. **Leave Body empty.** A post uses sections **or** the Body, **never both**: the editor refuses to save a post that has both ("Not saved. This post has both sections and a Body…"), and the build would stop on one, naming the file. To switch an existing post to sections, cut its text out of Body and rebuild it as blocks; nothing converts it for you.
+3. Under **Sections**, click **Add section** and pick a block, exactly as in section 7, steps 3 to 8. Pictures you upload in blocks go to the post's own folder (`public/media/<kind>/`), and each needs alt text unless it is marked **Decorative image**.
+4. **Headings.** Use **Heading** blocks for the parts of the post (*Section heading* for the main ones). On a blog post with three or more section headings the contents list ("On this page") appears beside the text, built from them and from any `##` heading you type inside a Text block. A `##` inside a Text block must be on a line of its own with a blank line before and after it: the build stops on one it cannot list.
+5. **Reading time** is counted from the words in the blocks (code, alt text and pull quotes are not counted), unless you type your own in **Reading time**.
+6. **A vlog's transcript.** With sections there is no Body to hold it, so put it in **Transcript (for a vlog written as sections)**. It is shown folded under the notes, as before. Leave **Transcript below** off: that switch is for a Body that ends with a "Transcript" heading.
+7. **A repo** with **README source** set to *Local* shows your sections instead of the README from GitHub, as it does with a Body.
+8. **The preview** on the right draws the blocks in the post's column with the site's styles, and lists above the page what the build would stop on (a picture without alt text, a post with both sections and a Body). Blog posts get the full page preview; news, vlogs, projects and repos get the head of the page and the body, and a note at the top says what is not drawn (the facts column, a project's play section, gallery and changelog, a repo's README). The limits of the block preview in section 7, step 9, apply here too.
+9. **Feeds.** A post written as sections sends its blocks to feed readers as simple formatted text: headings, paragraphs, lists, quotes, code, pictures with their captions and links (a spacer, the latest posts, the newsletter form and the contents list are left out). Blocks with a video or a game send a link to it.
+10. **Save** and **Publish** as in section 1. If the check on the pull request is red, its first error names the post's file and the block ("blog/my-post.md, block 3 (Image)").
+

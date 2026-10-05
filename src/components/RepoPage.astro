@@ -1,0 +1,210 @@
+---
+// The whole page for a repo (docs/PAGES.md): the route (src/pages/repos/[slug].astro) only fetches and passes data, and so does the
+// tests' fixture page (/styleguide/posts/repos/). The notes are the Markdown body, or the post's sections when it is written as blocks
+// (docs/SECTIONS.md). Either one replaces the GitHub README when `readme: local`.
+import { render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AuthorByline from './AuthorByline.astro';
+import AuthorNote from './AuthorNote.astro';
+import Icon from './Icon.astro';
+import PreviewBadge from './PreviewBadge.astro';
+import PostCard from './PostCard.astro';
+import ProjectJsonLd from './ProjectJsonLd.astro';
+import ReadmeBlock from './ReadmeBlock.astro';
+import Sections from './Sections.astro';
+import StatsRow from './StatsRow.astro';
+import SubscribeBand from './SubscribeBand.astro';
+import { toCard, type RepoData } from './detailCards';
+import { authorSlugOf } from '../lib/authors';
+import { getAuthorMap } from '../lib/authors-queries';
+import type { SitePost } from '../lib/content-queries';
+import { relatedPosts } from '../lib/content';
+import { loadGitHubRepo } from '../lib/github';
+import { hasSections } from '../lib/sections-to-content';
+import { headTitleFor } from '../lib/seo';
+import { longDate } from '../lib/text';
+import '../styles/markdown.css';
+
+interface Props {
+  post: SitePost<'repos'>;
+  /** Published posts of every kind, newest first: the posts about this repo. */
+  all: SitePost[];
+  /** The tests' fixture page: kept out of search engines. */
+  noindex?: boolean;
+}
+
+const { post, all, noindex = false } = Astro.props;
+const data = post.entry.data as unknown as RepoData;
+const [owner, name] = data.repo.split('/');
+const githubUrl = `https://github.com/${data.repo}`;
+const cloneCommand = data.install ?? `git clone ${githubUrl}.git`;
+
+// Never throws: either data (fresh or cached) or `unavailable`, and the page reads fine in both cases.
+const gh = await loadGitHubRepo(data.repo);
+const stats = gh.status === 'ok' ? gh.stats : undefined;
+const homepage = data.homepage ?? stats?.homepage ?? undefined;
+
+// The notes: the sections when the repo has any (then the Markdown body is empty: getPosts checks), else the Markdown.
+const sections = hasSections(data) ? (data.sections ?? []) : undefined;
+const hasBody = Boolean(sections) || Boolean(post.body?.trim());
+const { Content } = hasBody && !sections ? await render(post.entry) : { Content: undefined };
+const useLocal = data.readme === 'local';
+const readmeHtml = gh.status === 'ok' ? gh.readmeHtml : null;
+
+const related = relatedPosts(post, all);
+const path = `/repos/${post.id}/`;
+const author = (await getAuthorMap()).get(authorSlugOf(post))!;
+---
+
+<BaseLayout
+  title={headTitleFor(data.repo, data.seoTitle)}
+  description={data.summary}
+  current="Repos"
+  noindex={noindex}
+  published={data.date}
+  modified={data.updated}
+  tags={data.tags}
+>
+  <ProjectJsonLd
+    slot="head"
+    kind="repo"
+    name={data.repo}
+    description={data.summary}
+    path={path}
+    published={data.date}
+    modified={stats?.pushedAt ?? data.updated}
+    keywords={[...(stats?.topics ?? []), ...data.tags]}
+    codeRepository={githubUrl}
+    language={stats?.language}
+    license={stats?.license}
+    author={author}
+  />
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/repos/">Repos</a></li>
+        <li aria-current="page">{data.repo}</li>
+      </ol>
+    </nav>
+
+    <header class="repo-head">
+      <p class="eyebrow">
+        <span class="kind"><Icon name="repo" />Repo</span>
+        <PreviewBadge post={post} />
+      </p>
+      <h1 class="repo-name"><span class="owner">{owner}/</span><wbr />{name}</h1>
+      <p class="t-lead">{data.summary}</p>
+      <p class="post-author"><AuthorByline author={author} /></p>
+      {stats && <StatsRow language={stats.language} stars={stats.stars} forks={stats.forks} pushedAt={stats.pushedAt} />}
+      <div class="cluster actions">
+        <a class="btn solid" href={githubUrl} rel="noopener">
+          <Icon name="github" />View on GitHub<Icon name="external" />
+        </a>
+        <button class="btn" type="button" data-copy={cloneCommand}>
+          <Icon name="copy" /><span data-copy-label>Copy clone command</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="split">
+      <div>
+        {
+          sections ? (
+            <section class="block" aria-label="Notes">
+              <Sections sections={sections} source={post.entry.filePath ?? `repos/${post.id}`} layout="column" headingIds />
+            </section>
+          ) : (
+            Content && (
+              <section class="block" aria-label="Notes">
+                <div class="prose">
+                  <Content />
+                </div>
+              </section>
+            )
+          )
+        }
+
+        {
+          !(useLocal && hasBody) && (
+            <section class="block" aria-labelledby="readme-h">
+              <h2 class="visually-hidden" id="readme-h">README</h2>
+              {readmeHtml ? (
+                <ReadmeBlock html={readmeHtml} />
+              ) : (
+                <div class="callout">
+                  {gh.status === 'ok'
+                    ? 'This repository has no README yet. '
+                    : 'The README could not be loaded when this page was built. '}
+                  <a href={githubUrl} rel="noopener">Read it on GitHub</a>.
+                </div>
+              )}
+            </section>
+          )
+        }
+
+        <AuthorNote author={author} />
+      </div>
+
+      <aside class="sticky" aria-label="Repository facts">
+        <div class="facts">
+          <h2 class="eyebrow">Facts</h2>
+          <dl>
+            <div>
+              <dt>Repository</dt>
+              <dd><a href={githubUrl} rel="noopener">{data.repo}<Icon name="external" small /></a></dd>
+            </div>
+            {
+              homepage && (
+                <div>
+                  <dt>Website</dt>
+                  <dd><a href={homepage} rel="noopener">{new URL(homepage).hostname}<Icon name="external" small /></a></dd>
+                </div>
+              )
+            }
+            {stats?.license && <div><dt>License</dt><dd>{stats.license}</dd></div>}
+            {stats?.language && <div><dt>Language</dt><dd><span class="lang">{stats.language}</span></dd></div>}
+            {
+              stats && stats.topics.length > 0 && (
+                <div>
+                  <dt>Topics</dt>
+                  <dd>
+                    <div class="cluster">
+                      {stats.topics.map((topic) => (
+                        <span class="chip mono">{topic}</span>
+                      ))}
+                    </div>
+                  </dd>
+                </div>
+              )
+            }
+            {stats && <div><dt>Branch</dt><dd class="mono">{stats.defaultBranch}</dd></div>}
+          </dl>
+        </div>
+        {gh.status === 'ok' && <p class="t-meta">Stats from GitHub as of {longDate(gh.fetchedAt)}.</p>}
+      </aside>
+    </div>
+  </div>
+
+  {
+    related.length > 0 && (
+      <section class="section ruled" aria-labelledby="related-h">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Writing and video</p>
+              <h2 class="section-title" id="related-h">Posts about this repo</h2>
+            </div>
+          </div>
+          <div class="grid-cards">
+            {related.map((item) => (
+              <PostCard post={toCard(item)} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <SubscribeBand />
+</BaseLayout>

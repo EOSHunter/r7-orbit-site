@@ -45,8 +45,9 @@ async function schemaShapes(): Promise<Record<string, Record<string, Zod>>> {
   const { collections: defined } = await import('../content.config');
   const out: Record<string, Record<string, Zod>> = {};
   for (const [name, c] of Object.entries(defined)) {
-    // The block-built pages (About) are not posts: src/admin/pages.vitest.ts reads their schema.
-    if (name === 'pages') continue;
+    // The block-built pages (About) are not posts: src/admin/pages.vitest.ts reads their schema. The tests' fixture collections
+    // (fixtureBlog…) are the real kinds' schemas read from tests/fixtures/posts/, with no admin of their own.
+    if (name === 'pages' || name.startsWith('fixture')) continue;
     const { schema } = c as unknown as { schema: (ctx: { image: () => unknown }) => Zod };
     // `image()` is Astro's own helper; a string stands in for it.
     out[name] = schema({ image: () => z.string() }).shape ?? {};
@@ -356,9 +357,9 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
     expect(String(vlogs.videoUrl.hint)).toMatch(/not on YouTube/);
   });
 
-  it('turns the live preview on for blog posts only, and only blog bodies get the article blocks', () => {
+  it('turns the live preview on for every kind of post, and only blog bodies get the article blocks', () => {
     for (const c of posts) {
-      expect((c as { editor?: { preview?: boolean } }).editor?.preview ?? false, c.name).toBe(c.name === 'blog');
+      expect((c as { editor?: { preview?: boolean } }).editor?.preview ?? false, c.name).toBe(true);
       const components = (byName(c.fields).body.editor_components ?? []) as string[];
       expect(
         ARTICLE_COMPONENT_NAMES.every((b) => components.includes(b)),
@@ -419,5 +420,40 @@ describe('authors in the admin', () => {
     const shapes = await schemaShapes();
     expect(shapes.blog.author.safeParse(undefined)).toMatchObject({ success: true, data: { collection: 'authors', id: 'hunter-newton' } });
     expect(shapes.vlogs.author.safeParse('r7')).toMatchObject({ success: true, data: { collection: 'authors', id: 'r7' } });
+  });
+});
+
+describe('sections: a post body written as blocks', () => {
+  it('gives every kind the shared block list, next to the body, saying to use one or the other', async () => {
+    const { sectionsDrift } = await import('./sections-config');
+    for (const c of posts) {
+      const names = (c.fields ?? []).map((f) => (f as { name: string }).name);
+      const sections = byName(c.fields).sections;
+      expect(names.indexOf('sections'), `${c.name}: sections right after the body`).toBe(names.indexOf('body') + 1);
+      expect(sections, c.name).toMatchObject({ widget: 'list', typeKey: 'type', required: false, default: [], collapsed: true });
+      expect(String(sections.hint), c.name).toContain('Use sections OR the body, not both');
+      // The same blocks, fields and rules as the schema (the drift check the About page's list runs too).
+      expect(sectionsDrift(sections.types as Record<string, unknown>[]), c.name).toEqual([]);
+    }
+  });
+
+  it('lets the body be left empty, and says so, since a post written as sections has none', () => {
+    for (const c of posts) {
+      expect(byName(c.fields).body.required, c.name).toBe(false);
+      expect(String(byName(c.fields).body.hint), c.name).toContain('Use sections OR the body, not both');
+    }
+  });
+
+  it('uploads pictures in blocks to public/media/<kind>/, which the blocks read their size from (the blog too)', () => {
+    for (const c of posts) {
+      expect(byName(c.fields).sections, c.name).toMatchObject({ media_folder: `/public/media/${c.name}`, public_folder: `/media/${c.name}` });
+    }
+  });
+
+  it("gives a vlog written as sections a transcript box of its own, optional, as the schema's transcriptText", async () => {
+    const shapes = await schemaShapes();
+    expect(fieldsOf('vlogs').transcriptText).toMatchObject({ widget: 'markdown', required: false });
+    expect(shapes.vlogs.transcriptText.isOptional()).toBe(true);
+    for (const name of ['news', 'blog', 'projects', 'repos']) expect(fieldsOf(name).transcriptText, name).toBeUndefined();
   });
 });

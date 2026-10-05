@@ -69,6 +69,8 @@ const routes = [
   { path: '/styleguide/author-empty/', noindex: true }, // fixture for tests/authors.spec.js: an author with no posts
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
   { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
+  // fixtures for tests/post-sections.spec.js: one post per kind written as sections (tests/fixtures/posts/), drawn by the real post pages
+  ...KINDS.map((kind) => ({ path: `/styleguide/posts/${kind}/`, noindex: true })),
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

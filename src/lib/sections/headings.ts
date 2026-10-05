@@ -44,24 +44,62 @@ export function withHeadingIds(html: string, slugs: string[]): string {
   });
 }
 
-/** The h2 and h3 of a Markdown source (`##` and `###` outside code fences): good enough for the preview's list. */
+/** A heading's Markdown as the words a reader sees: links and pictures by their text, no emphasis, code or tag marks. */
+const headingWords = (source: string): string =>
+  source
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]*>/g, '')
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// A line's container marks: a quote's `>` and a list item's `-`, `*`, `+` or `1.` (a heading can sit inside either).
+const CONTAINER = /^(?:\s{0,3}(?:>|[-*+]|\d{1,9}[.)])(?:\s+|$))+/;
+
+/**
+ * The h2 and h3 of a Markdown source, in order, as the site's Markdown reader finds them: `##` and `###` lines, and a paragraph
+ * underlined with `---` (an h2), also inside a quote or a list item; nothing inside a code fence. The build checks that its count
+ * matches the rendered HTML (prepare.ts), so a heading this misses is a readable build error, not a dead link in the contents list.
+ */
 export function headingsOfMarkdown(markdown: string): { depth: 2 | 3; text: string }[] {
   const found: { depth: 2 | 3; text: string }[] = [];
-  let fence: string | undefined;
-  for (const line of markdown.split('\n')) {
-    const marker = /^\s*(```|~~~)/.exec(line)?.[1];
-    if (marker) {
-      fence = fence === marker ? undefined : (fence ?? marker);
+  let fence: { char: string; length: number } | undefined;
+  // The paragraph being read, which a `---` line under it turns into a heading. A list item's text cannot be underlined.
+  let paragraph: string[] = [];
+  let paragraphInList = false;
+  for (const raw of markdown.replace(/\r\n?/g, '\n').split('\n')) {
+    const marks = CONTAINER.exec(raw)?.[0] ?? '';
+    const line = raw.slice(marks.length);
+    const opener = /^\s{0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence) {
+      if (opener && opener[0] === fence.char && opener.length >= fence.length && !line.slice(line.indexOf(opener) + opener.length).trim()) {
+        fence = undefined;
+      }
       continue;
     }
-    if (fence) continue;
-    const match = /^(#{2,3})\s+(.+?)\s*#*\s*$/.exec(line);
-    if (match) {
-      found.push({
-        depth: match[1].length as 2 | 3,
-        text: match[2].replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`]/g, '').trim(),
-      });
+    if (opener) {
+      fence = { char: opener[0], length: opener.length };
+      paragraph = [];
+      continue;
     }
+    const atx = /^\s{0,3}(#{1,6})(?:\s+(.*?))?(?:\s+#+)?\s*$/.exec(line);
+    if (atx) {
+      if (atx[1].length === 2 || atx[1].length === 3) found.push({ depth: atx[1].length as 2 | 3, text: headingWords(atx[2] ?? '') });
+      paragraph = [];
+      continue;
+    }
+    const underline = /^\s{0,3}(=+|-+)\s*$/.exec(line)?.[1];
+    if (underline && paragraph.length && !paragraphInList && !/[-*+]|\d[.)]/.test(marks)) {
+      if (underline[0] === '-') found.push({ depth: 2, text: headingWords(paragraph.join(' ')) });
+      paragraph = [];
+      continue;
+    }
+    if (!line.trim() || /^\s{0,3}([-*_])(\s*\1){2,}\s*$/.test(line)) {
+      paragraph = [];
+      continue;
+    }
+    if (!paragraph.length) paragraphInList = /[-*+]|\d[.)]/.test(marks);
+    paragraph.push(line.trim());
   }
   return found;
 }

@@ -1,5 +1,7 @@
 // Pure helpers over content entries: no Astro imports, so they run under Vitest.
 // The Astro-bound loaders are in content-queries.ts.
+import type { Section } from './sections';
+import { hasSections, sectionsToText } from './sections-to-content';
 
 export type CollectionName = 'news' | 'blog' | 'vlogs' | 'projects' | 'repos';
 
@@ -16,6 +18,8 @@ export interface PostData {
   author?: { id: string };
   series?: string;
   seriesOrder?: number;
+  /** The body written as blocks (docs/SECTIONS.md). When it holds any, the Markdown body is empty (`bodyConflict`). */
+  sections?: readonly Section[];
 }
 
 export interface Post<D extends PostData = PostData> {
@@ -100,10 +104,29 @@ export function countWords(markdown: string): number {
   return text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
 }
 
+/** The words of a post's body: its sections as plain text (sections-to-content.ts) when it is written as sections, else its Markdown. */
+export function bodyWords(post: Pick<Post, 'body' | 'data'>): number {
+  return hasSections(post.data) ? countWords(sectionsToText(post.data.sections ?? [])) : countWords(post.body ?? '');
+}
+
 /** Reading time in whole minutes, rounded up, at least 1. A `readTime` in the frontmatter wins. */
 export function readTime(post: Pick<Post, 'body' | 'data'>): number {
   if (post.data.readTime) return post.data.readTime;
-  return Math.max(1, Math.ceil(countWords(post.body ?? '') / WORDS_PER_MINUTE));
+  return Math.max(1, Math.ceil(bodyWords(post) / WORDS_PER_MINUTE));
+}
+
+/**
+ * A post is written one way: as `sections` (blocks in the front matter) or as a Markdown body under the front matter, never both
+ * (docs/CONTENT_MODEL.md "Body: Markdown or sections"). The message for a post that has both, naming its file; undefined when it is fine.
+ * An empty `sections: []` (what the editor writes for a post without blocks) is not sections.
+ */
+export function bodyConflict(file: string, post: Pick<Post, 'body' | 'data'>): string | undefined {
+  if (!hasSections(post.data) || !post.body?.trim()) return undefined;
+  return (
+    `${file}: this post has both sections and a Markdown body. A post is written one way or the other: ` +
+    'to keep the sections, delete the text under the front matter (in the editor: empty the Body box); ' +
+    'to keep the Markdown, remove the sections (sections: []).'
+  );
 }
 
 export interface TagCount {

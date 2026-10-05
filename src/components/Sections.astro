@@ -5,7 +5,9 @@
 // leaves the column (a wide or full image, a gallery, the latest posts, a game, the newsletter band) gets a row of its own. Where
 // each block sits is its definition's `placement`; the rows come from `layoutSections`, which the admin preview uses too.
 //
-// Used by src/pages/about.astro and the fixture page. The admin preview draws the same rows from strings (src/admin/sections-html.ts).
+// Used by src/pages/about.astro and the fixture page (`layout="page"`: rows the width of the window), and by the post pages for a post
+// written as sections (`layout="column"`: the rows sit in the post's text column, beside its contents list or facts, so nothing reaches
+// the window's edges and a Full image is as wide as the column). The admin preview draws the same rows from strings (src/admin/sections-html.ts).
 import { layoutSections, type Section, type SectionOf } from '../lib/sections';
 import { prepareSections } from '../lib/sections/prepare';
 import HeadingBlock from './sections/HeadingBlock.astro';
@@ -19,44 +21,50 @@ interface Props {
   sections: readonly Section[];
   /** The page's file, for errors: "about.md". */
   source: string;
+  /** `page` (default): each row in a page-wide container. `column`: inside a post's text column. */
+  layout?: 'page' | 'column';
+  /** Give every heading an anchor (a post's contents list links to them). A page with a Table of contents block always does. */
+  headingIds?: boolean;
 }
 
-const { sections, source } = Astro.props;
+const { sections, source, layout = 'page', headingIds = false } = Astro.props;
+const rowClass = layout === 'page' ? 'container wide sec-row' : 'sec-row';
 
 // Everything the markup needs that takes a read or a render, done once up front: the Markdown of each text box (HTML,
 // sanitised), the size of each picture (so the page reserves its space) and, with a table of contents, the headings.
-const contexts = await prepareSections(sections, source);
+const contexts = await prepareSections(sections, source, { headingIds, layout });
 
 // Each block with the component that draws it and what it was prepared with, grouped into rows.
 const draw = (block: Section) => ({ Block: renderers[block.type], block, ctx: contexts.get(block)! });
-const rows = layoutSections(sections).map((row) =>
-  row.kind === 'split'
+const rows = layoutSections(sections).map((r) =>
+  r.kind === 'split'
     ? {
         kind: 'split' as const,
-        portrait: row.portrait as SectionOf<'portrait'>,
-        portraitCtx: contexts.get(row.portrait)!,
-        lead: row.lead as SectionOf<'heading'> | undefined,
-        leadCtx: row.lead && contexts.get(row.lead),
-        blocks: row.blocks.map(draw),
+        portrait: r.portrait as SectionOf<'portrait'>,
+        portraitCtx: contexts.get(r.portrait)!,
+        lead: r.lead as SectionOf<'heading'> | undefined,
+        leadCtx: r.lead && contexts.get(r.lead),
+        blocks: r.blocks.map(draw),
       }
-    : row.kind === 'prose'
-      ? { kind: 'prose' as const, blocks: row.blocks.map(draw) }
-      : { kind: row.kind, ...draw(row.block) },
+    : r.kind === 'prose'
+      ? { kind: 'prose' as const, blocks: r.blocks.map(draw) }
+      : // In a column nothing reaches the window's edges: a full row is a wide one.
+        { kind: r.kind === 'full' && layout === 'column' ? ('wide' as const) : r.kind, ...draw(r.block) },
 );
 ---
 
-<div class="sections">
+<div class="sections" data-layout={layout === 'column' ? 'column' : undefined}>
   {
     rows.map((row) =>
       row.kind === 'split' ? (
-        <div class="container wide sec-row">
+        <div class={rowClass}>
           <PortraitBlock block={row.portrait} ctx={row.portraitCtx}>
             {row.lead && row.leadCtx && <HeadingBlock slot="lead" block={row.lead} ctx={row.leadCtx} />}
             {row.blocks.map(({ Block, block, ctx }) => <Block block={block} ctx={ctx} />)}
           </PortraitBlock>
         </div>
       ) : row.kind === 'prose' ? (
-        <div class="container wide sec-row">
+        <div class={rowClass}>
           <div class="prose">{row.blocks.map(({ Block, block, ctx }) => <Block block={block} ctx={ctx} />)}</div>
         </div>
       ) : row.kind === 'full' ? (
@@ -64,7 +72,7 @@ const rows = layoutSections(sections).map((row) =>
       ) : row.kind === 'band' ? (
         <div class="sec-row sec-row-band"><row.Block block={row.block} ctx={row.ctx} /></div>
       ) : (
-        <div class="container wide sec-row"><row.Block block={row.block} ctx={row.ctx} /></div>
+        <div class={rowClass}><row.Block block={row.block} ctx={row.ctx} /></div>
       ),
     )
   }
