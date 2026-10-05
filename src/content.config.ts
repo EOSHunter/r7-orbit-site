@@ -39,6 +39,10 @@ const common = {
   author: reference('authors').prefault(DEFAULT_AUTHOR),
   canonicalUrl: z.url().optional(),
   aiAssist: z.enum(['none', 'edited', 'drafted']).optional(),
+  // The body written as blocks: the shared library of src/lib/sections/ (docs/SECTIONS.md). Optional: absent or empty, the Markdown
+  // under the front matter is the body, as before. A post with blocks must have no Markdown body; a schema does not see the body, so
+  // getPosts() checks that rule (bodyConflict in src/lib/content.ts) and the build stops, naming the file.
+  sections: sectionsSchema,
 };
 
 type ImageHelper = Parameters<Extract<Parameters<typeof defineCollection>[0]['schema'], (...args: never[]) => unknown>>[0]['image'];
@@ -107,8 +111,7 @@ const authors = defineCollection({
       }),
 });
 
-export const collections = {
-  authors,
+const posts = {
   news: collection('news', {
     sourceUrl: z.url(),
     sourceName: z.string().min(1),
@@ -148,11 +151,29 @@ export const collections = {
       chapters: z
         .array(z.object({ t: z.string().regex(/^(\d+:)?\d{1,2}:\d{2}$/, 'use m:ss'), title: z.string() }))
         .optional(),
+      // A Markdown body's transcript is its `## Transcript` part, which this switch labels.
       transcript: z.boolean().optional(),
+      // A vlog written as sections has no Markdown body to hold one: its transcript is this Markdown text, shown folded the same way.
+      transcriptText: z.string().optional(),
     },
     (data, ctx) => {
       if (!data.youtubeId && !data.videoUrl) {
         ctx.addIssue({ code: 'custom', path: ['youtubeId'], message: 'set youtubeId or videoUrl' });
+      }
+      const blocks = (data.sections as unknown[] | undefined)?.length ?? 0;
+      if (typeof data.transcriptText === 'string' && data.transcriptText.trim() && !blocks) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['transcriptText'],
+          message: 'transcriptText is for a vlog written with sections. With a Markdown body, put the transcript under a "## Transcript" heading in the body and set transcript: true',
+        });
+      }
+      if (data.transcript === true && blocks) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['transcript'],
+          message: 'transcript: true labels the "## Transcript" part of a Markdown body. A vlog written with sections keeps its transcript in transcriptText',
+        });
       }
     },
   ),
@@ -199,5 +220,24 @@ export const collections = {
     install: z.string().optional(),
     relatedProject: z.string().optional(),
   }),
+};
+
+// The tests' fixtures: one post per kind written as sections, in tests/fixtures/posts/<kind>/, read through the same schema as the
+// real kind and drawn by the same page components at /styleguide/posts/<kind>/ (noindex, unlinked, like the rest of the styleguide).
+// Only getFixturePosts() reads them (src/lib/content-queries.ts): never an archive, a feed of the site, the sitemap or search.
+// The real kind's collection (schema and all), with only the folder its files are read from changed.
+const fixture = <C extends (typeof posts)[keyof typeof posts]>(real: C, kind: keyof typeof posts): C => ({
+  ...real,
+  loader: glob({ pattern: '**/*.{md,mdx}', base: `./tests/fixtures/posts/${kind}` }),
+});
+
+export const collections = {
+  authors,
+  ...posts,
+  fixtureNews: fixture(posts.news, 'news'),
+  fixtureBlog: fixture(posts.blog, 'blog'),
+  fixtureVlogs: fixture(posts.vlogs, 'vlogs'),
+  fixtureProjects: fixture(posts.projects, 'projects'),
+  fixtureRepos: fixture(posts.repos, 'repos'),
   pages,
 };

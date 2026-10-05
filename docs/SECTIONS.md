@@ -1,6 +1,6 @@
 # Sections: the shared block library
 
-A page (today the About page; later posts and every other page) can be an **ordered list of blocks** the author adds, removes and drags into order in `/admin`. Every block is defined **once**, in `src/lib/sections/definitions.ts`, and four things are generated or driven from that one list:
+A page (today the About page; later every other page) and the body of any post can be an **ordered list of blocks** the author adds, removes and drags into order in `/admin`. Every block is defined **once**, in `src/lib/sections/definitions.ts`, and four things are generated or driven from that one list:
 
 | What | Where | How it comes from the definitions |
 | --- | --- | --- |
@@ -9,9 +9,21 @@ A page (today the About page; later posts and every other page) can be an **orde
 | The page | `src/components/Sections.astro` and `src/components/sections/<Id>Block.astro` | The layout rows come from the definitions' `placement` |
 | The live preview in the editor | `src/admin/sections-html.ts` | Same rows (`layoutSections`), same field list, and the real schema for its warnings |
 
-Phase 1 (this document) built the library and moved the About page onto it. **Posts and the other pages do not use it yet**; the section "Attaching the library to a collection" says how a later task does that.
+Phase 1 built the library and moved the About page onto it. Phase 2 attached it to **every kind of post** (blog, news, vlogs, projects, repos) as an optional body: see "Posts" below. The other pages do not use it yet; "Attaching the library to a collection" says how a later task does that.
 
 Related: [`CONTENT_MODEL.md`](CONTENT_MODEL.md#pages-srccontentpages) (the `pages` collection), [`PUBLISHING.md`](PUBLISHING.md#7-editing-the-about-page) (the author's steps), [`ARTICLE_COMPONENTS.md`](ARTICLE_COMPONENTS.md) (the article components most blocks wrap), [`IMAGES.md`](IMAGES.md).
+
+## Posts
+
+Every kind of post has an optional `sections` list next to its Markdown body (`common` in `src/content.config.ts`; the author's steps are [`PUBLISHING.md`](PUBLISHING.md#10-write-a-post-with-sections), the field-by-field effects [`CONTENT_MODEL.md`](CONTENT_MODEL.md#body-markdown-or-sections)).
+
+- **One or the other.** A post with blocks has no Markdown body. `bodyConflict` (`src/lib/content.ts`) is run by `getPosts` over every entry, drafts included, and stops the build naming the file; `bodyOrSectionsCheck` (`src/admin/post-body.ts`) refuses the save in the editor. An empty list (`sections: []`, what the form writes by default) is not sections. Existing Markdown posts are unchanged and nothing is converted automatically.
+- **One projection.** `src/lib/sections-to-content.ts` reads a sections list for everything that is not the page: `sectionsToText` (reading time: `readTime`/`bodyWords` in `content.ts`, the cards, JSON-LD `timeRequired`, the admin previews), `sectionsHeadings` (the blog's contents list in `ArticlePage`, the anchors `prepareSections` gives the page's headings, the Table of contents block and its preview) and `sectionsToMarkdown` (the feed item, rendered by `renderFeedMarkdown` in `section-markdown.ts`). What each block contributes is a typed table there (`BLOCKS`), so a new block does not compile until it has a line; `sections-to-content.vitest.ts` checks every block. The page itself is still drawn by `Sections.astro`; Pagefind indexes it from the built HTML.
+- **Headings.** On a post every heading gets an anchor (`headingIds`), not only when there is a Table of contents block. The anchors come from `sectionsHeadings`; `prepareSections` stops the build, naming the block, if the rendered Markdown holds a heading the projection did not read (an HTML `<h2>`, for one), so the contents list never links to nothing.
+- **Layout.** The post pages draw `<Sections layout="column" headingIds />` where the Markdown body was (`ArticlePage`, `VlogPage`, `ProjectPage`, `RepoPage`), so the rows sit in the post's text column beside its contents list or facts: a *Wide* block is the width of that column and a *Full* image is drawn as a wide one (nothing reaches the window's edges there). `sections.css` has the few rules for it (`.sections[data-layout='column']`).
+- **Pictures** in a post's blocks are files in `public/media/<kind>/` (the form uploads there, the blog included: the blocks read a picture's size from `public/`).
+- **Vlogs** keep a transcript in `transcriptText` (a Markdown field, not a block: it is one long text and only vlogs have it), shown folded under the notes as the `## Transcript` part of a Markdown body is.
+- **Fixtures.** `tests/fixtures/posts/<kind>/` holds one post per kind written as sections, read by the `fixture*` collections (the real schemas) and drawn by the real page components at `/styleguide/posts/<kind>/`, with their feed at `/styleguide/posts/rss.xml`. `tests/post-sections.spec.js` checks them (blocks, chrome, contents list, reading time, JSON-LD, feed, axe and widths at 320/375/1280, search through a Pagefind index of the fixture pages); the routes are in `tests/routes.js`, so every other suite runs over them too.
 
 ## How a page is written
 
@@ -72,7 +84,7 @@ Each definition has a `placement`, and `layoutSections` (`src/lib/sections/layou
 
 ## What the editor preview approximates
 
-The preview draws the page with the site's own stylesheets, the same classes and the same rows. It is **not** the built page:
+The preview draws the page with the site's own stylesheets, the same classes and the same rows (in a post: `sectionsHtml(…, { layout: 'column' })`, the post's column, in the blog preview `preview.ts` and the simpler one of the other kinds, `post-preview.ts`). It is **not** the built page:
 
 - the header and footer are not drawn, and the pane is narrower than a screen, so a portrait beside the text may sit above it;
 - text is read by a simplified Markdown reader (headings, paragraphs, lists, bold, italic, code, links): the page reads all of Markdown;
@@ -614,5 +626,6 @@ UPDATE_SECTIONS_DOC=1 npx vitest run src/lib/sections/sections-docs
 - **Schema**: `import { sectionsSchema } from './lib/sections'` and add `sections: sectionsSchema` to the collection's schema. It is optional (a file without it reads as an empty list).
 - **Form**: `import { sectionsField } from './sections-config'` (in `src/admin/`) and put `sectionsField()` in the collection's fields (`name`, `label` and `hint` can be set).
 - **Page**: `<Sections sections={entry.data.sections} source="the-file.md" />`.
-- **Preview**: `aboutPreview` in `src/admin/about-preview.ts` is the page preview; register it under the collection's preview name in `src/admin/main.ts`.
+- **Preview**: `aboutPreview` in `src/admin/about-preview.ts` is the page preview; register it under the collection's preview name in `src/admin/main.ts`. (Posts already have theirs: `preview.ts` and `post-preview.ts`.)
+- **Anything that reads the body** (a word count, a heading list, an export) goes through `src/lib/sections-to-content.ts`, not the Markdown.
 - **Tests**: add the route to `tests/routes.js`; `/styleguide/sections/` already covers every block.

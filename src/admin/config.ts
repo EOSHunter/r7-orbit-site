@@ -8,6 +8,7 @@ import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { seoTitleMax } from '../lib/seo';
 import { pageCollections } from './pages';
+import { sectionsField } from './sections-config';
 import { authorOptions, DEFAULT_AUTHOR } from './authors';
 // ---- Site settings (src/admin/settings.ts) ----
 import { settingsCollections } from './settings';
@@ -231,6 +232,9 @@ const BODY_BUTTONS = [
   'numbered-list',
 ];
 
+/** The Body's hint: a post is written as Markdown here or as sections (the block below), never both. */
+const BODY_OR_SECTIONS = 'Use sections OR the body, not both. Leave this empty when the post is written as sections.';
+
 /** Blog bodies are MDX, so they can hold the article blocks. Everything else is plain Markdown. */
 const body = (editorComponents: string[]) =>
   field({
@@ -240,9 +244,39 @@ const body = (editorComponents: string[]) =>
     modes: ['rich_text', 'raw'],
     buttons: BODY_BUTTONS,
     editor_components: editorComponents,
+    // Empty when the post is written as sections (the block below).
+    required: false,
+    hint: BODY_OR_SECTIONS,
   });
 
 const plainBody = body(['image', 'code-block']);
+
+// ==== Sections: a body written as blocks (docs/SECTIONS.md "Posts") ===============================================================
+// Every kind can be written as a list of blocks instead of the Markdown body: the shared block library, the same "Add section" form as
+// the About page (sections-config.ts, generated from src/lib/sections/definitions.ts). A post is written one way or the other: the
+// editor refuses to save one with both (bodyOrSectionsCheck, src/admin/post-body.ts, registered in main.ts) and the build stops on one
+// (bodyConflict, src/lib/content.ts). Pictures in blocks go to the kind's public/media/<kind>/ folder: the blocks read a picture's size
+// from public/ (src/lib/section-images.ts), so the blog's blocks do not use its src/assets/blog folder.
+
+const SECTIONS_HINT =
+  'Use sections OR the body, not both. Sections are blocks you add, drag into order and remove (a heading, text, a picture, a quote, a video…); the body is one Markdown text. Leave the Body empty when you use sections. Check the preview on the right.';
+
+/** The `sections` list of a post. `kind` is the folder its pictures are uploaded to (public/media/<kind>/). */
+const postSections = (kind: string) =>
+  field({ ...(sectionsField({ label: 'Sections', hint: SECTIONS_HINT }) as unknown as Record<string, unknown>), ...mediaFolders(kind) });
+
+// A vlog written as sections has no Markdown body to hold its transcript, so it has its own box (shown folded under the video).
+const transcriptText = field({
+  name: 'transcriptText',
+  label: 'Transcript (for a vlog written as sections)',
+  widget: 'markdown',
+  modes: ['rich_text', 'raw'],
+  buttons: BODY_BUTTONS,
+  editor_components: [],
+  required: false,
+  hint: 'Only with sections: the transcript, shown folded under the notes. With a Markdown body, put the transcript at the end of the body under a "Transcript" heading and turn on "Transcript below" instead.',
+});
+// ==== end sections ===============================================================================================================
 
 // ---- Blog ---------------------------------------------------------------------------------------------------------
 
@@ -301,6 +335,7 @@ const blogFields: CmsField[] = [
   aiAssist,
   // No built-in 'image' here: the Image block (Figure) asks for alt text, caption, placement and size.
   body(['code-block', ...ARTICLE_COMPONENT_NAMES]),
+  postSections('blog'),
 ];
 
 // ---- News ---------------------------------------------------------------------------------------------------------
@@ -335,6 +370,7 @@ const newsFields: CmsField[] = [
   canonicalUrl,
   aiAssist,
   plainBody,
+  postSections('news'),
 ];
 
 // ---- Vlogs --------------------------------------------------------------------------------------------------------
@@ -399,6 +435,8 @@ const vlogFields: CmsField[] = [
   canonicalUrl,
   aiAssist,
   plainBody,
+  postSections('vlogs'),
+  transcriptText,
 ];
 
 // ---- Projects -----------------------------------------------------------------------------------------------------
@@ -552,6 +590,7 @@ const projectFields: CmsField[] = [
   canonicalUrl,
   aiAssist,
   plainBody,
+  postSections('projects'),
 ];
 
 // ---- Repos --------------------------------------------------------------------------------------------------------
@@ -608,6 +647,7 @@ const repoFields: CmsField[] = [
   canonicalUrl,
   aiAssist,
   plainBody,
+  postSections('repos'),
 ];
 
 // ---- Collections --------------------------------------------------------------------------------------------------
@@ -634,7 +674,7 @@ export const blogCollection = collection({
   // Pictures in a blog body go to src/assets/blog (optimised). Images fields name their own folders (cover, featuredImage).
   media_folder: BLOG_BODY_MEDIA_FOLDER,
   public_folder: BLOG_BODY_PUBLIC_FOLDER,
-  // The preview pane renders the post with the site's own styles (src/admin/preview.ts).
+  // The preview pane renders the post with the site's own styles (src/admin/preview.ts), as sections or as Markdown.
   editor: { preview: true },
   fields: blogFields,
 });
@@ -646,6 +686,8 @@ export const newsCollection = collection({
   folder: 'src/content/news',
   extension: 'md',
   ...mediaFolders('news'),
+  // A simpler preview than the blog's (src/admin/post-preview.ts): the page head and the body, as sections or as Markdown.
+  editor: { preview: true },
   fields: newsFields,
 });
 
@@ -656,6 +698,8 @@ export const vlogsCollection = collection({
   folder: 'src/content/vlogs',
   extension: 'md',
   ...mediaFolders('vlogs'),
+  // A simpler preview than the blog's (src/admin/post-preview.ts): the page head and the body, as sections or as Markdown.
+  editor: { preview: true },
   fields: vlogFields,
 });
 
@@ -667,6 +711,8 @@ export const projectsCollection = collection({
   extension: 'md',
   ...mediaFolders('projects'),
   summary: '{{title}} · {{status}}',
+  // A simpler preview than the blog's (src/admin/post-preview.ts): the page head and the body, as sections or as Markdown.
+  editor: { preview: true },
   fields: projectFields,
 });
 
@@ -678,6 +724,8 @@ export const reposCollection = collection({
   extension: 'md',
   ...mediaFolders('repos'),
   summary: '{{title}} · {{repo}}',
+  // A simpler preview than the blog's (src/admin/post-preview.ts): the page head and the body, as sections or as Markdown.
+  editor: { preview: true },
   fields: repoFields,
 });
 
@@ -780,7 +828,7 @@ export function buildConfig(env: AdminEnv): CmsConfig {
     // "My Photo (1).JPG" is stored as my-photo-1-.jpg. The same setting names new posts' files, which are already hyphenated.
     slug: { encoding: 'ascii', clean_accents: true, sanitize_replacement: '-' },
     // ---- end images --------------------------------------------------------------------------------------------------
-    // Only blog posts and the About page have a live preview (their collections turn it on).
+    // The five post collections and the About page turn their live preview on; anything else (the authors) has none.
     editor: { preview: false },
     // The five post collections, then the block-built pages (src/admin/pages.ts), then the site settings (src/admin/settings.ts).
     collections: [

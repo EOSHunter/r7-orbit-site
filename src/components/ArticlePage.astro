@@ -1,5 +1,7 @@
 ---
-// The whole page for a blog post or a news item (docs/PAGES.md). The two routes only fetch and pass data.
+// The whole page for a blog post or a news item (docs/PAGES.md). The two routes only fetch and pass data, and so does the tests'
+// fixture page (/styleguide/posts/<kind>/). A post written as sections (docs/SECTIONS.md) has them drawn where the Markdown body goes;
+// its contents list and reading time come from the same projection (src/lib/sections-to-content.ts).
 import type { ImageMetadata } from 'astro';
 import ArticleHero from './ArticleHero.astro';
 import ArticleJsonLd from './ArticleJsonLd.astro';
@@ -9,6 +11,7 @@ import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import PrevNext from './PrevNext.astro';
 import RelatedPosts from './RelatedPosts.astro';
+import Sections from './Sections.astro';
 import SeriesNav from './SeriesNav.astro';
 import ShareRow from './ShareRow.astro';
 import SubscribeBand from './SubscribeBand.astro';
@@ -20,6 +23,7 @@ import { assistNote, authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
+import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
 import { getImage } from 'astro:assets';
@@ -32,12 +36,18 @@ interface Props {
   sameKind: SitePost<'blog'>[] | SitePost<'news'>[];
   /** Published posts of every kind, for related posts. */
   everything: SitePost[];
+  /** The tests' fixture page: kept out of search engines. */
+  noindex?: boolean;
 }
 
-const { post, sameKind, everything } = Astro.props;
+const { post, sameKind, everything, noindex = false } = Astro.props;
 const kind = post.collection as 'blog' | 'news';
 const { data } = post;
-const { Content, headings } = await render(post.entry as never);
+// The body: the sections when the post has any (then the Markdown body is empty: getPosts checks), else the Markdown.
+const sections = hasSections(data) ? (data.sections ?? []) : undefined;
+const { Content, headings } = sections
+  ? { Content: undefined, headings: sectionsHeadings(sections) }
+  : await render(post.entry as never);
 
 // <title> and og:title stay within 60 characters with the site name added (docs/PAGES.md); the h1 keeps the full headline.
 function headTitle(title: string): string {
@@ -81,6 +91,7 @@ const assist = assistNote(data.aiAssist, author);
   modified={data.updated}
   tags={data.tags}
   current={`/${kind}/`}
+  noindex={noindex}
 >
   <ArticleJsonLd
     slot="head"
@@ -156,9 +167,19 @@ const assist = assistNote(data.aiAssist, author);
           </aside>
         )}
 
-        <article class="prose" id="article">
-          <Content components={articleComponents} />
-        </article>
+        {
+          sections ? (
+            <article id="article">
+              <Sections sections={sections} source={post.entry.filePath ?? `${kind}/${post.id}`} layout="column" headingIds />
+            </article>
+          ) : (
+            Content && (
+              <article class="prose" id="article">
+                <Content components={articleComponents} />
+              </article>
+            )
+          )
+        }
 
         <AuthorNote author={author} />
 

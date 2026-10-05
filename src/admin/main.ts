@@ -1,4 +1,4 @@
-// Entry for /admin: registers the article blocks and the blog preview, then starts Decap. Bundled by Astro, so nothing is
+// Entry for /admin: registers the article blocks and the previews, then starts Decap. Bundled by Astro, so nothing is
 // fetched from a CDN.
 import CMS from 'decap-cms-app';
 import heroSource from '../components/ArticleHero.astro?raw';
@@ -18,6 +18,8 @@ import { buildConfig, CMS_AUTH_URL, CMS_BRANCH, CMS_REPO } from './config';
 import { framedPreview } from './framed-preview';
 import { imageSaveCheck } from './image-rules';
 import { FRAMED_PAGES } from './pages';
+import { bodyOrSectionsCheck } from './post-body';
+import { POST_PREVIEW_KINDS, postPreview, type PreviewKind } from './post-preview';
 import { blogPreview } from './preview';
 import { globalStyleOf, spriteOf } from './preview-assets';
 import previewCss from './preview.css?inline';
@@ -39,6 +41,8 @@ if (imageWidget) {
 }
 // Refuse to save a post with a picture that has no alt text, or a HEIC or oversized upload (docs/IMAGES.md).
 CMS.registerEventListener({ name: 'preSave', handler: imageSaveCheck });
+// Refuse to save a post written both ways, as sections and as a Body (docs/SECTIONS.md "Posts"); the build stops on one too.
+CMS.registerEventListener({ name: 'preSave', handler: bodyOrSectionsCheck });
 
 // The preview pane is an iframe, so it starts with no styles. These are the same files the public pages load, in the
 // order BaseLayout and its components import them (sections.css is the About page's), plus the hero's own block, which
@@ -47,6 +51,10 @@ for (const css of [tokensCss, componentsCss, siteCss, markdownCss, articleCss, s
   CMS.registerPreviewStyle(css, { raw: true });
 }
 CMS.registerPreviewTemplate('blog', blogPreview({ sprite: spriteOf(spriteSource), authorName: site.author.name, authorNames }));
+// The other four kinds: the page head and the body, as sections or as Markdown (src/admin/post-preview.ts says what is left out).
+for (const kind of Object.keys(POST_PREVIEW_KINDS) as PreviewKind[]) {
+  CMS.registerPreviewTemplate(kind, postPreview({ kind, sprite: spriteOf(spriteSource), authorName: site.author.name, authorNames }));
+}
 // A file collection's template is named after the file: the About page is the `about` file of the Pages collection.
 CMS.registerPreviewTemplate('about', aboutPreview({ sprite: spriteOf(spriteSource) }));
 // Subscribe, privacy, 404 and search: the same preview, with the site settings filled in (framed-preview.ts).

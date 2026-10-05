@@ -10,16 +10,15 @@
 import {
   definitionOf,
   describeShape,
-  headingsOfMarkdown,
   layoutSections,
   sectionSchema,
   SECTION_LABELS,
-  SlugBook,
   type FieldInfo,
   type Section,
   type SectionOf,
   type SectionType,
 } from '../lib/sections';
+import { sectionsHeadings } from '../lib/sections-to-content';
 import { titleParts } from '../lib/text';
 import {
   blocksHtml,
@@ -212,17 +211,9 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
   button: (d) =>
     `<p class="sec-button"><a class="btn solid" href="${attr(safeLink(d.url))}">${escapeHtml(d.label)}${isExternal(d.url) ? icon('external') : ''}</a></p>`,
   toc: (d, env) => {
-    // The headings as typed: the Heading blocks, and the ## and ### inside Markdown boxes, in page order.
-    const found: { depth: number; text: string; slug: string }[] = [];
-    const slugs = new SlugBook();
-    const add = (depth: number, text: string) => found.push({ depth, text, slug: slugs.next(text) });
-    for (const s of env.sections) {
-      if (s.type === 'heading') add(s.level, titleParts(s.text).map((p) => p.text).join(''));
-      for (const field of describeShape(definitionOf(s.type)!.schema.shape)) {
-        const value = (s as unknown as Loose)[field.name];
-        if (field.format === 'markdown' && typeof value === 'string') for (const h of headingsOfMarkdown(value)) add(h.depth, h.text);
-      }
-    }
+    // The headings as typed: the Heading blocks, and the ## and ### inside Markdown boxes, in page order, read by the same projection
+    // the page and the post's contents list use (src/lib/sections-to-content.ts).
+    const found = sectionsHeadings(env.sections);
     const tree: { text: string; slug: string; children: { text: string; slug: string }[] }[] = [];
     for (const h of found) {
       if (h.depth === 2) tree.push({ text: h.text, slug: h.slug, children: [] });
@@ -275,11 +266,22 @@ function blockHtml(block: Section, env: PreviewEnv): string {
 
 const PREVIEW_ROW = 'container wide sec-row';
 
+export interface SectionsHtmlOptions {
+  /** `page` (the About page): rows in page-wide containers. `column`: a post's body, in its text column (Sections.astro's `layout`). */
+  layout?: 'page' | 'column';
+}
+
 /** The `.sections` element of the page (Sections.astro), from the blocks as the editor holds them. */
-export function sectionsHtml(value: unknown, resolve: ResolveAsset, authors: PreviewEnv['authors'] = []): string {
+export function sectionsHtml(
+  value: unknown,
+  resolve: ResolveAsset,
+  authors: PreviewEnv['authors'] = [],
+  { layout = 'page' }: SectionsHtmlOptions = {},
+): string {
   const sections = looseSections(value);
   const env: PreviewEnv = { resolve, sections, authors };
   const draw = (block: Section) => blockHtml(block, env);
+  const rowClass = layout === 'page' ? PREVIEW_ROW : 'sec-row';
   const html = layoutSections(sections)
     .map((row) => {
       if (row.kind === 'split') {
@@ -290,14 +292,15 @@ export function sectionsHtml(value: unknown, resolve: ResolveAsset, authors: Pre
         const picture = url ? `<img src="${attr(url)}" alt="${attr(alt)}" />` : PLACEHOLDER;
         const heading = lead ? `<h${lead.level}>${headingText(lead.text)}</h${lead.level}>` : '';
         const body = [markdownHtml(portrait.text), ...row.blocks.map(draw)].join('');
-        return `<div class="${PREVIEW_ROW}"><div class="about-grid" data-side="${portrait.side}"><div class="portrait">${picture}</div><div class="prose">${heading}${body}</div></div></div>`;
+        return `<div class="${rowClass}"><div class="about-grid" data-side="${portrait.side}"><div class="portrait">${picture}</div><div class="prose">${heading}${body}</div></div></div>`;
       }
-      if (row.kind === 'prose') return `<div class="${PREVIEW_ROW}"><div class="prose">${row.blocks.map(draw).join('')}</div></div>`;
-      const drawn = draw(row.block);
-      if (row.kind === 'full') return `<div class="sec-row sec-row-full">${drawn}</div>`;
+      if (row.kind === 'prose') return `<div class="${rowClass}"><div class="prose">${row.blocks.map(draw).join('')}</div></div>`;
+      // In a post's column nothing reaches the window's edges: a full row is drawn as a wide one (and a Full image as a wide one).
+      const drawn = layout === 'column' && row.kind === 'full' ? draw({ ...(row.block as SectionOf<'image'>), width: 'wide' }) : draw(row.block);
+      if (row.kind === 'full' && layout === 'page') return `<div class="sec-row sec-row-full">${drawn}</div>`;
       if (row.kind === 'band') return `<div class="sec-row sec-row-band">${drawn}</div>`;
-      return `<div class="${PREVIEW_ROW}">${drawn}</div>`;
+      return `<div class="${rowClass}">${drawn}</div>`;
     })
     .join('');
-  return `<div class="sections">${html}</div>`;
+  return layout === 'column' ? `<div class="sections" data-layout="column">${html}</div>` : `<div class="sections">${html}</div>`;
 }
