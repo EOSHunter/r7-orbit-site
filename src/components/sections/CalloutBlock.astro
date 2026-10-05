@@ -1,0 +1,15 @@
+---
+// The Callout article component: a note, a tip (brass) or a warning.
+import Callout from '../article/Callout.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'callout'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+---
+
+<Callout type={block.kind} title={block.title || undefined}><Fragment set:html={ctx.html.text} /></Callout>

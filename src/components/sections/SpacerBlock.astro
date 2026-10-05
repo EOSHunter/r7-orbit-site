@@ -1,0 +1,14 @@
+---
+// Empty space. Decoration only, so it is hidden from assistive technology.
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'spacer'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+---
+
+<div class="sec-spacer" data-size={block.size} aria-hidden="true"></div>

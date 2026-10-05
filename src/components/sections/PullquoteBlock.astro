@@ -1,0 +1,15 @@
+---
+// The Pullquote article component. It is hidden from screen readers by design (it repeats text that is in the body).
+import Pullquote from '../article/Pullquote.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'pullquote'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+---
+
+<Pullquote cite={block.attribution || undefined}>{block.text}</Pullquote>

@@ -164,16 +164,16 @@ test('the About page opens in the editor with its blocks and a live preview, wit
 
   // The form shows the page's heading and its blocks, each with a line saying what it holds.
   await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
-  await expect(page.getByText('Heading: Hunter Newton')).toBeVisible();
-  await expect(page.getByText('Heading: R7 · Orbit AI Agent')).toBeVisible();
+  await expect(page.getByText('Heading: Hunter Newton · R7 Orbit Creator')).toBeVisible();
   await expect(page.getByText(/^Portrait: I build software/)).toBeVisible();
-  await expect(page.getByText(/^Text: R7 is the AI agent/)).toBeVisible();
+  await expect(page.getByText(/^Portrait: ## R7 · Orbit AI Agent/)).toBeVisible();
 
-  // The preview is the page with the site's styles: the h1, the two headings in order, the portrait grid.
+  // The preview is the page with the site's styles: the h1, the two headings in order (the second is inside the second portrait's
+  // text), the portrait grid.
   const preview = page.locator('iframe').first().contentFrame();
   await expect(preview.getByRole('heading', { level: 1 })).toHaveText('About');
-  await expect(preview.getByRole('heading', { level: 2 })).toHaveText(['Hunter Newton', 'R7 · Orbit AI Agent']);
-  await expect(preview.locator('.about-grid .portrait img')).toHaveAttribute('alt', 'Portrait of Hunter Newton');
+  await expect(preview.getByRole('heading', { level: 2 })).toHaveText(['Hunter Newton · R7 Orbit Creator', 'R7 · Orbit AI Agent']);
+  await expect(preview.locator('.about-grid .portrait img').first()).toHaveAttribute('alt', 'Portrait of Hunter Newton');
   await expect(preview.getByText('How a piece gets here:')).toBeVisible();
 
   expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
@@ -208,9 +208,9 @@ test('saving an About change works under the admin CSP: a new image block, two s
   // way to do this). A tall block is hard to drop: the editor picks the nearest block by its centre.
   const handles = page.locator('[aria-roledescription="sortable"]');
   await handles.last().locator('xpath=preceding-sibling::button[1]').click();
-  await expect(handles).toHaveCount(5);
+  await expect(handles).toHaveCount(4);
   await expect(page.getByLabel('Alt text (optional)').last()).toBeHidden();
-  const from = (await handles.nth(4).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const from = (await handles.nth(3).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   const to = (await handles.nth(0).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   const x = from.x + from.width / 2;
   await page.mouse.move(x, from.y + from.height / 2);
@@ -222,13 +222,12 @@ test('saving an About change works under the admin CSP: a new image block, two s
   // The editor swallows any click for a moment after a drop (so letting go over a button does not press it); a person is never
   // that quick, but a test is.
   await page.waitForTimeout(300);
-  await expect(page.getByText(/^(Heading|Portrait|Text|Image): /)).toHaveCount(5);
+  await expect(page.getByText(/^(Heading|Portrait|Text|Image): /)).toHaveCount(4);
   expect(await page.getByText(/^(Heading|Portrait|Text|Image): /).allInnerTexts()).toEqual([
     'Image: A tidy desk with one laptop',
-    'Heading: Hunter Newton',
+    'Heading: Hunter Newton · R7 Orbit Creator',
     expect.stringMatching(/^Portrait: /),
-    'Heading: R7 · Orbit AI Agent',
-    expect.stringMatching(/^Text: /),
+    expect.stringMatching(/^Portrait: /),
   ]);
 
   await page.getByRole('button', { name: /^save$/i }).click();
@@ -251,6 +250,9 @@ test('saving an About change works under the admin CSP: a new image block, two s
     alt: 'A tidy desk with one laptop',
     decorative: false,
     width: 'narrow',
+    // The two menus every picture block now has (centred, large), written like every menu the editor shows.
+    align: 'center',
+    size: 'lg',
   });
   expect(after.sections.slice(1)).toEqual(before.sections);
   // The picture itself is uploaded too, as a file of the site.
@@ -279,7 +281,7 @@ test('the editor refuses a button address that is not https or a page on the sit
   await page.getByLabel('Button text').fill('Subscribe');
   await page.getByLabel('Address').fill('http://example.com/subscribe');
   await page.getByRole('button', { name: /^save$/i }).click();
-  await expect(page.getByText(/a full address starting with https:\/\/, or a page on this site/i)).toBeVisible();
+  await expect(page.getByText(/use a full https:\/\/ address, or a page on this site/i)).toBeVisible();
   expect(
     seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')),
     'nothing is saved',

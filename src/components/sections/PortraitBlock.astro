@@ -1,0 +1,25 @@
+---
+// A picture in a side column with the text beside it (above it on a phone). The blocks Sections.astro puts in this block's slot
+// (the heading just above it goes in the `lead` slot) sit in the same text column.
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'portrait'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const size = ctx.sizes.get(block.image);
+---
+
+<div class="about-grid" data-side={block.side}>
+  <div class="portrait">
+    <img src={block.image} alt={block.decorative ? '' : block.alt} width={size?.width} height={size?.height} fetchpriority="high" />
+  </div>
+  <div class="prose">
+    <slot name="lead" />
+    <Fragment set:html={ctx.html.text} />
+    <slot />
+  </div>
+</div>

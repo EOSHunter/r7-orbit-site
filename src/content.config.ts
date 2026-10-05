@@ -2,7 +2,7 @@ import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import site from './data/site.json';
-import { sectionSchema } from './lib/page-sections';
+import { sectionsSchema } from './lib/sections';
 import { DEFAULT_AUTHOR } from './lib/authors';
 import { seoTitleMax } from './lib/seo';
 
@@ -67,7 +67,8 @@ function collection(
   });
 }
 
-// Pages made of blocks (docs/CONTENT_MODEL.md "Pages"). Only About uses it so far; the file is src/content/pages/about.md.
+// Pages made of blocks (docs/CONTENT_MODEL.md "Pages"). Only About uses it so far; the file is src/content/pages/about.md. The
+// blocks are the shared library in src/lib/sections/ (docs/SECTIONS.md): `sectionsSchema` is what any collection attaches to take a `sections` list.
 const pages = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
   schema: z
@@ -76,7 +77,7 @@ const pages = defineCollection({
       seoTitle,
       // The meta description (docs/SEO_AND_SHARING.md): 155 characters reads best in search results.
       description: z.string().min(1).max(180),
-      sections: z.array(sectionSchema).max(60).default([]),
+      sections: sectionsSchema,
     })
     .strict(),
 });

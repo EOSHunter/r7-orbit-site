@@ -1,0 +1,15 @@
+---
+// A break between parts: the Divider article component.
+import Divider from '../article/Divider.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'divider'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+---
+
+<Divider variant={block.style} />

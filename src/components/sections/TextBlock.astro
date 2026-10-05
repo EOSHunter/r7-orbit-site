@@ -1,0 +1,15 @@
+---
+// Markdown, already rendered and sanitised (src/lib/section-markdown.ts). It adds no wrapper, so its paragraphs are direct
+// children of `.prose` and get its spacing.
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'text'>;
+  ctx: BlockContext;
+}
+
+const { ctx } = Astro.props;
+---
+
+<Fragment set:html={ctx.html.text} />

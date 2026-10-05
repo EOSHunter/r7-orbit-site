@@ -1,0 +1,46 @@
+---
+// The newest published posts as cards (PostCard), by kind, tag and/or author. The list comes from getAllPosts, which already
+// leaves out drafts and future-dated posts (in `astro dev` they show, labelled). A tag or author no post has stops the build.
+import PostCard from '../PostCard.astro';
+import { getAllPosts } from '../../lib/content-queries';
+import { authorSlugOf } from '../../lib/authors';
+import { toCards } from '../../lib/post-cards';
+import { latestProblems } from '../../lib/sections/checks';
+import { loadKnown } from '../../lib/sections/known';
+import { titleParts } from '../../lib/text';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'latest'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const problems = latestProblems(block, await loadKnown());
+if (problems.length) throw new Error(`${ctx.where}: ${problems.join(' ')}`);
+
+// The kind a card shows for each collection.
+const KIND_OF = { news: 'news', blog: 'blog', vlogs: 'vlog', projects: 'project', repos: 'repo' } as const;
+const posts = (await getAllPosts())
+  .filter((post) => !block.kinds.length || (block.kinds as readonly string[]).includes(KIND_OF[post.collection]))
+  .filter((post) => !block.tag || post.data.tags.includes(block.tag))
+  .filter((post) => !block.author || authorSlugOf(post) === block.author)
+  .slice(0, block.count);
+const cards = await toCards(posts);
+---
+
+<div class="latest-posts">
+  {block.heading && <h2 class="section-title">{titleParts(block.heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>}
+  {
+    cards.length > 0 ? (
+      <div class="grid-cards">
+        {cards.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+    ) : (
+      <p class="t-meta">Nothing has been posted here yet.</p>
+    )
+  }
+</div>

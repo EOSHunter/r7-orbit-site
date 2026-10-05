@@ -1,0 +1,23 @@
+---
+// A YouTube video behind the click-to-load player: the VideoEmbed article component, so nothing is requested from YouTube
+// until the reader presses play.
+import VideoEmbed from '../article/VideoEmbed.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'video'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+---
+
+<VideoEmbed
+  id={block.youtubeId}
+  title={block.title}
+  poster={block.poster || undefined}
+  duration={block.duration || undefined}
+  chapters={block.chapters.length ? block.chapters : undefined}
+  caption={block.caption || undefined}
+/>

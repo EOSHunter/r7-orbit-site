@@ -1,0 +1,26 @@
+---
+// An author in a box, for the Author box block: avatar, name (a link to their page), the "AI-written" label for an agent, the
+// subtitle and the bio. The same look as AuthorNote (the agent's footer note on a post) from the same stylesheet, but it shows the
+// author's bio and carries no `data-author-note`, which only marks a post's footer.
+import AgentChip from './AgentChip.astro';
+import AuthorAvatar from './AuthorAvatar.astro';
+import { isAgent, type Author } from '../lib/authors';
+
+interface Props {
+  author: Author;
+}
+
+const { author } = Astro.props;
+---
+
+<aside class="author-note author-box" aria-label={`About ${author.name}`} data-author-box={author.slug}>
+  <AuthorAvatar author={author} />
+  <div class="author-note-body">
+    <p class="author-note-head">
+      <a class="author-name" href={author.path}>{author.name}</a>
+      {author.subtitle && <span class="author-sub">{author.subtitle}</span>}
+      {isAgent(author) && <AgentChip />}
+    </p>
+    <p>{author.bio}</p>
+  </div>
+</aside>

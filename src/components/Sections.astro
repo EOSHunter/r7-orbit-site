@@ -1,16 +1,16 @@
 ---
-// Draws a page built from blocks (the `pages` collection: src/lib/page-sections.ts). Each block is the author's own words and
-// pictures; this decides how they sit. Reading-column blocks (heading, text, quote, callout, links, button, divider, a narrow
-// image) share one `.prose` column; a portrait puts its picture in a side column beside the text; a wide or full image leaves the
-// column. The article components (Callout, Quote, Figure, Divider) draw what they already draw in blog posts.
+// Draws a page built from blocks (the `sections` list: the shared library in src/lib/sections/, docs/SECTIONS.md). Each block is the
+// author's own words and pictures; this decides how they sit, and the block's own component (src/components/sections/) draws it.
+// Reading-column blocks share one `.prose` column; a portrait puts its picture in a side column beside the text; a block that
+// leaves the column (a wide or full image, a gallery, the latest posts, a game, the newsletter band) gets a row of its own. Where
+// each block sits is its definition's `placement`; the rows come from `layoutSections`, which the admin preview uses too.
 //
-// Used by src/pages/about.astro. The admin preview draws the same rows from strings (src/admin/sections-html.ts).
-import Figure from './article/Figure.astro';
-import SectionBlock from './SectionBlock.astro';
-import { layoutSections, SECTION_LABELS, type ImageSection, type PortraitSection, type Section } from '../lib/page-sections';
-import { titleParts } from '../lib/text';
-import { imageSize, type ImageSize } from '../lib/section-images';
-import { renderSectionMarkdown } from '../lib/section-markdown';
+// Used by src/pages/about.astro and the fixture page. The admin preview draws the same rows from strings (src/admin/sections-html.ts).
+import { layoutSections, type Section, type SectionOf } from '../lib/sections';
+import { prepareSections } from '../lib/sections/prepare';
+import HeadingBlock from './sections/HeadingBlock.astro';
+import PortraitBlock from './sections/PortraitBlock.astro';
+import { renderers } from './sections/registry';
 import '../styles/markdown.css';
 import '../styles/article.css';
 import '../styles/sections.css';
@@ -24,56 +24,48 @@ interface Props {
 const { sections, source } = Astro.props;
 
 // Everything the markup needs that takes a read or a render, done once up front: the Markdown of each text box (HTML,
-// sanitised) and the size of each picture (so the page reserves its space).
-const html = new Map<Section, string>();
-const sizes = new Map<Section, ImageSize>();
-for (const [i, section] of sections.entries()) {
-  const where = `${source}, block ${i + 1} (${SECTION_LABELS[section.type]})`;
-  if ('text' in section && section.type !== 'heading') html.set(section, await renderSectionMarkdown(section.text));
-  if (section.type === 'image' || section.type === 'portrait') sizes.set(section, await imageSize(section.image, where));
-}
+// sanitised), the size of each picture (so the page reserves its space) and, with a table of contents, the headings.
+const contexts = await prepareSections(sections, source);
 
-const rows = layoutSections(sections);
-const altOf = (s: ImageSection | PortraitSection) => (s.decorative ? '' : s.alt);
+// Each block with the component that draws it and what it was prepared with, grouped into rows.
+const draw = (block: Section) => ({ Block: renderers[block.type], block, ctx: contexts.get(block)! });
+const rows = layoutSections(sections).map((row) =>
+  row.kind === 'split'
+    ? {
+        kind: 'split' as const,
+        portrait: row.portrait as SectionOf<'portrait'>,
+        portraitCtx: contexts.get(row.portrait)!,
+        lead: row.lead as SectionOf<'heading'> | undefined,
+        leadCtx: row.lead && contexts.get(row.lead),
+        blocks: row.blocks.map(draw),
+      }
+    : row.kind === 'prose'
+      ? { kind: 'prose' as const, blocks: row.blocks.map(draw) }
+      : { kind: row.kind, ...draw(row.block) },
+);
 ---
 
 <div class="sections">
   {
-    rows.map((row) => (
-      <div class={row.kind === 'picture' && row.block.width === 'full' ? 'sec-row sec-row-full' : 'container wide sec-row'}>
-        {row.kind === 'split' ? (
-          <div class="about-grid" data-side={row.portrait.side}>
-            <div class="portrait">
-              <img
-                src={row.portrait.image}
-                alt={altOf(row.portrait)}
-                width={sizes.get(row.portrait)?.width}
-                height={sizes.get(row.portrait)?.height}
-                fetchpriority="high"
-              />
-            </div>
-            <div class="prose">
-              {row.lead && (row.lead.level === 3 ? <h3>{titleParts(row.lead.text).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h3> : <h2>{titleParts(row.lead.text).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>)}
-              <Fragment set:html={html.get(row.portrait)} />
-              {row.blocks.map((block) => <SectionBlock block={block} html={html.get(block)} size={sizes.get(block)} />)}
-            </div>
-          </div>
-        ) : row.kind === 'picture' ? (
-          <Figure
-            src={row.block.image}
-            alt={altOf(row.block)}
-            decorative={row.block.decorative}
-            caption={row.block.caption || undefined}
-            align={row.block.width === 'full' ? 'full' : 'center'}
-            width={sizes.get(row.block)?.width}
-            height={sizes.get(row.block)?.height}
-          />
-        ) : (
-          <div class="prose">
-            {row.blocks.map((block) => <SectionBlock block={block} html={html.get(block)} size={sizes.get(block)} />)}
-          </div>
-        )}
-      </div>
-    ))
+    rows.map((row) =>
+      row.kind === 'split' ? (
+        <div class="container wide sec-row">
+          <PortraitBlock block={row.portrait} ctx={row.portraitCtx}>
+            {row.lead && row.leadCtx && <HeadingBlock slot="lead" block={row.lead} ctx={row.leadCtx} />}
+            {row.blocks.map(({ Block, block, ctx }) => <Block block={block} ctx={ctx} />)}
+          </PortraitBlock>
+        </div>
+      ) : row.kind === 'prose' ? (
+        <div class="container wide sec-row">
+          <div class="prose">{row.blocks.map(({ Block, block, ctx }) => <Block block={block} ctx={ctx} />)}</div>
+        </div>
+      ) : row.kind === 'full' ? (
+        <div class="sec-row sec-row-full"><row.Block block={row.block} ctx={row.ctx} /></div>
+      ) : row.kind === 'band' ? (
+        <div class="sec-row sec-row-band"><row.Block block={row.block} ctx={row.ctx} /></div>
+      ) : (
+        <div class="container wide sec-row"><row.Block block={row.block} ctx={row.ctx} /></div>
+      ),
+    )
   }
 </div>

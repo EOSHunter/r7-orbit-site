@@ -1,0 +1,15 @@
+---
+// The opening line: the Paragraph article component with `lead` set (larger, in the quieter text colour).
+import Paragraph from '../article/Paragraph.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'lead'>;
+  ctx: BlockContext;
+}
+
+const { ctx } = Astro.props;
+---
+
+<Paragraph lead><Fragment set:html={ctx.html.text} /></Paragraph>

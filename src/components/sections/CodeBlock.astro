@@ -1,0 +1,15 @@
+---
+// The CodeBlock article component: highlighted at build time with the site's code theme, with the copy button.
+import CodeBlockComponent from '../article/CodeBlock.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'code'>;
+  ctx: BlockContext;
+}
+
+const { block } = Astro.props;
+---
+
+<CodeBlockComponent code={block.code} lang={block.lang} title={block.title || undefined} />

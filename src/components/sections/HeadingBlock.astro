@@ -1,0 +1,17 @@
+---
+// A heading in the reading column (or above a portrait). One *phrase* in asterisks is set in italic brass, as in a page title.
+// It gets an id only when the page has a table of contents, so a page without one is unchanged.
+import { titleParts } from '../../lib/text';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'heading'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const parts = titleParts(block.text);
+---
+
+{block.level === 3 ? <h3 id={ctx.headingId}>{parts.map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h3> : <h2 id={ctx.headingId}>{parts.map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>}

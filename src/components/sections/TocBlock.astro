@@ -1,0 +1,16 @@
+---
+// A list of links to the headings of this page: the Toc article component (the bordered `block` variant). The page's headings
+// were collected, and given anchors, by prepareSections.
+import Toc from '../article/Toc.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'toc'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+---
+
+<Toc headings={ctx.headings} title={block.title || undefined} maxDepth={block.maxDepth as 2 | 3} />

@@ -111,10 +111,16 @@ export async function openAdmin(page, { signedIn }) {
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url());
     if (url.hostname === '127.0.0.1') {
-      const response = await route.fetch();
-      const headers = response.headers();
-      if (headers['content-type']?.includes('text/html')) Object.assign(headers, headersFor(url.pathname));
-      return route.fulfill({ response, headers });
+      try {
+        const response = await route.fetch();
+        const headers = response.headers();
+        if (headers['content-type']?.includes('text/html')) Object.assign(headers, headersFor(url.pathname));
+        return await route.fulfill({ response, headers });
+      } catch {
+        // The test ended while this request was in flight (a picture the live preview was still loading): nothing to answer,
+        // and an error thrown here would be reported as a failure of whichever test the worker runs next.
+        return;
+      }
     }
     if (url.origin === GITHUB_API) {
       const request = route.request();

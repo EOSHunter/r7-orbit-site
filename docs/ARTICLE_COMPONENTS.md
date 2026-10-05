@@ -2,6 +2,8 @@
 
 Building blocks for blog and news articles, in `src/components/article/`. Styles: `src/styles/article.css` (tokens only). Live demo with every component: `/styleguide/article-components/` (source: `src/components/article/demo/article-components-demo.mdx`).
 
+**Also as page blocks.** The shared block library (`src/lib/sections/`, [`SECTIONS.md`](SECTIONS.md)) wraps these same components (Figure, ImageRow, Callout, Quote, Pullquote, CodeBlock, VideoEmbed, TwoColumn, Toc, Paragraph, Divider) so a page such as About can be built from them in the admin; a page block is a thin component in `src/components/sections/` that passes the block's fields to the one here. Change a component here and the page blocks follow.
+
 ## Using them
 
 - **In MDX posts** (`src/content/blog/*.mdx`): no imports needed. `ArticlePage` passes `articleComponents` to `<Content>`, so `<Callout type="tip">…</Callout>` just works. Frontmatter is unchanged (same schema as `.md`).
