@@ -29,7 +29,7 @@ src/
                               privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/)
   data/site.json              site name, tagline, author, links, nav (placeholders; copy of content-examples/site.json). site.ts and nav.ts read it
-  content/                    news/ blog/ vlogs/ projects/ repos/ (sample posts, copied from content-examples/); site.json stays in src/data/
+  content/                    news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings; unit-tested),
@@ -41,7 +41,7 @@ src/
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
   scripts/                    site.js (menu, filters, copy, newsletter placeholder; bundled by Astro), orbit.js (hero and 404 only),
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play)
-tests/                        routes.js (every route, one list), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
+tests/                        routes.js (the fixed routes, plus the post and tag pages it finds in dist/: no slugs listed), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
                               admin (noindex, out of robots/sitemap/feeds), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)

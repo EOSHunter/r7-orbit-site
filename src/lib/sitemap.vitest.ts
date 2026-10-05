@@ -66,6 +66,21 @@ describe('collectSitemapEntries', () => {
     expect(paths).not.toContain('/vlogs/');
     expect(paths).not.toContain('/tags/git/');
   });
+  it('lists a listing page only when it has something to list', () => {
+    const listings = ['/news/', '/blog/', '/vlogs/', '/projects/', '/repos/', '/latest/', '/tags/'];
+    const staticPaths = ['/', '/about/', ...listings];
+    const none = collectSitemapEntries(staticPaths, []).map((e) => e.path);
+    expect(none).toEqual(['/', '/about/']);
+
+    // One untagged blog post: its archive and /latest/ are real pages, /tags/ and the other archives are not.
+    const one = collectSitemapEntries(staticPaths, [post('blog', 'a', '2026-10-01')]).map((e) => e.path);
+    expect(one).toEqual(['/', '/about/', '/blog/', '/blog/a/', '/latest/']);
+
+    // One tag used once: /tags/ has something to show, but no tag page exists.
+    const tagged = collectSitemapEntries(staticPaths, [post('blog', 'a', '2026-10-01', ['git'])]).map((e) => e.path);
+    expect(tagged).toContain('/tags/');
+    expect(tagged).not.toContain('/tags/git/');
+  });
   it('leaves out excluded pages', () => {
     expect(paths.some((p) => /styleguide|404|search/.test(p))).toBe(false);
   });

@@ -57,7 +57,7 @@ Validate with Google's Rich Results Test and the Schema.org validator.
 
 ## URLs
 
-- Lowercase, hyphenated, kind in the path, trailing slash: `/blog/why-every-agent-gets-its-own-room/`.
+- Lowercase, hyphenated, kind in the path, trailing slash: `/blog/a-post-about-something/`.
 - Never change a published URL without a 301 redirect (`public/_redirects` on Cloudflare/Netlify).
 - Pagination: `/blog/page/2/` with `rel="prev"/"next"` (informational) and a self-referencing canonical.
 - Tag pages only for tags with ≥ 2 posts; thin pages get `noindex`.

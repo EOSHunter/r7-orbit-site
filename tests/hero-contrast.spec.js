@@ -1,13 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { heroPaths as POSTS } from './routes.js';
 
 // Text over a featured image. axe cannot judge text on a photo, so this measures it: for every text run in the hero it takes
 // the brightest pixel behind it (the worst case for light text, with the scrim on) and checks WCAG AA (4.5:1, or 3:1 for
-// large text). It checks the images these sample posts actually use: swap in a bright photo and it will say so.
+// large text). It checks the images the published posts actually use: publish a bright photo and it will say so.
+// The posts are found in dist/ (see routes.js): the ones that have a featured image. With none published it skips.
 
-const POSTS = ['/blog/a-featured-image-on-a-post/', '/blog/an-article-built-from-components/'];
 const WIDTHS = [320, 768, 1280];
 
 test.describe('hero text contrast', () => {
+  test.skip(POSTS.length === 0, 'no published post has a featured image');
   for (const path of POSTS) {
     for (const width of WIDTHS) {
       test(`${path} at ${width}px`, async ({ page }) => {

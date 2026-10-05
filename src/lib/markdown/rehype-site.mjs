@@ -15,6 +15,19 @@ function walk(node, fn) {
   for (const child of node.children) walk(child, fn);
 }
 
+/**
+ * A post's page title is its one <h1>. A `# Heading` in the body would be a second one, so it becomes an <h2>.
+ * List it after rehypeHeadingIds (the ids and the table of contents are made from the headings as written) and before
+ * rehypeHeadingAnchors (so the new <h2> gets an anchor like the others).
+ */
+export function rehypeBodyHeadings() {
+  return (tree) => {
+    walk(tree, (node) => {
+      if (isElement(node, 'h1')) node.tagName = 'h2';
+    });
+  };
+}
+
 /** @returns {(tree: import('hast').Root, file: { path?: string }) => void} */
 export function rehypeHeadingAnchors() {
   return (tree) => {
