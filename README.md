@@ -4,6 +4,8 @@ all things r7 orbit
 
 ## Admin (writing posts at `/admin`)
 
+Author's guide: [`docs/PUBLISHING.md`](docs/PUBLISHING.md) (write and publish a post, scheduled posts, the manual check after admin or header changes, rolling back, build failures).
+
 A git-based editor for every kind of post, built on [Decap CMS](https://decapcms.org). There is no server and no database: saving writes a Markdown file into `src/content/<kind>/` and uploads images, and the site rebuilds from git like any other change. The admin page is `src/pages/admin/index.astro` (bundled by Astro, nothing loaded from a CDN); the forms are in `src/admin/config.ts`, the article blocks in `src/admin/blocks.ts`, the blog preview in `src/admin/preview.ts`.
 
 | Collection | Writes | Fields beyond the common ones |

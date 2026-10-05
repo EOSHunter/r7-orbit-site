@@ -131,20 +131,17 @@ export function postsWithTag<P extends Post>(posts: P[], tag: string): P[] {
 
 const samePost = (a: Post, b: Post) => a.collection === b.collection && a.id === b.id;
 
-/** Posts that share tags with `post`, best match first. A post with no shared tag is never related. */
-export function relatedPosts<P extends Post>(post: Post, candidates: P[], limit = 3): P[] {
+/**
+ * Posts that share tags with `post`: most shared tags first, then newest, then id (so the order is stable).
+ * Drafts and future-dated posts are never returned. A post with no shared tag is never related, so the list can be empty.
+ */
+export function relatedPosts<P extends Post>(post: Post, candidates: P[], limit = 3, now: Date = new Date()): P[] {
   const mine = new Set(post.data.tags);
-  return candidates
+  return filterPublished(candidates, { now })
     .filter((c) => !samePost(c, post))
-    .map((c) => ({ c, shared: c.data.tags.filter((t) => mine.has(t)).length }))
+    .map((c) => ({ c, shared: new Set(c.data.tags.filter((t) => mine.has(t))).size }))
     .filter(({ shared }) => shared > 0)
-    .sort(
-      (a, b) =>
-        b.shared - a.shared ||
-        Number(b.c.collection === post.collection) - Number(a.c.collection === post.collection) ||
-        b.c.data.date.getTime() - a.c.data.date.getTime() ||
-        a.c.id.localeCompare(b.c.id),
-    )
+    .sort((a, b) => b.shared - a.shared || b.c.data.date.getTime() - a.c.data.date.getTime() || a.c.id.localeCompare(b.c.id))
     .slice(0, limit)
     .map(({ c }) => c);
 }

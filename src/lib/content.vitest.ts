@@ -133,18 +133,37 @@ describe('relatedPosts', () => {
   const none = post('none', '2026-04-01', { tags: ['q'] });
   const all = [me, none, oneNews, oneSameKind, two];
 
-  it('ranks by shared tags, then same kind, then recency; excludes self and unrelated', () => {
-    expect(relatedPosts(me, all).map((p) => p.id)).toEqual(['two', 'one-blog', 'one-news']);
+  it('ranks by shared tags, then recency (not kind); excludes self and unrelated', () => {
+    expect(relatedPosts(me, all, 3, NOW).map((p) => p.id)).toEqual(['two', 'one-news', 'one-blog']);
+  });
+  it('breaks a full tie by id', () => {
+    const b = post('b', '2026-03-01', { tags: ['a'] });
+    const a = post('a', '2026-03-01', { tags: ['a'] });
+    expect(relatedPosts(me, [b, a], 3, NOW).map((p) => p.id)).toEqual(['a', 'b']);
+  });
+  it('counts a repeated tag once', () => {
+    const dup = post('dup', '2026-09-01', { tags: ['a', 'a', 'a'] });
+    expect(relatedPosts(me, [dup, oneNews, two], 3, NOW).map((p) => p.id)).toEqual(['two', 'dup', 'one-news']);
+  });
+  it('leaves out drafts and scheduled posts, but not today', () => {
+    const draft = post('draft', '2026-09-01', { tags: ['a', 'b'], draft: true });
+    const later = post('later', '2026-10-04', { tags: ['a', 'b'] });
+    const today = post('today', '2026-10-03', { tags: ['a'] });
+    expect(relatedPosts(me, [draft, later, today, none], 3, NOW).map((p) => p.id)).toEqual(['today']);
+  });
+  it('returns an empty list when nothing matches', () => {
+    expect(relatedPosts(me, [none], 3, NOW)).toEqual([]);
+    expect(relatedPosts(me, [], 3, NOW)).toEqual([]);
   });
   it('respects the limit', () => {
-    expect(relatedPosts(me, all, 1).map((p) => p.id)).toEqual(['two']);
+    expect(relatedPosts(me, all, 1, NOW).map((p) => p.id)).toEqual(['two']);
   });
   it('treats the same id in another collection as a different post', () => {
     const twin = post('me', '2026-06-01', { tags: ['a'] }, 'news');
-    expect(relatedPosts(me, [twin]).map((p) => p.collection)).toEqual(['news']);
+    expect(relatedPosts(me, [twin], 3, NOW).map((p) => p.collection)).toEqual(['news']);
   });
   it('returns nothing for a post without tags', () => {
-    expect(relatedPosts(post('x', '2026-01-01'), all)).toEqual([]);
+    expect(relatedPosts(post('x', '2026-01-01'), all, 3, NOW)).toEqual([]);
   });
 });
 

@@ -96,6 +96,8 @@ const assist = data.aiAssist && data.aiAssist !== 'none' ? ASSIST[data.aiAssist]
     sourceUrl={news?.sourceUrl}
   />
 
+  <div class="reading-progress" aria-hidden="true"></div>
+
   <ArticleHero image={featured} alt={featuredAlt}>
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <ol>
