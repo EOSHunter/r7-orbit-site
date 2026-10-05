@@ -294,3 +294,25 @@ export function breadcrumbLd(site: SiteInfo, crumbs: Crumb[]): JsonLd {
     })),
   };
 }
+
+export interface ListItemInput {
+  name: string;
+  /** Path of the item's page. */
+  path: string;
+}
+
+/** An ordered list of pages (the games on /games/), in the order the page shows them. */
+export function itemListLd(site: SiteInfo, c: { name: string; items: ListItemInput[] }): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: plainTitle(c.name),
+    numberOfItems: c.items.length,
+    itemListElement: c.items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: plainTitle(item.name),
+      url: absoluteUrl(item.path, site.url),
+    })),
+  };
+}

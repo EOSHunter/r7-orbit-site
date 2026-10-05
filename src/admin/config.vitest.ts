@@ -280,9 +280,19 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
     expect(shapes.projects.playAspect.safeParse(undefined).success).toBe(true);
     expect(projects.platforms).toMatchObject({ widget: 'select', multiple: true });
     expect(projects.platforms.options).toEqual(inner(inner(shapes.projects.platforms).def.element as Zod).options);
-    for (const name of ['playUrl', 'playMode', 'playAspect', 'controls', 'playNote', 'platforms']) {
+    for (const name of ['playUrl', 'playMode', 'playAspect', 'controls', 'playNote', 'platforms', 'order']) {
       expect(String(projects[name].hint), name).not.toBe('undefined');
     }
+  });
+
+  it('has an optional order for the Games page, under the schema name, on projects only', async () => {
+    const shapes = await schemaShapes();
+    expect(shapes.projects.order.isOptional()).toBe(true);
+    expect(shapes.projects.order.safeParse(2).success).toBe(true);
+    expect(shapes.projects.order.safeParse('first').success).toBe(false);
+    expect(fieldsOf('projects').order).toMatchObject({ widget: 'number', required: false });
+    expect(String(fieldsOf('projects').order.hint)).toMatch(/lower number comes first/);
+    for (const name of ['news', 'blog', 'vlogs', 'repos']) expect(shapes[name].order, name).toBeUndefined();
   });
 
   it('explains the two ways to give a vlog its video, and that one of them is needed', () => {

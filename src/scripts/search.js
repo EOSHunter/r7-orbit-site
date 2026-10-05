@@ -13,6 +13,8 @@ const KINDS = {
   projects: { label: 'Project', icon: 'project' },
   repos: { label: 'Repo', icon: 'repo' },
 };
+// A playable project page sets meta kind=Game (data-pagefind-meta on its header), so its result reads as a game.
+const GAME = { label: 'Game', icon: 'play' };
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 let pagefind = null;
@@ -38,7 +40,7 @@ function kindOf(url) {
 }
 
 function resultItem(data) {
-  const kind = kindOf(data.url);
+  const kind = data.meta && data.meta.kind === 'Game' ? GAME : kindOf(data.url);
   const li = document.createElement('li');
   const a = document.createElement('a');
   a.className = 'card link search-result';

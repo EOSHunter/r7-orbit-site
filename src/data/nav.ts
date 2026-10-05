@@ -7,6 +7,7 @@ const HREFS: Record<string, string> = {
   Blog: '/blog/',
   Vlogs: '/vlogs/',
   Projects: '/projects/',
+  Games: '/games/',
   Repos: '/repos/',
   About: '/about/',
 };

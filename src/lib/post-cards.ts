@@ -6,7 +6,7 @@ import type { SitePost } from './content-queries';
 import { isPlayable } from './play';
 
 /** Cover images are 16:9 by the content rules (docs/CONTENT_MODEL.md); the card crops to that anyway. */
-function coverOf(data: { cover?: string; coverAlt?: string }): Cover | undefined {
+export function coverOf(data: { cover?: string; coverAlt?: string }): Cover | undefined {
   if (!data.cover) return undefined;
   return { src: data.cover, alt: data.coverAlt ?? '', width: 1280, height: 720 };
 }

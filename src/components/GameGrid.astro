@@ -1,0 +1,37 @@
+---
+// The grid of GameCards. One column on a phone, two from 640px, three from 1000px, except with one or two cards, which stay at
+// two columns so a lone game is not stretched across the page. The poster has a fixed 16:9 frame, so nothing shifts as it loads.
+import GameCard from './GameCard.astro';
+import type { GameCardData } from '../lib/cards';
+import { GAMES_COPY } from '../lib/games';
+
+interface Props {
+  games: GameCardData[];
+  level?: 2 | 3;
+  /** Only the hub sets this: with exactly one game, a final "More games coming" card keeps the row from looking unfinished. */
+  soon?: boolean;
+}
+
+const { games, level = 2, soon = false } = Astro.props;
+const showSoon = soon && games.length === 1;
+const few = games.length + (showSoon ? 1 : 0) <= 2;
+const Heading = `h${level}` as 'h2' | 'h3';
+---
+
+<ul class:list={['game-grid', few && 'few']} data-games>
+  {games.map((game, i) => (
+    <li>
+      {/* The first row (at most three cards) loads at once; the rest wait until they are near the screen. */}
+      <GameCard {game} {level} eager={i < 3} />
+    </li>
+  ))}
+  {showSoon && (
+    <li>
+      <div class="game-soon" data-games-soon>
+        <p class="eyebrow">Next up</p>
+        <Heading class="card-title">{GAMES_COPY.soonTitle}</Heading>
+        <p class="card-text">{GAMES_COPY.soonText}</p>
+      </div>
+    </li>
+  )}
+</ul>
