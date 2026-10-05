@@ -1,0 +1,225 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it, vi } from 'vitest';
+import site from '../data/site.json';
+import {
+  AGENT_LABEL,
+  DEFAULT_AUTHOR,
+  assistNote,
+  authorLd,
+  authorPath,
+  authorProfilePageLd,
+  authorSlugOf,
+  authorsWithPosts,
+  initials,
+  isAgent,
+  postsByAuthor,
+  resolveAuthor,
+  sortAuthors,
+  unknownAuthorErrors,
+  type AuthorData,
+} from './authors';
+import type { CollectionName, Post } from './content';
+
+// The real schema, with Astro's two virtual modules stood in for (the same as src/admin/config.vitest.ts).
+vi.mock('astro:content', async () => {
+  const { z } = await import('astro/zod');
+  return {
+    defineCollection: (c: unknown) => c,
+    reference: (collection: string) => z.string().transform((id) => ({ collection, id })),
+  };
+});
+vi.mock('astro/loaders', () => ({ glob: () => ({}) }));
+
+// Docs may have CRLF line endings on Windows.
+const read = (file: string) => readFileSync(new URL(file, import.meta.url), 'utf-8').split('\r\n').join('\n');
+const authorFile = (slug: string) => JSON.parse(read(`../content/authors/${slug}.json`)) as AuthorData;
+
+const hunter = resolveAuthor(authorFile('hunter-newton'), site.author);
+const r7 = resolveAuthor(authorFile('r7'), site.author);
+
+const post = (collection: CollectionName, id: string, author?: string): Post => ({
+  collection,
+  id,
+  data: {
+    title: id,
+    date: new Date('2026-10-01'),
+    tags: [],
+    featured: false,
+    draft: false,
+    author: author ? { id: author } : undefined,
+  },
+});
+
+describe('the authors', () => {
+  it('are a person, Hunter Newton, and an agent, R7', () => {
+    expect(hunter).toMatchObject({ slug: 'hunter-newton', kind: 'person', name: 'Hunter Newton', path: '/authors/hunter-newton/' });
+    expect(r7).toMatchObject({ slug: 'r7', kind: 'agent', name: 'R7', subtitle: 'Orbit AI Agent', path: '/authors/r7/' });
+    expect(DEFAULT_AUTHOR).toBe('hunter-newton');
+    expect(authorPath('r7')).toBe('/authors/r7/');
+  });
+
+  it("read Hunter's name, bio and photo from site.json, and never copy them into the author file", () => {
+    const data = authorFile('hunter-newton');
+    expect(Object.keys(data).sort()).toEqual(['kind', 'slug']);
+    expect(hunter.name).toBe(site.author.name);
+    expect(hunter.bio).toBe(site.author.bio);
+    expect(hunter.avatar).toBe(site.author.photo);
+  });
+
+  it("give R7 the author's own bio, exactly, and the R7 mark as its avatar", () => {
+    expect(r7.bio).toBe(
+      "R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
+    );
+    expect(r7.avatar).toBe('/assets/r7-mark.svg');
+    expect(read('../../public/assets/r7-mark.svg')).toContain('<svg');
+  });
+
+  it('need a name and a bio when an agent, but not when a person', () => {
+    expect(() => resolveAuthor({ slug: 'x', kind: 'agent' }, site.author)).toThrow(/needs a name and a bio/);
+    expect(resolveAuthor({ slug: 'y', kind: 'person' }, { name: 'A B', bio: 'Bio.' })).toMatchObject({
+      name: 'A B',
+      bio: 'Bio.',
+      avatar: undefined,
+    });
+  });
+
+  it('list people first, and only those with posts in the filter', () => {
+    expect(sortAuthors([r7, hunter]).map((a) => a.slug)).toEqual(['hunter-newton', 'r7']);
+    const posts = [post('blog', 'a', 'r7'), post('news', 'b')];
+    expect(authorsWithPosts([hunter, r7], posts).map((a) => a.slug)).toEqual(['hunter-newton', 'r7']);
+    expect(authorsWithPosts([hunter, r7], [post('blog', 'a')]).map((a) => a.slug)).toEqual(['hunter-newton']);
+  });
+});
+
+describe('who a post is credited to', () => {
+  it('is Hunter Newton when the post names no author', () => {
+    expect(authorSlugOf(post('blog', 'a'))).toBe('hunter-newton');
+    expect(authorSlugOf(post('blog', 'a', 'r7'))).toBe('r7');
+  });
+
+  it('defaults to hunter-newton in the real schema of every kind, and reads a slug as a reference', async () => {
+    const { z } = await import('astro/zod');
+    const { collections } = await import('../content.config');
+    type Parse = { safeParse(v: unknown): { success: boolean; data?: unknown } };
+    type Defined = { schema: (c: { image: () => unknown }) => { shape: Record<string, Parse> } };
+    for (const name of ['news', 'blog', 'vlogs', 'projects', 'repos']) {
+      const author = (collections as unknown as Record<string, Defined>)[name].schema({ image: () => z.string() }).shape.author;
+      expect(author.safeParse(undefined).data, name).toEqual({ collection: 'authors', id: 'hunter-newton' });
+      expect(author.safeParse('r7').data, name).toEqual({ collection: 'authors', id: 'r7' });
+    }
+  });
+
+  it('gives a readable error naming the post, the bad slug and the real ones when the author does not exist', () => {
+    const known = ['hunter-newton', 'r7'];
+    const errors = unknownAuthorErrors(
+      [post('blog', 'good', 'r7'), post('vlogs', 'oops', 'hunter-newtn'), post('news', 'none')],
+      known,
+    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain('vlogs/oops');
+    expect(errors[0]).toContain('"hunter-newtn"');
+    expect(errors[0]).toContain('Authors are: hunter-newton, r7');
+    expect(errors[0]).toContain('src/content/authors/hunter-newtn.json');
+    expect(unknownAuthorErrors([post('blog', 'a')], ['hunter-newton'])).toEqual([]);
+  });
+
+  it("finds an author's posts", () => {
+    const posts = [post('blog', 'a', 'r7'), post('news', 'b'), post('vlogs', 'c', 'r7')];
+    expect(postsByAuthor(posts, 'r7').map((p) => p.id)).toEqual(['a', 'c']);
+    expect(postsByAuthor(posts, 'hunter-newton').map((p) => p.id)).toEqual(['b']);
+    expect(postsByAuthor(posts, 'nobody')).toEqual([]);
+  });
+});
+
+describe('the byline', () => {
+  it('marks an agent "AI-written" and a person not at all', () => {
+    expect(AGENT_LABEL).toBe('AI-written');
+    expect(isAgent(r7)).toBe(true);
+    expect(isAgent(hunter)).toBe(false);
+  });
+
+  it('falls back to initials for a person with no photo, never to the agent mark', () => {
+    expect(initials('Hunter Newton')).toBe('HN');
+    expect(initials('R7')).toBe('R');
+    expect(resolveAuthor({ slug: 'y', kind: 'person' }, { name: 'Ada Lovelace', bio: 'x', photo: null }).avatar).toBeUndefined();
+  });
+});
+
+describe('"How this was made" (aiAssist)', () => {
+  it("still shows on a person's post", () => {
+    expect(assistNote('drafted', hunter)).toBe('The first draft was written with AI help.');
+    expect(assistNote('edited', hunter)).toBe('Written by me and edited with AI help.');
+    expect(assistNote('none', hunter)).toBeUndefined();
+    expect(assistNote(undefined, hunter)).toBeUndefined();
+  });
+
+  it("is not shown on an agent's post, which already says so in the byline and the footer note", () => {
+    expect(assistNote('drafted', r7)).toBeUndefined();
+    expect(assistNote('edited', r7)).toBeUndefined();
+  });
+});
+
+describe('structured data', () => {
+  const base = 'https://r7orbit.io';
+
+  it('is a Person for a person, with the profiles from site.json', () => {
+    expect(authorLd(hunter, base, ['https://www.youtube.com/@R7Creatives'])).toMatchObject({
+      '@type': 'Person',
+      name: 'Hunter Newton',
+      url: 'https://r7orbit.io/authors/hunter-newton/',
+      sameAs: ['https://www.youtube.com/@R7Creatives'],
+    });
+  });
+
+  it('is an Organization for an agent, with its subtitle as the description and its page as the url', () => {
+    expect(authorLd(r7, base, ['https://www.youtube.com/@R7Creatives'])).toEqual({
+      '@type': 'Organization',
+      name: 'R7',
+      description: 'Orbit AI Agent',
+      url: 'https://r7orbit.io/authors/r7/',
+    });
+  });
+
+  it('is a ProfilePage whose main entity is that Person or Organization', () => {
+    expect(authorProfilePageLd(hunter, base)).toMatchObject({
+      '@type': 'ProfilePage',
+      url: 'https://r7orbit.io/authors/hunter-newton/',
+      mainEntity: { '@type': 'Person', name: 'Hunter Newton' },
+    });
+    expect(authorProfilePageLd(r7, base)).toMatchObject({
+      '@type': 'ProfilePage',
+      mainEntity: { '@type': 'Organization', name: 'R7', description: 'Orbit AI Agent' },
+    });
+  });
+});
+
+describe("R7's footer note", () => {
+  // docs/VOICE_AND_COPY.md holds the wording the author supplied (interim); the author file holds what the site shows.
+  const doc = read('../../docs/VOICE_AND_COPY.md');
+  const section = /^## Agent-authored footer note\n([\s\S]*?)(?=^## )/m.exec(doc)?.[1] ?? '';
+  const quoted = section
+    .split('\n')
+    .filter((line) => line.startsWith('> '))
+    .map((line) => line.slice(2))
+    .join(' ');
+
+  it('is labelled interim in the doc', () => {
+    expect(section).toMatch(/interim/i);
+    expect(section).toMatch(/author will supply final wording/);
+  });
+
+  it('is the same text in the doc and in src/content/authors/r7.json', () => {
+    expect(quoted).not.toBe('');
+    expect(authorFile('r7').note).toBe(quoted);
+  });
+
+  it("is built only from the author's own About-page sentences", () => {
+    expect(quoted).toBe(
+      `${authorFile('r7').bio} If you spot a mistake, tell me. I'll correct it, with a dated note at the bottom of the post.`,
+    );
+  });
+
+  it("is the agent's alone: the person's file has none", () => {
+    expect(authorFile('hunter-newton').note).toBeUndefined();
+  });
+});

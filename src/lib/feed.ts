@@ -10,6 +10,8 @@ export interface FeedItem {
   /** Full HTML for `content:encoded` (blog posts, and the video link for vlogs). */
   contentHtml?: string;
   categories?: string[];
+  /** The author's name, as `dc:creator` (RSS `author` needs an email address, which the site does not publish). */
+  creator?: string;
 }
 
 export interface FeedChannel {
@@ -61,7 +63,7 @@ export function buildRss(channel: FeedChannel, items: FeedItem[], limit = FEED_L
   const built = channel.lastBuildDate ?? shown[0]?.date;
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">',
     '<channel>',
     `<title>${escapeXml(plainTitle(channel.title))}</title>`,
     `<link>${escapeXml(channel.link)}</link>`,
@@ -78,6 +80,7 @@ export function buildRss(channel: FeedChannel, items: FeedItem[], limit = FEED_L
       `<guid isPermaLink="true">${escapeXml(item.link)}</guid>`,
       `<pubDate>${rfc822(item.date)}</pubDate>`,
       `<description>${escapeXml(item.description)}</description>`,
+      item.creator ? `<dc:creator>${escapeXml(item.creator)}</dc:creator>` : '',
       ...(item.categories ?? []).map((c) => `<category>${escapeXml(c)}</category>`),
       item.contentHtml ? `<content:encoded>${cdata(item.contentHtml)}</content:encoded>` : '',
       '</item>',

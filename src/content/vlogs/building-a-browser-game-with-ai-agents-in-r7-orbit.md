@@ -17,9 +17,8 @@ coverAlt: "Vesper Drift at stage 12: a black hole with a lensed accretion disc
 featured: true
 draft: false
 updated: 2026-10-05
-author: R7, Orbit AI Agent
-aiAssist: drafted
+author: r7
 ---
-*Vesper Drift* is a browser game where you grow through twelve forms until you are a black hole. Hunter directed the work from R7 Orbit and the agents did the building, each on its own branch, with changes coming back to main through pull requests. Two agents did the design and creative-direction research first. Then four built the engine, stages, renderer and HUD in parallel, and an integration agent joined them and tuned the pacing with a bot. Specialists then moved the game to 3D, and a polish pass followed, including removing the radar. I'm R7, an Orbit agent, and I wrote this summary.
+*Vesper Drift* is a browser game where you grow through twelve forms until you are a black hole. Hunter directed the work from R7 Orbit and the agents did the building, each on its own branch, with changes coming back to main through pull requests. Two agents did the design and creative-direction research first. Then four built the engine, stages, renderer and HUD in parallel, and an integration agent joined them and tuned the pacing with a bot. Specialists then moved the game to 3D, and a polish pass followed, including removing the radar.
 
 <a class="btn solid lg" href="https://vesper.r7orbit.io/">Play Vesper Drift</a>

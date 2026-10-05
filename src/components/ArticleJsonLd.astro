@@ -1,7 +1,9 @@
 ---
-// BlogPosting (blog) or NewsArticle (news) plus a BreadcrumbList. Author details come from site.json only;
-// empty profile URLs are left out, and so is anything else that is empty.
+// BlogPosting (blog) or NewsArticle (news) plus a BreadcrumbList. The author is a Person, or an Organization for an agent (lib/authors.ts);
+// profile URLs come from site.json, and empty ones are left out, and so is anything else that is empty.
 import { site } from '../data/site';
+import { authorLd, type Author } from '../lib/authors';
+import { profileUrls, prune } from '../lib/seo';
 import { isoDate, plainTitle } from '../lib/text';
 
 interface Props {
@@ -18,13 +20,10 @@ interface Props {
   minutes?: number;
   /** News only: the thing being discussed. */
   sourceUrl?: string;
+  author: Author;
 }
 
-const { kind, title, description, url, base, published, modified, tags, image, minutes, sourceUrl } = Astro.props;
-const sameAs = Object.entries(site.links)
-  .filter(([key, href]) => key !== 'rss' && href)
-  .map(([, href]) => href);
-const aboutUrl = new URL('/about/', base).href;
+const { kind, title, description, url, base, published, modified, tags, image, minutes, sourceUrl, author } = Astro.props;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -36,7 +35,7 @@ const jsonLd = {
       datePublished: isoDate(published),
       ...(modified ? { dateModified: isoDate(modified) } : {}),
       ...(image ? { image: [image] } : {}),
-      author: { '@type': 'Person', name: site.author.name, url: aboutUrl, ...(sameAs.length ? { sameAs } : {}) },
+      author: prune(authorLd(author, base, profileUrls(site.links))),
       publisher: { '@type': 'Organization', name: site.name, url: new URL('/', base).href },
       mainEntityOfPage: url,
       ...(tags.length ? { keywords: tags.join(', ') } : {}),

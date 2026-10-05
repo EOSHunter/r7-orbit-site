@@ -1,4 +1,5 @@
 import { site } from '../data/site';
+import { getAuthors } from '../lib/authors-queries';
 import { getAllPosts } from '../lib/content-queries';
 import { xmlResponse } from '../lib/feed-queries';
 import { buildUrlset, collectSitemapEntries, pagePathFromFile, sourceIsNoindex } from '../lib/sitemap';
@@ -15,6 +16,10 @@ export async function GET() {
     .filter(([, source]) => !sourceIsNoindex(source))
     .map(([file]) => pagePathFromFile(file))
     .filter((path): path is string => !!path);
-  const entries = collectSitemapEntries(staticPaths, await getAllPosts());
+  const entries = collectSitemapEntries(
+    staticPaths,
+    await getAllPosts(),
+    (await getAuthors()).map((a) => a.slug),
+  );
   return xmlResponse(buildUrlset(entries, site.url));
 }

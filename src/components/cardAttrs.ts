@@ -12,6 +12,7 @@ export function cardAttrs(post: CardData): Record<string, string | undefined> {
     attrs['data-title'] = plainTitle(post.title);
     attrs['data-text'] = post.summary;
     attrs['data-tags'] = (post.tags ?? []).join(' ');
+    attrs['data-author'] = post.author;
   }
   return attrs;
 }

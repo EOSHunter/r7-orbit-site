@@ -15,6 +15,10 @@ The posts are not named in the script: `tests/routes.js` finds them in `dist/`, 
 | `styleguide-games-*` | 375, 1280, whole page | The hub fixture: no games, one (with the "More games coming" card), two and five |
 | `<kind>-<slug>-*` | 375, 1280 (articles: see above) | One post of each kind that has one |
 | `tags-*`, `tags-<tag>-*` | 375, 1280 | Tag index and a tag page, when a tag has two posts |
+| `authors-r7-*`, `authors-hunter-newton-*` | 320 (R7), 375, 1280 | The two author pages: avatar, name, subtitle, AI-written label, bio, the author's posts |
+| `latest-author-r7-*` | 375, 1280 | `/latest/` with the By author filter set to R7 |
+| `projects-vesper-drift-*`, `blog-test-*`, `vlogs-building-a-browser-game-…-*` | 320, 375, 1280 | A person's post (Hunter Newton) and the two posts by R7: byline, AI-written label, footer note |
+| `styleguide-author-empty-*` | 375, 1280 | The author page fixture with no posts (empty state, initials avatar) |
 | `about-*`, `subscribe-*`, `privacy-*` | 375, 1280 | About, Subscribe, Privacy |
 | `404-*` | 375, 1280 | The 404 page with the static orbit |
 | `styleguide-*`, `styleguide-specimen-*`, `styleguide-article-components-*` | 375, 1280 | The styleguide shell, the specimen page and the article-components demo |

@@ -9,6 +9,7 @@ For the author. Plain steps, no coding needed. Everything happens at <https://r7
 3. Fill in the form. The required fields are marked. These are the ones that most often go wrong:
    - **Title**: up to 90 characters. **Summary**: one or two sentences, up to 180 characters.
    - **Browser title** (optional): a shorter title for browser tabs and search results, up to 49 characters. Use it when the title would push the page title past 60 characters; the page itself keeps the full title.
+   - **Author**: who the post is credited to. It starts as **Hunter Newton**. If an AI agent wrote the piece, pick **R7 · Orbit AI Agent** instead: it then shows an "AI-written" label under the title and the agent's note at the end. Never credit an AI-written piece to Hunter. Authors are the files in the **Authors** list; a new one appears in this menu after the site is next deployed.
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos.
@@ -78,6 +79,7 @@ The live site keeps running the last good version, so there is no emergency. Fin
    | The log says (roughly) | Cause and fix |
    | --- | --- |
    | `Invalid frontmatter` / `Does not match schema` / `Unrecognized key` | A field is missing, too long or not allowed. Title is limited to 90 characters, summary to 180, tags to six lowercase hyphenated words. News needs a source URL and source name. Fix it in the editor and save again |
+   | `has author "x", but there is no author with that slug` | The **Author** is not one of the authors. Pick one from the menu again (or add the author under **Authors** first) |
    | `use a date like 2026-10-03` / `Invalid date` | The date is empty or was typed in the wrong form. Pick it with the date picker, or write `2026-10-03` |
    | `coverAlt is required when cover is set` / `featuredImageAlt` | An image has no alt text. Fill in the alt text field next to the image (use a short description; leave it empty only for a purely decorative cover) |
    | `Could not find image` / `Cannot find …` an image path | The image file was deleted or the path was typed by hand. Choose the image again in the editor |

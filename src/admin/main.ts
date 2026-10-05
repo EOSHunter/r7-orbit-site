@@ -9,6 +9,7 @@ import componentsCss from '../styles/design-system/components.css?inline';
 import tokensCss from '../styles/design-system/tokens.css?inline';
 import markdownCss from '../styles/markdown.css?inline';
 import siteCss from '../styles/site.css?inline';
+import { authorNames } from './authors';
 import { blocks } from './blocks';
 import { buildConfig, CMS_AUTH_URL, CMS_BRANCH, CMS_REPO } from './config';
 import { blogPreview } from './preview';
@@ -27,7 +28,7 @@ for (const block of blocks) CMS.registerEditorComponent(block);
 for (const css of [tokensCss, componentsCss, siteCss, markdownCss, articleCss, globalStyleOf(heroSource), previewCss]) {
   CMS.registerPreviewStyle(css, { raw: true });
 }
-CMS.registerPreviewTemplate('blog', blogPreview({ sprite: spriteOf(spriteSource), authorName: site.author.name }));
+CMS.registerPreviewTemplate('blog', blogPreview({ sprite: spriteOf(spriteSource), authorName: site.author.name, authorNames }));
 
 CMS.init({
   config: buildConfig({

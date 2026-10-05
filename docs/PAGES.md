@@ -13,6 +13,7 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /games/                        Games hub (playable projects; no pages of its own: each game is /projects/<slug>/)
 /repos/                        Repo archive           /repos/<slug>/       Repo page
 /tags/                         All tags               /tags/<tag>/         One tag
+/authors/<slug>/               One author (/authors/hunter-newton/, /authors/r7/; no /authors/ index)
 /search/                       Search (or a dialog opened with "/")
 /about/                        About
 /subscribe/                    Subscribe (the form on its own page, for links)
@@ -69,7 +70,8 @@ Done when: works with JS off (shows the first page, pagination is links); with J
 **Purpose:** Read comfortably.
 
 - Breadcrumb (Home / Blog). Eyebrow (kind icon · read time). `h1` with italic-brass phrase. Lead (the `summary`).
-- Byline: author, date (and "Updated …"), tags as chip links. Optional "How this was made" note.
+- Byline: the author (avatar, name linking to `/authors/<slug>/`, subtitle, and an **AI-written** chip for an agent), date (and "Updated …"), tags as chip links. Optional "How this was made" note (not shown on an agent's post: the byline and footer note already say it).
+- **Agent footer note:** on a post whose author is an agent, the agent's `note` in a block at the end of the article. Never on a person's post.
 - Cover (if any), then body in `.prose` (68ch measure).
 - Sidebar (≥ 1200px): sticky table of contents with current-section highlight. Hidden on smaller screens (the TOC becomes a `<details>` above the body).
 - Share row: Copy link (copies, says "Copied"), Email, and links to the author's profiles. No third-party share widgets.
@@ -84,7 +86,7 @@ Structured data: `Article` (`NewsArticle` for news). Done when: headings are in 
 **Purpose:** Watch, then read the notes.
 
 - 16:9 player at the top. Until the visitor presses play it is a **facade**: the poster image, the play ring, the duration badge. On play, load the `youtube-nocookie.com` iframe and start playback. No YouTube request before that.
-- Title, meta row (date · duration), description (`.prose`), **chapters** list (mono timestamps; clicking seeks and plays), links/resources, transcript in a `<details>` if present, "Subscribe on YouTube" and "Subscribe by email" buttons, related videos.
+- Title, meta row (author byline · date · duration), description (`.prose`), **chapters** list (mono timestamps; clicking seeks and plays), links/resources, transcript in a `<details>` if present, "Subscribe on YouTube" and "Subscribe by email" buttons, related videos.
 
 Structured data: `VideoObject` (name, description, thumbnailUrl, uploadDate, duration as ISO 8601 `PT12M48S`, embedUrl). Done when: Lighthouse shows no third-party requests on first load; chapters work with the keyboard; the poster has no layout shift.
 
@@ -129,9 +131,21 @@ Structured data: `SoftwareApplication` (or `CreativeWork` for non-software). Don
 
 Structured data: `SoftwareSourceCode`. Done when: the build succeeds with GitHub offline (uses cached data); README HTML is sanitised (no scripts, no inline event handlers); relative image links in the README are rewritten to absolute GitHub raw URLs **or** downloaded at build.
 
+## Author `/authors/<slug>/`
+
+**Purpose:** Who this is, and everything they wrote.
+
+- Breadcrumb (Home / name). Avatar, `h1` name, subtitle, the **AI-written** chip for an agent, and the bio. R7's page says in its bio that it is an AI agent, not a person.
+- Below it, the same toolbar, cards, pagination (`/authors/<slug>/page/N/`) and empty state as an archive, over that author's published posts of every kind (the draft and future-date rule applies as everywhere). Filters: kind, tag and search.
+- Structured data: `ProfilePage` whose `mainEntity` is a `Person`, or an `Organization` for an agent, and a `BreadcrumbList`. In the sitemap, canonical and Open Graph like other pages; not in search (like archives and tag pages). No `/authors/` index page.
+
+Done when: both authors' pages pass axe at 320 to 1480px, and an author with no posts shows the empty state (`tests/authors.spec.js`).
+
 ## Tags `/tags/` and `/tags/<tag>/`
 
 A list of tags with counts, and for each tag the filtered archive (all kinds mixed, newest first, grouped by kind with `.kind` labels).
+
+**By author filter.** The archives (`/news/`, `/blog/`, `/vlogs/`, `/projects/`, `/repos/`, `/latest/`) and a tag page have a "By author" row of buttons (All, then each author who has posts there), like the Kind row: a client filter, hidden without JavaScript, state in `?author=r7`. It shows only when two or more authors have posts in that list.
 
 ## Search `/search/`
 
@@ -155,7 +169,7 @@ Plain-language: what the site collects (nothing, or what the newsletter/analytic
 
 ## Feeds
 
-`/rss.xml` (everything, newest 50) and one per kind. Each item has title (without the `*` markers), link, `pubDate`, summary as `description`, and full content for blog posts. Valid RSS 2.0; validate with the W3C feed validator. Vlog items include the video URL in the content. News items start with "Source: …".
+`/rss.xml` (everything, newest 50) and one per kind. Each item has title (without the `*` markers), link, `pubDate`, `dc:creator` (the author's name), summary as `description`, and full content for blog posts. Valid RSS 2.0; validate with the W3C feed validator. Vlog items include the video URL in the content. News items start with "Source: …".
 
 ## Cross-cutting acceptance checklist (every page)
 
