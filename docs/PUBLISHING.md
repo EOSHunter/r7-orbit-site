@@ -96,7 +96,7 @@ The About page is not a post. It is a list of **blocks** (a heading, some text, 
 2. The top three boxes are the big heading of the page (**Page heading**), an optional **Browser title**, and the **Description for search results** (one or two sentences; it is not shown on the page).
 3. Under **Page sections** every block is one line. Click the small arrow on its left to open it and edit it; click it again to fold it. The preview on the right redraws as you type, using the site's own styles.
 4. **To add a block:** click **Add section** and choose its kind:
-   - **Heading**: a title for the part below it. Pick *Section heading* or the smaller *Sub-heading*.
+   - **Heading**: a title for the part below it. Pick *Section heading* or the smaller *Sub-heading*. Put one phrase in single asterisks (`How I *work*`) to set it in the italic brass accent, like the page heading and post titles. Two asterisks (`**like this**`) in text only make it bold, as in posts.
    - **Text**: paragraphs, with **bold**, links and lists. Leave a blank line between paragraphs.
    - **Image**: a picture on its own, with an optional caption. **Width**: *Narrow* sits in line with the text, *Wide* is the width of the page, *Full* goes edge to edge of the window.
    - **Portrait and text**: a picture beside some text (above it on a phone). Choose **Picture on the** left or right. The blocks you put after it stay beside the picture, until a **Divider**, a *Wide* or *Full* image, or another Portrait. A **Heading** placed directly above it also sits beside the picture.

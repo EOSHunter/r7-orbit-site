@@ -159,7 +159,7 @@ Each block is `- type: <name>` plus its own fields. Every field is checked by th
 
 | `type` | Fields | What it draws |
 |---|---|---|
-| `heading` | `text`, `level` (2 or 3, default 2) | An `h2` or `h3` in the reading column |
+| `heading` | `text`, `level` (2 or 3, default 2) | An `h2` or `h3` in the reading column. One phrase may be wrapped in `*asterisks*` for italic brass, as in a title (it also works in the heading above a portrait and in a `##` heading inside a `text` block). `**bold**` stays plain bold, as in posts |
 | `text` | `text` (Markdown) | Paragraphs, bold, italic, links, lists, code. Raw HTML is removed. Straight quotes stay straight |
 | `image` | `image`, `alt`, `decorative`, `caption`, `width` (`narrow` default, `wide`, `full`) | The `Figure` article component. Narrow sits in the text column; wide and full leave it and start a new row (full reaches both edges of the window) |
 | `portrait` | `image`, `alt`, `decorative`, `side` (`left` default, `right`), `text` (Markdown) | The picture in a side column (sticky on wide screens, above the text on a phone) with the text beside it |

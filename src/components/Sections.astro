@@ -8,6 +8,7 @@
 import Figure from './article/Figure.astro';
 import SectionBlock from './SectionBlock.astro';
 import { layoutSections, SECTION_LABELS, type ImageSection, type PortraitSection, type Section } from '../lib/page-sections';
+import { titleParts } from '../lib/text';
 import { imageSize, type ImageSize } from '../lib/section-images';
 import { renderSectionMarkdown } from '../lib/section-markdown';
 import '../styles/markdown.css';
@@ -52,7 +53,7 @@ const altOf = (s: ImageSection | PortraitSection) => (s.decorative ? '' : s.alt)
               />
             </div>
             <div class="prose">
-              {row.lead && (row.lead.level === 3 ? <h3>{row.lead.text}</h3> : <h2>{row.lead.text}</h2>)}
+              {row.lead && (row.lead.level === 3 ? <h3>{titleParts(row.lead.text).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h3> : <h2>{titleParts(row.lead.text).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>)}
               <Fragment set:html={html.get(row.portrait)} />
               {row.blocks.map((block) => <SectionBlock block={block} html={html.get(block)} size={sizes.get(block)} />)}
             </div>
