@@ -68,6 +68,7 @@ const routes = [
   { path: '/styleguide/games/', noindex: true }, // fixture for tests/games.spec.js: the games hub with 0, 1, 2 and 5 games
   { path: '/styleguide/author-empty/', noindex: true }, // fixture for tests/authors.spec.js: an author with no posts
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
+  { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
 ];
 
 const extra = (process.env.EXTRA_ROUTES ?? '')

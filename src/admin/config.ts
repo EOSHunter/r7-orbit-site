@@ -6,6 +6,7 @@ import type { CmsCollection, CmsConfig, CmsField } from 'decap-cms-core';
 import site from '../data/site.json';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import { seoTitleMax } from '../lib/seo';
+import { pageCollections } from './pages';
 import { authorOptions, DEFAULT_AUTHOR } from './authors';
 
 // ---- Where the live admin signs in (edit here; the Cloudflare steps are in docs/DEPLOY_CLOUDFLARE.md) -----------------------
@@ -742,8 +743,9 @@ export function buildConfig(env: AdminEnv): CmsConfig {
     load_config_file: false,
     media_folder: MEDIA_FOLDER,
     public_folder: PUBLIC_FOLDER,
-    // Only blog posts have a live preview (the blog collection turns it on).
+    // Only blog posts and the About page have a live preview (their collections turn it on).
     editor: { preview: false },
-    collections,
+    // The five post collections, then the block-built pages (src/admin/pages.ts).
+    collections: [...collections, ...pageCollections],
   };
 }

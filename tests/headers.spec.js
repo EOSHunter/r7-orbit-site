@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect } from '@playwright/test';
 
 // public/_headers is read by Cloudflare Pages, not by `astro preview`. So this file reads it the way Pages does (every block
@@ -107,6 +108,10 @@ const GITHUB_STATUS = 'https://www.githubstatus.com';
 
 let nextSha = 1;
 
+// The About page as it is in the repository: the real file, so the test follows it. Decap reads it from the blob API (base64).
+const ABOUT_MD = readFileSync(new URL('../src/content/pages/about.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+const ABOUT_SHA = 'aboutfilesha';
+
 /** What GitHub answers to the calls the editor makes to list, read and save entries (just enough for it to carry on). */
 function githubApi(method, path) {
   const repo = '/repos/EOSHunter/r7-orbit-site';
@@ -119,6 +124,13 @@ function githubApi(method, path) {
   }
   if (path.startsWith(`${repo}/branches/`)) {
     return { name: 'main', commit: { sha: 'abc', commit: { tree: { sha: 'def' } } } };
+  }
+  // The About page file: Decap finds its blob in the folder's tree, then reads the blob as raw text.
+  if (path.includes('/git/trees/') && decodeURIComponent(path).endsWith('src/content/pages')) {
+    return { sha: sha(), tree: [{ path: 'about.md', type: 'blob', mode: '100644', sha: ABOUT_SHA, size: ABOUT_MD.length }], truncated: false };
+  }
+  if (method === 'GET' && path === `${repo}/git/blobs/${ABOUT_SHA}`) {
+    return { sha: ABOUT_SHA, encoding: 'base64', content: Buffer.from(ABOUT_MD).toString('base64'), size: ABOUT_MD.length };
   }
   if (path.startsWith(`${repo}/git/trees`)) return { sha: sha(), tree: [], truncated: false };
   if (path === `${repo}/git/blobs`) return { sha: sha() };
@@ -270,4 +282,157 @@ test('the editor checks GitHub status every five minutes without breaking the CS
   await expect.poll(() => seen.statusChecks.length, { timeout: 10_000 }).toBeGreaterThan(0);
   expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
   expect(seen.violations).toEqual([]);
+});
+
+// ---- Editing the About page under the admin CSP ---------------------------------------------------------------------
+
+/** What Decap committed: the files in the `git/trees` request, and each blob's text by its place in the call order. */
+function committedFiles(calls) {
+  const blobs = calls.filter((c) => c.method === 'POST' && c.path.endsWith('/git/blobs')).map((c) => c.body);
+  const trees = calls.filter((c) => c.method === 'POST' && c.path.endsWith('/git/trees'));
+  return { blobs, trees };
+}
+
+test('the About page opens in the editor with its blocks and a live preview, with no violations', async ({ page }) => {
+  const seen = await openAdmin(page, { signedIn: true });
+  await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
+
+  // The form shows the page's heading and its blocks, each with a line saying what it holds.
+  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+  await expect(page.getByText('Heading: Hunter Newton')).toBeVisible();
+  await expect(page.getByText('Heading: R7 · Orbit AI Agent')).toBeVisible();
+  await expect(page.getByText(/^Portrait: I build software/)).toBeVisible();
+  await expect(page.getByText(/^Text: R7 is the AI agent/)).toBeVisible();
+
+  // The preview is the page with the site's styles: the h1, the two headings in order, the portrait grid.
+  const preview = page.locator('iframe').first().contentFrame();
+  await expect(preview.getByRole('heading', { level: 1 })).toHaveText('About');
+  await expect(preview.getByRole('heading', { level: 2 })).toHaveText(['Hunter Newton', 'R7 · Orbit AI Agent']);
+  await expect(preview.locator('.about-grid .portrait img')).toHaveAttribute('alt', 'Portrait of Hunter Newton');
+  await expect(preview.getByText('How a piece gets here:')).toBeVisible();
+
+  expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
+  expect(seen.violations).toEqual([]);
+  expect(seen.refused, 'requests to other addresses').toEqual([]);
+  expect(seen.errors).toEqual([]);
+});
+
+test('saving an About change works under the admin CSP: a new image block, two sections swapped, the picture uploaded', async ({
+  page,
+}) => {
+  // Tall, so every block (and the new one's form) is on screen and can be dragged without scrolling.
+  await page.setViewportSize({ width: 1280, height: 1800 });
+  const seen = await openAdmin(page, { signedIn: true });
+  await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
+  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+
+  // Add an Image block (it opens at the end of the list), choose a picture and describe it.
+  await page.getByRole('button', { name: /add section/i }).click();
+  await page.getByRole('menuitem', { name: 'Image', exact: true }).click();
+  await page.getByRole('button', { name: /choose an image/i }).click();
+  await page.locator('input[type="file"]').setInputFiles({ name: 'desk.png', mimeType: 'image/png', buffer: PIXEL });
+  await page.getByRole('button', { name: /choose selected/i }).click();
+  await page.getByLabel('Alt text (optional)').last().fill('A tidy desk with one laptop');
+
+  // The preview shows the new block, with its alt text.
+  const preview = page.locator('iframe').first().contentFrame();
+  await expect(preview.locator('figure.art-fig img')).toHaveAttribute('alt', 'A tidy desk with one laptop');
+
+  // Re-order: fold the new block to one line, then drag it up above the first block by its handle (the editor has no keyboard
+  // way to do this). A tall block is hard to drop: the editor picks the nearest block by its centre.
+  const handles = page.locator('[aria-roledescription="sortable"]');
+  await handles.last().locator('xpath=preceding-sibling::button[1]').click();
+  await expect(handles).toHaveCount(5);
+  await expect(page.getByLabel('Alt text (optional)').last()).toBeHidden();
+  const from = (await handles.nth(4).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const to = (await handles.nth(0).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const x = from.x + from.width / 2;
+  await page.mouse.move(x, from.y + from.height / 2);
+  await page.mouse.down();
+  // Past the editor's 4px drag threshold, then up to the first block.
+  await page.mouse.move(x, from.y - 10, { steps: 6 });
+  await page.mouse.move(x, to.y + 5, { steps: 30 });
+  await page.mouse.up();
+  // The editor swallows any click for a moment after a drop (so letting go over a button does not press it); a person is never
+  // that quick, but a test is.
+  await page.waitForTimeout(300);
+  await expect(page.getByText(/^(Heading|Portrait|Text|Image): /)).toHaveCount(5);
+  expect(await page.getByText(/^(Heading|Portrait|Text|Image): /).allInnerTexts()).toEqual([
+    'Image: A tidy desk with one laptop',
+    'Heading: Hunter Newton',
+    expect.stringMatching(/^Portrait: /),
+    'Heading: R7 · Orbit AI Agent',
+    expect.stringMatching(/^Text: /),
+  ]);
+
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect
+    .poll(() => seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')), { timeout: 15_000 })
+    .toBe(true);
+  const { blobs } = committedFiles(seen.calls);
+  const text = (b) => (b.encoding === 'base64' ? Buffer.from(b.content, 'base64').toString('utf8') : b.content);
+  const saved = blobs.map(text).find((t) => t.startsWith('---') && t.includes('description:'));
+  expect(saved, 'the About file is committed').toBeDefined();
+  // Read back what was committed: the new block is first, and every old block follows it exactly as it was written, word for
+  // word (the editor re-wraps long lines in the file, which is the same text).
+  const { frontmatter: before } = parseFrontmatter(ABOUT_MD);
+  const { frontmatter: after } = parseFrontmatter(saved);
+  expect(after.title).toBe(before.title);
+  expect(after.description).toBe(before.description);
+  expect(after.sections[0]).toEqual({
+    type: 'image',
+    image: '/media/desk.png',
+    alt: 'A tidy desk with one laptop',
+    decorative: false,
+    width: 'narrow',
+  });
+  expect(after.sections.slice(1)).toEqual(before.sections);
+  // The picture itself is uploaded too, as a file of the site.
+  expect(blobs.some((b) => b.content === PIXEL.toString('base64'))).toBe(true);
+  const tree = seen.calls.find((c) => c.method === 'POST' && c.path.endsWith('/git/trees'))?.body.tree ?? [];
+  expect(tree.map((t) => t.path)).toEqual(expect.arrayContaining(['src/content/pages/about.md', 'public/media/desk.png']));
+
+  await expect(page.getByText(/failed to persist/i)).toHaveCount(0);
+  expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
+  expect(seen.violations).toEqual([]);
+  expect(seen.refused, 'requests to other addresses').toEqual([]);
+  expect(seen.errors).toEqual([]);
+});
+
+test('the editor refuses a button address that is not https or a page on the site, and nothing is saved', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 1800 });
+  const seen = await openAdmin(page, { signedIn: true });
+  await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
+  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+
+  await page.getByRole('button', { name: /add section/i }).click();
+  await page.getByRole('menuitem', { name: 'Button', exact: true }).click();
+  await page.getByLabel('Button text').fill('Subscribe');
+  await page.getByLabel('Address').fill('http://example.com/subscribe');
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect(page.getByText(/a full address starting with https:\/\/, or a page on this site/i)).toBeVisible();
+  expect(
+    seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')),
+    'nothing is saved',
+  ).toBe(false);
+
+  // A page on this site is fine: the message goes and the save goes through.
+  const address = page.getByLabel('Address');
+  await address.click();
+  await address.press('Control+A');
+  await address.pressSequentially('/subscribe/');
+  await expect(address).toHaveValue('/subscribe/');
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect
+    .poll(() => seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')), { timeout: 15_000 })
+    .toBe(true);
+  expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
+  // A refused save makes Decap reject its own promise with no reason, which the page reports as an error whose message is
+  // "undefined". That is the refusal itself, so it is not counted.
+  expect(seen.errors.filter((e) => e !== 'undefined')).toEqual([]);
 });
