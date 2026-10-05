@@ -1,22 +1,27 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBlocks from '../components/PageBlocks.astro';
 import Search from '../components/Search.astro';
 import { navItems } from '../data/nav';
+import { loadPage } from '../lib/page-copy-queries';
+import { headTitleFor } from '../lib/seo';
+import { titleParts } from '../lib/text';
 
+// The heading, description and the note for readers without JavaScript are src/content/pages/search.md (edited in /admin,
+// "Pages"); every block of it is that note. The search box and the kind links are the page's frame.
+const { title, seoTitle, description, sections, contexts } = await loadPage('search');
 const kinds = navItems.filter((item) => ['News', 'Blog', 'Vlogs', 'Projects', 'Repos'].includes(item.label));
 ---
 
-<BaseLayout title="Search" description="Search every post, video, project and repo on this site." noindex>
+<BaseLayout title={headTitleFor(title, seoTitle)} description={description} noindex>
   <div class="container wide">
     <header class="page-head">
       <p class="eyebrow brass">Search</p>
-      <h1>
-        Find a <em>post</em>
-      </h1>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
     </header>
     <Search page />
     <noscript>
-      <p class="search-note">Search needs JavaScript. Without it, browse by kind:</p>
+      <PageBlocks blocks={sections} contexts={contexts} paragraphs="search-note" />
     </noscript>
     <ul class="search-kinds" aria-label="Browse by kind">
       {kinds.map((item) => (
