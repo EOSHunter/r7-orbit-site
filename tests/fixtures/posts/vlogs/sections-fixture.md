@@ -16,7 +16,7 @@ sections:
   - type: lead
     text: The notes under the video are blocks. This is a **fixture**, not a real video post.
   - type: text
-    text: The word cometlark appears only in these notes, for the search test. [The subscribe page](/subscribe/) is a link on this site.
+    text: The word cometlark appears only in these notes, for the search test. [The about page](/about/) is a link on this site.
   - type: links
     items:
       - label: A resource mentioned in the fixture video

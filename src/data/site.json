@@ -46,10 +46,6 @@
   "name": "R7 Orbit",
   "tagline": "Field notes on building with AI",
   "url": "https://r7orbit.io",
-  "newsletter": {
-    "provider": "buttondown",
-    "formAction": ""
-  },
   "links": {
     "github": "",
     "youtube": "https://www.youtube.com/@R7Creatives",
@@ -74,11 +70,6 @@
         "label": "YouTube",
         "social": "youtube",
         "icon": "vlog"
-      },
-      {
-        "label": "Subscribe",
-        "href": "/subscribe/",
-        "icon": "mail"
       }
     ],
     "note": "Made with R7 Orbit"

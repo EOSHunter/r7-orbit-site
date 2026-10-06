@@ -2,9 +2,8 @@
 // The home page. Its words and the order of its rows are src/content/pages/home.md (edited in /admin, "Pages" > Home page): the
 // hero is the entry's own fields (the headline is the page's h1), and every row below it is a block (the shared library,
 // docs/SECTIONS.md): Pinned post, Latest feed, Latest posts (Projects, Repos), Games row. The blocks query the posts when the site
-// is built. The newsletter band at the end is the site's, as on every listing page.
+// is built.
 import Sections from '../components/Sections.astro';
-import SubscribeBand from '../components/SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { loadSitePage } from '../lib/site-pages-queries';
@@ -42,8 +41,6 @@ const lead = home.text('lead');
   </section>
 
   <Sections {sections} source="home.md" />
-
-  <SubscribeBand />
 </BaseLayout>
 
 <script>

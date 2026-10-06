@@ -12,6 +12,5 @@ exclude_selectors:
   - ".series"
   - ".prev-next"
   - ".related"
-  - ".subscribe-band"
   - ".breadcrumb"
 force_language: en

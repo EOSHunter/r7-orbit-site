@@ -18,7 +18,7 @@ One site, one author, five kinds of thing:
 | **Project** | Something I built: what, why, how, what I learned | A page with sections and screenshots | `/projects/` |
 | **Repo** | A GitHub repository, shown with live stats and a short write-up | A card with a README-style page | `/repos/` |
 
-A visitor can browse everything on the home page, filter by kind or tag, search, subscribe by email or RSS, and follow through to the video, the code or the live project.
+A visitor can browse everything on the home page, filter by kind or tag, search, subscribe by RSS, and follow through to the video, the code or the live project.
 
 ## 2. Who it is for
 
@@ -55,14 +55,13 @@ These can come later; none of them should be blocked by the first build.
 
 **Must have (v1)**
 
-- Home page with hero, one pinned post, latest feed with filters, projects and repos strips, subscribe band.
+- Home page with hero, one pinned post, latest feed with filters, projects and repos strips.
 - Archive page per kind, with tag filter, text search, sort, pagination.
 - Post pages for each of the five kinds (see `PAGES.md`).
 - Tag pages; About page; 404 page.
 - Dark theme only (the light "Ivory" theme was removed; see `DECISIONS.md`).
 - RSS (all posts, plus one feed per kind), `sitemap.xml`, `robots.txt`.
 - Open Graph / Twitter cards, with a good default image and an optional per-post cover.
-- Newsletter sign-up form wired to a real provider.
 - Site-wide search (static, built at build time).
 - Repo cards show live GitHub data (stars, forks, language, last update), fetched **at build time**, refreshed by a scheduled rebuild.
 - Videos embedded with a click-to-load facade (no YouTube scripts until the visitor presses play).
@@ -102,7 +101,6 @@ These are recommendations with reasons. The author decides (`DECISIONS.md`); the
 | Search | **Pagefind** | Static, tiny, no server, runs at build time | Fuse.js over a JSON index |
 | Video | YouTube via `youtube-nocookie.com`, click-to-load facade | Privacy and speed | Self-hosted video (cost), Vimeo |
 | Repo data | GitHub REST API at build time (token in env) | No runtime calls, no rate-limit surprises for visitors | Runtime fetch (not recommended) |
-| Newsletter | **Buttondown** or similar with a hosted form | Simple, owns the list, RSS-to-email | Substack (less control), ConvertKit, Resend + own list |
 | Hosting | **Cloudflare Pages** (or Netlify/Vercel/GitHub Pages) | Free static hosting, previews on branches, custom domain, HTTPS | — |
 | Analytics | **None**, or Cloudflare Web Analytics / Plausible | Privacy-friendly, no cookie banner needed | — |
 | Share images | Static default now; `satori` + `resvg` per-post later | Quick start, upgrade path | — |

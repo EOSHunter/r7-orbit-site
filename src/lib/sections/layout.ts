@@ -16,7 +16,7 @@ export type Row<B extends Placeable = Placeable> =
   | { kind: 'wide'; block: B }
   /** One block that reaches both edges of the window. */
   | { kind: 'full'; block: B }
-  /** One block that is a full-width section with its own spacing (the newsletter band). */
+  /** One block that is a full-width section with its own spacing (the home page's rows). */
   | { kind: 'band'; block: B }
   /** A portrait beside its column of text: the heading just above it, the portrait's own text, then what follows. */
   | { kind: 'split'; portrait: B; lead?: B; blocks: B[] };

@@ -79,7 +79,7 @@ describe('the admin form and the schema do not drift', () => {
 
 describe('what the form accepts, the build accepts (every pattern, against the schema)', () => {
   const GOOD: Record<string, string[]> = {
-    url: ['https://example.com', 'https://example.com/a?b=1#c', '/subscribe/', '/'],
+    url: ['https://example.com', 'https://example.com/a?b=1#c', '/about/', '/'],
     playUrl: ['https://vesper.r7orbit.io/', 'https://example.com'],
     tag: ['ai-agents', 'git', 'a1'],
     author: ['hunter-newton', 'r7'],

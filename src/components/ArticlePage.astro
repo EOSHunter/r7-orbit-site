@@ -14,7 +14,6 @@ import RelatedPosts from './RelatedPosts.astro';
 import Sections from './Sections.astro';
 import SeriesNav from './SeriesNav.astro';
 import ShareRow from './ShareRow.astro';
-import SubscribeBand from './SubscribeBand.astro';
 import TableOfContents from './TableOfContents.astro';
 import { articleComponents } from './article/mdx';
 import { site } from '../data/site';
@@ -199,6 +198,4 @@ const assist = assistNote(data.aiAssist, author);
   <div class="container post-nav-wrap">
     <PrevNext newer={newer} older={older} />
   </div>
-
-  <SubscribeBand />
 </BaseLayout>

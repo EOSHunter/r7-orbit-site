@@ -28,7 +28,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 | Ship the light "Ivory" theme, or dark only? | **Dark only.** The Ivory theme, its toggle, the `[data-theme='light']` tokens and the saved `r7-theme` preference were removed. | |
 | Framework | Astro | |
 | Tailwind or plain CSS? | Plain CSS from the design system | |
-| Newsletter provider | Buttondown | |
+| Newsletter provider | Buttondown | **Superseded:** no newsletter for now (2026-10-06), see section E |
 | Analytics | None at launch; add Cloudflare Web Analytics later if wanted | |
 | Comments | None at launch | |
 | Hosting | Cloudflare Pages | **Decided:** Cloudflare Pages at `https://r7orbit.io` (production branch `main`, `npm run build` → `dist`, `NODE_VERSION=22`). Setup: `docs/DEPLOY_CLOUDFLARE.md` |
@@ -54,12 +54,13 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 | Item | Notes |
 |---|---|
 | First content set | See the minimum in `PROJECT_BRIEF.md` §7 |
-| Newsletter welcome email | One short message from the author |
+| Newsletter welcome email | One short message from the author (not needed: no newsletter for now, see section E) |
 | Social profiles ready to link | Avatar and banners are in `brand/social/` |
 | Launch announcement | A news/blog post about why the site exists |
 
 ## E. Things already decided (don't reopen without reason)
 
+- No newsletter for now (2026-10-06): signups removed; RSS stays the way to follow. Removed in commit 0268673 on branch `orbit/remove-newsletter-signups-efd875`: to add a newsletter back, start from `git show 0268673` (the band, form, `newsletter` block, /subscribe/ page and `newsletter` setting). `/subscribe/` now redirects to `/` in `public/_redirects`. `src/lib/page-copy.ts` still reads `{newsletter.provider}` and the `{if newsletter …}` lines only so the Privacy page, whose wording is the author's, still builds.
 - Visual identity: the R7 Orbit design system as shipped in `design-system/`.
 - One accent colour (brass). Kinds of post are told apart by icon and label.
 - Static site; content as files in the repo; no database.

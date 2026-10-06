@@ -20,10 +20,10 @@ const example = (type: SectionType): Section => parse([{ type, ...definitions.fi
 // library fails the first test until it has a line here, so its projection is a decision, not an accident.
 const EXPECTED: Record<SectionType, { text: string[]; markdown: string[]; notInMarkdown?: string[] }> = {
   heading: { text: ['A row of text'], markdown: ['## A row of *text*'] },
-  lead: { text: ['A lead paragraph sets the scene', 'with bold and a link if needed'], markdown: ['with **bold** and a [link](/subscribe/)'] },
+  lead: { text: ['A lead paragraph sets the scene', 'with bold and a link if needed'], markdown: ['with **bold** and a [link](/about/)'] },
   text: {
     text: ['Plain paragraphs, bold, italic, inline code and a link.', 'a list item', 'A second paragraph'],
-    markdown: ['**bold**', '- a list item', '[a link](/subscribe/)'],
+    markdown: ['**bold**', '- a list item', '[a link](/about/)'],
   },
   quote: { text: ['A short quotation, set in the display face.', 'Someone Specific'], markdown: ['> A short quotation', '> — Someone Specific'] },
   pullquote: { text: [], markdown: [], notInMarkdown: ['One good line'] },
@@ -46,7 +46,7 @@ const EXPECTED: Record<SectionType, { text: string[]; markdown: string[]; notInM
   spacer: { text: [], markdown: [] },
   links: {
     text: ['A page on this site', 'Another site, with a note', 'video'],
-    markdown: ['- [A page on this site](</subscribe/>)', '- [Another site, with a note](<https://example.com/>) (video)'],
+    markdown: ['- [A page on this site](</about/>)', '- [Another site, with a note](<https://example.com/>) (video)'],
   },
   button: { text: ['A button to another site'], markdown: ['[A button to another site](<https://example.com/>)'] },
   toc: { text: [], markdown: [] },
@@ -56,7 +56,6 @@ const EXPECTED: Record<SectionType, { text: string[]; markdown: string[]; notInM
   pinned: { text: [], markdown: [], notInMarkdown: ['Start here'] },
   games: { text: [], markdown: [], notInMarkdown: ['Play in the browser', 'All games'] },
   author: { text: [], markdown: [], notInMarkdown: ['hunter-newton'] },
-  newsletter: { text: [], markdown: [], notInMarkdown: ['One email'] },
 };
 
 describe('sections-to-content: every block', () => {
@@ -226,7 +225,7 @@ describe('a feed item from sections', () => {
     const html = await renderFeedMarkdown(sectionsToMarkdown(blocks));
     expect(html).toContain('<h2>A row of <em>text</em></h2>');
     expect(html).toContain('<img src="/media/about/hunter-newton.jpg" alt="A portrait, narrow" />');
-    expect(html).toContain('<a href="/subscribe/">a link</a>');
+    expect(html).toContain('<a href="/about/">a link</a>');
     expect(html).toContain('<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Watch the video: A fixture video</a>');
     // No class on the code: a feed reader has none of the site's styles, and the sanitiser keeps no classes.
     expect(html).toContain('<pre><code>npm install\nnpm run build\n</code></pre>');

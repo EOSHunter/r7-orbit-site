@@ -19,7 +19,7 @@ sections:
 
       ### A heading inside a text block
 
-      This paragraph sits under a sub-heading that was typed in Markdown inside a Text block, with two hash marks and a third. It should appear in the contents list, nested under the heading above, and the link there should jump to it. [The subscribe page](/subscribe/) is a link on this site.
+      This paragraph sits under a sub-heading that was typed in Markdown inside a Text block, with two hash marks and a third. It should appear in the contents list, nested under the heading above, and the link there should jump to it. [The about page](/about/) is a link on this site.
   - type: callout
     kind: tip
     title: A tip in the fixture
@@ -59,13 +59,13 @@ sections:
   - type: links
     items:
       - label: A page on this site
-        url: /subscribe/
+        url: /about/
       - label: Another site
         url: https://example.com/
         note: example
   - type: button
-    label: Subscribe
-    url: /subscribe/
+    label: About
+    url: /about/
   - type: divider
     style: dots
   - type: text

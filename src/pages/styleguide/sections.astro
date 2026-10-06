@@ -14,7 +14,7 @@ const written: SectionInput[] = [
   { type: 'heading', level: 2, text: 'A row of *text*' },
   {
     type: 'text',
-    text: 'Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/subscribe/).\n\n- a list item\n- another list item\n\nA second paragraph with a long unbroken address: https://example.com/a/very/long/path/that/keeps/going/and/going/and/going/for/a/while',
+    text: 'Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/about/).\n\n- a list item\n- another list item\n\nA second paragraph with a long unbroken address: https://example.com/a/very/long/path/that/keeps/going/and/going/and/going/for/a/while',
   },
   { type: 'heading', level: 3, text: 'A smaller heading' },
   { type: 'image', image: '/media/about/hunter-newton.jpg', alt: 'A portrait, narrow', caption: 'A narrow image has a caption.', width: 'narrow', decorative: false },
@@ -25,11 +25,11 @@ const written: SectionInput[] = [
   {
     type: 'links',
     items: [
-      { label: 'A page on this site', url: '/subscribe/', note: undefined },
+      { label: 'A page on this site', url: '/about/', note: undefined },
       { label: 'Another site, with a note', url: 'https://example.com/', note: 'video' },
     ],
   },
-  { type: 'button', label: 'A button to a page', url: '/subscribe/' },
+  { type: 'button', label: 'A button to a page', url: '/about/' },
   { type: 'button', label: 'A button to another site', url: 'https://example.com/' },
   { type: 'divider', style: 'rule' },
   { type: 'image', image: '/og-default.png', alt: 'The brand image, wide', caption: 'A wide image.', width: 'wide', decorative: false },

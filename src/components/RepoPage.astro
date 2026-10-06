@@ -13,7 +13,6 @@ import ProjectJsonLd from './ProjectJsonLd.astro';
 import ReadmeBlock from './ReadmeBlock.astro';
 import Sections from './Sections.astro';
 import StatsRow from './StatsRow.astro';
-import SubscribeBand from './SubscribeBand.astro';
 import { toCard, type RepoData } from './detailCards';
 import { authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
@@ -205,6 +204,4 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
       </section>
     )
   }
-
-  <SubscribeBand />
 </BaseLayout>

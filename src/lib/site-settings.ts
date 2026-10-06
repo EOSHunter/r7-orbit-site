@@ -81,13 +81,6 @@ export const siteSchema = z
       .strict(),
     nav: z.array(navItem).min(1, 'needs at least one link'),
     footer: z.object({ links: z.array(footerLink), note: z.string().trim() }).strict(),
-    newsletter: z
-      .object({
-        provider: z.string().trim().min(1),
-        /** Public: the address the sign-up form posts to (it is in the page's HTML). Empty = the sample form that sends nothing. */
-        formAction: optionalHttps,
-      })
-      .strict(),
   })
   .strict()
   .superRefine((site, ctx) => {

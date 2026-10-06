@@ -7,7 +7,6 @@ import {
   fillTokens,
   pageSettingsOf,
   privacySlots,
-  subscribeSlots,
   lostSlots,
   type PageSettings,
 } from './page-copy';
@@ -19,7 +18,7 @@ const settings: PageSettings = {
   siteDescription: 'A description.',
   authorEmail: 'me@site.test',
   rss: '/rss.xml',
-  newsletterProvider: 'buttondown',
+  newsletterProvider: 'a provider',
   newsletterConnected: false,
 };
 const connected = { ...settings, newsletterConnected: true };
@@ -39,16 +38,14 @@ const read = (name: string) => {
 const textsOf = (data: { sections: Section[] }) => data.sections.map((s) => (s as { text?: string }).text ?? '');
 
 describe('settings tokens', () => {
-  it('reads the settings from site.json: connected means formAction is set', () => {
+  it('reads the settings from site.json; the newsletter is never connected (there is none)', () => {
     expect(pageSettingsOf(site)).toMatchObject({
       siteName: site.name,
       authorEmail: site.author.email,
       rss: site.links.rss,
+      newsletterProvider: '',
+      newsletterConnected: false,
     });
-    expect(
-      pageSettingsOf({ ...site, newsletter: { provider: 'x', formAction: 'https://x.test/' } }).newsletterConnected,
-    ).toBe(true);
-    expect(pageSettingsOf({ ...site, newsletter: { provider: 'x', formAction: '' } }).newsletterConnected).toBe(false);
   });
 
   it('fills every token, as often as it appears', () => {
@@ -58,7 +55,7 @@ describe('settings tokens', () => {
         settings,
         'x',
       ),
-    ).toBe('[me@site.test](mailto:me@site.test) on Site via buttondown at /rss.xml');
+    ).toBe('[me@site.test](mailto:me@site.test) on Site via a provider at /rss.xml');
   });
 
   it('stops on a token that does not exist, naming the place and the tokens there are', () => {
@@ -117,14 +114,6 @@ describe('the newsletter condition', () => {
 describe('slots', () => {
   const lead = { type: 'lead', text: 'L' } as Section;
   const heading = { type: 'heading', text: 'H', level: 2 } as Section;
-  const newsletter = { type: 'newsletter', style: 'form' } as Section;
-
-  it('subscribe: lead under the heading, blocks up to the newsletter block beside the form, the rest after', () => {
-    const s = subscribeSlots([lead, heading, text('a'), newsletter, text('b')]);
-    expect([types(s.lead), types(s.beside), types(s.after)]).toEqual([['lead'], ['heading', 'text'], ['text']]);
-    expect(subscribeSlots([heading, text('a')])).toEqual({ lead: [], beside: [heading, text('a')], after: [] });
-  });
-
   it('privacy: a Text block at the very end is the small print; anything else ends the body', () => {
     expect(types(privacySlots([lead, heading, text('a'), text('b')]).after)).toEqual(['text']);
     expect(privacySlots([lead, text('a'), heading]).after).toEqual([]);
@@ -136,18 +125,9 @@ describe('slots', () => {
 });
 
 // The page files hold the wording that was in the .astro pages before they became editable. The rendered text is compared with
-// fixtures in tests/pages.spec.js; the privacy page's "connected" paragraphs only show once the newsletter is connected, so they
-// are compared here, word for word with the old src/pages/privacy.astro.
+// fixtures in tests/pages.spec.js; the privacy page's "connected" paragraphs never show (there is no newsletter), so they
+// are only checked here to stay hidden.
 describe('the page files', () => {
-  it('privacy, newsletter connected: the paragraphs of the old page, with the provider from the settings', () => {
-    const data = fillPage(read('privacy'), { ...pageSettingsOf(site), newsletterConnected: true }, 'privacy.md');
-    const texts = textsOf(data);
-    expect(texts).toContain(
-      `If you subscribe, your email address is sent to **${site.newsletter.provider}**, the service that stores the list and sends the emails. I use it to tell you when something new is published, and for nothing else. That is the only time the form contacts anyone: the request is made when you press Subscribe, not when the page loads.\n\nEvery email has an unsubscribe link. Using it removes you from the list. You can also write to me and I'll remove you by hand.`,
-    );
-    expect(texts.join('\n')).not.toContain("The newsletter isn't connected yet");
-  });
-
   it('privacy, not connected: the other paragraphs, with the RSS address from the settings', () => {
     const texts = textsOf(
       fillPage(read('privacy'), { ...pageSettingsOf(site), newsletterConnected: false }, 'privacy.md'),
@@ -169,7 +149,7 @@ describe('the page files', () => {
   });
 
   it('every page file reads through the schema and fills without an unknown token', () => {
-    for (const name of ['subscribe', 'privacy', '404', 'search']) {
+    for (const name of ['privacy', '404', 'search']) {
       expect(() => fillPage(read(name), pageSettingsOf(site), `${name}.md`), name).not.toThrow();
     }
   });

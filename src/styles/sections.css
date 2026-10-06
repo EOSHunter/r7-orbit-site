@@ -20,7 +20,7 @@
 /* A long address pasted into the text must wrap rather than push the page wider than the window. */
 .sections .prose { overflow-wrap: anywhere; }
 
-/* A band (the newsletter, and the section-style blocks of the home page: Latest feed, Pinned post, Games row, Latest posts in its
+/* A band (the section-style blocks of the home page: Latest feed, Pinned post, Games row, Latest posts in its
    section frame) has its own spacing, so its row adds none, first and last included; two bands in a row would touch, which is the
    page's business. */
 .sections > .sec-row-band,
@@ -32,9 +32,7 @@
 .sec-spacer[data-size='sm'] { height: var(--s-4); }
 .sec-spacer[data-size='lg'] { height: var(--s-8); }
 
-/* The newsletter form inside the text (the `form` style) and the heading over the latest posts. */
-.sec-newsletter > h2 { margin-top: 0; }
-.sec-newsletter > p { margin-bottom: var(--s-4); }
+/* The heading over the latest posts. */
 .latest-posts .section-title { margin-bottom: var(--s-5); }
 .latest-posts .section-head .section-title { margin-bottom: 0; }
 

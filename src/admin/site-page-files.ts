@@ -70,20 +70,20 @@ const homeFields: CmsField[] = [
     summary: '{{fields.label}}',
     hint: 'Up to two buttons under the lead. The first is solid, the second outlined.',
     fields: [
-      line('label', 'Button text', 40, 'Short, e.g. "Subscribe".'),
+      line('label', 'Button text', 40, 'Short, e.g. "Read more".'),
       field({
         name: 'url',
         label: 'Address',
         widget: 'string',
-        pattern: [BUTTON_PATTERN.source, 'Use https://…, a page of this site such as /subscribe/, or #latest / #subscribe for a part of this page'],
-        hint: '#latest goes to the Latest feed below, #subscribe to the newsletter band at the end; /latest/ or https://… go to a page.',
+        pattern: [BUTTON_PATTERN.source, 'Use https://…, a page of this site such as /latest/, or #latest for a part of this page'],
+        hint: '#latest goes to the Latest feed below; /latest/ or https://… go to a page.',
       }),
     ],
   }),
   description(),
   sectionsField({
     label: 'Rows below the hero',
-    hint: 'The home page under the hero, top to bottom: the pinned post, the latest feed, the rows of projects, games and repos, or any other block. Drag a row by its handle to move it, open it with the arrow to edit it, and use the cross to remove it. The newsletter band at the end is the site\'s and is not in this list.',
+    hint: 'The home page under the hero, top to bottom: the pinned post, the latest feed, the rows of projects, games and repos, or any other block. Drag a row by its handle to move it, open it with the arrow to edit it, and use the cross to remove it.',
   }),
 ];
 
@@ -105,7 +105,7 @@ function listingFields(page: SitePage, nothing: string, extra: CmsField[] = []):
     sectionsField({
       name: 'outroSections',
       label: 'Sections below the list',
-      hint: `Optional blocks after the ${nothing}, before the newsletter band. Most pages leave this empty.`,
+      hint: `Optional blocks after the ${nothing}. Most pages leave this empty.`,
     }),
   ];
 }

@@ -61,7 +61,7 @@ for (const kind of Object.keys(POST_PREVIEW_KINDS) as PreviewKind[]) {
 CMS.registerPreviewTemplate('about', aboutPreview({ sprite: spriteOf(spriteSource) }));
 // The home page and the listing pages, each under its file's name in the Pages collection (src/admin/site-page-files.ts).
 for (const page of SITE_PAGES) CMS.registerPreviewTemplate(page.admin.name, pagePreview(page, { sprite: spriteOf(spriteSource) }));
-// Subscribe, privacy, 404 and search: the same preview, with the site settings filled in (framed-preview.ts).
+// Privacy, 404 and search: the same preview, with the site settings filled in (framed-preview.ts).
 for (const name of FRAMED_PAGES) CMS.registerPreviewTemplate(name, framedPreview(name, { sprite: spriteOf(spriteSource) }));
 
 CMS.init({

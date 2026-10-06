@@ -16,7 +16,6 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /authors/<slug>/               One author (/authors/hunter-newton/, /authors/r7/; no /authors/ index)
 /search/                       Search (or a dialog opened with "/")
 /about/                        About
-/subscribe/                    Subscribe (the form on its own page, for links)
 /rss.xml  /news/rss.xml  /blog/rss.xml  /vlogs/rss.xml  /projects/rss.xml  /repos/rss.xml
 /sitemap-index.xml  /robots.txt  /404.html
 /privacy/                      Privacy (when there is a form or analytics)
@@ -30,8 +29,7 @@ Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · R
 |---|---|
 | **Head** | `<title>`, description, canonical, Open Graph/Twitter, theme-color `#09090a`, icons, manifest, the three stylesheets, a tiny inline script that adds the `js` class |
 | **Header** | Sticky, blurred, hairline underline. Wordmark left; nav; search; menu button below 900px |
-| **Footer** | Wordmark, one line, links (RSS, GitHub, YouTube, Subscribe), © year, "Made with R7 Orbit" |
-| **Subscribe band** | Eyebrow, short line, email field + solid button, one-sentence privacy note |
+| **Footer** | Wordmark, one line, links (RSS, GitHub, YouTube), © year, "Made with R7 Orbit" |
 | **Post card** | The five variants in `DESIGN_SYSTEM.md` §9 |
 | **Icon sprite** | News, blog, vlog, project, repo, arrow, star, fork, clock, calendar, external, rss, github, search, menu, close, link, copy, play, sun |
 | **Media placeholder** | Plate gradient + dot grid + ivory mark at 10% opacity |
@@ -48,7 +46,7 @@ The home page, `/latest/`, the five archives, `/games/` and `/tags/` take their 
 | `/games/` | `games.md` | As an archive, plus the empty state's button and the "More games coming" card (eyebrow, heading, text) |
 | `/tags/` | `tags.md` | As an archive. "Used once" stays in code |
 
-The browser title of the home page is still `{site name} · {tagline}` from `src/data/site.json`. The newsletter band at the foot of these pages is the site's (`SubscribeBand`), not a block. The words were moved without a change: `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`, captured from the pages before they became editable, and the pages were compared pixel for pixel at 375px and 1280px before and after.
+The browser title of the home page is still `{site name} · {tagline}` from `src/data/site.json`. The words were moved without a change: `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`, captured from the pages before they became editable, and the pages were compared pixel for pixel at 375px and 1280px before and after.
 
 ## Home `/`
 
@@ -56,13 +54,12 @@ The browser title of the home page is still `{site name} · {tagline}` from `src
 
 Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each data row is a block of the shared library (`SECTIONS.md`): Pinned post (`pinned`), Latest feed (`feed`, one per page; its anchor is `#latest`), Latest posts with a section frame (`latest`, Projects newest first, Repos by last push), Games row (`games`).
 
-1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, two buttons ("Start with the latest" solid, "Subscribe" outline). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
+1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, one button ("Start with the latest", solid). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
 2. **Pinned:** the one `featured: true` post as a large horizontal card (media left, text right; stacked on mobile). Hidden if none.
 3. **Latest:** `.seg` filter (All · News · Blogs · Vlogs · Projects · Repos), then the 8 newest across kinds in the card grid; the newest has `.fresh`. "See everything" link to `/archive` (or the `All` archive).
 4. **Projects strip:** 3 newest projects (card with status mark). "All projects →".
 5. **Games strip** (only when a game is published): up to 3 `GameCard`s in hub order, "All games →" to `/games/`.
 6. **Repos strip:** 3 repos by most recent push. "All repos →".
-7. **Subscribe band.**
 
 States: filter with no results (can't happen on the home page since "All" is default; if a kind has no posts it isn't shown). Loading: none (static).
 
@@ -72,7 +69,7 @@ Done when: LCP element is the hero headline or the pinned card media (not the or
 
 **Purpose:** Find something in one kind.
 
-Words: `src/content/pages/<kind>.md` (`latest.md` for `/latest/`): the `h1`, lead, browser title, description, empty state, and optional blocks between the lead and the list (`introSections`) and between the list and the newsletter band (`outroSections`). The eyebrow (icon and label) is the kind's name in code. With no blocks above the list, the markup is the one the page always had. The fixture `/styleguide/listing/` draws an archive with blocks on both sides.
+Words: `src/content/pages/<kind>.md` (`latest.md` for `/latest/`): the `h1`, lead, browser title, description, empty state, and optional blocks between the lead and the list (`introSections`) and between the list and the foot of the page (`outroSections`). The eyebrow (icon and label) is the kind's name in code. With no blocks above the list, the markup is the one the page always had. The fixture `/styleguide/listing/` draws an archive with blocks on both sides.
 
 - Header: eyebrow (kind icon + label), `h1` (e.g. "Blog"), one-sentence lead, count.
 - Toolbar: search field (filters in place), tag chips (toggle, multi-select = AND), sort `.seg` (Newest · Oldest), result count (`aria-live="polite"`).
@@ -94,7 +91,7 @@ Done when: works with JS off (shows the first page, pagination is links); with J
 - Share row: Copy link (copies, says "Copied"), Email, and links to the author's profiles. No third-party share widgets.
 - Series navigation if `series` is set.
 - **News only:** a "Source" box above the body: source name, link (external icon), and the `take` as a pull line.
-- Related: 3 cards by shared tags. Prev / Next in the same kind. Subscribe band.
+- Related: 3 cards by shared tags. Prev / Next in the same kind.
 
 Structured data: `Article` (`NewsArticle` for news). Done when: headings are in order, code blocks scroll horizontally without moving the page, images never overflow, the copy buttons work, print stylesheet is sensible (no header/footer/nav).
 
@@ -103,7 +100,7 @@ Structured data: `Article` (`NewsArticle` for news). Done when: headings are in 
 **Purpose:** Watch, then read the notes.
 
 - 16:9 player at the top. Until the visitor presses play it is a **facade**: the poster image, the play ring, the duration badge. On play, load the `youtube-nocookie.com` iframe and start playback. No YouTube request before that.
-- Title, meta row (author byline · date · duration), description (`.prose`), **chapters** list (mono timestamps; clicking seeks and plays), links/resources, transcript in a `<details>` if present, "Subscribe on YouTube" and "Subscribe by email" buttons, related videos.
+- Title, meta row (author byline · date · duration), description (`.prose`), **chapters** list (mono timestamps; clicking seeks and plays), links/resources, transcript in a `<details>` if present, a "Subscribe on YouTube" button, related videos.
 
 Structured data: `VideoObject` (name, description, thumbnailUrl, uploadDate, duration as ISO 8601 `PT12M48S`, embedUrl). Done when: Lighthouse shows no third-party requests on first load; chapters work with the keyboard; the poster has no layout shift.
 
@@ -176,12 +173,6 @@ The author's own text only, written in /admin (**Pages > About page**) and store
 
 Layout: the page head, then one row per run of blocks (`Sections.astro`): a reading column (`.prose`, 68ch) for text-like blocks, a side column for a portrait, and a wider or edge-to-edge row for a wide or full image. At 375px and 1280px it looks exactly as it did before the page became editable (checked by comparing element positions and full-page screenshots). Done when: the text matches `tests/fixtures/about-text.txt`, axe passes, there is no horizontal scroll from 320 to 1480px and no layout shift.
 
-## Subscribe `/subscribe/`
-
-The form alone, plus what you'll get and how often, a link to RSS, and the privacy note. Success and error states are inline, polite, and in plain words (see `VOICE_AND_COPY.md`).
-
-Words: `src/content/pages/subscribe.md` (**Pages > Subscribe page**). A Lead paragraph at the top sits under the heading; the blocks up to the **Newsletter sign-up** block sit in the box beside the form (the block marks where the box ends; its own heading and text are not used here); the blocks after it sit under the box, Text set as small print (`.t-meta`). The eyebrow "Newsletter" and the form (`NewsletterForm`, with its label, button and hint) are code.
-
 ## 404
 
 "That page has drifted out of orbit." The orbit (dot animating), a search field, links Home and Latest. Returns HTTP 404.
@@ -190,13 +181,13 @@ Words: `src/content/pages/404.md` (**Pages > Page not found (404)**): the headin
 
 ## Privacy `/privacy/`
 
-Plain-language: what the site collects (nothing, or what the newsletter/analytics provider collects), where the form goes, how to unsubscribe, contact.
+Plain-language: what the site collects (nothing, or what an analytics provider collects), contact.
 
-Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The contact address is `{author.email}` and the RSS link `{links.rss}`, filled from `src/data/site.json` at build time, so changing the email in the settings changes this page. The two newsletter variants are two Text blocks starting with `{if newsletter connected}` and `{if newsletter not connected}`: the one that matches `newsletter.formAction` is shown, as before.
+Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The contact address is `{author.email}` and the RSS link `{links.rss}`, filled from `src/data/site.json` at build time, so changing the email in the settings changes this page. The file still carries two legacy newsletter paragraphs (`{if newsletter connected}` / `{if newsletter not connected}`); there is no newsletter, so only the "not connected" one is shown, and the author may rewrite the page.
 
-## Pages with a fixed frame (subscribe, privacy, 404, search)
+## Pages with a fixed frame (privacy, 404, search)
 
-These four keep their markup in `src/pages/*.astro` and take only their words from `src/content/pages/<page>.md` (the `pages` collection, the same schema and block library as About: `SECTIONS.md`). `src/lib/page-copy.ts` fills the settings tokens (`{site.name}`, `{author.email}`, `{links.rss}`, `{newsletter.provider}`; an unknown one stops the build), applies the newsletter condition lines, and says which blocks go where (`subscribeSlots`, `privacySlots`, `lostSlots`). `src/components/PageBlocks.astro` draws those blocks in place with the library's own block components, adding no rows or wrappers, so each page's markup and spacing are what they were (`Sections.astro` would add its row padding). A Lead paragraph in a page head is drawn as `p.t-lead`.
+These three keep their markup in `src/pages/*.astro` and take only their words from `src/content/pages/<page>.md` (the `pages` collection, the same schema and block library as About: `SECTIONS.md`). `src/lib/page-copy.ts` fills the settings tokens (`{site.name}`, `{author.email}`, `{links.rss}`; an unknown one stops the build) and says which blocks go where (`privacySlots`, `lostSlots`). `src/components/PageBlocks.astro` draws those blocks in place with the library's own block components, adding no rows or wrappers, so each page's markup and spacing are what they were (`Sections.astro` would add its row padding). A Lead paragraph in a page head is drawn as `p.t-lead`.
 
 When they became editable, their text was captured from `main` into `tests/fixtures/pages/<page>.txt` (title, description, robots, headings, paragraphs, links with addresses, form text) and `tests/pages.spec.js` compares the built pages with it line by line; full-page screenshots at 375 and 1280px were byte-identical before and after. Change a fixture in the same commit as a deliberate change to the words.
 

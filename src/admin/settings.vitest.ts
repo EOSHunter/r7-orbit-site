@@ -62,7 +62,7 @@ describe('the Site settings collection', () => {
     for (const secret of [CMS_REPO, CMS_AUTH_URL, 'token', 'secret', 'CF_DEPLOY_HOOK'])
       expect(text).not.toContain(secret);
     expect(paths(fields)).not.toContain('url');
-    expect(paths(fields)).toContain('newsletter.formAction');
+    expect(paths(fields).filter((p) => p.startsWith('newsletter'))).toEqual([]);
   });
 
   it('marks optional exactly what the schema lets be empty', () => {
@@ -83,7 +83,6 @@ describe('the Site settings collection', () => {
         'footer.links.href',
         'footer.links.social',
         'footer.note',
-        'newsletter.formAction',
       ].sort(),
     );
   });

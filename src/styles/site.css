@@ -3,7 +3,7 @@
 
   Load order: ../design-system/tokens.css, ../design-system/components.css, ./site.css.
   Only things that components.css does not already provide live here: page layout, the mobile menu, the table of contents,
-  the byline, the share row, pagination, the toolbar, the subscribe band, galleries, fact panels, timelines, breadcrumbs,
+  the byline, the share row, pagination, the toolbar, galleries, fact panels, timelines, breadcrumbs,
   the skip link and the 404 page. Everything resolves to a token; the only bare numbers are icon sizes and a few
   rem widths for columns. Mobile first. Breakpoints are the system's: 640 / 900 / 1200 / 1480.
 */
@@ -290,6 +290,7 @@ a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
   .split > aside.sticky { position: sticky; top: calc(var(--header-h) + var(--s-5)); align-self: start; }
 }
 .split .section-title + * { margin-top: 0; }
+.split:not(:has(> aside)) { grid-template-columns: minmax(0, 1fr); }
 .block + .block { margin-top: var(--s-8); }
 .block > .section-title { margin-bottom: var(--s-4); }
 
@@ -398,19 +399,6 @@ button.play { width: 100%; padding: 0; background: none; border: 0; color: inher
 .link-list .ico { color: var(--text-3); }
 .link-list .where { margin-left: auto; font: var(--fs-xs) var(--font-mono); color: var(--text-3); }
 
-/* ---------------------------------------------------------------------------------------------- Subscribe band */
-.subscribe { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); padding: var(--s-6) var(--s-5); background: linear-gradient(135deg, var(--brass-wash-1), transparent 60%), var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-xl); }
-.subscribe h2 { font-size: var(--fs-2xl); }
-.subscribe p { margin: var(--s-3) 0 0; color: var(--text-2); max-width: 44ch; }
-.subscribe-row { display: flex; flex-wrap: wrap; gap: var(--s-3); }
-.subscribe-row .input { flex: 1 1 14rem; width: auto; min-width: 0; }
-.subscribe-row .btn { height: auto; min-height: 40px; }
-.field .hint.ok { color: var(--st-done); }
-@media (min-width: 900px) {
-  .subscribe { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); align-items: center; padding: var(--s-7); gap: var(--s-7); }
-}
-.band { padding-block: var(--s-8); }
-
 /* --------------------------------------------------------------------------------------------------------- 404 */
 .lost { display: grid; justify-items: center; gap: var(--s-4); padding-block: var(--s-7); text-align: center; }
 .lost .orbit { --orbit-size: min(100%, 14rem); }
@@ -517,7 +505,7 @@ body:has(.lightbox[open]) { overflow: hidden; }
 
 /* Print: the article alone, on paper. System colour keywords so the dark theme never prints ivory on white. */
 @media print {
-  .site-header, .site-footer, .skip-link, .breadcrumb, .toc, .toc-inline, .share, .series-steps, .band, .post-nav-wrap,
+  .site-header, .site-footer, .skip-link, .breadcrumb, .toc, .toc-inline, .share, .series-steps, .post-nav-wrap,
   .related, .reading-progress, .byline .tags, .codeblock-bar button, .heading-anchor, .media-ph { display: none !important; }
   *, *::before, *::after { color: CanvasText !important; background: transparent !important; box-shadow: none !important; text-shadow: none !important; }
   html { color-scheme: light !important; }

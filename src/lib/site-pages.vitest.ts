@@ -112,7 +112,7 @@ describe('pageProblems', () => {
 
 describe('the hero buttons', () => {
   it('go to another site, a page of this one, or a part of the home page; nothing else', () => {
-    for (const ok of ['#latest', '#subscribe', '/latest/', 'https://example.com/']) expect(BUTTON_PATTERN.test(ok), ok).toBe(true);
+    for (const ok of ['#latest', '#about', '/latest/', 'https://example.com/']) expect(BUTTON_PATTERN.test(ok), ok).toBe(true);
     for (const bad of ['javascript:alert(1)', '//evil.test/', 'http://example.com/', '#', 'latest', '# x']) expect(BUTTON_PATTERN.test(bad), bad).toBe(false);
   });
 

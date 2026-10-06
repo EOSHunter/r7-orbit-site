@@ -44,7 +44,6 @@ const SHOWS = {
   pinned: '.sec-row-band section.section:not(.ruled) .section-head',
   games: '.sec-row-band section.section.ruled .section-head',
   author: '.author-box',
-  newsletter: '.sec-row-band .band, .sec-newsletter',
 };
 
 async function openAbout(page) {

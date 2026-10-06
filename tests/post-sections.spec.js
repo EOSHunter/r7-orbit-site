@@ -22,7 +22,7 @@ const FIXTURES = {
   blog: {
     word: 'quasarbloom',
     jsonLd: 'BlogPosting',
-    chrome: ['nav.breadcrumb', 'header.post-head .byline', '.share', 'aside.author-note', '.post-nav-wrap', 'section.band'],
+    chrome: ['nav.breadcrumb', 'header.post-head .byline', '.share', 'aside.author-note', '.post-nav-wrap'],
   },
   news: {
     word: 'nebulawren',
@@ -178,7 +178,7 @@ test('the feed of the fixtures carries each post’s blocks, with every address 
   expect(blog).toContain('<h2>Why the body is a <em>list</em></h2>');
   expect(blog).toContain('<h3>A heading inside a text block</h3>');
   expect(blog).toContain(`<img src="${SITE_URL}/og-default.png" alt="The brand image of the site, used as a fixture picture" />`);
-  expect(blog).toContain(`<a href="${SITE_URL}/subscribe/">Subscribe</a>`);
+  expect(blog).toContain(`<a href="${SITE_URL}/about/">About</a>`);
   expect(blog).toContain('<pre><code>npm run build\nnpm test\n</code></pre>');
   expect(blog).not.toMatch(/class=|<button|<form|<script/);
   expect(content('news')).toMatch(/^<p>Source: <a href="https:\/\/example\.com\/fixture-source\/">Example source<\/a><\/p>/);

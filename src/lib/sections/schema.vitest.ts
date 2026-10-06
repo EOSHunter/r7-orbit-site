@@ -281,7 +281,7 @@ describe('columns, divider, spacer', () => {
 });
 
 describe('links and button', () => {
-  const good = ['https://example.com', 'https://example.com/a?b=1#c', '/subscribe/', '/'];
+  const good = ['https://example.com', 'https://example.com/a?b=1#c', '/about/', '/'];
   const wrong = ['http://example.com', '//example.com', 'example.com', 'javascript:alert(1)', 'mailto:a@b.co', 'data:text/html,x', ''];
   it('a button address is https or a page on this site, with a readable message', () => {
     for (const url of good) ok({ type: 'button', label: 'Go', url });
@@ -300,7 +300,7 @@ describe('links and button', () => {
   });
 });
 
-describe('toc, stats, latest, author, newsletter', () => {
+describe('toc, stats, latest, author', () => {
   it('toc: an optional title and a depth of 2 or 3 (default 3)', () => {
     expect(sectionSchema.parse({ type: 'toc' })).toMatchObject({ maxDepth: 3 });
     ok({ type: 'toc', title: 'Contents', maxDepth: 2 });
@@ -327,12 +327,6 @@ describe('toc, stats, latest, author, newsletter', () => {
     ok({ type: 'author', author: 'hunter-newton' });
     bad({ type: 'author' });
     bad({ type: 'author', author: 'Hunter Newton' });
-  });
-  it('newsletter: a band or a form, with an optional heading and text', () => {
-    expect(sectionSchema.parse({ type: 'newsletter' })).toMatchObject({ style: 'band' });
-    ok({ type: 'newsletter', style: 'form', heading: 'H', text: 'T' });
-    bad({ type: 'newsletter', style: 'popup' });
-    bad({ type: 'newsletter', text: 'x'.repeat(221) });
   });
 });
 

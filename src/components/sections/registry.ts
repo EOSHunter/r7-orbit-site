@@ -27,7 +27,6 @@ import FeedBlock from './FeedBlock.astro';
 import PinnedBlock from './PinnedBlock.astro';
 import GamesBlock from './GamesBlock.astro';
 import AuthorBlock from './AuthorBlock.astro';
-import NewsletterBlock from './NewsletterBlock.astro';
 
 export const renderers: Record<SectionType, AstroComponentFactory> = {
   heading: HeadingBlock,
@@ -55,5 +54,4 @@ export const renderers: Record<SectionType, AstroComponentFactory> = {
   pinned: PinnedBlock,
   games: GamesBlock,
   author: AuthorBlock,
-  newsletter: NewsletterBlock,
 };

@@ -1,12 +1,13 @@
-// The pages that keep a fixed frame around blocks from src/content/pages/: subscribe, privacy, 404 and search (docs/PAGES.md,
+// The pages that keep a fixed frame around blocks from src/content/pages/: privacy, 404 and search (docs/PAGES.md,
 // docs/CONTENT_MODEL.md "Pages"). Their words are blocks of the shared library, edited in /admin; their frame (the eyebrow, the
-// newsletter form, the search box, the orbit) stays code. This module is what those pages do with the blocks before drawing them:
+// search box, the orbit) stays code. This module is what those pages do with the blocks before drawing them:
 //
 // - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}` and
 //   `{newsletter.provider}` in any text are replaced with the values of src/data/site.json, so changing the email in the settings changes the privacy page. An unknown `{x.y}` stops the
 //   build, so a typo never reaches the page as braces.
-// - The newsletter switch. A block whose text starts with the line `{if newsletter connected}` is shown only when the newsletter
-//   is connected (`newsletter.formAction` is set); `{if newsletter not connected}` only when it is not. The line itself is removed.
+// - The newsletter switch, kept only so the Privacy page (whose words are the author's to change) still builds: there is no newsletter
+//   (docs/DECISIONS.md), so it is never connected. `{if newsletter connected}` hides a block, `{if newsletter not connected}` shows it, and
+//   `{newsletter.provider}` is empty. Remove this with the Privacy page's newsletter paragraphs.
 // - Slots. Which blocks sit where in the page's frame: the Lead paragraphs at the top go under the page heading, and so on per
 //   page (the functions below say how).
 //
@@ -30,7 +31,6 @@ interface SiteLike {
   description: string;
   author: { email: string };
   links: { rss: string };
-  newsletter: { provider: string; formAction: string };
 }
 
 /** The settings from src/data/site.json (`site` from src/data/site.ts, or the JSON itself in the admin). */
@@ -41,9 +41,8 @@ export function pageSettingsOf(site: SiteLike): PageSettings {
     siteDescription: site.description,
     authorEmail: site.author.email,
     rss: site.links.rss,
-    newsletterProvider: site.newsletter.provider,
-    // The same test as the form and the privacy page always made (src/lib/newsletter.ts): an address to send to means connected.
-    newsletterConnected: Boolean(site.newsletter.formAction),
+    newsletterProvider: '',
+    newsletterConnected: false,
   };
 }
 
@@ -142,17 +141,6 @@ export function splitLead(sections: readonly Section[]): { lead: Section[]; rest
   const first = sections.findIndex((s) => s.type !== 'lead');
   const at = first === -1 ? sections.length : first;
   return { lead: sections.slice(0, at), rest: sections.slice(at) };
-}
-
-/**
- * /subscribe/: the Lead under the heading; the blocks up to the Newsletter sign-up block sit in the box beside the form; the
- * blocks after it are the small print under the box. The form itself is always drawn (it is the page), so without a Newsletter
- * block every block goes beside it. The Newsletter block only marks the place: its own heading and text are not used here.
- */
-export function subscribeSlots(sections: readonly Section[]) {
-  const { lead, rest } = splitLead(sections);
-  const at = rest.findIndex((s) => s.type === 'newsletter');
-  return at === -1 ? { lead, beside: rest, after: [] } : { lead, beside: rest.slice(0, at), after: rest.slice(at + 1) };
 }
 
 /** /privacy/: the Lead under the heading; the rest is the policy, one reading column; a Text block at the very end is the small print ("Last updated"). */

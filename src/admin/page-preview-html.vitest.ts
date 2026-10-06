@@ -15,7 +15,7 @@ describe('the home page preview', () => {
     lead: 'A <b>lead</b>.',
     buttons: [
       { label: 'Start with the latest', url: '#latest' },
-      { label: 'Subscribe', url: 'javascript:alert(1)' },
+      { label: 'Elsewhere', url: 'javascript:alert(1)' },
     ],
   };
 
@@ -25,7 +25,7 @@ describe('the home page preview', () => {
     expect(html).toContain('<p class="eyebrow brass">Field notes</p>');
     expect(html).toContain('<h1 class="t-display">Plain notes on building with <em>AI agents</em>.</h1>');
     expect(html).toContain('<a class="btn solid lg" href="#latest">Start with the latest</a>');
-    expect(html).toContain('<a class="btn lg" href="#">Subscribe</a>');
+    expect(html).toContain('<a class="btn lg" href="#">Elsewhere</a>');
   });
 
   it('escapes what the author typed, and survives an entry just opened', () => {

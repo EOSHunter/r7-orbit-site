@@ -6,7 +6,6 @@ import Icon from '../../components/Icon.astro';
 import MediaPlaceholder from '../../components/MediaPlaceholder.astro';
 import PostCard from '../../components/PostCard.astro';
 import StatusMark from '../../components/StatusMark.astro';
-import SubscribeBand from '../../components/SubscribeBand.astro';
 import YouTubeFacade from '../../components/YouTubeFacade.astro';
 import { ICON_NAMES } from '../../components/icons';
 import { KIND_LABEL, type CardData, type ProjectStatus } from '../../lib/cards';
@@ -220,16 +219,6 @@ const pinned: CardData = {
       <p class="t-meta">Thumbnails open a dialog: Esc closes, arrow keys step, focus returns to the thumbnail.</p>
       <Gallery shots={shots} />
     </div>
-  </section>
-
-  <section class="section ruled" aria-labelledby="sg-sub-h">
-    <div class="container wide">
-      <h2 class="section-title" id="sg-sub-h">
-        Subscribe band
-      </h2>
-      <p class="t-meta">The form sends nothing yet: it shows a sample message.</p>
-    </div>
-    <SubscribeBand id="sg-subscribe" />
   </section>
 </BaseLayout>
 

@@ -11,7 +11,7 @@ import { sectionsSchema } from './sections';
 
 /** Where a hero button may point: another site (https), a page of this site (/…), or a part of the home page (#latest). */
 export const BUTTON_PATTERN = /^(https:\/\/\S+|\/(?!\/)\S*|#[A-Za-z][\w-]*)$/;
-export const BUTTON_MESSAGE = 'use a full https:// address, a page on this site that starts with a single / (e.g. /subscribe/), or # and the name of a part of the page (e.g. #latest)';
+export const BUTTON_MESSAGE = 'use a full https:// address, a page on this site that starts with a single / (e.g. /about/), or # and the name of a part of the page (e.g. #latest)';
 
 /** The page fields beyond the ones every page has (title, seoTitle, description, sections). All optional here: which page needs
  *  which is `SITE_PAGES` below, checked by `pageProblems` when the page is built. An optional box left empty arrives as ''. */

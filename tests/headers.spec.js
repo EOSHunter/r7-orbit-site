@@ -278,8 +278,8 @@ test('the editor refuses a button address that is not https or a page on the sit
 
   await page.getByRole('button', { name: /add section/i }).click();
   await page.getByRole('menuitem', { name: 'Button', exact: true }).click();
-  await page.getByLabel('Button text').fill('Subscribe');
-  await page.getByLabel('Address').fill('http://example.com/subscribe');
+  await page.getByLabel('Button text').fill('Read more');
+  await page.getByLabel('Address').fill('http://example.com/more');
   await page.getByRole('button', { name: /^save$/i }).click();
   await expect(page.getByText(/use a full https:\/\/ address, or a page on this site/i)).toBeVisible();
   expect(
@@ -291,8 +291,8 @@ test('the editor refuses a button address that is not https or a page on the sit
   const address = page.getByLabel('Address');
   await address.click();
   await address.press('Control+A');
-  await address.pressSequentially('/subscribe/');
-  await expect(address).toHaveValue('/subscribe/');
+  await address.pressSequentially('/about/');
+  await expect(address).toHaveValue('/about/');
   await page.getByRole('button', { name: /^save$/i }).click();
   await expect
     .poll(() => seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')), { timeout: 15_000 })

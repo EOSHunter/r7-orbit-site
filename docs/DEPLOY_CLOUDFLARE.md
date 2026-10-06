@@ -222,7 +222,7 @@ Notes: GitHub runs scheduled workflows on a best-effort basis, often a few minut
 | Editor's repository, branch, sign-in Worker | `src/admin/config.ts` → `CMS_REPO`, `CMS_BRANCH`, `CMS_AUTH_URL` | `EOSHunter/r7-orbit-site`, `main`, `https://cms-auth.r7orbit.io` |
 | Publishing mode | `src/admin/config.ts` → `publish_mode` | `editorial_workflow` (a pull request per post) |
 | Response headers | `public/_headers` | Security headers everywhere; a Content-Security-Policy and `noindex` on `/admin/*`; long cache for `/_astro/*` |
-| Redirects | `public/_redirects` | Feed guesses and `/admin` |
+| Redirects | `public/_redirects` | Feed guesses, `/admin` and the removed `/subscribe/` |
 | Sign-in Worker | `workers/cms-auth/` | `wrangler.toml` holds the domain and `ALLOWED_DOMAINS` |
 
 A build can override the first three with `PUBLIC_CMS_REPO`, `PUBLIC_CMS_BRANCH` and `PUBLIC_CMS_AUTH_URL`; they are visible in the browser, so never put a secret in them.

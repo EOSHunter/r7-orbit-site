@@ -35,7 +35,7 @@ export const PIXEL = Buffer.from(
 
 const GITHUB_STATUS = 'https://www.githubstatus.com';
 
-// The pages as they are in the repository (About, the home page, the listing pages, subscribe, privacy, 404, search): the real
+// The pages as they are in the repository (About, the home page, the listing pages, privacy, 404, search): the real
 // files, so the tests follow them. Decap reads each from the blob API (base64), by blob sha (About keeps its own).
 const PAGES_DIR = new URL('../src/content/pages/', import.meta.url);
 export const PAGE_FILES = Object.fromEntries(
