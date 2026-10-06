@@ -60,6 +60,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 
 ## E. Things already decided (don't reopen without reason)
 
+- No newsletter for now (2026-10-06): signups removed; RSS stays the way to follow. Removed in commit 0268673 on branch `orbit/remove-newsletter-signups-efd875`: to add a newsletter back, start from `git show 0268673` (the band, form, `newsletter` block, /subscribe/ page and `newsletter` setting). `/subscribe/` now redirects to `/` in `public/_redirects`. `src/lib/page-copy.ts` still reads `{newsletter.provider}` and the `{if newsletter …}` lines only so the Privacy page, whose wording is the author's, still builds.
 - Visual identity: the R7 Orbit design system as shipped in `design-system/`.
 - One accent colour (brass). Kinds of post are told apart by icon and label.
 - Static site; content as files in the repo; no database.
