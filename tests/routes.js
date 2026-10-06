@@ -46,14 +46,24 @@ export const heroPaths = articlePaths.filter((path) =>
   readFileSync(join(dist, path, 'index.html'), 'utf8').includes('class="article-hero"'),
 );
 
+/**
+ * A listing (an archive, /latest/, /games/, /tags/) is noindex while it has nothing to list, and indexable once it does, so
+ * whether it is noindex is read from the build, not written here: `{ path, noindex: true }` for an empty one.
+ */
+const listing = (/** @type {string} */ path) => {
+  const file = join(dist, path, 'index.html');
+  const noindex = existsSync(file) && /<meta name="robots" content="[^"]*noindex/.test(readFileSync(file, 'utf8'));
+  return noindex ? { path, noindex } : { path };
+};
+
 /** @type {Route[]} */
 const routes = [
   { path: '/' },
-  { path: '/latest/' },
-  ...KINDS.flatMap((kind) => [{ path: `/${kind}/` }, ...postPaths(kind).map((path) => ({ path }))]),
+  listing('/latest/'),
+  ...KINDS.flatMap((kind) => [listing(`/${kind}/`), ...postPaths(kind).map((path) => ({ path }))]),
   ...secondPages.map((dir) => ({ path: `/${dir}/page/2/` })),
-  { path: '/games/' }, // noindex while no game is published (empty state); the layout variants are tested on /styleguide/games/
-  { path: '/tags/' },
+  listing('/games/'), // noindex while no game is published (empty state); the layout variants are tested on /styleguide/games/
+  listing('/tags/'),
   ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
   { path: '/authors/hunter-newton/' },
   { path: '/authors/r7/' },

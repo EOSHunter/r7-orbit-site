@@ -7,10 +7,21 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from '@playwright/test';
-import routes from './routes.js';
+import allRoutes from './routes.js';
 
 // LIGHTHOUSE_PORT=4397 (any free port) when something else, such as another checkout's run, already listens on 4398.
 const PORT = Number(process.env.LIGHTHOUSE_PORT ?? 4398);
+// LIGHTHOUSE_ROUTES="/blog/test/,/about/" re-runs only those routes (same assertions); unset, every route runs.
+const only = (process.env.LIGHTHOUSE_ROUTES ?? '')
+  .split(',')
+  .map((p) => p.trim())
+  .filter(Boolean);
+const routes = only.length ? allRoutes.filter((r) => only.includes(r.path)) : allRoutes;
+if (only.length && routes.length !== only.length) {
+  const unknown = only.filter((p) => !allRoutes.some((r) => r.path === p));
+  console.error(`LIGHTHOUSE_ROUTES: not in tests/routes.js: ${unknown.join(', ')}`);
+  process.exit(1);
+}
 const base = `http://127.0.0.1:${PORT}`;
 const minScore = ['error', { minScore: 0.95 }];
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
