@@ -10,7 +10,6 @@
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="R7 Orbit · Field notes on building with AI">
@@ -25,7 +24,7 @@ document.documentElement.classList.add('js');
 <link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/","description":"News, builds and the things in between: writing, videos, projects and code about building with AI.","publisher":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/about/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://www.youtube.com/@R7Creatives"]}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/","description":"News, builds and the things in between: writing, videos, projects and code about building with AI.","publisher":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/about/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://github.com/EOSHunter","https://www.youtube.com/@R7Creatives"]}}</script>
 </head>
 == / header
 <header class="site-header">
@@ -82,11 +81,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -116,7 +115,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Latest">
@@ -188,11 +186,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -223,7 +221,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="News">
@@ -295,11 +292,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -329,7 +326,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Blog">
@@ -401,11 +397,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -435,7 +431,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Vlogs">
@@ -507,11 +502,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -541,7 +536,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Projects">
@@ -613,11 +607,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -648,7 +642,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Repos">
@@ -720,11 +713,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -754,7 +747,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Games">
@@ -826,11 +818,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -860,7 +852,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Tags">
@@ -932,11 +923,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -966,7 +957,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="About">
@@ -981,7 +971,7 @@ document.documentElement.classList.add('js');
 <link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"ProfilePage","@id":"https://r7orbit.io/about/#page","url":"https://r7orbit.io/about/","name":"About · R7 Orbit","mainEntity":{"@id":"https://r7orbit.io/about/#person"}},{"@type":"Person","@id":"https://r7orbit.io/about/#person","name":"Hunter Newton","description":"I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work.","url":"https://r7orbit.io/about/","sameAs":["https://www.youtube.com/@R7Creatives"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"About","item":"https://r7orbit.io/about/"}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"ProfilePage","@id":"https://r7orbit.io/about/#page","url":"https://r7orbit.io/about/","name":"About · R7 Orbit","mainEntity":{"@id":"https://r7orbit.io/about/#person"}},{"@type":"Person","@id":"https://r7orbit.io/about/#person","name":"Hunter Newton","description":"I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work.","url":"https://r7orbit.io/about/","sameAs":["https://www.youtube.com/@R7Creatives","https://github.com/EOSHunter"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"About","item":"https://r7orbit.io/about/"}]}]}</script>
 </head>
 == /about/ header
 <header class="site-header">
@@ -1038,11 +1028,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1072,7 +1062,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Privacy">
@@ -1144,11 +1133,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1179,7 +1168,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Search">
@@ -1250,11 +1238,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1284,7 +1272,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Hunter Newton">
@@ -1299,7 +1286,7 @@ document.documentElement.classList.add('js');
 <link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"ProfilePage","url":"https://r7orbit.io/authors/hunter-newton/","name":"Hunter Newton","mainEntity":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/authors/hunter-newton/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://www.youtube.com/@R7Creatives"],"description":"I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Hunter Newton","item":"https://r7orbit.io/authors/hunter-newton/"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"ProfilePage","url":"https://r7orbit.io/authors/hunter-newton/","name":"Hunter Newton","mainEntity":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/authors/hunter-newton/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://github.com/EOSHunter","https://www.youtube.com/@R7Creatives"],"description":"I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Hunter Newton","item":"https://r7orbit.io/authors/hunter-newton/"}]}]</script>
 </head>
 == /authors/hunter-newton/ header
 <header class="site-header">
@@ -1356,11 +1343,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1391,7 +1378,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Page not found">
@@ -1462,11 +1448,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1496,7 +1482,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="How I built a browser game with R7 Orbit">
@@ -1569,11 +1554,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1603,7 +1588,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="video.other">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Building a browser game with AI agents">
@@ -1681,11 +1665,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
@@ -1715,7 +1699,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Vesper Drift, a browser space game">
@@ -1735,7 +1718,7 @@ document.documentElement.classList.add('js');
 <link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":["VideoGame","SoftwareApplication"],"name":"Vesper Drift","description":"A browser game where you start as a drifting pebble and grow through 12 forms, from Meteorite to Black Hole, absorbing what is smaller.","mainEntityOfPage":"https://r7orbit.io/projects/vesper-drift/","url":"https://vesper.r7orbit.io/","applicationCategory":"Game","operatingSystem":"Web browser","datePublished":"2026-10-05","keywords":"JavaScript, Three.js, WebGL2, vesper-drift, r7-orbit, ai-agents, games","author":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/authors/hunter-newton/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://www.youtube.com/@R7Creatives"]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://r7orbit.io/projects/"},{"@type":"ListItem","position":3,"name":"Vesper Drift","item":"https://r7orbit.io/projects/vesper-drift/"}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":["VideoGame","SoftwareApplication"],"name":"Vesper Drift","description":"A browser game where you start as a drifting pebble and grow through 12 forms, from Meteorite to Black Hole, absorbing what is smaller.","mainEntityOfPage":"https://r7orbit.io/projects/vesper-drift/","url":"https://vesper.r7orbit.io/","applicationCategory":"Game","operatingSystem":"Web browser","datePublished":"2026-10-05","keywords":"JavaScript, Three.js, WebGL2, vesper-drift, r7-orbit, ai-agents, games","author":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/authors/hunter-newton/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://github.com/EOSHunter","https://www.youtube.com/@R7Creatives"]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://r7orbit.io/projects/"},{"@type":"ListItem","position":3,"name":"Vesper Drift","item":"https://r7orbit.io/projects/vesper-drift/"}]}]}</script>
 </head>
 == /projects/vesper-drift/ header
 <header class="site-header">
@@ -1792,11 +1775,11 @@ document.documentElement.classList.add('js');
 </svg>Games</a>
 </li>
 <li>
-<a href="/rss.xml">
+<a href="https://github.com/EOSHunter" rel="noopener">
 <svg class="ico" aria-hidden="true">
-<use href="#i-rss">
+<use href="#i-github">
 </use>
-</svg>RSS</a>
+</svg>GitHub</a>
 </li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">

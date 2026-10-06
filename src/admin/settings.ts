@@ -2,15 +2,14 @@
 // fields mirror `siteSchema` in src/lib/site-settings.ts, with the same names and rules; settings.vitest.ts reads that schema to keep
 // the two in step, so change them together. Kept in its own file, away from config.ts, which holds the post collections.
 //
-// Three values in site.json have no field here on purpose, and the editor leaves them as they are when it saves:
-// - `url`: the address every canonical link, feed and sitemap is built on. Changing it is a domain move (docs/DEPLOY_CLOUDFLARE.md).
-// - `links.rss`: the feed the site builds, /rss.xml; the page head links it directly.
-// - where the editor itself commits and signs in (CMS_REPO, CMS_BRANCH, CMS_AUTH_URL in config.ts), and every secret, are not in
+// One value in site.json has no field here on purpose, and the editor leaves it as it is when it saves:
+// - `url`: the address every canonical link and the sitemap is built on. Changing it is a domain move (docs/DEPLOY_CLOUDFLARE.md).
+// Where the editor itself commits and signs in (CMS_REPO, CMS_BRANCH, CMS_AUTH_URL in config.ts), and every secret, are not in
 //   site.json at all.
 import type { CmsCollection, CmsField } from 'decap-cms-core';
 import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
-import { FOOTER_SOCIAL, HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS } from '../lib/site-settings';
+import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS } from '../lib/site-settings';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
 
@@ -22,15 +21,10 @@ const LINK: [string, string] = [
   'A page of this site starting with / (e.g. /blog/), or a full address starting with https://',
 ];
 const LABEL: [string, string] = ['^\\S.{0,29}$', 'Required, 30 characters at most'];
-const EMAIL: [string, string] = ['^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', 'An email address, e.g. me@example.org'];
 
-const SOCIAL_LABELS: Record<(typeof FOOTER_SOCIAL)[number], string> = {
+const SOCIAL_LABELS: Record<(typeof SOCIAL_KEYS)[number], string> = {
   github: 'GitHub',
   youtube: 'YouTube',
-  x: 'X',
-  linkedin: 'LinkedIn',
-  bluesky: 'Bluesky',
-  rss: 'RSS feed',
 };
 
 const iconField = (required: boolean, hint: string) =>
@@ -59,7 +53,7 @@ const settingsFields: CmsField[] = [
     label: 'Description',
     widget: 'text',
     pattern: ['^\\S[^\\n]{0,179}$', 'Required, one line, 180 characters at most'],
-    hint: 'One sentence about the site: on the home page, in the footer, in the feeds, and in search results for pages without their own.',
+    hint: 'One sentence about the site: on the home page, in the footer, and in search results for pages without their own.',
   }),
   imageField(
     'defaultOgImage',
@@ -82,13 +76,6 @@ const settingsFields: CmsField[] = [
       field({ name: 'name', label: 'Name', widget: 'string' }),
       field({ name: 'bio', label: 'Bio', widget: 'text', hint: 'A few sentences in your own words, first person.' }),
       imageField('photo', 'Photo', 'A square photo of you, at least 400 × 400 pixels.'),
-      field({
-        name: 'email',
-        label: 'Email',
-        widget: 'string',
-        pattern: EMAIL,
-        hint: 'Printed on the Privacy page for questions.',
-      }),
     ],
   }),
   field({
@@ -157,8 +144,8 @@ const settingsFields: CmsField[] = [
             label: 'Profile link',
             widget: 'select',
             required: false,
-            options: FOOTER_SOCIAL.map((value) => ({ label: SOCIAL_LABELS[value], value })),
-            hint: 'Use one of your profile links (or the RSS feed). Left out while that profile link is empty.',
+            options: SOCIAL_KEYS.map((value) => ({ label: SOCIAL_LABELS[value], value })),
+            hint: 'Use one of your profile links. Left out while that profile link is empty.',
           }),
         ],
       }),

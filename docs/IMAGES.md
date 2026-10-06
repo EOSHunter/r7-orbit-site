@@ -26,7 +26,7 @@ There are two homes, because the site reads pictures in two ways.
 | Home | Optimised? | Why |
 | --- | --- | --- |
 | `src/assets/blog/` | **Yes**: several widths, AVIF + WebP + JPG, width and height known up front | Astro can only optimise a file it imports. Blog `featuredImage` is an Astro `image()`; a blog body's *Image* and *Image gallery* blocks resolve `/src/assets/...` through `import.meta.glob` (`src/components/article/assets.ts`) |
-| `public/media/<kind>/` | **No** (served as a plain file at `/media/<kind>/x.jpg`), but the build shrinks it in `dist/` | `cover`, `poster` and `gallery[].src` are plain strings in the schema. Cards, the RSS feeds, JSON-LD and `og:image` read them as they are, so they cannot become Astro assets without changing all of those |
+| `public/media/<kind>/` | **No** (served as a plain file at `/media/<kind>/x.jpg`), but the build shrinks it in `dist/` | `cover`, `poster` and `gallery[].src` are plain strings in the schema. Cards, JSON-LD and `og:image` read them as they are, so they cannot become Astro assets without changing all of those |
 
 | What | Collection | Stored in | Written into the post as | Optimised |
 | --- | --- | --- | --- | --- |
@@ -138,7 +138,7 @@ Found by reading `src/admin/`, `src/content.config.ts`, the components and the c
 
 ## Known limits
 
-- **`cover`, `poster`, `gallery` and Markdown-body pictures are not responsive** (no srcset, no AVIF): they are shrunk to ≤ 2000px and recompressed, which fixes the weight but not the format. Making them Astro assets means changing every place that reads them as strings (cards, feeds, JSON-LD, the share image), which belongs to other work.
+- **`cover`, `poster`, `gallery` and Markdown-body pictures are not responsive** (no srcset, no AVIF): they are shrunk to ≤ 2000px and recompressed, which fixes the weight but not the format. Making them Astro assets means changing every place that reads them as strings (cards, JSON-LD, the share image), which belongs to other work.
 - **Markdown body images** still lack `width`/`height`/`loading="lazy"`. A rehype step could add them.
 - **The picker shows one folder at a time.** To reuse a picture in another kind of post, upload it again (the check warns, it does not fail).
 - **After reopening an unpublished draft**, the thumbnail of an image that is only in the pull request may not show in the form until the post is published (the preview does show it once Decap has loaded it). Nothing is lost.

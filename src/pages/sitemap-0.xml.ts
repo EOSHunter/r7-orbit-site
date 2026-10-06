@@ -1,8 +1,7 @@
 import { site } from '../data/site';
 import { getAuthors } from '../lib/authors-queries';
 import { getAllPosts } from '../lib/content-queries';
-import { xmlResponse } from '../lib/feed-queries';
-import { buildUrlset, collectSitemapEntries, pagePathFromFile, sourceIsNoindex } from '../lib/sitemap';
+import { buildUrlset, collectSitemapEntries, pagePathFromFile, sourceIsNoindex, xmlResponse } from '../lib/sitemap';
 
 // Static pages are read from src/pages: dynamic routes ([slug]) are covered by the posts, and any page whose source
 // sets `noindex` is left out, so a new unindexed page needs no change here.

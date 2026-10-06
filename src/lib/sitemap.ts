@@ -1,9 +1,25 @@
 // Sitemap, robots.txt and the list of indexable URLs, pure. The Astro-bound endpoints are in src/pages/.
-import { escapeXml } from './feed';
 import { absoluteUrl, isoDate } from './text';
 import { GAMES_PATH, isGame } from './games';
 import { authorPath, postsByAuthor } from './authors';
 import { postUrl, tagCounts, tagsWithPages, type CollectionName, type Post } from './content';
+
+// Characters XML 1.0 forbids would make the whole file unreadable.
+// eslint-disable-next-line no-control-regex
+const XML_FORBIDDEN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g;
+
+export function escapeXml(text: string): string {
+  return text
+    .replace(XML_FORBIDDEN, '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+export const xmlResponse = (body: string, type = 'application/xml') =>
+  new Response(body, { headers: { 'Content-Type': `${type}; charset=utf-8` } });
 
 export interface SitemapEntry {
   /** Path, e.g. `/blog/`. */

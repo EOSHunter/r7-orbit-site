@@ -23,11 +23,11 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `title` | string | yes | Plain text. ≤ 70 characters reads best; ≤ 60 fits a search result. One phrase may be wrapped in `*asterisks*` to be shown in italic brass (e.g. `Why every agent gets its own *room*`); the site strips them for `<title>` and feeds |
+| `title` | string | yes | Plain text. ≤ 70 characters reads best; ≤ 60 fits a search result. One phrase may be wrapped in `*asterisks*` to be shown in italic brass (e.g. `Why every agent gets its own *room*`); the site strips them for `<title>` |
 | `seoTitle` | string | no | Shorter title for the browser tab, search results and `og:title`, when the title is too long. At most 49 characters (60 minus ` · R7 Orbit`; the build fails with a readable message if it is longer). Without it the title is used, and the headline and JSON-LD always keep the real title |
 | `date` | date (`YYYY-MM-DD`) | yes | Publish date; future dates are hidden until then (see "Drafts and scheduled posts") |
 | `updated` | date | no | Set when the post is materially changed; shown as "Updated Oct 8" |
-| `summary` | string | yes | 1–2 sentences, ≤ 155 characters. Used on cards, in the meta description and in feeds |
+| `summary` | string | yes | 1–2 sentences, ≤ 155 characters. Used on cards, in the meta description |
 | `tags` | string[] | no | 1–4 lowercase tags, hyphenated (`ai-agents`, `evals`, `git`). Reuse existing tags before inventing |
 | `cover` | image path | no | 16:9, ≥ 1280×720. If absent, the plate placeholder is shown (never a stock photo) |
 | `coverAlt` | string | if `cover` | Describe what is in the image. Empty string only if purely decorative |
@@ -56,18 +56,17 @@ What a sections body changes, and what it does not:
 | Blog/news/vlog/project/repo page chrome | breadcrumb, byline, source box, player, play section, facts, gallery, changelog, author note, share row, series, related posts, previous/next | unchanged |
 | Reading time | words of the Markdown | words of the blocks (`sectionsToText`, `src/lib/sections-to-content.ts`): headings, text, quotes, captions, link and button labels; not code, alt text or pull quotes |
 | Blog contents list | `##`/`###` of the rendered body, shown at 3+ `h2` (or `toc`) | Heading blocks plus `##`/`###` inside Markdown boxes (`sectionsHeadings`), same rule |
-| Feed item (`content:encoded`) | blog: the rendered body; news/vlog: source or summary; project/repo: none | every kind: the blocks as Markdown (`sectionsToMarkdown`) rendered to sanitised HTML with absolute addresses; a news item still starts with its source and a vlog still ends with the video link |
 | Search (Pagefind) | indexes the built page | the same: the blocks are in `<main>` |
 | JSON-LD | from the front matter; `timeRequired` from the reading time | the same (there is no `articleBody`; `description` is always the required `summary`) |
 | Vlog transcript | the body's `## Transcript` part, with `transcript: true` | the `transcriptText` field (Markdown), shown folded the same way |
 | Repo `readme: local` | the body replaces the README | the sections replace the README |
 | Drafts, scheduling, related posts, series, sitemap | front matter only | unchanged |
 
-Fixtures: `tests/fixtures/posts/<kind>/` holds one post per kind written as sections. They are read through the real schema (the `fixture*` collections in `src/content.config.ts`) and drawn by the real page components at `/styleguide/posts/<kind>/` (noindex, unlinked; feed at `/styleguide/posts/rss.xml`). They are never in an archive, a site feed, the sitemap or the site's search.
+Fixtures: `tests/fixtures/posts/<kind>/` holds one post per kind written as sections. They are read through the real schema (the `fixture*` collections in `src/content.config.ts`) and drawn by the real page components at `/styleguide/posts/<kind>/` (noindex, unlinked). They are never in an archive, the sitemap or the site's search.
 
 ## Authors
 
-One JSON file per author in `src/content/authors/`, named by its slug (`hunter-newton.json`, `r7.json`). Editable in the admin (**Authors**). Every post names one through `author`; the byline, the author page `/authors/<slug>/`, the "By author" filter, the structured data and the feeds follow from it.
+One JSON file per author in `src/content/authors/`, named by its slug (`hunter-newton.json`, `r7.json`). Editable in the admin (**Authors**). Every post names one through `author`; the byline, the author page `/authors/<slug>/`, the "By author" filter and the structured data follow from it.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -83,7 +82,7 @@ Hunter's name, bio and photo exist once, in `site.json`: the author file holds o
 
 ## Drafts and scheduled posts
 
-A post is **hidden in production builds** if `draft: true` **or** its `date` is later than today (UTC calendar day, checked at build time). Today's date is published. The rule lives in one place, `src/lib/content.ts` (`isPublished` / `filterPublished`), applied by `getPosts` and `getAllPosts` in `src/lib/content-queries.ts`. Every page, archive, tag page, pagination, home/latest, related, prev/next and series list, RSS and per-kind feed, the sitemap and JSON-LD read through those, so a hidden post has no page, no feed entry and nothing for Pagefind to index (it indexes the built `dist/`). Use `getPosts`/`getAllPosts`, never `getCollection` directly.
+A post is **hidden in production builds** if `draft: true` **or** its `date` is later than today (UTC calendar day, checked at build time). Today's date is published. The rule lives in one place, `src/lib/content.ts` (`isPublished` / `filterPublished`), applied by `getPosts` and `getAllPosts` in `src/lib/content-queries.ts`. Every page, archive, tag page, pagination, home/latest, related, prev/next and series list, the sitemap and JSON-LD read through those, so a hidden post has no page and nothing for Pagefind to index (it indexes the built `dist/`). Use `getPosts`/`getAllPosts`, never `getCollection` directly.
 
 **A scheduled post does not publish itself.** It goes live on the first build/deploy on or after its date. For it to appear on time, rebuild daily (a host cron or a GitHub Actions `schedule`; see `BUILD_PLAN.md`).
 
@@ -242,7 +241,7 @@ The settings tokens of the next section work in these files too: `home.md` write
 | `404.md` | Leading `lead` under the heading; anything else after it, above the search box |
 | `search.md` | Every block is the note shown only without JavaScript (inside `<noscript>`, `text` paragraphs as `.search-note`) |
 
-**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
+**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
 
 **Legacy newsletter lines.** There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected". Any other `{if ...}` fails the build.
 
@@ -301,7 +300,7 @@ export const collections = {
 
 ## Site settings: `src/data/site.json`
 
-One file holds the site-wide settings, and it is edited in /admin under **Site settings** (`src/admin/settings.ts`, a Decap file collection pointing at this same file). Every reader goes through `src/data/site.ts`, which checks the file against `siteSchema` in `src/lib/site-settings.ts` when it is imported: a bad edit fails the build with the field named (`src/data/site.json (Site settings in /admin) has a problem: links.x: use a full address that starts with https://`). `astro.config.mjs`, `src/content.config.ts` and the admin's `seoTitleMax` still import the JSON directly, so it stays plain JSON.
+One file holds the site-wide settings, and it is edited in /admin under **Site settings** (`src/admin/settings.ts`, a Decap file collection pointing at this same file). Every reader goes through `src/data/site.ts`, which checks the file against `siteSchema` in `src/lib/site-settings.ts` when it is imported: a bad edit fails the build with the field named (`src/data/site.json (Site settings in /admin) has a problem: links.github: use a full address that starts with https://`). `astro.config.mjs`, `src/content.config.ts` and the admin's `seoTitleMax` still import the JSON directly, so it stays plain JSON.
 
 ```json
 {
@@ -311,15 +310,15 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
   "url": "https://r7orbit.io",
   "defaultOgImage": "/og-default.png",
   "defaultOgImageAlt": "R7 Orbit: the R7 mark inside a ring …",
-  "author": { "name": "…", "bio": "…", "photo": "/media/about/hunter-newton.jpg", "email": "hello@example.com" },
-  "links": { "github": "", "youtube": "https://www.youtube.com/@R7Creatives", "x": "", "linkedin": "", "bluesky": "", "rss": "/rss.xml" },
+  "author": { "name": "…", "bio": "…", "photo": "/media/about/hunter-newton.jpg" },
+  "links": { "github": "", "youtube": "https://www.youtube.com/@R7Creatives" },
   "nav": [
     { "label": "Latest", "href": "/#latest" },
     { "label": "Games", "href": "/games/", "footer": true, "icon": "play" }
   ],
   "footer": {
     "links": [
-      { "label": "RSS", "social": "rss", "icon": "rss" }
+      { "label": "GitHub", "social": "github", "icon": "github" }
     ],
     "note": "Made with R7 Orbit"
   }
@@ -330,13 +329,12 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
 |---|---|---|
 | `name` | yes | 1-30 characters. It is added to every browser title, so it also sets the longest `seoTitle` a post may have |
 | `tagline`, `description` | yes | required; description one line, 180 characters at most |
-| `url` | **no** | the canonical address of every page, feed and sitemap entry; changing it is a domain move (`docs/DEPLOY_CLOUDFLARE.md`) |
+| `url` | **no** | the canonical address of every page and sitemap entry; changing it is a domain move (`docs/DEPLOY_CLOUDFLARE.md`) |
 | `defaultOgImage`, `defaultOgImageAlt` | yes | the share image (and its alt text) for any page without its own; a path on this site that exists |
-| `author.name`, `bio`, `photo`, `email` | yes | the person's profile: posts, the author page and the About page's Person data read it. `photo` is a path that exists; `email` an address. The example.com placeholder prints a build warning |
-| `links.github`, `youtube`, `x`, `linkedin`, `bluesky` | yes | empty, or `https://…` only. Empty leaves the link out everywhere (footer, share row, JSON-LD `sameAs`) |
-| `links.rss` | **no** | the feed the site builds (`/rss.xml`); the page head links it directly |
+| `author.name`, `bio`, `photo` | yes | the person's profile: posts, the author page and the About page's Person data read it. `photo` is a path that exists |
+| `links.github`, `youtube` | yes | empty, or `https://…` only. Empty leaves the link out everywhere (footer, share row, JSON-LD `sameAs`) |
 | `nav[]`: `label`, `href`, `footer`, `icon` | yes | the header links in order. `href` is a page of this site (`/blog/`, `/#latest`) or `https://…`; a site path must exist under `src/pages` or `public` (the build names the item and the address if not); no two items with the same `href`. `footer: true` also lists it in the footer, first, with `icon` (required then) |
-| `footer.links[]`: `label`, `icon`, `href` or `social` | yes | after the nav items marked `footer`. Either an `href` (same rules as nav) or `social`, one of the profile links or `rss`, which is left out while that link is empty. Not both. No two footer links to the same address |
+| `footer.links[]`: `label`, `icon`, `href` or `social` | yes | after the nav items marked `footer`. Either an `href` (same rules as nav) or `social`, either `github` or `youtube`, which is left out while that link is empty. Not both. No two footer links to the same address |
 | `footer.note` | yes | the line after the year; empty shows nothing |
 
 **The nav is matched by address, never by label.** A page says which section it belongs to with `current="/blog/"` (the `href` of the nav item), and `Header.astro` marks the item whose `href` equals it (`isCurrent` in `src/lib/site-settings.ts`). The search page picks its archive chips by address too (`searchKinds`). So renaming "Blog" in /admin keeps the highlight and the chips; changing an item's `href` is what moves it. `/styleguide/nav/` (noindex, unlinked) draws the nav with every label renamed, and `tests/site-settings.spec.js` checks it.

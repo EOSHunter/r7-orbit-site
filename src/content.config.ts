@@ -227,7 +227,7 @@ const posts = {
 
 // The tests' fixtures: one post per kind written as sections, in tests/fixtures/posts/<kind>/, read through the same schema as the
 // real kind and drawn by the same page components at /styleguide/posts/<kind>/ (noindex, unlinked, like the rest of the styleguide).
-// Only getFixturePosts() reads them (src/lib/content-queries.ts): never an archive, a feed of the site, the sitemap or search.
+// Only getFixturePosts() reads them (src/lib/content-queries.ts): never an archive, the sitemap or search.
 // The real kind's collection (schema and all), with only the folder its files are read from changed.
 const fixture = <C extends (typeof posts)[keyof typeof posts]>(real: C, kind: keyof typeof posts): C => ({
   ...real,

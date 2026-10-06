@@ -45,7 +45,7 @@ const aboutFields: CmsField[] = [
 // hints that say where each block lands on that page. Settings tokens such as {author.email} are filled from the site settings.
 
 const TOKENS_HINT =
-  'Write {site.name}, {author.email} or {links.rss} to print that site setting: it changes when the setting does.';
+  'Write {site.name}, {site.tagline} or {site.description} to print that site setting: it changes when the setting does.';
 
 /** The page fields of a fixed-frame page: About's, with hints for this page. */
 const framedPageFields = ({ title, seoTitle, sections }: { title: string; seoTitle: string; sections: string }): CmsField[] => [

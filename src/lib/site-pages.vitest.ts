@@ -62,7 +62,7 @@ describe('the site pages', () => {
   });
 
   it('prints the site settings through tokens, never by typing their values (the settings stay the one place for them)', () => {
-    const typed = [site.tagline, site.description, site.author.email];
+    const typed = [site.tagline, site.description];
     for (const page of SITE_PAGES) {
       const text = readFileSync(`src/content/pages/${page.id}.md`, 'utf8');
       for (const value of typed) expect(text, `${page.id}.md types "${value}"`).not.toContain(value);

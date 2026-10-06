@@ -3,7 +3,7 @@
 // renamed in /admin to a page that does not exist fails the build with the field and the address, instead of a dead link.
 import { readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { siteLinkProblems, siteWarnings, type SiteFiles, type SiteSettings } from './site-settings';
+import { siteLinkProblems, type SiteFiles, type SiteSettings } from './site-settings';
 
 function filesUnder(dir: string): string[] {
   try {
@@ -25,7 +25,7 @@ export function siteFiles(root = process.cwd()): SiteFiles {
 
 let checked = false;
 
-/** Throws on a link to nowhere; prints the placeholders the author still has to replace. Does the work once per build. */
+/** Throws on a link to nowhere. Does the work once per build. */
 export function checkSiteLinks(site: SiteSettings): void {
   if (checked) return;
   const problems = siteLinkProblems(site, siteFiles());
@@ -35,5 +35,4 @@ export function checkSiteLinks(site: SiteSettings): void {
     );
   }
   checked = true;
-  for (const warning of siteWarnings(site)) console.warn(`[site settings] ${warning}`);
 }

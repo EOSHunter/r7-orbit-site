@@ -3,11 +3,21 @@
 #
 # Not here, because they need the real domain and are set in the host's dashboard: www <-> apex and HTTP -> HTTPS.
 
-# Common guesses for the feed and the sitemap.
-/feed       /rss.xml            301
-/feed.xml   /rss.xml            301
-/rss        /rss.xml            301
-/atom.xml   /rss.xml            301
+# The RSS feeds were removed (docs/DECISIONS.md). Cloudflare Pages cannot answer 410 from this file (it allows 200, 301, 302, 303,
+# 307 and 308), so every old feed address, and the usual guesses for one, goes to the home page. 302, not 301, so a browser or reader
+# does not remember the move if the feeds are ever restored.
+/rss.xml            /   302
+/news/rss.xml       /   302
+/blog/rss.xml       /   302
+/vlogs/rss.xml      /   302
+/projects/rss.xml   /   302
+/repos/rss.xml      /   302
+/feed               /   302
+/feed.xml           /   302
+/rss                /   302
+/atom.xml           /   302
+
+# Common guess for the sitemap.
 /sitemap.xml /sitemap-index.xml 301
 
 # Without the trailing slash the admin would 404.

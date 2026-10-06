@@ -47,7 +47,7 @@ You will need: the GitHub repository (`EOSHunter/r7-orbit-site`), a Cloudflare a
 
 If the build fails, open the build log: the usual cause is a missing `NODE_VERSION` (error mentions the Node version).
 
-What Pages does for you, and why nothing else is configured: static files are served as they are; `/about` is redirected to `/about/` (the site uses trailing slashes, matching `trailingSlash: 'always'` in `astro.config.mjs`); unknown paths get `dist/404.html` with a 404 status. Security and cache headers come from `public/_headers`, and a few redirects (`/feed` → `/rss.xml`, `/admin` → `/admin/`) from `public/_redirects`.
+What Pages does for you, and why nothing else is configured: static files are served as they are; `/about` is redirected to `/about/` (the site uses trailing slashes, matching `trailingSlash: 'always'` in `astro.config.mjs`); unknown paths get `dist/404.html` with a 404 status. Security and cache headers come from `public/_headers`, and a few redirects (the old feed addresses → `/`, `/admin` → `/admin/`) from `public/_redirects`.
 
 ## 2. Add the custom domain `r7orbit.io` and redirect `www`
 
@@ -72,7 +72,7 @@ What Pages does for you, and why nothing else is configured: static files are se
    curl -I https://r7orbit.io/admin/        # x-robots-tag: noindex, nofollow; content-security-policy: ...
    ```
 
-The site address is already `https://r7orbit.io` in `src/data/site.json` (`url`), which feeds the canonical and Open Graph tags, JSON-LD, the sitemap, `robots.txt` and the RSS feeds. Nothing to change.
+The site address is already `https://r7orbit.io` in `src/data/site.json` (`url`), which feeds the canonical and Open Graph tags, JSON-LD, the sitemap and `robots.txt`. Nothing to change.
 
 ## 3. Create the GitHub OAuth App
 
@@ -222,7 +222,7 @@ Notes: GitHub runs scheduled workflows on a best-effort basis, often a few minut
 | Editor's repository, branch, sign-in Worker | `src/admin/config.ts` → `CMS_REPO`, `CMS_BRANCH`, `CMS_AUTH_URL` | `EOSHunter/r7-orbit-site`, `main`, `https://cms-auth.r7orbit.io` |
 | Publishing mode | `src/admin/config.ts` → `publish_mode` | `editorial_workflow` (a pull request per post) |
 | Response headers | `public/_headers` | Security headers everywhere; a Content-Security-Policy and `noindex` on `/admin/*`; long cache for `/_astro/*` |
-| Redirects | `public/_redirects` | Feed guesses, `/admin` and the removed `/subscribe/` |
+| Redirects | `public/_redirects` | The removed feed addresses, `/admin` and the removed `/subscribe/` |
 | Sign-in Worker | `workers/cms-auth/` | `wrangler.toml` holds the domain and `ALLOWED_DOMAINS` |
 
 A build can override the first three with `PUBLIC_CMS_REPO`, `PUBLIC_CMS_BRANCH` and `PUBLIC_CMS_AUTH_URL`; they are visible in the browser, so never put a secret in them.

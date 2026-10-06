@@ -15,7 +15,7 @@ const base = Astro.site ?? new URL(site.url);
 const pageUrl = absoluteUrl(Astro.url.pathname, base.href);
 
 // Profiles the owner has filled in (structured data only; none is shown on the page). Empty URLs are left out.
-const profiles = [site.links.youtube, site.links.github, site.links.x, site.links.linkedin, site.links.bluesky].filter(Boolean);
+const profiles = [site.links.youtube, site.links.github].filter(Boolean);
 
 const jsonLd = {
   '@context': 'https://schema.org',

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/media.mjs check && astro build && node scripts/media.mjs dist && node scripts/search-index.mjs",
+    "build": "node scripts/media.mjs check && astro build && node scripts/media.mjs dist && node scripts/no-contact.mjs && node scripts/search-index.mjs",
     "media:check": "node scripts/media.mjs check",
     "preview": "astro preview",
     "check": "astro check",

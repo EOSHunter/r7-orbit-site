@@ -7,8 +7,8 @@ import { loadPage } from '../lib/page-copy-queries';
 import { headTitleFor } from '../lib/seo';
 import { absoluteUrl, titleParts } from '../lib/text';
 
-// The policy is src/content/pages/privacy.md (edited in /admin, "Pages"). The contact email and the RSS address are
-// tokens filled from src/data/site.json (src/lib/page-copy.ts), so the settings stay the single place for them.
+// The policy is src/content/pages/privacy.md (edited in /admin, "Pages"). The site name, tagline and description
+// can be printed through tokens filled from src/data/site.json (src/lib/page-copy.ts).
 const { title, seoTitle, description, sections, contexts } = await loadPage('privacy');
 const { lead, body, after } = privacySlots(sections);
 const base = Astro.site ?? new URL(site.url);

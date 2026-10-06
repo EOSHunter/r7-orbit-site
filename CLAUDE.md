@@ -17,6 +17,7 @@ astro.config.mjs              static output, trailing slashes; "site" comes from
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
 .github/workflows/scheduled-deploy.yml   daily Cloudflare Pages Deploy Hook (publishes future-dated posts); needs secret CF_DEPLOY_HOOK_URL
 scripts/media.mjs             picture guard (before Astro) and dist/media shrinker + 2 MB limit (after); rules in src/lib/media-rules.mjs; see docs/IMAGES.md
+scripts/no-contact.mjs        after the build: fails if a public page (not /admin/, not /styleguide/) has a mailto: link or an email address; rule in src/lib/no-contact.mjs
 workers/cms-auth/             Cloudflare Worker: GitHub OAuth for /admin (deployed with wrangler; outside the Astro build, lint, check and tests)
 src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
@@ -35,25 +36,25 @@ src/
                               post-body.ts (a post's body for the previews, written as Markdown or sections; the save check that refuses both), post-preview.ts (the preview of news, vlogs, projects and repos),
                               pages.ts (the "Pages" file collection: About, then site-page-files.ts = home, Latest, the five archives, Games, Tags, then privacy, 404 and search in their own block),
                               page-previews.ts + page-preview-html.ts (home and listing previews: hero or page head, blocks, a labelled stand-in where posts go), framed-preview.ts (privacy/404/search preview: About's, with settings tokens filled), sections-config.ts (the Decap block list, generated from the block definitions; `sectionsField()` attaches it to any collection), about-preview.ts + sections-html.ts (the live preview of a page of blocks). See README "Admin" and docs/SECTIONS.md
-  pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug], rss.xml), games/ (hub of playable projects), tags/, about,
-                              privacy, 404, rss.xml, robots.txt, sitemap-index.xml + sitemap-0.xml,
-                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, games/, listing/, nav/ and others for the tests; styleguide/posts/<kind>/ + rss.xml draw the tests' fixture posts)
+  pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug]), games/ (hub of playable projects), tags/, about,
+                              privacy, 404, robots.txt, sitemap-index.xml + sitemap-0.xml,
+                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, games/, listing/, nav/ and others for the tests; styleguide/posts/<kind>/ draws the tests' fixture posts)
   data/site.json              the site settings: name, tagline, description, default share image, author, profile links, nav (label + href), footer links + note;
-                              edited in /admin as "Site settings" (admin/settings.ts) except `url` and `links.rss`. site.ts parses it with siteSchema (lib/site-settings.ts) and every reader imports site.ts; nav.ts gives navItems + footerItems
+                              edited in /admin as "Site settings" (admin/settings.ts) except `url`. site.ts parses it with siteSchema (lib/site-settings.ts) and every reader imports site.ts; nav.ts gives navItems + footerItems
   content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state; a post's body is Markdown OR a `sections` list, never both), pages/ (about.md as blocks; home.md = hero fields + rows as blocks; latest, news, blog, vlogs, projects, repos, games, tags .md = each listing's words, empty state and blocks above/below its list; privacy.md, 404.md, search.md = the words of those pages, their frame stays in src/pages/; all edited in /admin); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               sections/ (THE block library, docs/SECTIONS.md: definitions.ts defines every block once - fields, schema, label, placement, example; fields.ts is the field vocabulary; schema.ts exports `sectionsSchema` for any collection; layout.ts is the row rule; describe.ts reads a schema back for the admin form and the build; prepare.ts renders each block's Markdown and measures its pictures; checks.ts holds the checks a schema cannot make; catalogue.ts writes the catalogue in docs/SECTIONS.md; unit-tested),
-                              sections-to-content.ts (THE projection of a sections body: plain text for reading time, headings for contents lists and anchors, Markdown for feeds; every consumer goes through it, unit-tested per block),
-                              section-markdown.ts + section-images.ts (build-time Markdown and picture sizes for those blocks; renderFeedMarkdown for feed items),
-                              page-copy.ts + page-copy-queries.ts (privacy/404/search: settings tokens such as {author.email}, which block goes where; unit-tested),
+                              sections-to-content.ts (THE projection of a sections body: plain text for reading time, headings for contents lists and anchors; every consumer goes through it, unit-tested per block),
+                              section-markdown.ts + section-images.ts (build-time Markdown and picture sizes for those blocks),
+                              page-copy.ts + page-copy-queries.ts (privacy/404/search: settings tokens such as {site.name}, which block goes where; unit-tested),
                               content.ts (pure helpers: drafts, future dates, sort, read time, tags, related, series, warnings, bodyConflict (sections XOR Markdown body); unit-tested),
                               content-queries.ts (getPosts/getAllPosts over astro:content; getFixturePosts for the tests' fixtures), markdown/ (remark/rehype plugins, Shiki transformer),
                               authors.ts + authors-queries.ts (authors: default, byline rules, JSON-LD; unit-tested),
                               site-settings.ts (site.json schema, footer links, isCurrent/searchKinds: nav matched by href; unit-tested) + site-routes.ts (build-only: every site path in the settings exists),
                               games.ts + game-cards.ts (the /games/ hub: which projects are games, order, Play link; unit-tested),
                               site-pages.ts (the home and listing pages' extra fields, which page needs which: pageProblems; unit-tested) + site-pages-queries.ts (loadSitePage),
-                              seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging), feed.ts + feed-queries.ts,
+                              seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging),
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts
   styles/design-system/       tokens.css, components.css, tokens.json, DESIGN_SYSTEM.md (moved from design-system/; the source of truth for the look)
   styles/sections.css         the few rules a page of blocks needs on top of site.css and article.css (portrait on the right, full-width image, long addresses)
@@ -62,12 +63,12 @@ src/
   scripts/                    site.js (menu, filters, copy; bundled by Astro), orbit.js (hero and 404 only),
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro)
 tests/                        fixtures/posts/<kind>/ (one post per kind written as sections: read by the fixture* collections in content.config.ts, never part of the site),
-                              post-sections.spec.js (those fixtures through the real post pages: blocks, chrome, contents list, reading time, JSON-LD, feed, axe and widths, Pagefind search),
+                              post-sections.spec.js (those fixtures through the real post pages: blocks, chrome, contents list, reading time, JSON-LD, axe and widths, Pagefind search),
                               sections.spec.js (every block drawn on /styleguide/sections/: axe, widths, behaviour), admin-sections.spec.js (adds each block type in the real editor, GitHub mocked),
                               page-text.spec.js + page-text.js (the words of home, archives, Latest, Games, Tags against tests/fixtures/pages/<id>.json; refresh with UPDATE_PAGE_TEXT=1),
                               site-pages.spec.js (hero anchors, row order, blocks around a list on /styleguide/listing/), admin-site-pages.spec.js (those pages in the real editor), routes.js (the fixed routes, plus the post and tag pages it finds in dist/: no slugs listed), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
-                              head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), feeds,
-                              admin (noindex, out of robots/sitemap/feeds), admin-images (uploading pictures through the real editor under its CSP, GitHub mocked via admin-mock.js), images (what readers get: optimised pictures, size limit), about (the rendered /about/ text against tests/fixtures/about-text.txt, JSON-LD, layout), pages (privacy, 404, search text against tests/fixtures/pages/*.txt via page-text.js, 404 status, layout), admin-pages (those three in the real editor), games (the hub on the fixture /styleguide/games/: 0, 1, 2, 5 games), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
+                              head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), no-contact (no mailto: link or email address in any public page of dist/),
+                              admin (noindex, out of robots/sitemap), admin-images (uploading pictures through the real editor under its CSP, GitHub mocked via admin-mock.js), images (what readers get: optimised pictures, size limit), about (the rendered /about/ text against tests/fixtures/about-text.txt, JSON-LD, layout), pages (privacy, 404, search text against tests/fixtures/pages/*.txt via page-text.js, 404 status, layout), admin-pages (those three in the real editor), games (the hub on the fixture /styleguide/games/: 0, 1, 2, 5 games), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
 public/                       served as-is: _headers + _redirects (Cloudflare Pages), fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
@@ -84,7 +85,7 @@ Markdown runs on the `unified` processor (`@astrojs/markdown-remark`, build-time
 
 ```
 npm run dev       # local dev server (http://localhost:4321)
-npm run build     # production build to dist/ (must pass before any merge); runs scripts/media.mjs before and after Astro (picture guard, then shrink dist/media and a 2 MB limit)
+npm run build     # production build to dist/ (must pass before any merge); runs scripts/media.mjs before and after Astro (picture guard, then shrink dist/media and a 2 MB limit), then scripts/no-contact.mjs (no mailto: link or email address in a public page)
 npm run media:check # the picture guard alone: formats (no HEIC), names, 10 MB; warns about identical files
 npm run preview   # serve dist/ to look at the built site (search only works here: Pagefind indexes dist/ during `npm run build`)
 npm run cms       # Decap local proxy for /admin (run next to `npm run dev`; see README "Admin")
@@ -94,7 +95,7 @@ npm run format    # prettier --write (kit files such as docs/, templates/, brand
 npm test          # runs test:unit first, then test:e2e (stops at the first failing stage)
 npm run test:unit # node:test *.test.ts + Vitest *.vitest.ts for content/Markdown/SEO helpers
 npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + JS/CSS budgets (375 and 1280px),
-                  # audit (320-1480px, head tags, JSON-LD, links), keyboard, feeds/robots/sitemap
+                  # audit (320-1480px, head tags, JSON-LD, links), keyboard, no-contact, robots/sitemap
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
                   # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=4401 if another checkout already uses it: Playwright reuses a server it finds there and would test that one's dist/); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
@@ -129,8 +130,8 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 - Follow `docs/CONTENT_MODEL.md`. Every post has `title`, `date`, `summary`; every image has alt text.
 - **Authors.** Every post has an `author` (a slug in `src/content/authors/`); absent means `hunter-newton`. AI-written pieces are credited to R7 (`author: r7`), never to Hunter. An agent's byline shows an "AI-written" label and its post ends with the agent's footer note; a person's post shows neither. Never write an agent's note, bio or label wording yourself: it is the author's text (`docs/VOICE_AND_COPY.md`, "Agent-authored footer note").
 - Voice: plain, specific, first person, calm. No hype words (list in `docs/VOICE_AND_COPY.md`). Never publish AI-written text as the author's without the author's review. Never invent quotes, sources, statistics or benchmarks. Mark sample/placeholder content as such.
-- Page files (`src/content/pages/`) print site settings through tokens (`{author.email}`, `{site.name}`, `{site.tagline}`, `{site.description}`, `{links.rss}`), never by typing the value: the settings stay the one place for them (`src/lib/page-copy.ts`, docs/CONTENT_MODEL.md "Pages with a fixed frame"). There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected".
-- Never invent the author's identity, bio, links, email, domain or social handles. Use the placeholders from `content-examples/site.json` and ask.
+- Page files (`src/content/pages/`) print site settings through tokens (`{site.name}`, `{site.tagline}`, `{site.description}`), never by typing the value: the settings stay the one place for them (`src/lib/page-copy.ts`, docs/CONTENT_MODEL.md "Pages with a fixed frame"). There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected".
+- Never invent the author's identity, bio, links, domain or social handles. Use the placeholders from `content-examples/site.json` and ask.
 - **Site settings and the nav.** Site-wide values come from `src/data/site.ts` (never hard-code the name, links or nav in a component). A page names its nav section by the item's address: `current="/blog/"`, never `current="Blog"`; labels are the author's to rename in /admin. A new setting goes in `siteSchema` (`src/lib/site-settings.ts`) and the form (`src/admin/settings.ts`) together; `url`, the CMS backend settings and anything secret stay out of the admin. `tests/fixtures/site-chrome.txt` is the head, header and footer of every page type: rewrite it (`UPDATE_SITE_CHROME=1`, see `tests/site-chrome.js`) only for a deliberate change.
 - No stock photography and no generated images unless the author approves each one. Use the placeholder pattern.
 
@@ -158,7 +159,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 
 ## Ask the author before
 
-Choosing a domain, name, tagline or bio · adding analytics, comments or any tracking · adding a paid service · publishing or deleting content · changing the colour palette, fonts or logo · adding a new runtime dependency · force-pushing or rewriting git history · anything that sends email or posts to a social network.
+Choosing a domain, name, tagline or bio · adding analytics, comments or any tracking · adding a paid service · publishing or deleting content · changing the colour palette, fonts or logo · adding a new runtime dependency · force-pushing or rewriting git history · anything that posts to a social network.
 
 ## Definition of done (any task)
 

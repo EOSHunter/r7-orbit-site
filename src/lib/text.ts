@@ -1,4 +1,4 @@
-/** Titles mark one italic-brass phrase with *asterisks*. Outside the page body (cards, <title>, og:title, feeds) the markers go. */
+/** Titles mark one italic-brass phrase with *asterisks*. Outside the page body (cards, <title>, og:title) the markers go. */
 export function plainTitle(title: string): string {
   return title.replace(/\*/g, '');
 }

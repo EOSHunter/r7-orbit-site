@@ -13,13 +13,11 @@ export const ICON_NAMES = [
   'menu',
   'close',
   'external',
-  'rss',
   'github',
   'clock',
   'calendar',
   'fork',
   'link',
-  'mail',
   'file',
   'agent',
 ] as const;

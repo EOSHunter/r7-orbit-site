@@ -10,7 +10,7 @@
 - `src/pages/authors/`, `src/admin/authors.ts`: author profiles and author attribution.
 - `src/components/article/`: reusable MDX article blocks; `docs/ARTICLE_COMPONENTS.md` documents their authoring syntax.
 - `src/styles/`, `src/styles/design-system/`: site styling and tokens.
-- `src/pages/rss.xml.ts`, `src/pages/sitemap-*.xml.ts`, `pagefind.yml`: feeds, sitemap and static search index.
+- `src/pages/sitemap-*.xml.ts`, `pagefind.yml`: sitemap and static search index.
 - `tests/`, `src/**/*.test.ts`: browser and unit checks. `package.json` defines `npm run build`, `npm run check`, `npm run lint` and `npm test`.
 
 See [decisions](decisions.md) and [October 2026 changes](changes/2026-10.md). The history summary is bounded to mainline integration outcomes from the initial commit through the head above. Publishing instructions are in `docs/PUBLISHING.md`; configuration and checks are in `docs/DEPLOY_CLOUDFLARE.md` and `docs/LAUNCH_CHECKLIST.md`.
