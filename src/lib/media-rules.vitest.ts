@@ -99,12 +99,17 @@ describe('bodyImagesMissingAlt', () => {
 
 describe('smaller copies (srcset)', () => {
   it('makes the widths below the picture and one at its own width, after the 2000px cap', () => {
-    expect(variantWidths(2293)).toEqual([480, 720, 960, 1280, 2000]);
-    expect(variantWidths(1280)).toEqual([480, 720, 960, 1280]);
-    expect(variantWidths(800)).toEqual([480, 720, 800]);
-    expect(variantWidths(512)).toEqual([480, 512]);
-    expect(variantWidths(480)).toEqual([480]);
+    expect(variantWidths(2293)).toEqual([160, 480, 720, 960, 1280, 2000]);
+    expect(variantWidths(1280)).toEqual([160, 480, 720, 960, 1280]);
+    expect(variantWidths(800)).toEqual([160, 480, 720, 800]);
+    expect(variantWidths(512)).toEqual([160, 480, 512]);
+    expect(variantWidths(480)).toEqual([160, 480]);
+  });
+
+  it('makes none for an icon (narrower than 480px), not even the avatar-sized 160', () => {
+    expect(variantWidths(479)).toEqual([]);
     expect(variantWidths(192)).toEqual([]);
+    expect(variantWidths(160)).toEqual([]);
     expect(variantWidths(0)).toEqual([]);
   });
 

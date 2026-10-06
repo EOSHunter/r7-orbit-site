@@ -1,18 +1,33 @@
 ---
 // A round-cornered square: the person's photo, the agent's mark on the plate, or initials when there is no picture.
+// A photo from public/ comes with its small WebP copies (src/lib/media-srcset.ts), so a 32px avatar is not the 800px original.
 import { initials, isAgent, type Author } from '../lib/authors';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Props {
   author: Author;
   /** The bigger one on the author's own page. */
   large?: boolean;
+  /** In the Author box block (AuthorBox), which sits among a page's blocks: load it when it nears the screen. */
+  lazy?: boolean;
 }
 
-const { author, large = false } = Astro.props;
+const { author, large = false, lazy = false } = Astro.props;
 const mark = isAgent(author);
 const kind = author.avatar ? (mark ? 'mark' : 'photo') : 'initials';
+const srcset = await publicSrcset(author.avatar);
 ---
 
 <span class:list={['avatar', kind, large && 'lg']} aria-hidden="true">
-  {author.avatar ? <img src={author.avatar} alt="" /> : <span>{initials(author.name)}</span>}
+  {author.avatar ? (
+    <img
+      src={author.avatar}
+      srcset={srcset}
+      sizes={srcset && (large ? SIZES.avatarLarge : SIZES.avatar)}
+      alt=""
+      loading={lazy ? 'lazy' : undefined}
+    />
+  ) : (
+    <span>{initials(author.name)}</span>
+  )}
 </span>

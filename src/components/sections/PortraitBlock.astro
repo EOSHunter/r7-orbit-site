@@ -8,16 +8,28 @@ import { SIZES, publicSrcset } from '../../lib/media-srcset';
 interface Props {
   block: SectionOf<'portrait'>;
   ctx: BlockContext;
+  /** The portrait opens the page (Sections.astro: the first row), so it is likely the largest thing on screen: fetched first.
+   *  A portrait further down loads lazily, like the other pictures, and does not compete with what is on screen. */
+  first?: boolean;
 }
 
-const { block, ctx } = Astro.props;
+const { block, ctx, first = false } = Astro.props;
 const size = ctx.sizes.get(block.image);
 const srcset = await publicSrcset(block.image);
 ---
 
 <div class="about-grid" data-side={block.side}>
   <div class="portrait">
-    <img src={block.image} srcset={srcset} sizes={srcset && SIZES.portrait} alt={block.decorative ? '' : block.alt} width={size?.width} height={size?.height} fetchpriority="high" />
+    <img
+      src={block.image}
+      srcset={srcset}
+      sizes={srcset && SIZES.portrait}
+      alt={block.decorative ? '' : block.alt}
+      width={size?.width}
+      height={size?.height}
+      fetchpriority={first ? 'high' : undefined}
+      loading={first ? undefined : 'lazy'}
+    />
   </div>
   <div class="prose">
     <slot name="lead" />

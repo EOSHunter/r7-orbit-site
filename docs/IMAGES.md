@@ -81,6 +81,8 @@ The file is copied to `dist/media/` unchanged, then `scripts/media.mjs dist` (ru
 
 The originals in `public/media/` are never changed, so git keeps what the author uploaded. The paths in posts are the same before and after.
 
+Before that, it writes smaller **WebP copies** of every picture from `public/` that is at least 480px wide, next to it: `x.160w.webp`, `x.480w.webp`, `x.720w.webp`, `x.960w.webp`, `x.1280w.webp` (the widths below its own) and one at its own width (widths and names in `src/lib/media-rules.mjs`). The components that draw such a picture (cards, covers, posters, the portrait, the author's avatar, a `/media/` picture in a Figure) list them in a `srcset` with a `sizes` that says how wide it is drawn (`src/lib/media-srcset.ts`), so a phone downloads the copy it needs: the 160 copy for a 32px avatar instead of the 800px photo. `src` stays the original.
+
 Measured on this repository: `public/media/screenshot-2026-10-03-195701.png` (2293×1206, 1.3 MB) becomes 2000×1052, 386 KB. A synthetic 4032×3024 phone-sized JPEG with EXIF (4.0 MB, noise-heavy so a worst case) becomes 2000×1500, 725 KB, with the EXIF gone.
 
 ### What a 6 MB phone photo does, step by step

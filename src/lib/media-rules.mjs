@@ -38,20 +38,26 @@ export const RECOMPRESS_ABOVE_BYTES = 300 * 1024;
 // components that draw such a picture offer them in a srcset (src/lib/media-srcset.ts), so a card downloads a few kB instead
 // of the original. Both sides read the widths from here, so they cannot disagree.
 
-/** Widths of the WebP copies. A card is about 380 CSS px wide on a phone, which the 720 copy covers at the phone's density. */
-export const VARIANT_WIDTHS = [480, 720, 960, 1280];
+/**
+ * Widths of the WebP copies. A card is about 380 CSS px wide on a phone, which the 720 copy covers at the phone's density.
+ * 160 is for the author's photo drawn as an avatar (32 or 88 CSS px, AuthorAvatar.astro), which the 480 copy would cover thrice.
+ */
+export const VARIANT_WIDTHS = [160, 480, 720, 960, 1280];
+
+/** Pictures narrower than this (icons) get no copies: they are small already. */
+export const MIN_VARIANT_SOURCE_WIDTH = 480;
 
 /** Formats that get copies (an SVG is drawn at any size as it is). */
 export const VARIANT_SOURCE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
 
 /**
  * The copies a picture `width` pixels wide gets: the widths below its own, and one at its own width (after the build's 2000px
- * cap), so the largest choice in a srcset is a WebP too, never the original JPG or PNG. None for a picture narrower than the
- * smallest width (an icon): it is small already.
+ * cap), so the largest choice in a srcset is a WebP too, never the original JPG or PNG. None for a picture narrower than
+ * MIN_VARIANT_SOURCE_WIDTH.
  */
 export function variantWidths(width) {
   const own = Math.min(width, MAX_WIDTH);
-  return own >= VARIANT_WIDTHS[0] ? [...VARIANT_WIDTHS.filter((w) => w < own), own] : [];
+  return own >= MIN_VARIANT_SOURCE_WIDTH ? [...VARIANT_WIDTHS.filter((w) => w < own), own] : [];
 }
 
 /** Where the copy of `path` at `width` is served: `/media/x.png`, 720 -> `/media/x.720w.webp`. */

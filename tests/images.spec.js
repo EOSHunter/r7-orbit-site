@@ -53,6 +53,52 @@ test('a cover from public/media reaches a phone as a small WebP copy, not the or
   expect(sizes.get(chosen), chosen).toBeLessThan(60 * 1024);
 });
 
+test('an author photo drawn as an avatar is the 160px WebP copy, not the 800px original (LCP budget)', async ({
+  page,
+}) => {
+  await page.goto('/authors/hunter-newton/');
+  const avatars = page.locator('.avatar.photo img');
+  test.skip((await avatars.count()) === 0, 'the author has no photo');
+  for (const img of await avatars.all()) {
+    await expect.poll(() => img.evaluate((el) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+    expect(new URL(await img.evaluate((el) => el.currentSrc)).pathname).toMatch(/\.160w\.webp$/);
+  }
+});
+
+test('a picture in the reading column reaches a phone at the column width (92vw), not a copy a size too big', async ({
+  browser,
+}) => {
+  // The Lighthouse phone: 412px at 1.75x. 100vw asked for 721px and got the 800 copy; the column is 92vw (379px), so 720 does.
+  const context = await browser.newContext({ viewport: { width: 412, height: 823 }, deviceScaleFactor: 1.75 });
+  const page = await context.newPage();
+  await page.goto('/styleguide/sections/');
+  const img = page.locator('figure.art-fig[data-size="lg"] img[src="/media/about/hunter-newton.jpg"]').first();
+  await img.scrollIntoViewIfNeeded();
+  await expect.poll(() => img.evaluate((el) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+  expect(new URL(await img.evaluate((el) => el.currentSrc)).pathname).toBe('/media/about/hunter-newton.720w.webp');
+  await context.close();
+});
+
+test('only a portrait that opens the page is fetched first; one further down loads lazily', async ({ page }) => {
+  await page.goto('/about/');
+  const rows = page.locator('.sections > .sec-row');
+  for (const [index, row] of (await rows.all()).entries()) {
+    for (const img of await row.locator('.portrait img').all()) {
+      if (index === 0) {
+        await expect(img).toHaveAttribute('fetchpriority', 'high');
+        await expect(img).not.toHaveAttribute('loading', 'lazy');
+      } else {
+        await expect(img).toHaveAttribute('loading', 'lazy');
+        await expect(img).not.toHaveAttribute('fetchpriority', /./);
+      }
+    }
+  }
+  // On the block gallery the portrait comes after several rows.
+  await page.goto('/styleguide/sections/');
+  await expect(page.locator('.portrait img')).toHaveAttribute('loading', 'lazy');
+  await expect(page.locator('.portrait img')).not.toHaveAttribute('fetchpriority', /./);
+});
+
 test('every picture the build serves is within the size limit and no wider than 2000px', async () => {
   const files = [];
   const walk = (dir) => {

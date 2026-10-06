@@ -32,14 +32,16 @@ if (src !== undefined && !decorative && !altProp?.trim()) {
 const alt = decorative ? '' : (altProp ?? '');
 const image = src === undefined ? undefined : await resolveBodyImage(src, 'Figure');
 
-// How wide the picture is drawn, so the browser picks the right file from the srcset.
+// How wide the picture is drawn (article.css), so the browser picks the right file from the srcset. On a phone the column is
+// 92vw (.container's 4vw gutter a side), and the small sizes keep their max-width there (14rem, 20rem, 32rem): saying 100vw
+// makes the browser take a copy a size or two too big.
 const floated = align === 'left' || align === 'right';
 const sizes =
   align === 'full' || size === 'lg'
-    ? '(min-width: 760px) 720px, 100vw'
+    ? '(min-width: 760px) 720px, 92vw'
     : size === 'md'
-      ? floated ? '(min-width: 720px) 320px, 100vw' : '(min-width: 600px) 512px, 100vw'
-      : floated ? '(min-width: 720px) 224px, 100vw' : '(min-width: 600px) 320px, 100vw';
+      ? floated ? '320px' : '(min-width: 557px) 512px, 92vw'
+      : floated ? '224px' : '320px';
 ---
 
 <figure class="art-fig" data-align={align} data-size={size}>

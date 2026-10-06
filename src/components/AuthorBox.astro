@@ -14,7 +14,7 @@ const { author } = Astro.props;
 ---
 
 <aside class="author-note author-box" aria-label={`About ${author.name}`} data-author-box={author.slug}>
-  <AuthorAvatar author={author} />
+  <AuthorAvatar author={author} lazy />
   <div class="author-note-body">
     <p class="author-note-head">
       <a class="author-name" href={author.path}>{author.name}</a>
