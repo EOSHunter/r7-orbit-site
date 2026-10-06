@@ -1,17 +1,19 @@
 ---
 import MediaPlaceholder from './MediaPlaceholder.astro';
 import type { Cover } from '../lib/cards';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Props {
   cover?: Cover;
 }
 
 const { cover } = Astro.props;
+const srcset = await publicSrcset(cover?.src);
 ---
 
 <div class="card-media">
   {cover ? (
-    <img src={cover.src} alt={cover.alt} width={cover.width} height={cover.height} loading="lazy" />
+    <img src={cover.src} srcset={srcset} sizes={srcset && SIZES.card} alt={cover.alt} width={cover.width} height={cover.height} loading="lazy" />
   ) : (
     <MediaPlaceholder />
   )}

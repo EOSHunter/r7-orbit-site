@@ -1,8 +1,10 @@
 ---
 // The <img> inside a Figure or an ImageRow. A file from src/assets/ is drawn as <picture> with several widths in AVIF and WebP, so
-// a 6 MB phone photo reaches a reader as a few dozen kB. A file from public/media/ is a plain <img> (it is served as it is).
+// a 6 MB phone photo reaches a reader as a few dozen kB. A file from public/media/ is a plain <img>, with the WebP copies the
+// build makes of it in its srcset (src/lib/media-srcset.ts).
 import { Picture } from 'astro:assets';
 import type { ResolvedImage } from './assets';
+import { publicSrcset } from '../../lib/media-srcset';
 
 interface Props {
   image: ResolvedImage;
@@ -14,6 +16,7 @@ interface Props {
 }
 
 const { image, alt, sizes, width, height } = Astro.props;
+const srcset = image.kind === 'optimised' ? undefined : await publicSrcset(image.src);
 ---
 
 {
@@ -31,6 +34,6 @@ const { image, alt, sizes, width, height } = Astro.props;
       decoding="async"
     />
   ) : (
-    <img class="art-img" src={image.src} alt={alt} width={width ?? image.width} height={height ?? image.height} loading="lazy" decoding="async" />
+    <img class="art-img" src={image.src} srcset={srcset} sizes={srcset && sizes} alt={alt} width={width ?? image.width} height={height ?? image.height} loading="lazy" decoding="async" />
   )
 }

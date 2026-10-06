@@ -4,6 +4,7 @@
 // chapters seek it (src/scripts/yt-facade.js). Without JavaScript the chapters are links to the video on YouTube.
 import Icon from './Icon.astro';
 import MediaPlaceholder from './MediaPlaceholder.astro';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Chapter {
   /** `m:ss` or `h:mm:ss`. */
@@ -25,6 +26,7 @@ interface Props {
 const { id, title, poster, duration, chapters = [] } = Astro.props;
 
 if (!/^[\w-]{11}$/.test(id)) throw new Error(`YouTubeFacade: "${id}" is not an 11-character YouTube id.`);
+const srcset = await publicSrcset(poster);
 
 function seconds(t: string): number {
   return t.split(':').reduce((total, part) => total * 60 + Number(part), 0);
@@ -39,7 +41,7 @@ function iso(total: number): string {
 
 <div class="yt" data-yt data-yt-id={id} data-yt-title={title}>
   <div class="player">
-    {poster ? <img class="yt-poster" src={poster} alt="" data-yt-facade /> : <MediaPlaceholder />}
+    {poster ? <img class="yt-poster" src={poster} srcset={srcset} sizes={srcset && SIZES.page} alt="" data-yt-facade /> : <MediaPlaceholder />}
     <button class="play" type="button" data-yt-play data-yt-facade aria-label={`Play video: ${title}`}>
       <span><Icon name="play" /></span>
     </button>

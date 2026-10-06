@@ -6,7 +6,7 @@ import { aboutTextLines } from './about-text.js';
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
 // tests/fixtures/about-text.txt is the text of the page as it was before it became editable, line for line. If you change the
 // page on purpose, change the fixture in the same commit.
-const fixture = readFileSync(new URL('./fixtures/about-text.txt', import.meta.url), 'utf8').trimEnd().split('\n');
+const fixture = readFileSync(new URL('./fixtures/about-text.txt', import.meta.url), 'utf8').trimEnd().split(/\r?\n/);
 
 test('the rendered /about/ text is exactly the fixture: title, description, headings, paragraphs, bold lead-ins, alt text', async ({
   page,

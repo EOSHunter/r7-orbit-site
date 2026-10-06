@@ -6,7 +6,10 @@ import {
   checkShippedFile,
   checkSourceFile,
   extensionOf,
+  isVariant,
   safeFileName,
+  variantPath,
+  variantWidths,
 } from './media-rules.mjs';
 
 describe('checkSourceFile', () => {
@@ -91,5 +94,25 @@ describe('bodyImagesMissingAlt', () => {
 
   it('ignores images inside a code fence', () => {
     expect(bodyImagesMissingAlt('```md\n![](/media/a.jpg)\n```')).toEqual([]);
+  });
+});
+
+describe('smaller copies (srcset)', () => {
+  it('makes the widths below the picture and one at its own width, after the 2000px cap', () => {
+    expect(variantWidths(2293)).toEqual([480, 720, 960, 1280, 2000]);
+    expect(variantWidths(1280)).toEqual([480, 720, 960, 1280]);
+    expect(variantWidths(800)).toEqual([480, 720, 800]);
+    expect(variantWidths(512)).toEqual([480, 512]);
+    expect(variantWidths(480)).toEqual([480]);
+    expect(variantWidths(192)).toEqual([]);
+    expect(variantWidths(0)).toEqual([]);
+  });
+
+  it('names a copy after its picture, as WebP, and recognises it', () => {
+    expect(variantPath('/media/vlogs/x/poster.jpg', 640)).toBe('/media/vlogs/x/poster.640w.webp');
+    expect(variantPath('/media/screenshot-2026-10-03.png', 480)).toBe('/media/screenshot-2026-10-03.480w.webp');
+    expect(isVariant('/media/a.640w.webp')).toBe(true);
+    expect(isVariant('/media/a.webp')).toBe(false);
+    expect(isVariant('/media/a-640w.webp')).toBe(false);
   });
 });

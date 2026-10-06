@@ -1,0 +1,2 @@
+# Test fixtures are compared line for line with what the site renders: keep them LF on every checkout (Windows included).
+tests/fixtures/** text eol=lf

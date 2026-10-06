@@ -37,6 +37,22 @@ test('a picture from public/media is a plain image that loads; a decorative one 
   await expect(plain.nth(1)).toHaveAttribute('alt', '');
 });
 
+test('a cover from public/media reaches a phone as a small WebP copy, not the original (LCP budget)', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const sizes = new Map();
+  page.on('response', async (res) => {
+    if (res.request().resourceType() === 'image') sizes.set(new URL(res.url()).pathname, (await res.body().catch(() => Buffer.alloc(0))).length);
+  });
+  await page.goto('/blog/');
+  const img = page.locator('.card-media img:not(.media-ph img)').first();
+  await expect(img).toHaveAttribute('srcset', /\/media\/\S+\.480w\.webp 480w/);
+  await expect(img).toHaveAttribute('sizes', /\S/);
+  await expect.poll(() => img.evaluate((el) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+  const chosen = new URL(await img.evaluate((el) => el.currentSrc)).pathname;
+  expect(chosen).toMatch(/\.\d+w\.webp$/);
+  expect(sizes.get(chosen), chosen).toBeLessThan(60 * 1024);
+});
+
 test('every picture the build serves is within the size limit and no wider than 2000px', async () => {
   const files = [];
   const walk = (dir) => {
