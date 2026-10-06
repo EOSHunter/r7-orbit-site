@@ -1,17 +1,16 @@
 ---
-title: Plain notes on building with *AI agents*.
-description: "{site.description}"
 eyebrow: "{site.tagline}"
-lead: "{site.description}"
+title: Building with *AI agents*.
+lead: "News, builds and the things in between: videos, projects, code and
+  building with AI."
 buttons:
   - label: Start with the latest
     url: "#latest"
-  - label: Subscribe
-    url: "#subscribe"
+description: "{site.description}"
 sections:
   - type: pinned
     eyebrow: Pinned
-    heading: Start here
+    heading: The first *vlog*
   - type: feed
     heading: Latest
     count: 8
@@ -20,30 +19,32 @@ sections:
     browseLabel: Browse by kind
     moreLabel: Browse everything
     moreUrl: /latest/
-  - type: latest
+  - heading: Projects
     eyebrow: Things I am making
-    heading: Projects
-    kinds: [project]
-    count: 3
     order: newest
-    look: section
-    moreLabel: All projects
-    moreUrl: /projects/
+    count: 3
     ifEmpty: hide
+    moreUrl: /projects/
+    type: latest
+    moreLabel: All projects
+    look: section
+    kinds:
+      - project
   - type: games
     eyebrow: Play in the browser
     heading: Games
     count: 3
     moreLabel: All games
     moreUrl: /games/
-  - type: latest
+  - heading: Repos
     eyebrow: Open source
-    heading: Repos
-    kinds: [repo]
-    count: 3
     order: updated
-    look: section
-    moreLabel: All repos
-    moreUrl: /repos/
+    count: 3
     ifEmpty: hide
+    moreUrl: /repos/
+    type: latest
+    moreLabel: All repos
+    look: section
+    kinds:
+      - repo
 ---
