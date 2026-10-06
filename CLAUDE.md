@@ -8,10 +8,13 @@ A personal website for posting **AI news, blogs, vlogs, projects and repos**, st
 
 Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must supply: `docs/DECISIONS.md`.
 
+**Asked to add or draft a post, news item, vlog, project, repo page or game? Follow the project skill `.claude/skills/add-content/SKILL.md` first** (inputs to confirm, front-matter templates per kind, verification, report).
+
 ## Where things are
 
 ```
 CLAUDE.md                     this file
+.claude/skills/add-content/   the skill for adding a post of any kind (SKILL.md, templates/ per kind, checklists/, examples.md)
 docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: the About page, and optionally the body of any post, is an ordered list of blocks; the catalogue, the rules, posts written as sections, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
