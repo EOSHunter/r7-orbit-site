@@ -1,0 +1,89 @@
+---
+// Fixture for tests/apps.spec.js: the apps hub drawn with the real components over made-up projects, so the tests do not depend
+// on published content. It runs the same helpers as /apps/ (selectApps, toAppCards, appsPageLd) over a mix that includes a draft,
+// a future-dated app, a project that is not an app, `order` values, and both types (games, apps, and a project with a playUrl and
+// no appType, which is an app), for zero, one, two and many apps, and for several apps of one type. The words (empty state, "more
+// apps coming" card) are the real hub's, from src/content/pages/apps.md.
+// Sample content, not part of the site. Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
+import AppsSection from '../../components/AppsSection.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site';
+import type { Post } from '../../lib/content';
+import { toAppCards } from '../../lib/app-cards';
+import { appsPageLd, selectApps, typeOf } from '../../lib/apps';
+import { jsonLdString } from '../../lib/seo';
+import { appsCopy, loadSitePage } from '../../lib/site-pages-queries';
+
+const URL = 'https://play.example.test/';
+
+function project(id: string, date: string, data: Record<string, unknown> = {}): Post {
+  return {
+    collection: 'projects',
+    id,
+    data: {
+      title: id.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase()),
+      summary: `A made-up app called ${id}.`,
+      date: new Date(date),
+      tags: [],
+      featured: false,
+      draft: false,
+      playUrl: `${URL}${id}/`,
+      ...data,
+    } as Post['data'],
+  };
+}
+
+// Newest first by date, so the `order` values (not the dates) are what the tests see deciding the sequence.
+const pool: Post[] = [
+  // No appType: an app.
+  project('fixture-newest', '2026-09-30', {
+    cover: '/og-default.png',
+    coverAlt: 'A fixture poster',
+    platforms: ['desktop', 'mobile'],
+  }),
+  project('fixture-second', '2026-09-20', { order: 2, appType: 'app', platforms: ['desktop'] }),
+  project('fixture-first', '2026-01-05', {
+    order: 1,
+    appType: 'game',
+    cover: '/og-default.png',
+    coverAlt: 'A fixture poster',
+    platforms: ['mobile'],
+  }),
+  project('fixture-link', '2026-08-01', { appType: 'game', playMode: 'link', platforms: ['desktop'] }),
+  project('fixture-older', '2026-05-01', { appType: 'game', cover: '/og-default.png', coverAlt: 'A fixture poster' }),
+  project('fixture-draft', '2026-09-01', { draft: true, order: 0, appType: 'app' }),
+  project('fixture-scheduled', '2099-01-01', { order: 0, appType: 'app' }),
+  project('fixture-not-an-app', '2026-09-15', { playUrl: undefined, order: 0 }),
+];
+
+const hub = await loadSitePage('apps');
+const copy = appsCopy(hub);
+
+const NOW = new Date('2026-10-05T12:00:00Z');
+const many = selectApps(pool, { now: NOW });
+// One, two and none: the first published apps of the same selection, so a change in the rules shows in every variant. One type:
+// the published games with the unpublished apps still in the pool, so the filter must count only what is published.
+const variants = [
+  { name: 'none', apps: [] as Post[] },
+  { name: 'one', apps: many.slice(0, 1) },
+  { name: 'two', apps: many.slice(0, 2) },
+  { name: 'many', apps: many },
+  { name: 'one-type', apps: selectApps(pool.filter((p) => typeOf(p) === 'game' || p.data.draft || p.data.date > NOW), { now: NOW }) },
+];
+---
+
+<BaseLayout title="Apps fixture" description="A made-up apps hub the tests use. Not part of the site." noindex>
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(appsPageLd(site, many, hub.data.description))} />
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1>Apps fixture</h1>
+    </header>
+    {variants.map((variant) => (
+      <section class="section" data-fixture={variant.name} aria-label={`Fixture: ${variant.name}`}>
+        <AppsSection apps={toAppCards(variant.apps)} {copy} id={`fx-${variant.name}`} />
+      </section>
+    ))}
+  </div>
+  <div class="archive-end"></div>
+</BaseLayout>

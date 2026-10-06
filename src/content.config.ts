@@ -2,6 +2,7 @@ import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import site from './data/site.json';
+import { APP_TYPE_IDS } from './lib/app-types';
 import { sectionsSchema } from './lib/sections';
 import { DEFAULT_AUTHOR } from './lib/authors';
 import { seoTitleMax } from './lib/seo';
@@ -73,7 +74,7 @@ function collection(
 }
 
 // Pages made of blocks (docs/CONTENT_MODEL.md "Pages"): About (src/content/pages/about.md), and the home page, the archives, the
-// Games hub and the tag index (`sitePageFields`, src/lib/site-pages.ts, which also says which page needs which field). The
+// Apps hub and the tag index (`sitePageFields`, src/lib/site-pages.ts, which also says which page needs which field). The
 // blocks are the shared library in src/lib/sections/ (docs/SECTIONS.md): `sectionsSchema` is what any collection attaches to take a `sections` list.
 const pages = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
@@ -193,7 +194,7 @@ const posts = {
       role: z.string().optional(),
       gallery: z.array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() })).default([]),
       timeline: z.array(z.object({ date: isoDate, text: z.string() })).default([]),
-      // Playable projects (a browser game hosted on its own address). All optional: without playUrl nothing changes.
+      // Playable projects (a game or an app hosted on its own address). All optional: without playUrl nothing changes.
       playUrl: z.url({ protocol: /^https$/, error: 'use a full https:// address' }).optional(),
       playMode: z.enum(['embed', 'link']).default('embed'),
       playAspect: z
@@ -203,15 +204,19 @@ const posts = {
       controls: z.array(z.object({ key: z.string().min(1), action: z.string().min(1) })).default([]),
       playNote: z.string().min(1).max(120).optional(),
       platforms: z.array(z.enum(['desktop', 'mobile'])).default([]),
-      // Where this game sits on /games/: lower comes first; games without it follow, newest first.
+      // Where this project sits on /apps/: lower comes first; those without it follow, newest first.
       order: z.number().optional(),
+      // What it is on /apps/ (the type chip, the filter, the button's word, the structured data). The values are APP_TYPES
+      // (src/lib/app-types.ts); a playable project without it is an app.
+      appType: z.enum(APP_TYPE_IDS, { error: `use one of: ${APP_TYPE_IDS.join(', ')}` }).optional(),
     },
     (data, ctx) => {
       if (!data.playUrl) {
         const orphan =
           ['controls', 'platforms'].find((k) => (data[k] as unknown[] | undefined)?.length) ??
           (data.playNote ? 'playNote' : undefined) ??
-          (data.order !== undefined ? 'order' : undefined);
+          (data.order !== undefined ? 'order' : undefined) ??
+          (data.appType !== undefined ? 'appType' : undefined);
         if (orphan) ctx.addIssue({ code: 'custom', path: [orphan], message: `${orphan} needs playUrl: it only shows on a playable project` });
       }
     },

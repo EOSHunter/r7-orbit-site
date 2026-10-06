@@ -1,4 +1,4 @@
-// The home page, the archives, Latest, the Games page and the Tags page as files of the "Pages" collection (src/admin/pages.ts adds
+// The home page, the archives, Latest, the Apps page and the Tags page as files of the "Pages" collection (src/admin/pages.ts adds
 // them after About). Their fields mirror `sitePageFields` and the page shapes in src/lib/site-pages.ts (site-page-files.vitest.ts
 // reads both to keep them in step); their block lists are the shared library (`sectionsField`), so no block is written here.
 // Each file's preview is page-previews.ts, registered in main.ts under the file's `name`.
@@ -83,11 +83,11 @@ const homeFields: CmsField[] = [
   description(),
   sectionsField({
     label: 'Rows below the hero',
-    hint: 'The home page under the hero, top to bottom: the pinned post, the latest feed, the rows of projects, games and repos, or any other block. Drag a row by its handle to move it, open it with the arrow to edit it, and use the cross to remove it.',
+    hint: 'The home page under the hero, top to bottom: the pinned post, the latest feed, the rows of projects, apps and repos, or any other block. Drag a row by its handle to move it, open it with the arrow to edit it, and use the cross to remove it.',
   }),
 ];
 
-/** The words of a listing page: its head, the blocks around the list, and the empty state. `extra` are the Games page's own. */
+/** The words of a listing page: its head, the blocks around the list, and the empty state. `extra` are the Apps page's own. */
 function listingFields(page: SitePage, nothing: string, extra: CmsField[] = []): CmsField[] {
   return [
     line('title', 'Page heading', 90, 'The big heading at the top of the page. Put one phrase in *asterisks* for the italic brass accent.'),
@@ -110,19 +110,19 @@ function listingFields(page: SitePage, nothing: string, extra: CmsField[] = []):
   ];
 }
 
-const gamesExtra: CmsField[] = [
+const appsExtra: CmsField[] = [
   line('emptyLinkLabel', 'When there is nothing to list: button', 40, 'The button under that text. It goes to the projects.'),
-  line('soonEyebrow', 'Beside a single game: eyebrow', 40, 'With exactly one game, a card beside it keeps the row from looking unfinished. This is its small line.'),
-  line('soonTitle', 'Beside a single game: heading', 80, 'The heading of that card.'),
-  paragraph('soonText', 'Beside a single game: text', 300, 'The sentence of that card.'),
+  line('soonEyebrow', 'Beside a single app: eyebrow', 40, 'With exactly one app, a card beside it keeps the row from looking unfinished. This is its small line.'),
+  line('soonTitle', 'Beside a single app: heading', 80, 'The heading of that card.'),
+  paragraph('soonText', 'Beside a single app: text', 300, 'The sentence of that card.'),
 ];
 
 /** What each listing calls the thing it lists, for the hints. */
-const NOTHING: Record<string, string> = { tags: 'tags', games: 'games' };
+const NOTHING: Record<string, string> = { tags: 'tags', apps: 'apps' };
 
 function fieldsOf(page: SitePage): CmsField[] {
   if (page.shape === 'home') return homeFields;
-  return listingFields(page, NOTHING[page.id] ?? 'posts', page.shape === 'games' ? gamesExtra : []);
+  return listingFields(page, NOTHING[page.id] ?? 'posts', page.shape === 'apps' ? appsExtra : []);
 }
 
 /** The file entries, in the editor's order (after About). */

@@ -34,10 +34,10 @@ const PRESENT = {
   toc: 'nav.art-toc li a',
   stats: '.stats',
   latest: '.latest-posts .grid-cards .card',
-  // The home page's blocks are made from the posts: they draw while the site has posts, a featured one and a game (it does today).
+  // The home page's blocks are made from the posts: they draw while the site has posts, a featured one and an app (it does today).
   feed: 'section#latest[data-list] .feed-head h2',
   pinned: 'section[data-pinned] .card',
-  games: 'section[data-games-teaser] .game-card',
+  apps: 'section[data-apps-teaser] .app-card',
   author: 'aside.author-box',
 };
 

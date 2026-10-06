@@ -1,0 +1,50 @@
+---
+// The apps hub: every published project with a playUrl, games and apps alike, with a filter by type when there are two or more
+// types. No collection of its own (docs/CONTENT_MODEL.md, Playable projects). Its words are src/content/pages/apps.md (edited in
+// /admin, "Pages" > Apps page): the heading, lead, browser title and description, the empty state, the "more apps coming" card,
+// and blocks above and below the grid. The grid and the filter are code. /games/ redirects here (public/_redirects).
+import AppsSection from '../../components/AppsSection.astro';
+import Icon from '../../components/Icon.astro';
+import Sections from '../../components/Sections.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site';
+import { getApps } from '../../lib/content-queries';
+import { toAppCards } from '../../lib/app-cards';
+import { APPS_LABEL, APPS_PATH, appsPageLd } from '../../lib/apps';
+import { headTitleFor, jsonLdString } from '../../lib/seo';
+import { appsCopy, loadSitePage } from '../../lib/site-pages-queries';
+import { titleParts } from '../../lib/text';
+
+const apps = await getApps();
+const entry = await loadSitePage('apps');
+const { title, seoTitle, description, introSections, outroSections } = entry.data;
+const copy = appsCopy(entry);
+---
+
+<BaseLayout title={headTitleFor(title, seoTitle)} {description} current={APPS_PATH} noindex={apps.length === 0}>
+  <script slot="head" type="application/ld+json" set:html={jsonLdString(appsPageLd(site, apps, description))} />
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">
+        <Icon name="play" />
+        {APPS_LABEL}
+      </p>
+      <h1>{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <p class="t-lead">{entry.text('lead')}</p>
+    </header>
+
+    {introSections.length === 0 && <AppsSection apps={toAppCards(apps)} {copy} />}
+  </div>
+  {
+    introSections.length > 0 && (
+      <>
+        <Sections sections={introSections} source="apps.md (introSections)" />
+        <div class="container wide">
+          <AppsSection apps={toAppCards(apps)} {copy} />
+        </div>
+      </>
+    )
+  }
+  {outroSections.length > 0 && <Sections sections={outroSections} source="apps.md (outroSections)" />}
+  <div class="archive-end"></div>
+</BaseLayout>

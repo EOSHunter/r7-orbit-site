@@ -4,6 +4,7 @@
 // own, and config.vitest.ts reads the real schema to keep the two in step, so change them together.
 import type { CmsCollection, CmsConfig, CmsField } from 'decap-cms-core';
 import site from '../data/site.json';
+import { APP_TYPES, APP_TYPE_IDS, DEFAULT_APP_TYPE } from '../lib/app-types';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { seoTitleMax } from '../lib/seo';
@@ -441,8 +442,8 @@ const vlogFields: CmsField[] = [
 
 // ---- Projects -----------------------------------------------------------------------------------------------------
 
-// A playable project: a browser game hosted at its own address. Everything here is optional; without Play URL the project
-// is an ordinary one. An embedded game's address must be one that public/_headers lets the site frame (frame-src).
+// A playable project: a browser game or app hosted at its own address, listed on /apps/. Everything here is optional; without
+// Play URL the project is an ordinary one. An embedded address must be one that public/_headers lets the site frame (frame-src).
 const playFields: CmsField[] = [
   field({
     name: 'playUrl',
@@ -450,7 +451,16 @@ const playFields: CmsField[] = [
     widget: 'string',
     required: false,
     pattern: HTTPS_URL_PATTERN,
-    hint: 'Where the game runs, e.g. https://vesper.r7orbit.io/. Setting it makes this a Playable project: a Play section on the page and a Playable badge on cards. https only. To embed it, its origin must be listed in frame-src in public/_headers.',
+    hint: 'Where the game or app runs, e.g. https://vesper.r7orbit.io/. Setting it makes this a Playable project: a Play section on the page, a Playable badge on cards, and a card on the Apps page. https only. To embed it, its origin must be listed in frame-src in public/_headers.',
+  }),
+  field({
+    name: 'appType',
+    label: 'Type',
+    widget: 'select',
+    // The values are APP_TYPES (src/lib/app-types.ts), the same list as the schema's.
+    options: APP_TYPE_IDS.map((value) => ({ label: APP_TYPES[value].label, value })),
+    required: false,
+    hint: `What it is on the Apps page: its label on the card, the type filter there, and the card's button (${APP_TYPE_IDS.map((t) => `${APP_TYPES[t].label}: ${APP_TYPES[t].action}`).join(', ')}). Left empty: ${APP_TYPES[DEFAULT_APP_TYPE].label}. Needs a Play URL.`,
   }),
   field({
     name: 'playMode',
@@ -459,7 +469,7 @@ const playFields: CmsField[] = [
     options: ['embed', 'link'],
     default: 'embed',
     required: false,
-    hint: 'embed: the game loads in the page when the visitor presses Play. link: only a button that opens it in a new tab.',
+    hint: 'embed: it loads in the page when the visitor presses Play. link: only a button that opens it in a new tab.',
   }),
   field({
     name: 'playAspect',
@@ -503,11 +513,11 @@ const playFields: CmsField[] = [
   }),
   field({
     name: 'order',
-    label: 'Order on the Games page',
+    label: 'Order on the Apps page',
     widget: 'number',
     value_type: 'int',
     required: false,
-    hint: 'Optional. A lower number comes first on the Games page and the home page; games without one follow, newest first. Needs a Play URL.',
+    hint: 'Optional. A lower number comes first on the Apps page and the home page; those without one follow, newest first. Needs a Play URL.',
   }),
 ];
 

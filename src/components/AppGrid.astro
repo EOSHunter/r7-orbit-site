@@ -1,0 +1,40 @@
+---
+// The grid of AppCards. One column on a phone, two from 640px, three from 1000px, except with one or two cards, which stay at
+// two columns so a lone app is not stretched across the page. The poster has a fixed 16:9 frame, so nothing shifts as it loads.
+import AppCard from './AppCard.astro';
+import type { AppCardData } from '../lib/cards';
+
+interface Props {
+  apps: AppCardData[];
+  level?: 2 | 3;
+  /** Only the hub sets this: with exactly one app, a final "More apps coming" card keeps the row from looking unfinished. Its
+   *  words are the hub's (src/content/pages/apps.md). */
+  soon?: { eyebrow: string; title: string; text: string };
+  /** Only the hub sets this: there the grid is the top of the page. On the home row and the "More apps" strip it sits
+   * far below the fold, where an eager poster would compete with the page's LCP. */
+  eager?: boolean;
+}
+
+const { apps, level = 2, soon, eager = false } = Astro.props;
+const showSoon = !!soon && apps.length === 1;
+const few = apps.length + (showSoon ? 1 : 0) <= 2;
+const Heading = `h${level}` as 'h2' | 'h3';
+---
+
+<ul class:list={['app-grid', few && 'few']} data-apps>
+  {apps.map((app, i) => (
+    <li data-type={app.type}>
+      {/* On the hub the first row (at most three cards) loads at once; the rest wait until they are near the screen. */}
+      <AppCard {app} {level} eager={eager && i < 3} />
+    </li>
+  ))}
+  {showSoon && (
+    <li>
+      <div class="app-soon" data-apps-soon>
+        <p class="eyebrow">{soon.eyebrow}</p>
+        <Heading class="card-title">{soon.title}</Heading>
+        <p class="card-text">{soon.text}</p>
+      </div>
+    </li>
+  )}
+</ul>

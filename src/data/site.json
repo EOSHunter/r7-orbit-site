@@ -22,8 +22,8 @@
       "href": "/projects/"
     },
     {
-      "label": "Games",
-      "href": "/games/",
+      "label": "Apps",
+      "href": "/apps/",
       "footer": true,
       "icon": "play"
     },

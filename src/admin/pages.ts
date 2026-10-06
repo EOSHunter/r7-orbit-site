@@ -101,7 +101,7 @@ export const pagesCollection = {
   label: 'Pages',
   label_singular: 'Page',
   description:
-    'Pages made of blocks you can add, remove and re-order: About, the home page, the words of the archives, the Games page and the Tags page, and the words of Privacy, the 404 page and Search.',
+    'Pages made of blocks you can add, remove and re-order: About, the home page, the words of the archives, the Apps page and the Tags page, and the words of Privacy, the 404 page and Search.',
   delete: false,
   // Uploads for pages go to public/media/about/, written as /media/about/x.jpg (the same pair as mediaFolders('about') in
   // config.ts, which imports this file, so it is spelled out here). docs/IMAGES.md.
@@ -117,7 +117,7 @@ export const pagesCollection = {
       editor: { preview: true },
       fields: aboutFields,
     },
-    // The home page, the archives, Latest, Games and Tags (src/admin/site-page-files.ts).
+    // The home page, the archives, Latest, Apps and Tags (src/admin/site-page-files.ts).
     ...sitePageFiles,
     ...framedPageFiles,
   ],

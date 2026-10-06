@@ -38,20 +38,20 @@ describe('the settings file as it is', () => {
       ['Blog', '/blog/'],
       ['Vlogs', '/vlogs/'],
       ['Projects', '/projects/'],
-      ['Games', '/games/'],
+      ['Apps', '/apps/'],
       ['Repos', '/repos/'],
-      ['About', '/about/'],
+      ['About R7 Orbit', '/about/'],
     ]);
   });
 
-  it('keeps the footer: Games, GitHub, YouTube (an empty profile link leaves its icon out)', () => {
+  it('keeps the footer: Apps, GitHub, YouTube (an empty profile link leaves its icon out)', () => {
     expect(footerLinks(site)).toEqual([
-      { label: 'Games', href: '/games/', icon: 'play', external: false },
+      { label: 'Apps', href: '/apps/', icon: 'play', external: false },
       { label: 'GitHub', href: 'https://github.com/EOSHunter', icon: 'github', external: true },
       { label: 'YouTube', href: 'https://www.youtube.com/@R7Creatives', icon: 'vlog', external: true },
     ]);
     const withoutGithub = edit((s) => (s.links.github = ''));
-    expect(footerLinks(withoutGithub).map((l) => l.label)).toEqual(['Games', 'YouTube']);
+    expect(footerLinks(withoutGithub).map((l) => l.label)).toEqual(['Apps', 'YouTube']);
   });
 
   it('has only GitHub and YouTube as profile links, and no email', () => {
@@ -86,8 +86,8 @@ describe('a renamed nav label', () => {
 
   it('keeps the footer links, with the new label', () => {
     expect(footerLinks({ ...site, nav: renamed })[0]).toEqual({
-      label: 'Renamed Games',
-      href: '/games/',
+      label: 'Renamed Apps',
+      href: '/apps/',
       icon: 'play',
       external: false,
     });
@@ -156,7 +156,7 @@ describe('what the schema refuses', () => {
 
   it('needs an icon for a nav link that is also in the footer', () => {
     expect(problems(edit((s) => delete s.nav[5].icon))).toEqual([
-      'nav.5.icon: "Games" is shown in the footer, so it needs an icon',
+      'nav.5.icon: "Apps" is shown in the footer, so it needs an icon',
     ]);
   });
 

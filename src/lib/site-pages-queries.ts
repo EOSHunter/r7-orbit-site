@@ -25,8 +25,8 @@ export async function loadSitePage(id: string): Promise<LoadedPage> {
   return { ...page, data, text: (field) => data[field] ?? '' };
 }
 
-/** The words of the Games hub's empty state and its "more games coming" card (GamesSection). */
-export interface GamesCopy {
+/** The words of the Apps hub's empty state and its "more apps coming" card (AppsSection). */
+export interface AppsCopy {
   emptyHeading: string;
   emptyText: string;
   emptyLinkLabel: string;
@@ -35,7 +35,7 @@ export interface GamesCopy {
   soonText: string;
 }
 
-export const gamesCopy = (page: LoadedPage): GamesCopy => ({
+export const appsCopy = (page: LoadedPage): AppsCopy => ({
   emptyHeading: page.text('emptyHeading'),
   emptyText: page.text('emptyText'),
   emptyLinkLabel: page.text('emptyLinkLabel'),

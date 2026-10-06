@@ -1,0 +1,27 @@
+{
+  "path": "/apps/",
+  "posts": [
+    "blog/test",
+    "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "projects/vesper-drift"
+  ],
+  "head": [
+    "title: Apps · R7 Orbit",
+    "description: Small apps I built that run in your browser. No install: pick one and open it.",
+    "p.eyebrow: Apps",
+    "h1: Apps",
+    "p.t-lead: Things I have built that run in your browser. No install."
+  ],
+  "lines": [
+    "title: Apps · R7 Orbit",
+    "description: Small apps I built that run in your browser. No install: pick one and open it.",
+    "p.eyebrow: Apps",
+    "h1: Apps",
+    "p.t-lead: Things I have built that run in your browser. No install.",
+    "[content]",
+    "li: Next upMore apps comingThis is the only one so far. The next is still being built, and it will show up here when it is ready.",
+    "p.eyebrow: Next up",
+    "h2: More apps coming",
+    "p: This is the only one so far. The next is still being built, and it will show up here when it is ready."
+  ]
+}

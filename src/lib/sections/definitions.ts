@@ -78,7 +78,7 @@ function defineBlock<const Id extends string, Shape extends z.ZodRawShape>(
 const MARKDOWN_HINT = 'Paragraphs, **bold**, *italic*, links and lists. Leave a blank line between paragraphs.';
 const ADDRESS_HINT = 'https://… for another site, or /about/ for a page on this site.';
 
-// The parts the section-style blocks share (Latest posts in its section frame, Pinned post, Games row, Latest feed): the small line
+// The parts the section-style blocks share (Latest posts in its section frame, Pinned post, Apps row, Latest feed): the small line
 // over the heading and the link at the end of the heading row ("All projects" → /projects/), drawn when both its words and its
 // address are filled in (any one optional box may be left empty on its own: the library's rule, schema.vitest.ts).
 const eyebrowField = () =>
@@ -715,22 +715,22 @@ const pinned = defineBlock(
   },
 );
 
-const gamesRow = defineBlock(
-  'games',
+const appsRow = defineBlock(
+  'apps',
   {
-    label: 'Games row',
+    label: 'Apps row',
     group: 'From the site',
-    description: 'The first published games (projects with a Play address), in the order of the Games page, as game cards with a Play button. Left out while no game is published.',
-    summary: 'Games row: {{fields.count}} {{fields.heading}}',
+    description: 'The first published apps and games (projects with a Play address), in the order of the Apps page, as cards with their type and a Play or Open button. Left out while none is published.',
+    summary: 'Apps row: {{fields.count}} {{fields.heading}}',
     placement: 'band',
-    example: { eyebrow: 'Play in the browser', heading: 'Games', count: 3, moreLabel: 'All games', moreUrl: '/games/' },
-    previewNote: 'The games are chosen when the site is built, so the preview shows a stand-in.',
+    example: { eyebrow: 'Play in the browser', heading: 'Apps', count: 3, moreLabel: 'All apps', moreUrl: '/apps/' },
+    previewNote: 'The apps are chosen when the site is built, so the preview shows a stand-in.',
   },
   {
     eyebrow: eyebrowField(),
-    heading: text({ label: 'Heading', max: 80, hint: 'e.g. Games. Put one phrase in *asterisks* for the italic brass accent.' }),
+    heading: text({ label: 'Heading', max: 80, hint: 'e.g. Apps. Put one phrase in *asterisks* for the italic brass accent.' }),
     count: count({ label: 'How many', min: 1, max: 12, fallback: 3, hint: 'Between 1 and 12.' }),
-    ...moreFields('All games'),
+    ...moreFields('All apps'),
   },
 );
 
@@ -782,7 +782,7 @@ export const definitions = [
   latest,
   feed,
   pinned,
-  gamesRow,
+  appsRow,
   author,
 ] as const;
 

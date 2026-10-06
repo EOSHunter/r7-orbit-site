@@ -1,0 +1,34 @@
+---
+// The first published apps (projects with a playUrl), in the order of the /apps/ hub, as AppCards. Left out while there is none.
+// The hub itself (every app, its type filter, its empty state and its "More apps coming" card) is src/pages/apps/index.astro.
+import AppGrid from '../AppGrid.astro';
+import SectionBand from './SectionBand.astro';
+import { getApps } from '../../lib/content-queries';
+import { toAppCards } from '../../lib/app-cards';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'apps'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const apps = toAppCards((await getApps()).slice(0, block.count));
+---
+
+{
+  apps.length > 0 && (
+    <SectionBand
+      headingId={`sec-${ctx.index + 1}-h`}
+      eyebrow={block.eyebrow || undefined}
+      heading={block.heading}
+      moreLabel={block.moreLabel || undefined}
+      moreUrl={block.moreUrl || undefined}
+      ruled
+      data-apps-teaser
+    >
+      <AppGrid {apps} level={3} />
+    </SectionBand>
+  )
+}

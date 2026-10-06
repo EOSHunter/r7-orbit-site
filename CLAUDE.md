@@ -8,7 +8,7 @@ A personal website for posting **AI news, blogs, vlogs, projects and repos**, st
 
 Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must supply: `docs/DECISIONS.md`.
 
-**Asked to add or draft a post, news item, vlog, project, repo page or game? Follow the project skill `.claude/skills/add-content/SKILL.md` first** (inputs to confirm, front-matter templates per kind, verification, report).
+**Asked to add or draft a post, news item, vlog, project, repo page, game or app? Follow the project skill `.claude/skills/add-content/SKILL.md` first** (inputs to confirm, front-matter templates per kind, verification, report).
 
 ## Where things are
 
@@ -27,7 +27,7 @@ src/
   components/                 Header, Footer, Icon + IconSprite, MediaPlaceholder, StatusMark,
                               AuthorByline + AuthorAvatar + AgentChip + AuthorNote + AuthorPage (the /authors/<slug>/ page),
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
-                              GamesSection + GameGrid + GameCard (the /games/ hub),
+                              AppsSection (type filter) + AppGrid + AppCard + AppsEmpty (the /apps/ hub; it was /games/, which redirects),
                               Sections + sections/ (a page built from blocks: About, the home page's rows, the blocks around a listing, and a post's body written as sections with layout="column";
                               one <Id>Block.astro per block, registry.ts, SectionBand.astro = the home rows' ruled section frame) + AuthorBox, TagIndex (the /tags/ list),
                               PageBlocks (library blocks drawn in place inside a page's own frame: privacy, 404, search),
@@ -37,14 +37,14 @@ src/
   admin/                      Decap CMS for /admin: settings.ts (the "Site settings" file collection over src/data/site.json), config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry);
                               post-body.ts (a post's body for the previews, written as Markdown or sections; the save check that refuses both), post-preview.ts (the preview of news, vlogs, projects and repos),
-                              pages.ts (the "Pages" file collection: About, then site-page-files.ts = home, Latest, the five archives, Games, Tags, then privacy, 404 and search in their own block),
+                              pages.ts (the "Pages" file collection: About, then site-page-files.ts = home, Latest, the five archives, Apps, Tags, then privacy, 404 and search in their own block),
                               page-previews.ts + page-preview-html.ts (home and listing previews: hero or page head, blocks, a labelled stand-in where posts go), framed-preview.ts (privacy/404/search preview: About's, with settings tokens filled), sections-config.ts (the Decap block list, generated from the block definitions; `sectionsField()` attaches it to any collection), about-preview.ts + sections-html.ts (the live preview of a page of blocks). See README "Admin" and docs/SECTIONS.md
-  pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug]), games/ (hub of playable projects), tags/, about,
+  pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug]), apps/ (hub of playable projects: games and apps), tags/, about,
                               privacy, 404, robots.txt, sitemap-index.xml + sitemap-0.xml,
-                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, games/, listing/, nav/ and others for the tests; styleguide/posts/<kind>/ draws the tests' fixture posts)
+                              styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, apps/, listing/, nav/ and others for the tests; styleguide/posts/<kind>/ draws the tests' fixture posts)
   data/site.json              the site settings: name, tagline, description, default share image, author, profile links, nav (label + href), footer links + note;
                               edited in /admin as "Site settings" (admin/settings.ts) except `url`. site.ts parses it with siteSchema (lib/site-settings.ts) and every reader imports site.ts; nav.ts gives navItems + footerItems
-  content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state; a post's body is Markdown OR a `sections` list, never both), pages/ (about.md as blocks; home.md = hero fields + rows as blocks; latest, news, blog, vlogs, projects, repos, games, tags .md = each listing's words, empty state and blocks above/below its list; privacy.md, 404.md, search.md = the words of those pages, their frame stays in src/pages/; all edited in /admin); site.json stays in src/data/
+  content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state; a post's body is Markdown OR a `sections` list, never both), pages/ (about.md as blocks; home.md = hero fields + rows as blocks; latest, news, blog, vlogs, projects, repos, apps, tags .md = each listing's words, empty state and blocks above/below its list; privacy.md, 404.md, search.md = the words of those pages, their frame stays in src/pages/; all edited in /admin); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
   lib/                        cards.ts (card prop types), text.ts (title markers, dates, absolute URLs),
                               sections/ (THE block library, docs/SECTIONS.md: definitions.ts defines every block once - fields, schema, label, placement, example; fields.ts is the field vocabulary; schema.ts exports `sectionsSchema` for any collection; layout.ts is the row rule; describe.ts reads a schema back for the admin form and the build; prepare.ts renders each block's Markdown and measures its pictures; checks.ts holds the checks a schema cannot make; catalogue.ts writes the catalogue in docs/SECTIONS.md; unit-tested),
@@ -55,7 +55,7 @@ src/
                               content-queries.ts (getPosts/getAllPosts over astro:content; getFixturePosts for the tests' fixtures), markdown/ (remark/rehype plugins, Shiki transformer),
                               authors.ts + authors-queries.ts (authors: default, byline rules, JSON-LD; unit-tested),
                               site-settings.ts (site.json schema, footer links, isCurrent/searchKinds: nav matched by href; unit-tested) + site-routes.ts (build-only: every site path in the settings exists),
-                              games.ts + game-cards.ts (the /games/ hub: which projects are games, order, Play link; unit-tested),
+                              app-types.ts (APP_TYPES: THE list of app types, game and app, with label, icon, button word, JSON-LD; schema, admin, filter and cards read it) + apps.ts + app-cards.ts (the /apps/ hub: which projects are on it, type, order, primary link; unit-tested),
                               site-pages.ts (the home and listing pages' extra fields, which page needs which: pageProblems; unit-tested) + site-pages-queries.ts (loadSitePage),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging),
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts
@@ -68,10 +68,10 @@ src/
 tests/                        fixtures/posts/<kind>/ (one post per kind written as sections: read by the fixture* collections in content.config.ts, never part of the site),
                               post-sections.spec.js (those fixtures through the real post pages: blocks, chrome, contents list, reading time, JSON-LD, axe and widths, Pagefind search),
                               sections.spec.js (every block drawn on /styleguide/sections/: axe, widths, behaviour), admin-sections.spec.js (adds each block type in the real editor, GitHub mocked),
-                              page-text.spec.js + page-text.js (the words of home, archives, Latest, Games, Tags against tests/fixtures/pages/<id>.json; refresh with UPDATE_PAGE_TEXT=1),
+                              page-text.spec.js + page-text.js (the words of home, archives, Latest, Apps, Tags against tests/fixtures/pages/<id>.json; refresh with UPDATE_PAGE_TEXT=1),
                               site-pages.spec.js (hero anchors, row order, blocks around a list on /styleguide/listing/), admin-site-pages.spec.js (those pages in the real editor), routes.js (the fixed routes, plus the post and tag pages it finds in dist/: no slugs listed), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), no-contact (no mailto: link or email address in any public page of dist/),
-                              admin (noindex, out of robots/sitemap), admin-images (uploading pictures through the real editor under its CSP, GitHub mocked via admin-mock.js), images (what readers get: optimised pictures, size limit), about (the rendered /about/ text against tests/fixtures/about-text.txt, JSON-LD, layout), pages (privacy, 404, search text against tests/fixtures/pages/*.txt via page-text.js, 404 status, layout), admin-pages (those three in the real editor), games (the hub on the fixture /styleguide/games/: 0, 1, 2, 5 games), headers (reads public/_headers; the admin runs under its CSP), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
+                              admin (noindex, out of robots/sitemap), admin-images (uploading pictures through the real editor under its CSP, GitHub mocked via admin-mock.js), images (what readers get: optimised pictures, size limit), about (the rendered /about/ text against tests/fixtures/about-text.txt, JSON-LD, layout), pages (privacy, 404, search text against tests/fixtures/pages/*.txt via page-text.js, 404 status, layout), admin-pages (those three in the real editor), apps (the hub on the fixture /styleguide/apps/: 0, 1, 2, 5 apps and one type; type filter, chips, Play/Open, JSON-LD per type), admin-apps (the Type menu in the real editor), headers (reads public/_headers; the admin runs under its CSP), redirects (reads public/_redirects: /games/ to /apps/; astro preview ignores that file), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
 public/                       served as-is: _headers + _redirects (Cloudflare Pages), fonts/ (self-hosted woff2 + LICENSES), assets/ (logo marks), favicons, og-default.png, site.webmanifest
@@ -105,7 +105,7 @@ npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2
                          # run it alone: npm run build && npm run test:lighthouse (serves dist/ on 127.0.0.1:4398; if that port is taken,
                          # check with Get-NetTCPConnection -LocalPort 4398 and use $env:LIGHTHOUSE_PORT=4397 in PowerShell / LIGHTHOUSE_PORT=4397 in bash).
                          # About 8 minutes for every route; to re-check a few, LIGHTHOUSE_ROUTES="/blog/test/,/about/" (paths from tests/routes.js,
-                         # same assertions). An empty archive, /latest/, /games/ or /tags/ is noindex, and routes.js reads that from dist/,
+                         # same assertions). An empty archive, /latest/, /apps/ or /tags/ is noindex, and routes.js reads that from dist/,
                          # so its SEO category (69 by design) is not asserted.
                          # Throttling is simulated, so results repeat; LCP counts every byte before it (fonts, and any picture a card draws:
                          # covers and posters go through the srcset of build-made WebP copies, src/lib/media-srcset.ts)

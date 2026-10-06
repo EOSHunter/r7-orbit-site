@@ -11,6 +11,7 @@ stack: [JavaScript, Three.js, WebGL2]
 role: Directed the AI agents
 shipped: 2026-10-05
 playUrl: https://vesper.r7orbit.io/
+appType: game
 playMode: embed
 playAspect: "16:9"
 controls:

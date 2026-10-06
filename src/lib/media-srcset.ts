@@ -21,9 +21,9 @@ export async function publicSrcset(src: string | undefined): Promise<string | un
  * on a phone .container leaves 92vw (--gutter is 4vw a side); saying 100vw there makes the browser take a copy a size too big.
  */
 export const SIZES = {
-  /** A card in .grid-cards or .game-grid (one column on a phone, two or three after), or the wider pinned card. */
+  /** A card in .grid-cards or .app-grid (one column on a phone, two or three after), or the wider pinned card. */
   card: '(min-width: 1180px) 600px, (min-width: 700px) 50vw, 92vw',
-  /** Across the page: the video and game players, a post's cover. */
+  /** Across the page: the video and play panels, a post's cover. */
   page: '(min-width: 1180px) 1120px, 92vw',
   /** The portrait column (.portrait: at most 20rem, 4:5); `object-fit: cover` draws a square picture at the frame's height, 25rem. */
   portrait: '25rem',

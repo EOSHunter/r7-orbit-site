@@ -1,6 +1,6 @@
 // Sitemap, robots.txt and the list of indexable URLs, pure. The Astro-bound endpoints are in src/pages/.
 import { absoluteUrl, isoDate } from './text';
-import { GAMES_PATH, isGame } from './games';
+import { APPS_PATH, isApp } from './apps';
 import { authorPath, postsByAuthor } from './authors';
 import { postUrl, tagCounts, tagsWithPages, type CollectionName, type Post } from './content';
 
@@ -50,7 +50,7 @@ export function sourceIsNoindex(source: string): boolean {
 const KINDS: CollectionName[] = ['news', 'blog', 'vlogs', 'projects', 'repos'];
 
 /** Pages that exist whatever the content, but are noindex while they have nothing to list, so they are added by content, not by file. */
-const LISTINGS = ['/latest/', '/tags/', GAMES_PATH, ...KINDS.map((kind) => `/${kind}/`)];
+const LISTINGS = ['/latest/', '/tags/', APPS_PATH, ...KINDS.map((kind) => `/${kind}/`)];
 
 const newest = (posts: Post[]) =>
   posts.reduce<Date | undefined>((acc, p) => {
@@ -59,7 +59,7 @@ const newest = (posts: Post[]) =>
   }, undefined);
 
 /**
- * Every indexable URL: the static pages found in src/pages (minus noindex ones), `/latest/`, `/games/` once a game is
+ * Every indexable URL: the static pages found in src/pages (minus noindex ones), `/latest/`, `/apps/` once an app is
  * published, and the archive for each kind that has posts, `/tags/` once a post has a tag and each tag with two or more posts, every published post,
  * and the page of every author (it exists, with an empty state, even before the author has a post). `posts` must already exclude drafts and
  * future-dated posts.
@@ -78,8 +78,8 @@ export function collectSitemapEntries(staticPaths: string[], posts: Post[], auth
     const ofKind = posts.filter((p) => p.collection === kind);
     if (ofKind.length) add(`/${kind}/`, newest(ofKind));
   }
-  const games = posts.filter(isGame);
-  if (games.length) add(GAMES_PATH, newest(games));
+  const apps = posts.filter(isApp);
+  if (apps.length) add(APPS_PATH, newest(apps));
   const tags = tagsWithPages(posts);
   if (tagCounts(posts).length) add('/tags/', newest(posts));
   for (const tag of tags) add(`/tags/${tag}/`, newest(posts.filter((p) => p.data.tags.includes(tag))));

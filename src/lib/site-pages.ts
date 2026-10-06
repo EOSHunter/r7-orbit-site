@@ -1,9 +1,9 @@
-// The home page, the archives (/latest/ and one per kind), the Games hub and the tag index as entries of the `pages` collection
+// The home page, the archives (/latest/ and one per kind), the Apps hub and the tag index as entries of the `pages` collection
 // (src/content/pages/<id>.md, edited in /admin, "Pages"; docs/CONTENT_MODEL.md "Pages"). Pure, no Astro: read by
 // src/content.config.ts (the fields), the pages (via site-pages-queries.ts), the admin (src/admin/site-pages.ts) and Vitest.
 //
 // Each page holds its own words. What is made from the posts stays in code: the listing, its filters, pagination and counts, the
-// games grid, the tag chips. The home page is a hero (fields) and a list of blocks (`sections`, the shared library, docs/SECTIONS.md);
+// apps grid, the tag chips. The home page is a hero (fields) and a list of blocks (`sections`, the shared library, docs/SECTIONS.md);
 // a listing page is a page head (fields), optional blocks above and below the listing (`introSections`, `outroSections`) and the
 // words of its empty state.
 import { z } from 'astro/zod';
@@ -38,7 +38,7 @@ export const sitePageFields = {
   /** Listing pages: what is said when there is nothing to list. */
   emptyHeading: z.string().max(100, 'emptyHeading is too long: at most 100 characters').optional(),
   emptyText: z.string().max(300, 'emptyText is too long: at most 300 characters').optional(),
-  /** Games hub: the empty state's button (to /projects/), and the card shown beside a single game. */
+  /** Apps hub: the empty state's button (to /projects/), and the card shown beside a single app. */
   emptyLinkLabel: z.string().max(40, 'emptyLinkLabel is too long: at most 40 characters').optional(),
   soonEyebrow: z.string().max(40, 'soonEyebrow is too long: at most 40 characters').optional(),
   soonTitle: z.string().max(80, 'soonTitle is too long: at most 80 characters').optional(),
@@ -49,12 +49,12 @@ export type SitePageField = keyof typeof sitePageFields | 'title' | 'seoTitle' |
 
 /** The shapes a page can have. Each says which fields it needs and which it draws (a field it does not draw is an error, not
  *  silently ignored: the same reason the schema is strict). */
-export type PageShape = 'home' | 'listing' | 'games';
+export type PageShape = 'home' | 'listing' | 'apps';
 
 const SHAPES: Record<PageShape, { required: SitePageField[]; optional: SitePageField[] }> = {
   home: { required: ['title', 'description'], optional: ['eyebrow', 'lead', 'buttons', 'sections'] },
   listing: { required: ['title', 'description', 'lead', 'emptyHeading', 'emptyText'], optional: ['seoTitle', 'introSections', 'outroSections'] },
-  games: {
+  apps: {
     required: ['title', 'description', 'lead', 'emptyHeading', 'emptyText', 'emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText'],
     optional: ['seoTitle', 'introSections', 'outroSections'],
   },
@@ -74,9 +74,9 @@ const WHAT: Record<SitePageField, string> = {
   emptyHeading: 'the heading shown when there is nothing to list',
   emptyText: 'the text shown when there is nothing to list',
   emptyLinkLabel: 'the button of the empty state',
-  soonEyebrow: 'the eyebrow of the "more games coming" card',
-  soonTitle: 'the heading of the "more games coming" card',
-  soonText: 'the text of the "more games coming" card',
+  soonEyebrow: 'the eyebrow of the "more apps coming" card',
+  soonTitle: 'the heading of the "more apps coming" card',
+  soonText: 'the text of the "more apps coming" card',
 };
 
 export interface SitePage {
@@ -104,7 +104,7 @@ export const SITE_PAGES: SitePage[] = [
   { id: 'vlogs', path: '/vlogs/', shape: 'listing', label: 'Vlogs', icon: 'vlog', admin: { name: 'vlogs-archive', label: 'Vlogs archive' } },
   { id: 'projects', path: '/projects/', shape: 'listing', label: 'Projects', icon: 'project', admin: { name: 'projects-archive', label: 'Projects archive' } },
   { id: 'repos', path: '/repos/', shape: 'listing', label: 'Repos', icon: 'repo', admin: { name: 'repos-archive', label: 'Repos archive' } },
-  { id: 'games', path: '/games/', shape: 'games', label: 'Games', icon: 'play', admin: { name: 'games', label: 'Games page' } },
+  { id: 'apps', path: '/apps/', shape: 'apps', label: 'Apps', icon: 'play', admin: { name: 'apps', label: 'Apps page' } },
   { id: 'tags', path: '/tags/', shape: 'listing', label: 'Tags', admin: { name: 'tags', label: 'Tags page' } },
 ];
 

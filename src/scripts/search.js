@@ -13,8 +13,8 @@ const KINDS = {
   projects: { label: 'Project', icon: 'project' },
   repos: { label: 'Repo', icon: 'repo' },
 };
-// A playable project page sets meta kind=Game (data-pagefind-meta on its header), so its result reads as a game.
-const GAME = { label: 'Game', icon: 'play' };
+// A playable project page sets its type as meta kind and kindIcon (data-pagefind-meta on its header, from src/lib/app-types.ts),
+// so its result reads as a game or an app rather than a project.
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 let pagefind = null;
@@ -40,7 +40,8 @@ function kindOf(url) {
 }
 
 function resultItem(data) {
-  const kind = data.meta && data.meta.kind === 'Game' ? GAME : kindOf(data.url);
+  const meta = data.meta || {};
+  const kind = meta.kind && /^[a-z]+$/.test(meta.kindIcon || '') ? { label: meta.kind, icon: meta.kindIcon } : kindOf(data.url);
   const li = document.createElement('li');
   const a = document.createElement('a');
   a.className = 'card link search-result';

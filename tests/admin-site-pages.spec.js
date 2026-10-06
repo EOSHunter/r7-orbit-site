@@ -42,22 +42,24 @@ test('the Pages collection lists About, then the home page and every listing pag
 
 test('home page: opens with today\'s words, previews the hero and stand-ins for the rows made from posts, and saves a valid page', async ({ page }) => {
   const seen = await openEntry(page, 'home');
-  await expect(page.getByLabel('Headline')).toHaveValue('Plain notes on building with *AI agents*.', { timeout: 15_000 });
+  // Today's words, read from the file the editor opens (the author edits them in /admin).
+  const home = parseFrontmatter(PAGE_FILES['home.md']).frontmatter;
+  await expect(page.getByLabel('Headline')).toHaveValue(home.title, { timeout: 15_000 });
   // The tagline is the Site settings' (a token); the preview prints it.
   await expect(page.getByLabel(/^Eyebrow/).first()).toHaveValue('{site.tagline}');
 
   const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.locator('section.hero h1')).toHaveText('Plain notes on building with AI agents.', { timeout: 15_000 });
+  await expect(preview.locator('section.hero h1')).toHaveText(home.title.replaceAll('*', ''), { timeout: 15_000 });
   await expect(preview.locator('section.hero h1 em')).toHaveText('AI agents');
   await expect(preview.locator('.hero .cluster a.btn')).toHaveText(['Start with the latest']);
   await expect(preview.locator('.hero .eyebrow')).toHaveText(JSON.parse(SITE_JSON).tagline);
-  await expect(preview.locator('.hero .t-lead')).toHaveText(JSON.parse(SITE_JSON).description);
+  await expect(preview.locator('.hero .t-lead')).toHaveText(home.lead.replace('{site.description}', JSON.parse(SITE_JSON).description));
   // Every row made from the posts says so: a stand-in in its frame, and the note under it.
   await expect(preview.getByText('Pinned post: the post marked Featured, as a large card.')).toBeVisible();
   await expect(preview.getByText(/^Latest feed: the 8 newest posts of every kind/)).toBeVisible();
   await expect(preview.getByText(/^Latest posts: 3 newest · project/)).toBeVisible();
   await expect(preview.getByText(/^Latest posts: 3 most recently updated · repo/)).toBeVisible();
-  await expect(preview.getByText(/^Games row: the first 3 published games/)).toBeVisible();
+  await expect(preview.getByText(/^Apps row: the first 3 published apps/)).toBeVisible();
   await expect(preview.getByText(/^Preview: the home page with the site’s own styles/)).toBeVisible();
   await expect(preview.getByText('Fix before saving.')).toHaveCount(0);
 
@@ -106,14 +108,18 @@ test('blog archive: opens with today\'s words, previews the head, a stand-in for
   await expectClean(page, seen);
 });
 
-test('games page: the preview shows the empty-state button and the card beside a single game, in the page\'s words', async ({ page }) => {
-  const seen = await openEntry(page, 'games');
-  await expect(page.getByLabel(/^Beside a single game: heading/)).toHaveValue('More games coming', { timeout: 15_000 });
+test('apps page: the preview shows the empty-state button and the card beside a single app, in the page\'s words', async ({ page }) => {
+  const seen = await openEntry(page, 'apps');
+  const apps = parseFrontmatter(PAGE_FILES['apps.md']).frontmatter;
+  await expect(page.getByLabel('Page heading')).toHaveValue('Apps', { timeout: 15_000 });
+  await expect(page.getByLabel(/^Lead paragraph/)).toHaveValue(apps.lead);
+  await expect(page.getByLabel(/^Beside a single app: heading/)).toHaveValue(apps.soonTitle);
   const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.getByText(/Stand-in\. The published games are shown here/)).toBeVisible({ timeout: 15_000 });
-  await expect(preview.getByRole('link', { name: 'See the projects' })).toBeVisible();
-  await expect(preview.locator('.game-soon h2')).toHaveText('More games coming');
-  await expect(preview.locator('.game-soon .eyebrow')).toHaveText('Next up');
+  await expect(preview.getByText(/Stand-in\. The published apps and games are shown here/)).toBeVisible({ timeout: 15_000 });
+  await expect(preview.getByRole('heading', { level: 1 })).toHaveText(apps.title);
+  await expect(preview.getByRole('link', { name: apps.emptyLinkLabel })).toBeVisible();
+  await expect(preview.locator('.app-soon h2')).toHaveText(apps.soonTitle);
+  await expect(preview.locator('.app-soon .eyebrow')).toHaveText(apps.soonEyebrow);
   await expectClean(page, seen);
 });
 

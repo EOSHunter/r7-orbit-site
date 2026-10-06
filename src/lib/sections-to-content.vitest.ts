@@ -40,7 +40,7 @@ const EXPECTED: Record<SectionType, { text: string[] }> = {
   latest: { text: [] },
   feed: { text: [] },
   pinned: { text: [] },
-  games: { text: [] },
+  apps: { text: [] },
   author: { text: [] },
 };
 

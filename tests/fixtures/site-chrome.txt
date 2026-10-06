@@ -37,7 +37,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -74,11 +74,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -142,7 +142,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -179,11 +179,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -248,7 +248,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -285,11 +285,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -353,7 +353,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/" aria-current="page">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -390,11 +390,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -458,7 +458,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/" aria-current="page">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -495,11 +495,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -563,7 +563,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/" aria-current="page">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -600,11 +600,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -669,7 +669,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/" aria-current="page">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -706,11 +706,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -735,13 +735,13 @@ document.documentElement.classList.add('js');
 </div>
 </div>
 </footer>
-== /games/ head
+== /apps/ head
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Games · R7 Orbit</title>
-<meta name="description" content="Small games I built that run in your browser. No install: pick one and press Play.">
-<link rel="canonical" href="https://r7orbit.io/games/">
+<title>Apps · R7 Orbit</title>
+<meta name="description" content="Small apps I built that run in your browser. No install: pick one and open it.">
+<link rel="canonical" href="https://r7orbit.io/apps/">
 <meta name="theme-color" content="#09090a">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -749,9 +749,9 @@ document.documentElement.classList.add('js');
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
-<meta property="og:title" content="Games">
-<meta property="og:description" content="Small games I built that run in your browser. No install: pick one and press Play.">
-<meta property="og:url" content="https://r7orbit.io/games/">
+<meta property="og:title" content="Apps">
+<meta property="og:description" content="Small apps I built that run in your browser. No install: pick one and open it.">
+<meta property="og:url" content="https://r7orbit.io/apps/">
 <meta property="og:image" content="https://r7orbit.io/og-default.png">
 <meta property="og:image:alt" content="R7 Orbit: the R7 mark inside a ring with one orbiting dot, beside the words &quot;News, builds and the things in between.&quot;">
 <meta name="twitter:card" content="summary_large_image">
@@ -761,9 +761,9 @@ document.documentElement.classList.add('js');
 <link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Games","description":"Small games I built that run in your browser. No install: pick one and press Play.","url":"https://r7orbit.io/games/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"ItemList","name":"Games","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"name":"Vesper Drift","url":"https://r7orbit.io/projects/vesper-drift/"}]},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Games","item":"https://r7orbit.io/games/"}]}]</script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Apps","description":"Small apps I built that run in your browser. No install: pick one and open it.","url":"https://r7orbit.io/apps/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"ItemList","name":"Apps","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"name":"Vesper Drift","url":"https://r7orbit.io/projects/vesper-drift/"}]},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Apps","item":"https://r7orbit.io/apps/"}]}]</script>
 </head>
-== /games/ header
+== /apps/ header
 <header class="site-header">
 <div class="container wide bar">
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
@@ -774,7 +774,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/" aria-current="page">Games</a>
+<a href="/apps/" aria-current="page">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -799,7 +799,7 @@ document.documentElement.classList.add('js');
 </div>
 </div>
 </header>
-== /games/ footer
+== /apps/ footer
 <footer class="site-footer">
 <div class="container wide">
 <div class="footer-grid">
@@ -811,11 +811,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -879,7 +879,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -916,11 +916,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -984,7 +984,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/" aria-current="page">About R7 Orbit</a>
 </nav>
@@ -1021,11 +1021,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1089,7 +1089,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1126,11 +1126,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1194,7 +1194,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1231,11 +1231,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1299,7 +1299,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1336,11 +1336,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1404,7 +1404,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1441,11 +1441,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1510,7 +1510,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/" aria-current="page">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1547,11 +1547,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1621,7 +1621,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/" aria-current="page">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1658,11 +1658,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">
@@ -1731,7 +1731,7 @@ document.documentElement.classList.add('js');
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/" aria-current="page">Projects</a>
-<a href="/games/">Games</a>
+<a href="/apps/">Apps</a>
 <a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
@@ -1768,11 +1768,11 @@ document.documentElement.classList.add('js');
 <nav aria-label="Footer">
 <ul class="footer-links">
 <li>
-<a href="/games/">
+<a href="/apps/">
 <svg class="ico" aria-hidden="true">
 <use href="#i-play">
 </use>
-</svg>Games</a>
+</svg>Apps</a>
 </li>
 <li>
 <a href="https://github.com/EOSHunter" rel="noopener">

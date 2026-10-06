@@ -23,7 +23,7 @@ const pagesSchema = z
 const read = (id: string) => parseFrontmatter(readFileSync(`src/content/pages/${id}.md`, 'utf8')).frontmatter as Record<string, unknown>;
 
 describe('the site pages', () => {
-  it('are the home page, Latest, the five archives, Games and Tags, each at its address', () => {
+  it('are the home page, Latest, the five archives, Apps and Tags, each at its address', () => {
     expect(SITE_PAGES.map((p) => [p.id, p.path])).toEqual([
       ['home', '/'],
       ['latest', '/latest/'],
@@ -32,7 +32,7 @@ describe('the site pages', () => {
       ['vlogs', '/vlogs/'],
       ['projects', '/projects/'],
       ['repos', '/repos/'],
-      ['games', '/games/'],
+      ['apps', '/apps/'],
       ['tags', '/tags/'],
     ]);
     expect(() => sitePage('nowhere')).toThrow(/There is no site page "nowhere"/);
@@ -72,12 +72,12 @@ describe('the site pages', () => {
   });
 
   it('holds the copy the pages had in code, moved over unchanged (a few anchors; tests/page-text.spec.js compares every word)', () => {
-    expect(read('home')).toMatchObject({ title: 'Plain notes on building with *AI agents*.', eyebrow: '{site.tagline}', lead: '{site.description}' });
+    expect(read('home')).toMatchObject({ title: 'Building with *AI agents*.', eyebrow: '{site.tagline}' });
     expect(read('blog')).toMatchObject({ title: 'Writing about *building with agents*', seoTitle: 'Blog', emptyHeading: 'No posts yet.' });
-    expect(read('games')).toMatchObject({ soonTitle: 'More games coming', emptyLinkLabel: 'See the projects', soonEyebrow: 'Next up' });
+    expect(read('apps')).toMatchObject({ title: 'Apps', soonTitle: 'More apps coming', emptyLinkLabel: 'See the projects', soonEyebrow: 'Next up' });
     expect(read('tags')).toMatchObject({ title: 'Browse by *topic*', emptyHeading: 'No tags yet.' });
     // The home page's rows, in today's order.
-    expect((read('home').sections as { type: string }[]).map((s) => s.type)).toEqual(['pinned', 'feed', 'latest', 'games', 'latest']);
+    expect((read('home').sections as { type: string }[]).map((s) => s.type)).toEqual(['pinned', 'feed', 'latest', 'apps', 'latest']);
   });
 });
 
@@ -104,9 +104,9 @@ describe('pageProblems', () => {
     expect(pageProblems(blog, { ...complete, buttons: [], soonTitle: '' })).toEqual([]);
   });
 
-  it('asks the Games page for its own words: the empty state button and the card beside a single game', () => {
-    expect(fieldsOf('games').required).toEqual(expect.arrayContaining(['emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText']));
-    expect(pageProblems(sitePage('games'), complete).map((p) => p.match(/"(\w+)"/)?.[1])).toEqual(['emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText']);
+  it('asks the Apps page for its own words: the empty state button and the card beside a single app', () => {
+    expect(fieldsOf('apps').required).toEqual(expect.arrayContaining(['emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText']));
+    expect(pageProblems(sitePage('apps'), complete).map((p) => p.match(/"(\w+)"/)?.[1])).toEqual(['emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText']);
   });
 });
 

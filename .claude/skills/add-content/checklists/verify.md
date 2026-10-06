@@ -20,7 +20,7 @@ The post must be `draft: false` and dated today or earlier for this part; build 
 node .claude/skills/add-content/checklists/check-page.mjs blog/<slug> "<a phrase from the post>"
 ```
 
-(Git Bash rewrites a leading `/blog/...`; leave the slash off, or use PowerShell.) It serves `dist/` on a free port, checks that `dist/<kind>/<slug>/index.html` exists and that the kind's archive, `/latest/`, `/sitemap-0.xml` and the site search all contain it, that there is no horizontal scroll and no console error at 375px and 1280px, and writes `.cache/add-content/<slug>-375.png` and `-1280.png` (git-ignored). Open both screenshots and look at them. A game or project with a `playUrl` is also on `/games/`.
+(Git Bash rewrites a leading `/blog/...`; leave the slash off, or use PowerShell.) It serves `dist/` on a free port, checks that `dist/<kind>/<slug>/index.html` exists and that the kind's archive, `/latest/`, `/sitemap-0.xml` and the site search all contain it, that there is no horizontal scroll and no console error at 375px and 1280px, and writes `.cache/add-content/<slug>-375.png` and `-1280.png` (git-ignored). Open both screenshots and look at them. A game, app or project with a `playUrl` is also on `/apps/`, with its type chip and Play or Open button.
 
 axe: `npm run test:e2e` runs axe over every post page it finds in `dist/` (`tests/routes.js`). To run it on one page: `EXTRA_ROUTES="/blog/<slug>/" npx playwright test a11y`.
 
@@ -34,7 +34,7 @@ node .claude/skills/add-content/checklists/check-page.mjs blog/<slug> "<a phrase
 
 All lines must read `ok (absent)`. It also helps to `rg -l "<slug>" dist` (no output expected; the sitemap and archives must not name it).
 
-## Lighthouse (only for a post with a hero, a big cover or poster, or a game)
+## Lighthouse (only for a post with a hero, a big cover or poster, or a game or app)
 
 ```
 npm run build

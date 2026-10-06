@@ -304,7 +304,7 @@ export interface ListItemInput {
   path: string;
 }
 
-/** An ordered list of pages (the games on /games/), in the order the page shows them. */
+/** An ordered list of pages (the apps on /apps/), in the order the page shows them. */
 export function itemListLd(site: SiteInfo, c: { name: string; items: ListItemInput[] }): JsonLd {
   return {
     '@context': 'https://schema.org',

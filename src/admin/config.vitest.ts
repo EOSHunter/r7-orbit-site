@@ -1,5 +1,6 @@
 import site from '../data/site.json';
 import { describe, expect, it, vi } from 'vitest';
+import { APP_TYPES, APP_TYPE_IDS } from '../lib/app-types';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
 import {
   CMS_AUTH_URL,
@@ -338,7 +339,25 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
     }
   });
 
-  it('has an optional order for the Games page, under the schema name, on projects only', async () => {
+  it('offers the type as a select with exactly the schema values (APP_TYPES), labelled, optional, with a hint', async () => {
+    const shapes = await schemaShapes();
+    const appType = fieldsOf('projects').appType;
+    expect(appType).toMatchObject({ widget: 'select', required: false });
+    expect(appType.default, 'no default: a project left empty is an app, and one that is not playable has no type').toBeUndefined();
+    const options = appType.options as { label: string; value: string }[];
+    expect(options.map((o) => o.value)).toEqual(inner(shapes.projects.appType).options);
+    expect(options.map((o) => o.value)).toEqual([...APP_TYPE_IDS]);
+    expect(options.map((o) => o.label)).toEqual(APP_TYPE_IDS.map((t) => APP_TYPES[t].label));
+    expect(shapes.projects.appType.isOptional()).toBe(true);
+    expect(String(appType.hint)).toMatch(/Game: Play, App: Open/);
+    expect(String(appType.hint)).toMatch(/Left empty: App/);
+    // Next to the play address it depends on.
+    const names = (collections.find((c) => c.name === 'projects')?.fields ?? []).map((f) => (f as { name: string }).name);
+    expect(names.indexOf('appType')).toBe(names.indexOf('playUrl') + 1);
+    for (const name of ['news', 'blog', 'vlogs', 'repos']) expect(shapes[name].appType, name).toBeUndefined();
+  });
+
+  it('has an optional order for the Apps page, under the schema name, on projects only', async () => {
     const shapes = await schemaShapes();
     expect(shapes.projects.order.isOptional()).toBe(true);
     expect(shapes.projects.order.safeParse(2).success).toBe(true);

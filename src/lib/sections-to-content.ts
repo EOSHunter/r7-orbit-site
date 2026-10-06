@@ -80,7 +80,7 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   // The home page's rows: made from the posts when the site is built; nothing of their own to read.
   feed: nothing,
   pinned: nothing,
-  games: nothing,
+  apps: nothing,
   author: nothing,
 };
 

@@ -21,7 +21,7 @@ export const CHROME_PAGES = [
   '/vlogs/',
   '/projects/',
   '/repos/',
-  '/games/',
+  '/apps/',
   '/tags/',
   '/about/',
   '/privacy/',

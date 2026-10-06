@@ -19,7 +19,7 @@ export function getStaticPaths() {
 const kind = Astro.params.kind as CollectionName;
 const [post] = await getFixturePosts(kind);
 if (!post) throw new Error(`tests/fixtures/posts/${kind}/ has no published post: /styleguide/posts/${kind}/ draws it.`);
-// Its own kind only, so the related posts, previous/next and "more games" never link to a page that does not exist.
+// Its own kind only, so the related posts, previous/next and "more apps" never link to a page that does not exist.
 const alone = [post] as SitePost[];
 ---
 
@@ -28,7 +28,7 @@ const alone = [post] as SitePost[];
 ) : kind === 'vlogs' ? (
   <VlogPage post={post as SitePost<'vlogs'>} vlogs={alone as SitePost<'vlogs'>[]} noindex />
 ) : kind === 'projects' ? (
-  <ProjectPage post={post as SitePost<'projects'>} all={alone} games={[]} noindex />
+  <ProjectPage post={post as SitePost<'projects'>} all={alone} apps={[]} noindex />
 ) : (
   <RepoPage post={post as SitePost<'repos'>} all={alone} noindex />
 )}

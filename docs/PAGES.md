@@ -10,7 +10,7 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /blog/                         Blog archive           /blog/<slug>/        Blog post
 /vlogs/                        Vlog archive           /vlogs/<slug>/       Vlog page
 /projects/                     Project archive        /projects/<slug>/    Project page
-/games/                        Games hub (playable projects; no pages of its own: each game is /projects/<slug>/)
+/apps/                         Apps hub (playable projects, games and apps; no pages of its own: each is /projects/<slug>/; /games/ redirects here)
 /repos/                        Repo archive           /repos/<slug>/       Repo page
 /tags/                         All tags               /tags/<tag>/         One tag
 /authors/<slug>/               One author (/authors/hunter-newton/, /authors/r7/; no /authors/ index)
@@ -20,7 +20,7 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /privacy/                      Privacy (when there is a form or analytics)
 ```
 
-Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · Repos · About**, then search; the footer links to Games too. A section whose archive has fewer than three items is not in the header.
+Navigation (header): **Latest · News · Blog · Vlogs · Projects · Apps · Repos · About**, then search; the footer links to Apps too. A section whose archive has fewer than three items is not in the header.
 
 ## Shared parts (build once, reuse)
 
@@ -36,13 +36,13 @@ Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · R
 
 ## Pages whose words are edited in /admin
 
-The home page, `/latest/`, the five archives, `/games/` and `/tags/` take their words from `src/content/pages/<id>.md` (the `pages` collection, edited in /admin under **Pages**; fields in `CONTENT_MODEL.md`, "Pages"; the author's steps in `PUBLISHING.md`, section 11). What is made from the posts stays in code: the listing with its filters, counts and pagination, the games grid, the tag chips, the kind labels and icons (shared with the navigation). The numbered pages (`/blog/page/2/`) repeat their archive's words.
+The home page, `/latest/`, the five archives, `/apps/` and `/tags/` take their words from `src/content/pages/<id>.md` (the `pages` collection, edited in /admin under **Pages**; fields in `CONTENT_MODEL.md`, "Pages"; the author's steps in `PUBLISHING.md`, section 11). What is made from the posts stays in code: the listing with its filters, counts and pagination, the apps grid and its type filter, the tag chips, the kind labels and icons (shared with the navigation). The numbered pages (`/blog/page/2/`) repeat their archive's words.
 
 | Page | File | What the file holds |
 |---|---|---|
-| `/` | `home.md` | The hero (headline = the page's `h1`, eyebrow, lead, up to two buttons), the meta description, and the rows below the hero as blocks (`sections`): Pinned post, Latest feed, Latest posts (Projects), Games row, Latest posts (Repos) |
+| `/` | `home.md` | The hero (headline = the page's `h1`, eyebrow, lead, up to two buttons), the meta description, and the rows below the hero as blocks (`sections`): Pinned post, Latest feed, Latest posts (Projects), Apps row, Latest posts (Repos) |
 | `/latest/`, `/news/`, `/blog/`, `/vlogs/`, `/projects/`, `/repos/` | `latest.md`, `news.md`, … | `h1`, browser title (`seoTitle`, today the kind's name), description, lead, the empty state (heading and text), blocks above and below the list (`introSections`, `outroSections`, empty today) |
-| `/games/` | `games.md` | As an archive, plus the empty state's button and the "More games coming" card (eyebrow, heading, text) |
+| `/apps/` | `apps.md` | As an archive, plus the empty state's button and the "More apps coming" card (eyebrow, heading, text). The lead is interim (see "Apps" below) |
 | `/tags/` | `tags.md` | As an archive. "Used once" stays in code |
 
 The browser title of the home page is still `{site name} · {tagline}` from `src/data/site.json`. The words were moved without a change: `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`, captured from the pages before they became editable, and the pages were compared pixel for pixel at 375px and 1280px before and after.
@@ -51,13 +51,13 @@ The browser title of the home page is still `{site name} · {tagline}` from `src
 
 **Purpose:** In five seconds, say what this is and show what's newest.
 
-Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each data row is a block of the shared library (`SECTIONS.md`): Pinned post (`pinned`), Latest feed (`feed`, one per page; its anchor is `#latest`), Latest posts with a section frame (`latest`, Projects newest first, Repos by last push), Games row (`games`).
+Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each data row is a block of the shared library (`SECTIONS.md`): Pinned post (`pinned`), Latest feed (`feed`, one per page; its anchor is `#latest`), Latest posts with a section frame (`latest`, Projects newest first, Repos by last push), Apps row (`apps`).
 
 1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, one button ("Start with the latest", solid). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
 2. **Pinned:** the one `featured: true` post as a large horizontal card (media left, text right; stacked on mobile). Hidden if none.
 3. **Latest:** `.seg` filter (All · News · Blogs · Vlogs · Projects · Repos), then the 8 newest across kinds in the card grid; the newest has `.fresh`. "See everything" link to `/archive` (or the `All` archive).
 4. **Projects strip:** 3 newest projects (card with status mark). "All projects →".
-5. **Games strip** (only when a game is published): up to 3 `GameCard`s in hub order, "All games →" to `/games/`.
+5. **Apps row** (only when an app or game is published): up to 3 `AppCard`s in hub order, heading "Apps", "All apps →" to `/apps/`. No type filter here.
 6. **Repos strip:** 3 repos by most recent push. "All repos →".
 
 States: filter with no results (can't happen on the home page since "All" is default; if a kind has no posts it isn't shown). Loading: none (static).
@@ -103,20 +103,21 @@ Structured data: `Article` (`NewsArticle` for news). Done when: headings are in 
 
 Structured data: `VideoObject` (name, description, thumbnailUrl, uploadDate, duration as ISO 8601 `PT12M48S`, embedUrl). Done when: Lighthouse shows no third-party requests on first load; chapters work with the keyboard; the poster has no layout shift.
 
-## Games `/games/`
+## Apps `/apps/`
 
-**Purpose:** Find something to play, with nothing to install.
+**Purpose:** Find something to play or use in the browser, with nothing to install. Until 2026-10-06 this was the Games hub at `/games/`; `/games` and `/games/` now redirect here with a 301 (`public/_redirects`).
 
-- A game is a `projects` entry with a `playUrl` (no collection of its own). Only published games are listed: drafts and future-dated posts go through the same helper as every list (`selectGames` in `src/lib/games.ts`, which wraps `filterPublished`).
-- Order: the optional `order` number (lower first), then games without one, newest first.
-- Header: eyebrow (play icon + "Games"), `h1` "Games", one line: "Small games that run in your browser. No install." The `h1`, the line, the browser title and description, the empty state and the "More games coming" card are `src/content/pages/games.md`.
-- `GameGrid` of `GameCard`s: 1 column on a phone, 2 from 640px, 3 from 1000px; with one or two cards it stays at 2 columns. Each card: poster (the project's `cover`, or the `MediaPlaceholder`), Playable badge, title, one line, platform chips, a solid **Play** button and a **Details** link. Play goes to `/projects/<slug>/#play` (where the game is embedded); with `playMode: link` it opens `playUrl` in a new tab. Details always goes to the project page. The first row (three cards) loads its posters at once, the rest are lazy; every poster sits in a 16:9 frame, so nothing shifts.
-- With exactly one game, a final dashed "More games coming" card (no links) follows it.
-- Empty state: "No games yet." with a link to the projects. The page is `noindex` and out of the sitemap while it is empty.
-- Structured data: `CollectionPage`, an `ItemList` of the games in the order shown (omitted when empty) and a `BreadcrumbList`. In the sitemap once a game is published.
-- Each playable project page ends with a "More games" strip (up to three other games, and "All games →"). Search results for a playable project are labelled **Game** (Pagefind meta `kind`, set on the project page header).
+- An app is a `projects` entry with a `playUrl` (no collection of its own). Its type is `appType` (`game` or `app`, defined once in `src/lib/app-types.ts`; a playable project without it is an `app`). Only published entries are listed: drafts and future-dated posts go through the same helper as every list (`selectApps` in `src/lib/apps.ts`, which wraps `filterPublished`).
+- Order: the optional `order` number (lower first), then those without one, newest first. The type does not change the order.
+- Header: eyebrow (play icon + "Apps"), `h1` "Apps", one line. The `h1`, the line, the browser title and description, the empty state and the "More apps coming" card are `src/content/pages/apps.md`. **The lead is interim**: "Things I have built that run in your browser. No install." stands until the author writes the final one in /admin (**Pages > Apps page**). The description was reworded with the rename ("pick one and open it") and is the author's to change too.
+- **Type filter** (only when two or more types have a published entry): a `.seg` labelled "Type" with **All**, then one button per type present, labelled by its plural ("Games", "Apps"), in the order of `APP_TYPES`, with a live count ("2 of 5 apps"). It follows the archives' filters: buttons with `aria-pressed`, hidden with JavaScript off (every card shows then), and the choice is kept in the address (`?type=game`, read on load; a type with no button is ignored). With one or two cards left it keeps the two-column grid.
+- `AppGrid` of `AppCard`s: 1 column on a phone, 2 from 640px, 3 from 1000px; with one or two cards it stays at 2 columns. Each card: poster (the project's `cover`, or the `MediaPlaceholder`), a **type chip** (icon and label: play icon + "Game", project icon + "App"; a plain `.chip`, no colour of its own), title, one line, platform chips, a solid primary button and a **Details** link. The primary button says **Play** for a game and **Open** for an app; it goes to `/projects/<slug>/#play` (where it is embedded), or with `playMode: link` opens `playUrl` in a new tab. Details always goes to the project page. The first row (three cards) loads its posters at once, the rest are lazy; every poster sits in a 16:9 frame, so nothing shifts.
+- With exactly one entry, a final dashed "More apps coming" card (no links) follows it.
+- Empty state: the page entry's heading and text ("No apps yet."), with a link to the projects. The page is `noindex` and out of the sitemap while it is empty.
+- Structured data: `CollectionPage` named "Apps", an `ItemList` of the entries in the order shown (omitted when empty) and a `BreadcrumbList` (Home / Apps). In the sitemap once one is published.
+- Each playable project page ends with a "More apps" strip (up to three others of any type, never itself, and "All apps →"). The project page's structured data follows its type (`CONTENT_MODEL.md`, Playable projects), and so does its search result's label: **Game** or **App** (Pagefind meta `kind` and `kindIcon`, set on the project page header).
 
-Done when: the layouts for 0, 1, 2 and 5 games pass axe at 320 to 1480px (`tests/games.spec.js` runs them on the fixture `/styleguide/games/`).
+Done when: the layouts for 0, 1, 2 and 5 entries, and for several of one type, pass axe at 320 to 1480px, and the filter works by mouse, keyboard and address (`tests/apps.spec.js` runs them on the fixture `/styleguide/apps/`).
 
 ## Project `/projects/<slug>/`
 

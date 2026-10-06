@@ -1,5 +1,5 @@
 ---
-// The hub with no game published: the words are the page's (src/content/pages/games.md), the button goes to the projects.
+// The hub with no app published: the words are the page's (src/content/pages/apps.md), the button goes to the projects.
 interface Props {
   heading: string;
   text: string;
@@ -9,7 +9,7 @@ interface Props {
 const { heading, text, linkLabel } = Astro.props;
 ---
 
-<div class="empty" data-games-empty>
+<div class="empty" data-apps-empty>
   <h2>{heading}</h2>
   <p>{text}</p>
   <a class="btn" href="/projects/">

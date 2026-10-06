@@ -1,3 +1,5 @@
+import type { AppType } from './app-types';
+
 /** What a card needs. Phase 3 maps content-collection entries onto these shapes. */
 export type Kind = 'news' | 'blog' | 'vlog' | 'project' | 'repo';
 
@@ -53,7 +55,7 @@ export interface ProjectCardData extends CardBase {
   kind: 'project';
   status: ProjectStatus;
   stack?: string[];
-  /** The project has a game to play in the browser (playUrl): the card shows a Playable badge. */
+  /** The project runs in the browser (playUrl): the card shows a Playable badge. */
   playable?: boolean;
   cover?: Cover;
 }
@@ -96,12 +98,14 @@ export const STATUS_MARK: Record<ProjectStatus, 'working' | 'done' | 'idle'> = {
   archived: 'idle',
 };
 
-/** What a GameCard needs (the /games/ hub, the home teaser and the "More games" strip). */
-export interface GameCardData {
-  /** The project page, where the game's details are. */
+/** What an AppCard needs (the /apps/ hub, the home row and the "More apps" strip). */
+export interface AppCardData {
+  /** The project page, where the app's details are. */
   href: string;
-  /** Where Play goes: the project page's Play section, or the game itself in a new tab (`playMode: link`). */
+  /** Where the primary button goes: the project page's Play section, or the app itself in a new tab (`playMode: link`). */
   play: { href: string; external: boolean };
+  /** Game or app (src/lib/app-types.ts): the type chip, the button's word and the hub's type filter. */
+  type: AppType;
   title: string;
   summary: string;
   cover?: Cover;

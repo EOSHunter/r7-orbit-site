@@ -1,0 +1,104 @@
+---
+// What the hub shows under its heading: the type filter (only when two or more types have an app), the grid of apps, or the empty
+// state when there are none. The page and its test fixture both use it, so the fixture exercises the real branches. The words
+// come from the hub's entry (src/content/pages/apps.md); the type names come from src/lib/app-types.ts.
+//
+// The filter follows the archives' (ArchiveList): a .seg of buttons with aria-pressed and a live count, hidden with JavaScript off
+// (every card is then shown), and its state kept in the address (?type=game).
+import AppGrid from './AppGrid.astro';
+import AppsEmpty from './AppsEmpty.astro';
+import type { AppCardData } from '../lib/cards';
+import { APP_TYPES, APP_TYPE_IDS } from '../lib/app-types';
+import { countLabel } from '../lib/listing';
+import type { AppsCopy } from '../lib/site-pages-queries';
+
+interface Props {
+  apps: AppCardData[];
+  copy: AppsCopy;
+  /** Names the filter's ids; the fixture page draws several hubs on one page. */
+  id?: string;
+}
+
+const { apps, copy, id = 'apps' } = Astro.props;
+const types = APP_TYPE_IDS.filter((t) => apps.some((a) => a.type === t));
+---
+
+{
+  apps.length > 0 ? (
+    <div data-apps-hub data-total={apps.length}>
+      {types.length > 1 && (
+        <div class="toolbar" role="group" aria-label="Filter apps">
+          <div class="toolbar-row">
+            <span class="eyebrow" id={`${id}-types-label`}>Type</span>
+            <div class="seg" role="group" aria-labelledby={`${id}-types-label`} data-filter="type">
+              <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
+              {types.map((t) => (
+                <button type="button" data-value={t} aria-pressed="false">
+                  {APP_TYPES[t].plural}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p class="t-meta toolbar-count" data-count aria-live="polite">{countLabel(apps.length, 'app', 'apps')}</p>
+        </div>
+      )}
+      <AppGrid {apps} soon={{ eyebrow: copy.soonEyebrow, title: copy.soonTitle, text: copy.soonText }} eager />
+    </div>
+  ) : (
+    <AppsEmpty heading={copy.emptyHeading} text={copy.emptyText} linkLabel={copy.emptyLinkLabel} />
+  )
+}
+
+<script>
+  // Every hub on the page (the fixture draws several), each on its own; the address holds one `type` for them all.
+  for (const root of document.querySelectorAll<HTMLElement>('[data-apps-hub]')) {
+    const seg = root.querySelector<HTMLElement>('[data-filter="type"]');
+    const grid = root.querySelector<HTMLElement>('[data-apps]');
+    if (!seg || !grid) continue;
+    const buttons = [...seg.querySelectorAll<HTMLButtonElement>('button')];
+    const items = [...grid.querySelectorAll<HTMLElement>(':scope > li[data-type]')];
+    const count = root.querySelector<HTMLElement>('[data-count]');
+    const total = items.length;
+    // One or two cards stay at two columns (AppGrid): kept true while filtering, as it is for the full list.
+    const fewAtFirst = grid.classList.contains('few');
+    let type = 'all';
+
+    const render = (writeUrl: boolean) => {
+      let shown = 0;
+      for (const li of items) {
+        const on = type === 'all' || li.dataset.type === type;
+        li.hidden = !on;
+        if (on) shown++;
+      }
+      grid.classList.toggle('few', type === 'all' ? fewAtFirst : shown <= 2);
+      for (const b of buttons) {
+        const on = (b.dataset.value ?? 'all') === type;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+      }
+      if (count) count.textContent = type === 'all' || shown === total ? `${total} ${total === 1 ? 'app' : 'apps'}` : `${shown} of ${total} apps`;
+      if (!writeUrl) return;
+      const params = new URLSearchParams(location.search);
+      if (type === 'all') params.delete('type');
+      else params.set('type', type);
+      const query = params.toString();
+      try {
+        history.replaceState(null, '', location.pathname + (query ? `?${query}` : '') + location.hash);
+      } catch {
+        /* a sandboxed frame: the filter still works, it just is not shareable */
+      }
+    };
+
+    seg.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest('button');
+      if (!b) return;
+      type = b.dataset.value ?? 'all';
+      render(true);
+    });
+
+    // Start from the address: ?type=game. A type with no button here (none published) shows everything.
+    const asked = new URLSearchParams(location.search).get('type') ?? 'all';
+    type = buttons.some((b) => b.dataset.value === asked) ? asked : 'all';
+    render(false);
+  }
+</script>

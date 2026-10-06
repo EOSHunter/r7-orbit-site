@@ -26,9 +26,11 @@ test('every page gets the baseline security headers, and no header is set twice'
   }
 });
 
-test('project pages may frame the play origin and nothing else; no other page gets a policy of its own', () => {
+test('project pages may frame the play origins (Vesper Drift, House Painter) and nothing else; no other page gets a policy of its own', () => {
   const csp = headersFor('/projects/vesper-drift/')['content-security-policy'];
-  expect(csp).toBe('frame-src https://vesper.r7orbit.io');
+  // Each host listed explicitly: adding a game or an app adds its host here (docs/PUBLISHING.md).
+  expect(csp).toBe('frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io');
+  expect(headersFor('/projects/house-painter/')['content-security-policy']).toBe(csp);
   // Not script-src, so nothing about scripts is loosened.
   expect(csp).not.toMatch(/script-src|default-src|\*/);
   for (const path of ['/', '/vlogs/x/', '/blog/x/', '/repos/x/']) {
@@ -36,6 +38,7 @@ test('project pages may frame the play origin and nothing else; no other page ge
   }
   // The admin keeps its own policy, unjoined with this one (it needs frame-src 'self' blob: for the live preview).
   expect(headersFor('/admin/')['content-security-policy']).not.toContain('vesper.r7orbit.io');
+  expect(headersFor('/admin/')['content-security-policy']).not.toContain('housepainter.r7orbit.io');
 });
 
 test('the sign-in popup keeps its link to the admin: no Cross-Origin-Opener-Policy', () => {

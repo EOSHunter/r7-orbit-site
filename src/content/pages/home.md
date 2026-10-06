@@ -29,12 +29,12 @@ sections:
     look: section
     kinds:
       - project
-  - type: games
+  - type: apps
     eyebrow: Play in the browser
-    heading: Games
+    heading: Apps
     count: 3
-    moreLabel: All games
-    moreUrl: /games/
+    moreLabel: All apps
+    moreUrl: /apps/
   - heading: Repos
     eyebrow: Open source
     order: updated

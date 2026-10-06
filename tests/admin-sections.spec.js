@@ -42,7 +42,7 @@ const SHOWS = {
   latest: '.latest-posts',
   feed: '.sec-row-band .feed-head h2',
   pinned: '.sec-row-band section.section:not(.ruled) .section-head',
-  games: '.sec-row-band section.section.ruled .section-head',
+  apps: '.sec-row-band section.section.ruled .section-head',
   author: '.author-box',
 };
 
