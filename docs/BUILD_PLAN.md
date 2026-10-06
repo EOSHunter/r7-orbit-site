@@ -68,13 +68,13 @@ Port from `templates/`; the template HTML is the visual spec. Keep class names f
 
 **Done when:** each integration has a test or a manual checklist item, and the build still passes with the network off.
 
-## Phase 6: Feeds, SEO, sharing (parallel)
+## Phase 6: SEO, sharing (parallel)
 
-- [ ] RSS (all + per kind), sitemap, `robots.txt`, redirects file
+- [ ] Sitemap, `robots.txt`, redirects file
 - [ ] JSON-LD per page type; canonical; OG tags; `og:image` fallback
 - [ ] Optional: per-post OG images (satori)
 
-**Done when:** feeds validate; the Rich Results Test passes for each page type; link previews look right in Slack/Discord/LinkedIn.
+**Done when:** the Rich Results Test passes for each page type; link previews look right in Slack/Discord/LinkedIn.
 
 ## Phase 7: Quality pass
 

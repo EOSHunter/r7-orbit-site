@@ -6,16 +6,11 @@
   "author": {
     "name": "Your Name",
     "bio": "Two or three sentences, in the first person.",
-    "photo": null,
-    "email": "hello@example.com"
+    "photo": null
   },
   "links": {
     "github": "https://github.com/your-username",
-    "youtube": "",
-    "x": "",
-    "linkedin": "",
-    "bluesky": "",
-    "rss": "/rss.xml"
+    "youtube": ""
   },
   "nav": ["Latest", "News", "Blog", "Vlogs", "Projects", "Repos", "About"],
   "newsletter": { "provider": "buttondown", "formAction": "" }

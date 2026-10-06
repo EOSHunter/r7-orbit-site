@@ -26,14 +26,10 @@ test('the site never links to the admin', async ({ page }) => {
   }
 });
 
-test('admin stays out of robots, sitemap and feeds', async ({ request }) => {
+test('admin stays out of robots and the sitemap', async ({ request }) => {
   const robots = await (await request.get('/robots.txt')).text();
   expect(robots).toMatch(/^Disallow: \/admin\/$/m);
 
   const sitemap = await (await request.get('/sitemap-0.xml')).text();
   expect(sitemap).not.toMatch(/\/admin\//);
-
-  for (const path of ['/rss.xml', '/blog/rss.xml', '/news/rss.xml']) {
-    expect(await (await request.get(path)).text(), path).not.toMatch(/\/admin\//);
-  }
 });

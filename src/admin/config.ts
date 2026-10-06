@@ -47,7 +47,7 @@ export interface AdminEnv {
 //                      post, because Astro's image() needs that) and every picture inside a blog body (Image, Image gallery
 //                      blocks: written /src/assets/blog/x.jpg, which Figure and ImageRow resolve).
 // - public/media/<kind>/  served as a plain file at /media/<kind>/x.jpg: covers, posters, gallery shots, pictures in the body of
-//                      news, vlogs, projects and repos. These are strings in the schema that cards, feeds and share images read
+//                      news, vlogs, projects and repos. These are strings in the schema that cards and share images read
 //                      as they are, so they cannot be optimised by Astro; scripts/media.mjs resizes them in the build output.
 // The top-level media_folder (public/media) is the library the editor's "Media" tab opens.
 export const MEDIA_FOLDER = 'public/media';
@@ -178,7 +178,7 @@ const draft = field({
   widget: 'boolean',
   default: false,
   required: false,
-  hint: 'A draft is left out of the site, archives, search, feeds and sitemap. Turn it on to hold a post back.',
+  hint: 'A draft is left out of the site, archives, search and sitemap. Turn it on to hold a post back.',
 });
 const readTime = field({
   name: 'readTime',

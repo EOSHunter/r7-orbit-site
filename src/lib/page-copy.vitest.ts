@@ -16,8 +16,6 @@ const settings: PageSettings = {
   siteName: 'Site',
   siteTagline: 'A tagline',
   siteDescription: 'A description.',
-  authorEmail: 'me@site.test',
-  rss: '/rss.xml',
   newsletterProvider: 'a provider',
   newsletterConnected: false,
 };
@@ -41,8 +39,6 @@ describe('settings tokens', () => {
   it('reads the settings from site.json; the newsletter is never connected (there is none)', () => {
     expect(pageSettingsOf(site)).toMatchObject({
       siteName: site.name,
-      authorEmail: site.author.email,
-      rss: site.links.rss,
       newsletterProvider: '',
       newsletterConnected: false,
     });
@@ -51,17 +47,19 @@ describe('settings tokens', () => {
   it('fills every token, as often as it appears', () => {
     expect(
       fillTokens(
-        '[{author.email}](mailto:{author.email}) on {site.name} via {newsletter.provider} at {links.rss}',
+        '{site.name}: {site.tagline} ({site.description}) via {newsletter.provider}, {site.name} again',
         settings,
         'x',
       ),
-    ).toBe('[me@site.test](mailto:me@site.test) on Site via a provider at /rss.xml');
+    ).toBe('Site: A tagline (A description.) via a provider, Site again');
   });
 
   it('stops on a token that does not exist, naming the place and the tokens there are', () => {
     expect(() => fillTokens('Write to {author.mail}', settings, 'privacy.md, block 3 (Text)')).toThrow(
-      /privacy\.md, block 3 \(Text\): there is no setting \{author\.mail\}\. .*\{author\.email\}/,
+      /privacy\.md, block 3 \(Text\): there is no setting \{author\.mail\}\. .*\{site\.name\}/,
     );
+    // There is no email and no feed to print.
+    for (const gone of ['{author.email}', '{links.rss}']) expect(() => fillTokens(gone, settings, 'x')).toThrow(/there is no setting/);
   });
 
   it('leaves braces that are not a token alone', () => {
@@ -74,7 +72,7 @@ describe('settings tokens', () => {
         title: '{site.name}',
         seoTitle: 'At {site.name}',
         description: 'About {site.name}',
-        sections: [{ type: 'links', items: [{ label: '{author.email}', url: '/x/' }] } as Section],
+        sections: [{ type: 'links', items: [{ label: '{site.tagline}', url: '/x/' }] } as Section],
       },
       settings,
       'x.md',
@@ -83,7 +81,7 @@ describe('settings tokens', () => {
       title: 'Site',
       seoTitle: 'At Site',
       description: 'About Site',
-      sections: [{ items: [{ label: 'me@site.test' }] }],
+      sections: [{ items: [{ label: 'A tagline' }] }],
     });
   });
 });
@@ -128,24 +126,16 @@ describe('slots', () => {
 // fixtures in tests/pages.spec.js; the privacy page's "connected" paragraphs never show (there is no newsletter), so they
 // are only checked here to stay hidden.
 describe('the page files', () => {
-  it('privacy, not connected: the other paragraphs, with the RSS address from the settings', () => {
+  it('privacy, not connected: the other paragraphs, with no feed link and no contact address', () => {
     const texts = textsOf(
       fillPage(read('privacy'), { ...pageSettingsOf(site), newsletterConnected: false }, 'privacy.md'),
     );
     expect(texts).toContain(
-      `The newsletter isn't connected yet. The sign-up form on this site does not send your address anywhere, and nothing is stored. When it is connected, this page will name the service that holds the list.\n\nUntil then, you can follow by [RSS](${site.links.rss}), which needs no address at all.`,
+      "The newsletter isn't connected yet. The sign-up form on this site does not send your address anywhere, and nothing is stored. When it is connected, this page will name the service that holds the list.",
     );
     expect(texts.join('\n')).not.toContain('If you subscribe');
-  });
-
-  it('privacy prints the contact email from the settings and never holds it as text', () => {
     const file = readFileSync('src/content/pages/privacy.md', 'utf8');
-    expect(file).toContain('[{author.email}](mailto:{author.email})');
-    expect(file).not.toContain(site.author.email);
-    const texts = textsOf(
-      fillPage(read('privacy'), { ...pageSettingsOf(site), authorEmail: 'new@site.test' }, 'privacy.md'),
-    );
-    expect(texts).toContain('Questions, or a request to remove your address: [new@site.test](mailto:new@site.test).');
+    expect(file).not.toMatch(/mailto|@|rss/i);
   });
 
   it('every page file reads through the schema and fills without an unknown token', () => {

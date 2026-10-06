@@ -18,7 +18,7 @@ One site, one author, five kinds of thing:
 | **Project** | Something I built: what, why, how, what I learned | A page with sections and screenshots | `/projects/` |
 | **Repo** | A GitHub repository, shown with live stats and a short write-up | A card with a README-style page | `/repos/` |
 
-A visitor can browse everything on the home page, filter by kind or tag, search, subscribe by RSS, and follow through to the video, the code or the live project.
+A visitor can browse everything on the home page, filter by kind or tag, search, and follow through to the video, the code or the live project.
 
 ## 2. Who it is for
 
@@ -37,7 +37,7 @@ Calm, precise, a little theatrical. Like a well-made instrument: dark, quiet, on
 1. Publishing a new post takes **minutes, not an afternoon**: write a Markdown file, push, done.
 2. The site is **fast and light**: it opens instantly on a phone on a poor connection.
 3. Every kind of post has a **fitting, consistent page** (not one template stretched over five).
-4. It is **findable**: good titles, descriptions, share images, feeds, sitemap.
+4. It is **findable**: good titles, descriptions, share images, sitemap.
 5. It is **accessible** and works with keyboard, screen reader, reduced motion and both light/dark preferences.
 6. It is **cheap to run**: static hosting, no database, no accounts.
 
@@ -60,7 +60,7 @@ These can come later; none of them should be blocked by the first build.
 - Post pages for each of the five kinds (see `PAGES.md`).
 - Tag pages; About page; 404 page.
 - Dark theme only (the light "Ivory" theme was removed; see `DECISIONS.md`).
-- RSS (all posts, plus one feed per kind), `sitemap.xml`, `robots.txt`.
+- `sitemap.xml`, `robots.txt`.
 - Open Graph / Twitter cards, with a good default image and an optional per-post cover.
 - Site-wide search (static, built at build time).
 - Repo cards show live GitHub data (stars, forks, language, last update), fetched **at build time**, refreshed by a scheduled rebuild.
@@ -95,7 +95,7 @@ These are recommendations with reasons. The author decides (`DECISIONS.md`); the
 
 | Concern | Recommendation | Why | Alternatives |
 |---|---|---|---|
-| Framework | **Astro** (static output) | Content-first, Markdown/MDX collections with typed fields, ships almost no JavaScript, easy RSS/sitemap | Next.js (heavier), Eleventy (lighter, less structure), SvelteKit |
+| Framework | **Astro** (static output) | Content-first, Markdown/MDX collections with typed fields, ships almost no JavaScript, easy sitemap | Next.js (heavier), Eleventy (lighter, less structure), SvelteKit |
 | Styling | **The design system's plain CSS** (`tokens.css`, `components.css`, small `site.css`) | Already built, tiny, themeable. No build step | Tailwind v4 with `tailwind/theme.css` if the author prefers utilities |
 | Content | Markdown/MDX files with frontmatter in `src/content/<kind>/` | Diffable, portable, works with any editor, works with AI agents | A headless CMS later |
 | Search | **Pagefind** | Static, tiny, no server, runs at build time | Fuse.js over a JSON index |

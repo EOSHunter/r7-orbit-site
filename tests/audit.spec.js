@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import routes, { articlePaths } from './routes.js';
+import site from '../src/data/site.json' with { type: 'json' };
 
 // Phase 7 checks that go beyond the smoke test: layout at every width, head tags, JSON-LD, links, heading order.
 const widths = [320, 375, 768, 1024, 1280, 1480];
@@ -101,7 +102,8 @@ for (const route of routes) {
       expect(l.href, 'link has an href').toBeTruthy();
       if (!route.noindex) expect(l.href, `no placeholder href (${l.name})`).not.toMatch(/^#?$|^javascript:/); // the specimen's sample cards use #
       expect(l.name, `link ${l.href} has an accessible name`).not.toBe('');
-      expect(l.href, 'owner has no GitHub profile link').not.toMatch(/^https?:\/\/(www\.)?github\.com\/[^/]+\/?$/);
+      // The only GitHub profile link is the one in the site settings (the author confirms it); no other profile is guessed.
+      if (l.href !== site.links.github) expect(l.href, 'no other GitHub profile link').not.toMatch(/^https?:\/\/(www\.)?github\.com\/[^/]+\/?$/);
     }
 
     // Heading order: never skip a level going down.

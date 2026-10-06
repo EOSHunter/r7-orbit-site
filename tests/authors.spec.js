@@ -250,19 +250,7 @@ test('a tag page shared by both authors has the filter too, and hides the kinds 
   await expect(page.locator('[data-item][hidden]')).toHaveCount(0);
 });
 
-// ---- feeds and sitemap ----------------------------------------------------------------------------------------------------
-
-test('every feed item carries its author as dc:creator, in the all-posts feed and in each kind feed', async ({ request }) => {
-  for (const path of ['/rss.xml', ...KINDS.map((k) => `/${k}/rss.xml`)]) {
-    const xml = await (await request.get(path)).text();
-    expect(xml, path).toContain('xmlns:dc="http://purl.org/dc/elements/1.1/"');
-    for (const item of xml.match(/<item>[\s\S]*?<\/item>/g) ?? []) {
-      const link = /<link>([^<]+)<\/link>/.exec(item)[1];
-      const creator = /<dc:creator>([^<]+)<\/dc:creator>/.exec(item)?.[1];
-      expect(creator, `${path} ${link}`).toBe(credited(new URL(link).pathname) === 'r7' ? 'R7' : site.author.name);
-    }
-  }
-});
+// ---- sitemap ----------------------------------------------------------------------------------------------------------
 
 test('the sitemap lists both author pages', async ({ request }) => {
   const xml = await (await request.get('/sitemap-0.xml')).text();

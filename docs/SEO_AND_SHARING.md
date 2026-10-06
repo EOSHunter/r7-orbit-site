@@ -13,7 +13,6 @@ What makes the site findable and makes a shared link look good. All of this is c
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="{Site name}" href="/rss.xml">
 
 <meta property="og:type" content="article">             <!-- website for home/archives -->
 <meta property="og:site_name" content="{Site name}">
@@ -75,10 +74,6 @@ Sitemap: https://r7orbit.io/sitemap-index.xml
 
 `/sitemap-index.xml` lists every page except drafts, search and `noindex` pages, with `lastmod` from `updated` or `date`. Submit it in Google Search Console and Bing Webmaster Tools after launch.
 
-## Feeds
-
-RSS 2.0 at `/rss.xml` (everything) and per kind. Include the full text for blog posts, summary + link for the others. Set `<atom:link rel="self">`, a stable `<guid isPermaLink="true">`, and `<lastBuildDate>`. Add the `<link rel="alternate">` in every page head.
-
 ## Performance is SEO
 
 See the budgets in `PROJECT_BRIEF.md` §9. Specifically: no render-blocking third-party scripts; preload the two above-the-fold font files (`Inter` variable and `Cormorant Garamond 400`); set `width`/`height` on every image; serve AVIF/WebP; cache static assets with long `max-age` + hashed filenames; HTML with short cache.
@@ -95,10 +90,7 @@ Semantic HTML, one `h1`, descriptive link text, alt text, language attribute, re
 | YouTube banner | `brand/social/youtube-banner.png` (2560×1440) | Text kept inside the 1546×423 safe area; edit `brand/source/youtube-banner.html` to change it |
 | GitHub profile / org avatar | `brand/social/avatar-800.png` | |
 | GitHub repo social preview | `brand/social/github-social-preview.png` (1280×640) | Settings → Social preview. Edit `github-social.html` for each repo's name |
-| X / Bluesky / LinkedIn avatar | `brand/social/avatar-800.png` | |
 | Link previews | `brand/og-default.png` | |
-
-Headers for X (1500×500) and LinkedIn (1584×396) aren't made yet; copy `youtube-banner.html` as the starting point if wanted.
 
 ## Launch checklist for search
 
@@ -106,6 +98,6 @@ Headers for X (1500×500) and LinkedIn (1584×396) aren't made yet; copy `youtub
 - [ ] `robots.txt` allows crawling; staging site is `noindex` and password-protected
 - [ ] Every page has a unique title and description
 - [ ] OG images render on Slack, Discord, X, LinkedIn
-- [ ] RSS validates; sitemap validates; structured data validates
+- [ ] Sitemap validates; structured data validates
 - [ ] 404 returns 404; `www` ↔ apex redirect is set; HTTP → HTTPS redirect is on
 - [ ] Lighthouse mobile ≥ 95 in all categories on home, a post, an archive

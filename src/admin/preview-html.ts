@@ -13,7 +13,7 @@ export const escapeHtml = (s: string): string =>
 const text = (v: unknown): string => (typeof v === 'string' ? v : '');
 
 /** Only addresses that stay on the web or on this site: a pasted `javascript:` link is shown as plain text. */
-const safeHref = (href: string): boolean => /^(https?:\/\/|\/|#|mailto:)/i.test(href);
+const safeHref = (href: string): boolean => /^(https?:\/\/|\/|#)/i.test(href);
 
 /** The inline Markdown a block's text box is likely to hold: `code`, **bold**, *italic*, [links](url). Everything is escaped first. */
 export function inlineMarkdown(source: string): string {

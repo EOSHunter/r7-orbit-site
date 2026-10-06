@@ -22,7 +22,7 @@ const site: SiteInfo = {
   url: 'https://example.com',
   description: 'Site description.',
   author: { name: 'Your Name', photo: null },
-  links: { github: '', youtube: 'https://www.youtube.com/@R7Creatives', x: '', rss: '/rss.xml' },
+  links: { github: '', youtube: 'https://www.youtube.com/@R7Creatives' },
 };
 
 describe('resolveSeo', () => {
@@ -78,11 +78,11 @@ describe('jsonLdString', () => {
 });
 
 describe('person and sameAs', () => {
-  it('keeps only filled http(s) profile links and skips the feed', () => {
+  it('keeps only filled http(s) profile links', () => {
     expect(profileUrls(site.links)).toEqual(['https://www.youtube.com/@R7Creatives']);
-    expect(profileUrls({ x: 'javascript:alert(1)', bluesky: 'not a url' })).toEqual([]);
+    expect(profileUrls({ github: 'javascript:alert(1)', youtube: 'not a url' })).toEqual([]);
   });
-  it('omits sameAs and image when there are none, and never includes the email', () => {
+  it('omits sameAs and image when there are none', () => {
     const out = JSON.parse(jsonLdString(personLd({ ...site, links: { github: '' } })));
     expect(out).toEqual({ '@type': 'Person', name: 'Your Name', url: 'https://example.com/about/' });
   });

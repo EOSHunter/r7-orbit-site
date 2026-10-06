@@ -9,7 +9,6 @@ import {
   searchKinds,
   siteLinkProblems,
   siteSchema,
-  siteWarnings,
   type SiteSettings,
 } from './site-settings';
 
@@ -45,19 +44,21 @@ describe('the settings file as it is', () => {
     ]);
   });
 
-  it('keeps the footer it had: Games, RSS, (GitHub when filled in), YouTube', () => {
+  it('keeps the footer: Games, GitHub, YouTube (an empty profile link leaves its icon out)', () => {
     expect(footerLinks(site)).toEqual([
       { label: 'Games', href: '/games/', icon: 'play', external: false },
-      { label: 'RSS', href: '/rss.xml', icon: 'rss', external: false },
+      { label: 'GitHub', href: 'https://github.com/EOSHunter', icon: 'github', external: true },
       { label: 'YouTube', href: 'https://www.youtube.com/@R7Creatives', icon: 'vlog', external: true },
     ]);
-    const withGithub = edit((s) => (s.links.github = 'https://github.com/someone'));
-    expect(footerLinks(withGithub).map((l) => l.label)).toEqual(['Games', 'RSS', 'GitHub', 'YouTube']);
+    const withoutGithub = edit((s) => (s.links.github = ''));
+    expect(footerLinks(withoutGithub).map((l) => l.label)).toEqual(['Games', 'YouTube']);
   });
 
-  it('warns (without failing) that the email is still the example placeholder', () => {
-    expect(siteWarnings(site).join()).toMatch(/hello@example\.com/);
-    expect(siteWarnings(edit((s) => (s.author.email = 'me@r7orbit.io')))).toEqual([]);
+  it('has only GitHub and YouTube as profile links, and no email', () => {
+    expect(Object.keys(site.links)).toEqual(['github', 'youtube']);
+    expect(Object.keys(site.author)).toEqual(['name', 'bio', 'photo']);
+    expect(problems({ ...data, links: { ...data.links, x: '' } }).join()).toMatch(/links/);
+    expect(problems({ ...data, author: { ...data.author, email: 'me@example.org' } }).join()).toMatch(/author/);
   });
 });
 
@@ -95,21 +96,21 @@ describe('a renamed nav label', () => {
 
 describe('what the schema refuses', () => {
   it('leaves an empty profile link out, and takes https addresses only', () => {
-    expect(problems(edit((s) => (s.links.x = '')))).toEqual([]);
-    expect(problems(edit((s) => (s.links.x = 'https://x.com/someone')))).toEqual([]);
+    expect(problems(edit((s) => (s.links.github = '')))).toEqual([]);
+    expect(problems(edit((s) => (s.links.github = 'https://github.com/someone')))).toEqual([]);
     for (const bad of [
-      'http://x.com/someone',
-      'x.com/someone',
+      'http://github.com/someone',
+      'github.com/someone',
       'javascript:alert(1)',
       'https://',
-      ' https://x.com/a',
+      ' https://github.com/a',
     ]) {
-      expect(problems(edit((s) => (s.links.x = bad))).join(), bad).toMatch(/^links\.x: .*https:\/\//);
+      expect(problems(edit((s) => (s.links.github = bad))).join(), bad).toMatch(/^links\.github: .*https:\/\//);
     }
   });
 
   it('takes a nav address on this site (/…) or another (https://…), and nothing else', () => {
-    for (const ok of ['/notes/', '/#top', '/feed.xml', 'https://example.org/']) {
+    for (const ok of ['/notes/', '/#top', 'https://example.org/']) {
       expect(problems(edit((s) => (s.nav[0].href = ok))), ok).toEqual([]);
     }
     for (const bad of [
@@ -129,26 +130,26 @@ describe('what the schema refuses', () => {
       'nav: two nav links go to /blog/: each page is in the nav once',
     ]);
     const twice = edit((s) => {
-      s.footer.links.push({ label: 'One', href: '/about/', icon: 'mail' });
-      s.footer.links.push({ label: 'Again', href: '/about/', icon: 'mail' });
+      s.footer.links.push({ label: 'One', href: '/about/', icon: 'link' });
+      s.footer.links.push({ label: 'Again', href: '/about/', icon: 'link' });
     });
     expect(problems(twice).join()).toMatch(/two footer links go to \/about\//);
   });
 
   it('needs a footer link to have an address or a profile link, not both and not neither', () => {
-    expect(problems(edit((s) => (s.footer.links[0].href = '/rss.xml'))).join()).toMatch(
-      /"RSS" needs either .* not both/,
+    expect(problems(edit((s) => (s.footer.links[0].href = '/about/'))).join()).toMatch(
+      /"GitHub" needs either .* not both/,
     );
     expect(problems(edit((s) => delete s.footer.links[0].social)).join()).toMatch(
-      /"RSS" needs either .* not neither/,
+      /"GitHub" needs either .* not neither/,
     );
   });
 
   it('reads a field the editor cleared ("" or null) as absent', () => {
     const cleared = edit((s) => {
       Object.assign(s.nav[0], { footer: null, icon: '' });
-      s.footer.links.push({ label: 'Elsewhere', href: '/about/', icon: 'mail' });
-      Object.assign(s.footer.links[3], { social: '' });
+      s.footer.links.push({ label: 'Elsewhere', href: '/about/', icon: 'link' });
+      Object.assign(s.footer.links[2], { social: '' });
     });
     expect(problems(cleared)).toEqual([]);
   });
@@ -159,9 +160,8 @@ describe('what the schema refuses', () => {
     ]);
   });
 
-  it('refuses an unknown field, a bad email and a missing name, and says which file and field', () => {
+  it('refuses an unknown field, and a missing name, and says which file and field', () => {
     expect(problems({ ...data, colour: 'red' }).join()).toMatch(/colour/);
-    expect(problems(edit((s) => (s.author.email = 'not an email'))).join()).toMatch(/^author\.email: /);
     expect(() => parseSite({ ...data, name: '' })).toThrow(
       /src\/data\/site\.json \(Site settings in \/admin\) has a problem:\n {2}- name: /,
     );
@@ -170,14 +170,14 @@ describe('what the schema refuses', () => {
 
 describe('links to pages that do not exist', () => {
   const files = {
-    pages: ['index.astro', 'blog/index.astro', 'blog/[slug].astro', 'rss.xml.ts', 'docs/[...path].astro'],
+    pages: ['index.astro', 'blog/index.astro', 'blog/[slug].astro', 'robots.txt.ts', 'docs/[...path].astro'],
     publicFiles: ['/og-default.png'],
   };
 
   it('reads routes from the file names under src/pages', () => {
     const match = (path: string) => routePatterns(files.pages).some((r) => r.test(path));
-    expect(['/', '/blog/', '/blog/a-post/', '/rss.xml', '/docs/a/b/'].every(match)).toBe(true);
-    expect(['/blog', '/news/', '/blog/a/b/', '/rss.xml/'].some(match)).toBe(false);
+    expect(['/', '/blog/', '/blog/a-post/', '/robots.txt', '/docs/a/b/'].every(match)).toBe(true);
+    expect(['/blog', '/news/', '/blog/a/b/', '/robots.txt/'].some(match)).toBe(false);
   });
 
   it('names the field and the address that goes nowhere; other sites and anchors on real pages are fine', () => {
@@ -190,10 +190,10 @@ describe('links to pages that do not exist', () => {
     ).toEqual(['nav.2 ("Blog"): /blgo/ is not a page or file of this site']);
     expect(
       siteLinkProblems(
-        edit((s) => s.footer.links.push({ label: 'Elsewhere', href: '/about-me/', icon: 'mail' })),
+        edit((s) => s.footer.links.push({ label: 'Elsewhere', href: '/about-me/', icon: 'link' })),
         real,
       ),
-    ).toEqual(['footer.links.3 ("Elsewhere"): /about-me/ is not a page or file of this site']);
+    ).toEqual(['footer.links.2 ("Elsewhere"): /about-me/ is not a page or file of this site']);
     expect(
       siteLinkProblems(
         edit((s) => (s.defaultOgImage = '/missing.png')),

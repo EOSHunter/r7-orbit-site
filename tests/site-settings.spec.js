@@ -128,7 +128,7 @@ test('the Site settings editor saves a file the build reads, and keeps the field
   const data = JSON.parse(saved);
   const parsed = siteSchema.safeParse(data);
   expect(parsed.success ? '' : JSON.stringify(parsed.error.issues), 'the saved settings are valid').toBe('');
-  // Only the tagline changed: url and links.rss (no field in the form) and everything else are as they were.
+  // Only the tagline changed: url (no field in the form) and everything else are as they were.
   expect(data).toEqual({ ...JSON.parse(SITE_JSON), tagline: 'A tagline changed in the test' });
   expect(seen.errors).toEqual([]);
   expect(seen.refused, 'requests to other addresses').toEqual([]);

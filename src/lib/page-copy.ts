@@ -2,8 +2,8 @@
 // docs/CONTENT_MODEL.md "Pages"). Their words are blocks of the shared library, edited in /admin; their frame (the eyebrow, the
 // search box, the orbit) stays code. This module is what those pages do with the blocks before drawing them:
 //
-// - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}` and
-//   `{newsletter.provider}` in any text are replaced with the values of src/data/site.json, so changing the email in the settings changes the privacy page. An unknown `{x.y}` stops the
+// - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}` and
+//   `{newsletter.provider}` in any text are replaced with the values of src/data/site.json, so changing the name in the settings changes the privacy page. An unknown `{x.y}` stops the
 //   build, so a typo never reaches the page as braces.
 // - The newsletter switch, kept only so the Privacy page (whose words are the author's to change) still builds: there is no newsletter
 //   (docs/DECISIONS.md), so it is never connected. `{if newsletter connected}` hides a block, `{if newsletter not connected}` shows it, and
@@ -19,8 +19,6 @@ export interface PageSettings {
   siteName: string;
   siteTagline: string;
   siteDescription: string;
-  authorEmail: string;
-  rss: string;
   newsletterProvider: string;
   newsletterConnected: boolean;
 }
@@ -29,8 +27,6 @@ interface SiteLike {
   name: string;
   tagline: string;
   description: string;
-  author: { email: string };
-  links: { rss: string };
 }
 
 /** The settings from src/data/site.json (`site` from src/data/site.ts, or the JSON itself in the admin). */
@@ -39,8 +35,6 @@ export function pageSettingsOf(site: SiteLike): PageSettings {
     siteName: site.name,
     siteTagline: site.tagline,
     siteDescription: site.description,
-    authorEmail: site.author.email,
-    rss: site.links.rss,
     newsletterProvider: '',
     newsletterConnected: false,
   };
@@ -50,8 +44,6 @@ const TOKENS: Record<string, (s: PageSettings) => string> = {
   'site.name': (s) => s.siteName,
   'site.tagline': (s) => s.siteTagline,
   'site.description': (s) => s.siteDescription,
-  'author.email': (s) => s.authorEmail,
-  'links.rss': (s) => s.rss,
   'newsletter.provider': (s) => s.newsletterProvider,
 };
 

@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import site from '../src/data/site.json' with { type: 'json' };
 import { pageTextLines } from './page-text.js';
 
 // Privacy, 404 and search are built from src/content/pages/*.md (edited in /admin) inside their own frame. Their
@@ -41,17 +40,11 @@ for (const { name, path } of PAGES) {
   }
 }
 
-test('the privacy contact address and the RSS link are the site settings, not text in the page file', async ({
-  page,
-}) => {
+test('privacy: no contact address and no feed link', async ({ page }) => {
   await page.goto('/privacy/');
-  const mail = page.locator('main a[href^="mailto:"]');
-  await expect(mail).toHaveAttribute('href', `mailto:${site.author.email}`);
-  await expect(mail).toHaveText(site.author.email);
-  await expect(page.locator('main a', { hasText: 'RSS' })).toHaveAttribute('href', site.links.rss);
-  expect(readFileSync(new URL('../src/content/pages/privacy.md', import.meta.url), 'utf8')).not.toContain(
-    site.author.email,
-  );
+  await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0);
+  await expect(page.locator('main a[href*="rss"]')).toHaveCount(0);
+  expect(await page.locator('main').innerText()).not.toMatch(/@/);
 });
 
 test('the last privacy line is small print, as before', async ({ page }) => {

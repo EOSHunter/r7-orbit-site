@@ -2,7 +2,7 @@
 // the title, the meta description and the robots meta, then every heading, paragraph, list item, link (with its address), label,
 // button and field placeholder inside <main> in document order, with the alt text of every image. Runs of whitespace are
 // collapsed to one space, which is what a reader sees (the source wraps long lines). Same idea as tests/about-text.js, with links,
-// so an address that moves (the contact email, the RSS feed) fails as surely as a word that changes.
+// so an address that moves fails as surely as a word that changes.
 
 /** @param {import('@playwright/test').Page} page */
 export async function pageTextLines(page) {

@@ -51,7 +51,7 @@ export async function prepareSections(
 ): Promise<Map<Section, BlockContext>> {
   const contexts = new Map<Section, BlockContext>();
   const anchors = headingIds || sections.some((s) => s.type === 'toc');
-  // The headings and their anchors come from the one projection the contents lists and the feeds use (sections-to-content.ts).
+  // The headings and their anchors come from the one projection the contents lists use (sections-to-content.ts).
   const found = anchors ? sectionsHeadings(sections) : [];
   const headings: PageHeading[] = found.map(({ depth, slug, text }) => ({ depth, slug, text }));
 

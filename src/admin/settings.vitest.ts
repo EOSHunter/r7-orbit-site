@@ -19,7 +19,7 @@ const file = (settingsCollection as unknown as { files: Field[] }).files[0];
 const fields = file.fields as Field[];
 const named = (list: Field[], name: string) => list.find((f) => f.name === name) as Field;
 
-/** Every field path in the form, e.g. author.email, nav.label. */
+/** Every field path in the form, e.g. author.name, nav.label. */
 const paths = (list: Field[], prefix = ''): string[] =>
   list.flatMap((f) => [`${prefix}${f.name}`, ...(f.fields ? paths(f.fields, `${prefix}${f.name}.`) : [])]);
 
@@ -46,12 +46,12 @@ describe('the Site settings collection', () => {
     expect(settingsCollections).toEqual([settingsCollection]);
   });
 
-  it('has a field for every setting in the file, except the address of the site and the feed', () => {
+  it('has a field for every setting in the file, except the address of the site', () => {
     const inFile = keys(site).filter(
       (k) => !['nav.footer', 'nav.icon', 'footer.links.href', 'footer.links.social'].includes(k),
     );
     const inForm = paths(fields);
-    expect(inFile.filter((k) => !inForm.includes(k)).sort()).toEqual(['links.rss', 'url']);
+    expect(inFile.filter((k) => !inForm.includes(k)).sort()).toEqual(['url']);
     // And no field the schema does not know (it is strict, so it would fail the build).
     const known = new Set([...keys(site), 'nav.footer', 'nav.icon', 'footer.links.href', 'footer.links.social']);
     expect(inForm.filter((p) => !known.has(p))).toEqual([]);
@@ -75,9 +75,6 @@ describe('the Site settings collection', () => {
       [
         'links.github',
         'links.youtube',
-        'links.x',
-        'links.linkedin',
-        'links.bluesky',
         'nav.footer',
         'nav.icon',
         'footer.links.href',
@@ -94,9 +91,9 @@ describe('the Site settings collection', () => {
       change(copy);
       return siteSchema.safeParse(copy).success;
     };
-    const social = named(named(fields, 'links').fields!, 'x');
-    for (const value of ['https://x.com/a', 'http://x.com/a', 'x.com/a', 'javascript:alert(1)', 'https://']) {
-      expect(test(social, value), value).toBe(accepts((s) => (s.links.x = value)));
+    const social = named(named(fields, 'links').fields!, 'github');
+    for (const value of ['https://github.com/a', 'http://github.com/a', 'github.com/a', 'javascript:alert(1)', 'https://']) {
+      expect(test(social, value), value).toBe(accepts((s) => (s.links.github = value)));
     }
     const href = named(named(fields, 'nav').fields!, 'href');
     for (const value of [
@@ -110,9 +107,13 @@ describe('the Site settings collection', () => {
     ]) {
       expect(test(href, value), value).toBe(accepts((s) => (s.nav[0].href = value)));
     }
-    const email = named(named(fields, 'author').fields!, 'email');
-    for (const value of ['me@example.org', 'not an email', 'me@host']) {
-      expect(test(email, value), value).toBe(accepts((s) => (s.author.email = value)));
-    }
+  });
+
+  it('has no email field and offers only GitHub and YouTube as profile links', () => {
+    expect(paths(fields).some((p) => /email|mail/i.test(p))).toBe(false);
+    expect(named(named(fields, 'links').fields!, 'github')).toBeTruthy();
+    expect(named(fields, 'links').fields!.map((f) => f.name)).toEqual(['github', 'youtube']);
+    const social = named(named(named(fields, 'footer').fields!, 'links').fields!, 'social');
+    expect((social.options as { value: string }[]).map((o) => o.value)).toEqual(['github', 'youtube']);
   });
 });

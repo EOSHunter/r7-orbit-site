@@ -106,10 +106,9 @@ export interface SiteInfo {
   links: Record<string, string | undefined>;
 }
 
-/** Profile URLs for `sameAs`: only http(s) links that are filled in. `rss` is a feed, not a profile. */
+/** Profile URLs for `sameAs`: only http(s) links that are filled in. */
 export function profileUrls(links: SiteInfo['links']): string[] {
   return Object.entries(links)
-    .filter(([key]) => key !== 'rss')
     .map(([, url]) => url?.trim())
     .filter(isHttpUrl);
 }

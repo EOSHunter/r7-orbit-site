@@ -8,12 +8,10 @@ import { z } from 'astro/zod';
 import { ICON_NAMES } from '../components/icons';
 
 /** The profile links, in the order the admin shows them. Empty means "I have none": no icon, no link, no JSON-LD `sameAs`. */
-export const SOCIAL_KEYS = ['github', 'youtube', 'x', 'linkedin', 'bluesky'] as const;
-/** What a footer link can point at instead of an address: one of the profile links above, or the RSS feed. */
-export const FOOTER_SOCIAL = [...SOCIAL_KEYS, 'rss'] as const;
+export const SOCIAL_KEYS = ['github', 'youtube'] as const;
 
 export const HTTPS_PATTERN = /^https:\/\/[^\s/]+\.[^\s]+$/;
-/** A page or file of this site: starts with one "/", no spaces, e.g. /blog/, /#latest, /rss.xml. */
+/** A page or file of this site: starts with one "/", no spaces, e.g. /blog/, /#latest. */
 export const SITE_PATH_PATTERN = /^\/(?!\/)\S*$/;
 
 const httpsUrl = z.string().regex(HTTPS_PATTERN, 'use a full address that starts with https://');
@@ -50,8 +48,8 @@ const footerLink = z
     icon,
     /** A page of this site or another site. Leave empty when `social` is set. */
     href: optional(linkHref),
-    /** Use one of the profile links (or the RSS feed) instead of an address: it is left out while that link is empty. */
-    social: optional(z.enum(FOOTER_SOCIAL)),
+    /** Use one of the profile links instead of an address: it is left out while that link is empty. */
+    social: optional(z.enum(SOCIAL_KEYS)),
   })
   .strict();
 
@@ -69,16 +67,9 @@ export const siteSchema = z
         name: z.string().trim().min(1),
         bio: z.string().trim().min(1),
         photo: z.union([z.literal(''), sitePath]),
-        email: z.email('use an email address, e.g. me@example.org'),
       })
       .strict(),
-    links: z
-      .object({
-        ...Object.fromEntries(SOCIAL_KEYS.map((key) => [key, optionalHttps])),
-        /** Not in the admin: the feed the site builds. */
-        rss: sitePath,
-      } as Record<(typeof SOCIAL_KEYS)[number], typeof optionalHttps> & { rss: typeof sitePath })
-      .strict(),
+    links: z.object({ github: optionalHttps, youtube: optionalHttps }).strict(),
     nav: z.array(navItem).min(1, 'needs at least one link'),
     footer: z.object({ links: z.array(footerLink), note: z.string().trim() }).strict(),
   })
@@ -141,7 +132,7 @@ export interface FooterLink {
 }
 
 /**
- * The footer's links in order: the nav items marked "show in footer", then the footer links. A link to a profile (or the feed)
+ * The footer's links in order: the nav items marked "show in footer", then the footer links. A link to a profile
  * that is empty is left out, so an empty setting never shows an icon that goes nowhere.
  */
 export function footerLinks(site: Pick<SiteSettings, 'nav' | 'footer' | 'links'>): FooterLink[] {
@@ -216,19 +207,7 @@ export function siteLinkProblems(site: SiteSettings, files: SiteFiles): string[]
   };
   site.nav.forEach((item, i) => check(`nav.${i} ("${item.label}")`, item.href));
   site.footer.links.forEach((link, i) => check(`footer.links.${i} ("${link.label}")`, link.href));
-  check('links.rss', site.links.rss);
   check('defaultOgImage', site.defaultOgImage);
   check('author.photo', site.author.photo);
   return problems;
-}
-
-/** Placeholders the build lets through but says out loud: only the author can fill these in (docs/DECISIONS.md). */
-export function siteWarnings(site: SiteSettings): string[] {
-  const warnings: string[] = [];
-  if (/@example\.(com|org|net)$/i.test(site.author.email)) {
-    warnings.push(
-      `author.email is the placeholder ${site.author.email}, and /privacy/ prints it. Set your own in /admin, Site settings.`,
-    );
-  }
-  return warnings;
 }

@@ -37,7 +37,7 @@ describe('the fixed-frame pages in the Pages collection', () => {
         expect(f.pattern ?? null, `${name}.${String(f.name)}`).toEqual(
           fieldsOf(about).find((a) => a.name === f.name)!.pattern ?? null,
         );
-      expect(String(sectionsOf(file).hint)).toContain('{author.email}');
+      expect(String(sectionsOf(file).hint)).toContain('{site.name}');
       expect(String(sectionsOf(file).hint)).not.toBe(String(sectionsOf(about).hint));
     }
   });

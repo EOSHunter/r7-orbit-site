@@ -1,12 +1,10 @@
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import site from '../src/data/site.json' with { type: 'json' };
 import { openAdmin } from './admin-mock.js';
 
 // Privacy, 404 and search open in the real editor (under its Content-Security-Policy, GitHub stood in for by
-// tests/admin-mock.js) with the words of their files, and the preview shows them as the reader gets them: settings tokens filled
-// from site.json.
+// tests/admin-mock.js) with the words of their files, and the preview shows them as the reader gets them: settings tokens filled.
 
 const titleOf = (name) =>
   parseFrontmatter(readFileSync(new URL(`../src/content/pages/${name}.md`, import.meta.url), 'utf8')).frontmatter.title;
@@ -38,10 +36,3 @@ for (const name of ['privacy', '404', 'search']) {
     await expectClean(page, seen);
   });
 }
-
-test('privacy: the preview prints the email from the settings', async ({ page }) => {
-  const seen = await openPage(page, 'privacy');
-  const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.locator('a', { hasText: site.author.email })).toBeVisible({ timeout: 15_000 });
-  await expectClean(page, seen);
-});

@@ -28,8 +28,6 @@ sections:
     text: |-
       {if newsletter not connected}
       The newsletter isn't connected yet. The sign-up form on this site does not send your address anywhere, and nothing is stored. When it is connected, this page will name the service that holds the list.
-
-      Until then, you can follow by [RSS]({links.rss}), which needs no address at all.
   - type: heading
     level: 2
     text: Videos and links to other sites
@@ -40,11 +38,6 @@ sections:
     text: Server logs
   - type: text
     text: Like any website, whatever serves these pages can see the address and browser details of each request. I don't use those logs to follow anyone.
-  - type: heading
-    level: 2
-    text: Contact
-  - type: text
-    text: "Questions, or a request to remove your address: [{author.email}](mailto:{author.email})."
   - type: text
     text: Last updated Oct 3, 2026.
 ---

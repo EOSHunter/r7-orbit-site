@@ -16,7 +16,6 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /authors/<slug>/               One author (/authors/hunter-newton/, /authors/r7/; no /authors/ index)
 /search/                       Search (or a dialog opened with "/")
 /about/                        About
-/rss.xml  /news/rss.xml  /blog/rss.xml  /vlogs/rss.xml  /projects/rss.xml  /repos/rss.xml
 /sitemap-index.xml  /robots.txt  /404.html
 /privacy/                      Privacy (when there is a form or analytics)
 ```
@@ -29,9 +28,9 @@ Navigation (header): **Latest · News · Blog · Vlogs · Projects · Games · R
 |---|---|
 | **Head** | `<title>`, description, canonical, Open Graph/Twitter, theme-color `#09090a`, icons, manifest, the three stylesheets, a tiny inline script that adds the `js` class |
 | **Header** | Sticky, blurred, hairline underline. Wordmark left; nav; search; menu button below 900px |
-| **Footer** | Wordmark, one line, links (RSS, GitHub, YouTube), © year, "Made with R7 Orbit" |
+| **Footer** | Wordmark, one line, links (GitHub, YouTube), © year, "Made with R7 Orbit" |
 | **Post card** | The five variants in `DESIGN_SYSTEM.md` §9 |
-| **Icon sprite** | News, blog, vlog, project, repo, arrow, star, fork, clock, calendar, external, rss, github, search, menu, close, link, copy, play, sun |
+| **Icon sprite** | News, blog, vlog, project, repo, arrow, star, fork, clock, calendar, external, github, search, menu, close, link, copy, play, sun |
 | **Media placeholder** | Plate gradient + dot grid + ivory mark at 10% opacity |
 | **Skip link** | First focusable element; jumps to `#main` |
 
@@ -88,7 +87,7 @@ Done when: works with JS off (shows the first page, pagination is links); with J
 - **Agent footer note:** on a post whose author is an agent, the agent's `note` in a block at the end of the article. Never on a person's post.
 - Cover (if any), then body in `.prose` (68ch measure).
 - Sidebar (≥ 1200px): sticky table of contents with current-section highlight. Hidden on smaller screens (the TOC becomes a `<details>` above the body).
-- Share row: Copy link (copies, says "Copied"), Email, and links to the author's profiles. No third-party share widgets.
+- Share row: Copy link (copies, says "Copied"), and links to the author's profiles. No third-party share widgets.
 - Series navigation if `series` is set.
 - **News only:** a "Source" box above the body: source name, link (external icon), and the `take` as a pull line.
 - Related: 3 cards by shared tags. Prev / Next in the same kind.
@@ -181,19 +180,15 @@ Words: `src/content/pages/404.md` (**Pages > Page not found (404)**): the headin
 
 ## Privacy `/privacy/`
 
-Plain-language: what the site collects (nothing, or what an analytics provider collects), contact.
+Plain-language: what the site collects (nothing, or what an analytics provider collects).
 
-Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The contact address is `{author.email}` and the RSS link `{links.rss}`, filled from `src/data/site.json` at build time, so changing the email in the settings changes this page. The file still carries two legacy newsletter paragraphs (`{if newsletter connected}` / `{if newsletter not connected}`); there is no newsletter, so only the "not connected" one is shown, and the author may rewrite the page.
+Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The file still carries two legacy newsletter paragraphs (`{if newsletter connected}` / `{if newsletter not connected}`); there is no newsletter, so only the "not connected" one is shown, and the author may rewrite the page.
 
 ## Pages with a fixed frame (privacy, 404, search)
 
-These three keep their markup in `src/pages/*.astro` and take only their words from `src/content/pages/<page>.md` (the `pages` collection, the same schema and block library as About: `SECTIONS.md`). `src/lib/page-copy.ts` fills the settings tokens (`{site.name}`, `{author.email}`, `{links.rss}`; an unknown one stops the build) and says which blocks go where (`privacySlots`, `lostSlots`). `src/components/PageBlocks.astro` draws those blocks in place with the library's own block components, adding no rows or wrappers, so each page's markup and spacing are what they were (`Sections.astro` would add its row padding). A Lead paragraph in a page head is drawn as `p.t-lead`.
+These three keep their markup in `src/pages/*.astro` and take only their words from `src/content/pages/<page>.md` (the `pages` collection, the same schema and block library as About: `SECTIONS.md`). `src/lib/page-copy.ts` fills the settings tokens (`{site.name}`; an unknown one stops the build) and says which blocks go where (`privacySlots`, `lostSlots`). `src/components/PageBlocks.astro` draws those blocks in place with the library's own block components, adding no rows or wrappers, so each page's markup and spacing are what they were (`Sections.astro` would add its row padding). A Lead paragraph in a page head is drawn as `p.t-lead`.
 
 When they became editable, their text was captured from `main` into `tests/fixtures/pages/<page>.txt` (title, description, robots, headings, paragraphs, links with addresses, form text) and `tests/pages.spec.js` compares the built pages with it line by line; full-page screenshots at 375 and 1280px were byte-identical before and after. Change a fixture in the same commit as a deliberate change to the words.
-
-## Feeds
-
-`/rss.xml` (everything, newest 50) and one per kind. Each item has title (without the `*` markers), link, `pubDate`, `dc:creator` (the author's name), summary as `description`, and full content for blog posts. Valid RSS 2.0; validate with the W3C feed validator. Vlog items include the video URL in the content. News items start with "Source: …".
 
 ## Cross-cutting acceptance checklist (every page)
 

@@ -4,16 +4,14 @@ import { join, normalize } from 'node:path';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import * as pagefind from 'pagefind';
-import { assertWellFormed } from '../src/lib/xml-check.ts';
 import { watchPage } from './helpers.js';
 
 // Posts written as sections (docs/SECTIONS.md "Posts"). The tests' fixtures, one post per kind in tests/fixtures/posts/<kind>/, go
-// through the real schema, loaders and page components and are drawn at /styleguide/posts/<kind>/ (noindex, unlinked), with their feed
-// at /styleguide/posts/rss.xml. The same pages are in tests/routes.js, so smoke, axe, budgets, audit and keyboard run over them too;
+// through the real schema, loaders and page components and are drawn at /styleguide/posts/<kind>/ (noindex, unlinked).
+// The same pages are in tests/routes.js, so smoke, axe, budgets, audit and keyboard run over them too;
 // this file checks what is specific to a sections body: the blocks are drawn, the page keeps its chrome, the contents list, reading
-// time, JSON-LD and feed come from the blocks, the layout holds at 320, 375 and 1280px, and the text is searchable.
+// time and JSON-LD come from the blocks, the layout holds at 320, 375 and 1280px, and the text is searchable.
 
-const { url: SITE_URL } = JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8'));
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const YT_PAGE = '<!doctype html><title>Video</title><p>video</p>';
 
@@ -160,33 +158,8 @@ test('a repo written as sections with readme: local shows the blocks instead of 
   await expect(page.locator('main section[aria-label="Notes"] .sections')).toContainText('readme: local');
 });
 
-test('the feed of the fixtures carries each post’s blocks, with every address absolute', async ({ request }) => {
-  const res = await request.get('/styleguide/posts/rss.xml');
-  expect(res.status()).toBe(200);
-  const xml = await res.text();
-  assertWellFormed(xml);
-  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
-  expect(items).toHaveLength(KINDS.length);
-  const item = (kind) => items.find((i) => i.includes(`<link>${SITE_URL}${pathOf(kind)}</link>`));
-  const content = (kind) => /<content:encoded><!\[CDATA\[([\s\S]*?)\]\]><\/content:encoded>/.exec(item(kind))?.[1] ?? '';
-  for (const kind of KINDS) {
-    expect(item(kind), kind).toBeTruthy();
-    expect(content(kind), `${kind}: the blocks' text`).toContain(FIXTURES[kind].word);
-    expect(content(kind), `${kind}: no relative address`).not.toMatch(/(href|src)="\/(?!\/)/);
-  }
-  const blog = content('blog');
-  expect(blog).toContain('<h2>Why the body is a <em>list</em></h2>');
-  expect(blog).toContain('<h3>A heading inside a text block</h3>');
-  expect(blog).toContain(`<img src="${SITE_URL}/og-default.png" alt="The brand image of the site, used as a fixture picture" />`);
-  expect(blog).toContain(`<a href="${SITE_URL}/about/">About</a>`);
-  expect(blog).toContain('<pre><code>npm run build\nnpm test\n</code></pre>');
-  expect(blog).not.toMatch(/class=|<button|<form|<script/);
-  expect(content('news')).toMatch(/^<p>Source: <a href="https:\/\/example\.com\/fixture-source\/">Example source<\/a><\/p>/);
-  expect(content('vlogs')).toMatch(/<p><a href="https:\/\/www\.youtube\.com\/watch\?v=dQw4w9WgXcQ">Watch the video<\/a><\/p>$/);
-});
-
-test('the fixtures are not part of the site: no archive, feed or sitemap lists them', async ({ request }) => {
-  for (const path of ['/rss.xml', '/blog/rss.xml', '/news/rss.xml', '/sitemap-0.xml', '/latest/', '/blog/', '/news/']) {
+test('the fixtures are not part of the site: no archive or sitemap lists them', async ({ request }) => {
+  for (const path of ['/sitemap-0.xml', '/latest/', '/blog/', '/news/']) {
     const text = await (await request.get(path)).text();
     expect(text, path).not.toMatch(/styleguide\/posts|written as \*?sections/);
   }

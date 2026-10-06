@@ -107,7 +107,7 @@ export function sanitizeReadme(html: string, repo: string, branch: string): stri
       ol: ['start'],
       ...Object.fromEntries(HEADINGS.map((h) => [h, ['id']])),
     },
-    allowedSchemes: ['http', 'https', 'mailto'],
+    allowedSchemes: ['http', 'https'],
     allowProtocolRelative: false,
     // Drop the content of these, not just the tag.
     nonTextTags: ['script', 'style', 'textarea', 'option', 'iframe', 'noscript', 'object', 'embed'],
