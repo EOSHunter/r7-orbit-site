@@ -1,0 +1,23 @@
+# Inputs to confirm before writing
+
+Ask for what is missing in one short message. Say the default you would use. Do not start until the starred ones are known.
+
+| Input                                                            | Default                               | Notes                                                                                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kind*                                                            | none                                  | `blog`, `news`, `vlog`, `project`, `repo`, `game` (a project with `playUrl`)                                                                        |
+| Title*                                                           | none                                  | Sentence case, one `*brass phrase*` at most; `seoTitle` (49 or fewer) if the plain title is over 49 characters                                      |
+| Summary*                                                         | none                                  | 155 characters or fewer (hard limit 180). If the author gave none, propose one built only from what they gave, and mark it as a proposal            |
+| Date                                                             | today (UTC, `date -u +%F`)            | Future = scheduled: hidden until the first build on or after it                                                                                     |
+| Draft                                                            | `true`                                | `false` only when the author says it goes live                                                                                                      |
+| Author*                                                          | `hunter-newton` (leave the field out) | AI-written = `author: r7`, always. Never write the agent's note or label                                                                            |
+| Tags                                                             | none                                  | Lowercase-hyphenated, at most 6, reuse existing ones                                                                                                |
+| Picture + alt text                                               | none (placeholder plate)              | Cover, `featuredImage` (blog), `poster` (vlog), gallery. A file the author supplies; alt text for each, or "decorative"                             |
+| Sources                                                          | none                                  | News: `sourceUrl`, `sourceName`. Any outside claim: the link it came from                                                                           |
+| Body                                                             | none                                  | The author's text, or a brief to write from. Markdown/MDX or sections, never both                                                                   |
+| Vlog: YouTube id*, duration*                                     | none                                  | 11-character id, `m:ss` or `h:mm:ss`; chapters optional                                                                                             |
+| Project: `status`*                                               | none                                  | `idea`, `building`, `shipped`, `paused`, `archived`                                                                                                 |
+| Game: `playUrl`*, mode, aspect, controls, platforms, note, order | `embed`, `16:9`                       | https only. Embedded: the host goes in `frame-src` in `public/_headers`, and the game must allow framing by `https://r7orbit.io`. `link` needs none |
+| Repo: `owner/name`*                                              | none                                  | Stats and README come from GitHub at build time; never typed                                                                                        |
+| Featured                                                         | `false`                               | Only one post may be featured                                                                                                                       |
+
+Do not ask for, or add: an email address, a newsletter, an RSS link, any profile link other than GitHub and YouTube.

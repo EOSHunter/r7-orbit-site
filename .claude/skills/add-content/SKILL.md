@@ -1,0 +1,73 @@
+---
+name: add-content
+description: Use when asked to add or draft a new blog post, news item, vlog, project, repo page or game to the site
+---
+
+# Add content to the site
+
+Content here is one Markdown/MDX file per post in `src/content/<kind>/`, checked by a strict schema (`src/content.config.ts`: a misspelt or unknown field fails the build). This skill is the short path through `docs/CONTENT_MODEL.md`, `docs/SECTIONS.md`, `docs/IMAGES.md`, `docs/VOICE_AND_COPY.md` and `CLAUDE.md`. When this file and the schema disagree, the schema wins: say so in the report.
+
+Files next to this one: `templates/<kind>.md` (one front-matter template per kind, every field is in the schema), `examples.md` (a filled-in blog post and vlog, placeholders marked), `checklists/inputs.md`, `checklists/verify.md`, `checklists/report.md`.
+
+You never push or merge: Orbit does that. You never publish for the author: a post is `draft: true` until the author says it goes live.
+
+## 1. Confirm the inputs before writing a file
+
+Ask for what is missing (one message, a short list), confirm what is given. Full list with defaults: `checklists/inputs.md`.
+
+- **Kind:** `blog`, `news`, `vlog`, `project`, `repo`, or `game` (a game is a _project_ with `playUrl`; there is no games collection, `/games/` lists them).
+- **Title, summary, tags** (reuse existing tags: `rg -o "^tags:.*" src/content` and `/tags/`), **date** (default today, UTC; a future date = scheduled, see below), **draft** true/false.
+- **Author.** Default `hunter-newton` (omit the field). **If an AI wrote the piece (you, or any agent), it MUST be `author: r7`, never Hunter.** The "AI-written" label and the agent's footer note then appear by themselves. Never write that note, the label wording or a bio yourself, never edit `src/content/authors/`, and do not add `aiAssist` to an R7 post (the label and note are the disclosure). For Hunter's own post that he used AI on, `aiAssist: edited|drafted` only if he asks for the line. Never credit AI-written text to Hunter without his review.
+- **Picture:** cover (blog/news/vlog/project/repo), `featuredImage` (blog hero), vlog `poster`, project `gallery`, each with alt text, or the author says to leave it out (a placeholder plate is shown). A picture is a file the author supplies; no stock, no generated images unless approved one by one. You cannot upload through `/admin`: if you are given a file path, copy it in (section 3); if not, leave the field out and list it in the report.
+- **Sources:** for news the `sourceUrl` + `sourceName`; for any claim from outside, the link it comes from.
+- **Vlog:** the 11-character YouTube id (not the whole link) and the duration (`m:ss` / `h:mm:ss`), optional chapters.
+- **Project / game:** `status`; for a game the https `playUrl`, `playMode` (`embed` or `link`), `playAspect`, controls, `platforms`, `playNote`. **An embedded game's host must be added to `frame-src` in `public/_headers`** (explicit host, no wildcard, space-separated, on the `/projects/*` line). `tests/headers.spec.js` and `tests/playable.spec.js` fail otherwise; the host must also allow framing by `https://r7orbit.io`. `playMode: link` needs no entry. That `_headers` line is the only non-content file you may edit, and only for this.
+- **Repo:** `owner/name`; stars, language, license and the README come from GitHub at build time: never type them.
+
+**Never invent** facts, quotes, numbers, benchmarks, links, sources, handles or the author's opinions. Use only what the author gave you, or what you can verify in the repo or from a source you opened. When R7 writes from sources, link where each claim comes from, and list every claim you could not verify in the final message. Mark any sample or placeholder text as such. If an input is missing and you cannot proceed without it (a source, a video id, a play URL), ask; do not fill it in.
+
+## 2. Choose the format
+
+Start from `templates/<kind>.md`. Body is **either** Markdown/MDX **or** a `sections` list **never both** (the build stops, naming the file; an empty `sections: []` counts as none).
+
+| Use           | When                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Markdown body | Mostly text: essays, news, notes. The default. Blog files are `.mdx` and can use article components with no imports (`docs/ARTICLE_COMPONENTS.md`: `Figure`, `ImageRow`, `Callout`, `Quote`, `Pullquote`, `CodeBlock`, `VideoEmbed`, `TwoColumn`, `Toc`…). Other kinds are `.md`.                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `sections`    | Layout matters: a picture beside text, a gallery, a button, two columns, a video or game in the middle. The block catalogue and every field are in `docs/SECTIONS.md` (`heading`, `lead`, `text`, `quote`, `pullquote`, `callout`, `code`, `image`, `image-row`, `gallery`, `portrait`, `video`, `game`, `columns`, `divider`, `spacer`, `links`, `button`, `toc`, `stats`, `latest`, `author`; not `feed`/`pinned`/`games`, which are for the home page). Section pictures are files in `public/media/<kind>/` and need `alt` or `decorative: true`. A `##` inside a `text` block needs blank lines around it. A vlog written as sections keeps its transcript in `transcriptText`, not `transcript: true`. |
+
+Rules for either:
+
+- **Voice** (`docs/VOICE_AND_COPY.md`): plain, specific, first person, calm; no exclamation marks and none of the listed hype words; say what did not work. Length by kind: news 150-500 words, blog 800-3000, vlog notes short, project and repo modest. Link text says where it goes.
+- **Title:** sentence case, at most 90 characters (aim for 70), at most one `*brass phrase*` in asterisks. The asterisks are stripped for the tab.
+- **`seoTitle`:** the tab title is `<title or seoTitle> · R7 Orbit`, at most 60 characters. `seoTitle` is **at most 49 characters** (`seoTitleMax`, the build fails above that). Add one whenever the plain title (without asterisks) is longer than 49.
+- **`summary`:** required, one or two sentences, 155 characters or fewer (hard limit 180), not a repeat of the title.
+- **`tags`:** lowercase words joined by hyphens, at most 6 (aim for 1-4). `featured: true` pins to the home page, only one post at a time: set it only if asked, and if another post is already featured, tell the author instead of unsetting it.
+- **File name = slug:** lowercase words joined by hyphens, no spaces, no capitals, no accents, no date (news may start with the date). Check `src/content/<kind>/` for a clash. Never rename after publishing. Blog `.mdx`, everything else `.md`. Headings in a body start at `##`.
+- **Links and contact:** no email address anywhere, no newsletter, no RSS mention or feed link, no `mailto:`, no social profile of the author except GitHub and YouTube (and only if the author gave it). Only `https://` for outside links; links to other posts are the slug path with a trailing slash (`/blog/x/`) and the post must exist. No hot-linked pictures, scripts or embeds from other sites.
+- **Pictures** (`docs/IMAGES.md`): JPG, PNG, WebP, AVIF or SVG (no HEIC); names `[a-z0-9._-]` only, so rename `My Photo 1.PNG` to `my-photo-1.png`; 10 MB limit per file; 16:9 and at least 1280px wide for a cover, poster or featured image. Where: `cover`, `poster`, gallery, section and news/vlog/project/repo body pictures go in `public/media/<kind>/x.jpg` and are written `/media/<kind>/x.jpg`. Only the blog's `featuredImage` (written `../../assets/blog/x.jpg`) and a blog MDX `<Figure src="/src/assets/blog/x.jpg">` live in `src/assets/blog/` and are optimised by Astro. `scripts/media.mjs` runs inside `npm run build`: it refuses bad formats and names, shrinks `dist/media` to 2000px, and writes the `.NNNw.webp` copies for `srcset`; nothing may be over 2 MB after that. **Alt text is required** (`coverAlt` whenever `cover` is set, `featuredImageAlt` for `featuredImage`; `""` only for a purely decorative picture, and say so in the report); a Markdown body picture is `![alt](/media/x.jpg)` or `![](/media/x.jpg "decorative")`.
+
+Schedule: a future `date` is hidden until the first build on or after it; the daily deploy workflow does that. Drafts and future posts show in `npm run dev`, never in `dist/`.
+
+## 3. Write the files
+
+1. Copy the template into `src/content/<kind>/<slug>.md` (`.mdx` for blog). Delete the comment lines above its first `---`, every field you do not use, and every `<placeholder>`: a leftover placeholder fails the schema or ships wrong. Keep `draft: true` until the author approves, unless they said to publish now.
+2. For an embedded game: add its host to the `/projects/*` line of `public/_headers` before the build.
+3. Copy supplied pictures to the folder above under a clean name.
+4. If you create throwaway posts to test (a scratch trial), delete them, and any picture you copied for them, before you finish, and confirm with `git status` that only the author's files remain.
+
+## 4. Verify (`checklists/verify.md` has the commands)
+
+In order, stop and fix at the first failure; never delete or loosen a test, field or schema rule to get green.
+
+1. `npm run check`, `npm run lint`, `npm run build` (the build runs the media guard, Pagefind and the schema).
+2. `npm run test:unit`, then `npm run test:e2e` (`E2E_PORT=4401` if 4399 is busy; do not kill processes you did not start). Run it with the post `draft: false` for the check below, then restore the author's choice.
+3. `node .claude/skills/add-content/checklists/check-page.mjs <kind>/<slug> "<phrase from the post>"` does steps 3 and 5 (add `--absent` for the no-leak run). In `dist/`: the page exists (`dist/<kind>/<slug>/index.html`), it appears in its archive, `/latest/` (if published), the sitemap and a Pagefind search; with `draft: true` or a future date none of those has it (no leak: grep `dist/` for the slug and title).
+4. axe passes on the page (the e2e run covers every page in `dist/`; add `EXTRA_ROUTES="/blog/<slug>/"` if needed).
+5. Screenshots at 375px and 1280px of the new page (console open, no errors, no horizontal scroll). Save them outside `src/content/` and do not commit them unless asked.
+6. Lighthouse alone on the new route if it has a hero (`featuredImage`), a big cover, a poster or a game: `npm run build && LIGHTHOUSE_ROUTES="/blog/<slug>/" npm run test:lighthouse` (`LIGHTHOUSE_PORT=4397` if 4398 is busy). Thresholds are in `CLAUDE.md`.
+
+A test that fails may not be yours: remove your post, rebuild and rerun just that spec. If it still fails, it was already failing; report it by name and do not touch it. If you could not run something, say exactly that. Never claim a check passed that you did not run.
+
+## 5. Report (`checklists/report.md`)
+
+End with a short message: file paths created or edited, the front matter used, what you verified (commands, routes, widths), what you did not, claims you could not verify, and what the author must do (upload a missing picture through `/admin`, confirm a link or the video id, supply alt text, set `draft: false`, add the game host). Do not push or open a pull request unless the author asks; Orbit publishes.

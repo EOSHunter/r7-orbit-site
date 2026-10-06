@@ -1,6 +1,6 @@
 # Publishing a post
 
-For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7; the words of the Privacy, 404 and Search pages are section 8, the site-wide settings (name, your details, links, navigation, footer) are section 9, writing a post as blocks instead of one Markdown text is section 10, and the home page and the listing pages (archives, Latest, Games, Tags) are section 11. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+For the author. Adding pictures is section 6 and editing the About page (and what every block does: [`SECTIONS.md`](SECTIONS.md)) is section 7; the words of the Privacy, 404 and Search pages are section 8, the site-wide settings (name, your details, links, navigation, footer) are section 9, writing a post as blocks instead of one Markdown text is section 10, the home page and the listing pages (archives, Latest, Games, Tags) are section 11, and asking a coding agent to draft a post for you is section 12. Plain steps, no coding needed. Everything happens at <https://r7orbit.io/admin/>. For the one-time setup (GitHub login, Cloudflare), see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ## 1. Write and publish a post
 
@@ -236,6 +236,18 @@ Any post (a blog post, news item, vlog, project or repo) can be written as **sec
 8. **The preview** on the right draws the blocks in the post's column with the site's styles, and lists above the page what the build would stop on (a picture without alt text, a post with both sections and a Body). Blog posts get the full page preview; news, vlogs, projects and repos get the head of the page and the body, and a note at the top says what is not drawn (the facts column, a project's play section, gallery and changelog, a repo's README). The limits of the block preview in section 7, step 9, apply here too.
 9. **Feeds.** A post written as sections sends its blocks to feed readers as simple formatted text: headings, paragraphs, lists, quotes, code, pictures with their captions and links (a spacer, the latest posts, the latest feed, the pinned post, the games row and the contents list are left out). Blocks with a video or a game send a link to it.
 10. **Save** and **Publish** as in section 1. If the check on the pull request is red, its first error names the post's file and the block ("blog/my-post.md, block 3 (Image)").
+
+## 12. Use the add-content skill
+
+Instead of the editor you can ask a coding agent (Claude Code, in this repository) to draft a post: "add a blog post about …", "draft a news item for this link", "add my new game". The agent follows the project skill `.claude/skills/add-content/SKILL.md`. It starts from a template for the kind (`templates/`), and:
+
+- **Asks first** for what it needs: the kind, title, date, whether it is a draft, the author, summary, tags, pictures and their alt text, sources, and for a vlog the YouTube id, for a game the play address and controls. It does not invent facts, quotes, numbers, links or sources.
+- **Credits AI-written pieces to R7** (`author: r7`), never to you. The "AI-written" label and R7's note then appear on their own; the agent never writes that note.
+- **Saves the post as a draft** unless you say it goes live, writes the file in `src/content/<kind>/`, copies any picture you give it into `public/media/<kind>/`, and for an embedded game adds its host to `frame-src` in `public/_headers`.
+- **Checks its work**: type check, lint, build, the tests, that the page exists and shows in the archive, the sitemap and search, that a draft or scheduled post does not leak, and screenshots at phone and computer width.
+- **Ends with a report**: the files, the front matter, what was checked, what was not, claims it could not verify, and what you still have to do (upload a missing picture and give its alt text, confirm a link, turn Draft off).
+
+It never pushes or merges: the work arrives as a branch for you to review, then you publish as in sections 1 and 2.
 
 ## 11. Editing the home page and listing pages
 
