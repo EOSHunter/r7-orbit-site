@@ -22,9 +22,9 @@
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/","description":"News, builds and the things in between: writing, videos, projects and code about building with AI.","publisher":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/about/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://www.youtube.com/@R7Creatives"]}}</script>
 </head>
 == / header
@@ -135,9 +135,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Latest","description":"News, builds and the things in between: writing, videos, projects and code about building with AI.","url":"https://r7orbit.io/latest/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Latest","item":"https://r7orbit.io/latest/"}]}]</script>
 </head>
 == /latest/ header
@@ -249,9 +249,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"News","description":"Short news items on AI, each with a link to the source and my take on what it means.","url":"https://r7orbit.io/news/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"News","item":"https://r7orbit.io/news/"}]}]</script>
 </head>
 == /news/ header
@@ -362,9 +362,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Blog","description":"Longer posts about building with AI agents: what I tried, what happened and what I would do again.","url":"https://r7orbit.io/blog/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://r7orbit.io/blog/"}]}]</script>
 </head>
 == /blog/ header
@@ -475,9 +475,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Vlogs","description":"Videos about building with AI, each with chapters, links and written notes.","url":"https://r7orbit.io/vlogs/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Vlogs","item":"https://r7orbit.io/vlogs/"}]}]</script>
 </head>
 == /vlogs/ header
@@ -588,9 +588,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Projects","description":"Projects I am building with AI: what they are, why I built them and what I learned.","url":"https://r7orbit.io/projects/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://r7orbit.io/projects/"}]}]</script>
 </head>
 == /projects/ header
@@ -702,9 +702,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Repos","description":"Open-source repositories from my work with AI, with stats from GitHub.","url":"https://r7orbit.io/repos/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Repos","item":"https://r7orbit.io/repos/"}]}]</script>
 </head>
 == /repos/ header
@@ -815,9 +815,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Games","description":"Small games I built that run in your browser. No install: pick one and press Play.","url":"https://r7orbit.io/games/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"ItemList","name":"Games","numberOfItems":1,"itemListElement":[{"@type":"ListItem","position":1,"name":"Vesper Drift","url":"https://r7orbit.io/projects/vesper-drift/"}]},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Games","item":"https://r7orbit.io/games/"}]}]</script>
 </head>
 == /games/ header
@@ -928,9 +928,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"CollectionPage","name":"Tags","description":"Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.","url":"https://r7orbit.io/tags/","isPartOf":{"@type":"WebSite","name":"R7 Orbit","url":"https://r7orbit.io/"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Tags"}]}]</script>
 </head>
 == /tags/ header
@@ -1041,9 +1041,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"ProfilePage","@id":"https://r7orbit.io/about/#page","url":"https://r7orbit.io/about/","name":"About · R7 Orbit","mainEntity":{"@id":"https://r7orbit.io/about/#person"}},{"@type":"Person","@id":"https://r7orbit.io/about/#person","name":"Hunter Newton","description":"I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work.","url":"https://r7orbit.io/about/","sameAs":["https://www.youtube.com/@R7Creatives"]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"About","item":"https://r7orbit.io/about/"}]}]}</script>
 </head>
 == /about/ header
@@ -1154,9 +1154,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Subscribe","item":"https://r7orbit.io/subscribe/"}]}</script>
 </head>
 == /subscribe/ header
@@ -1267,9 +1267,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Privacy","item":"https://r7orbit.io/privacy/"}]}</script>
 </head>
 == /privacy/ header
@@ -1381,9 +1381,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 == /search/ header
 <header class="site-header">
@@ -1493,9 +1493,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"ProfilePage","url":"https://r7orbit.io/authors/hunter-newton/","name":"Hunter Newton","mainEntity":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/authors/hunter-newton/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://www.youtube.com/@R7Creatives"],"description":"I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them. I'm a Product Designer and I design products, systems, and interactive experiences. I post what I learn, including the parts that don't work."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Hunter Newton","item":"https://r7orbit.io/authors/hunter-newton/"}]}]</script>
 </head>
 == /authors/hunter-newton/ header
@@ -1607,9 +1607,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 == /404.html header
 <header class="site-header">
@@ -1720,9 +1720,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BlogPosting","headline":"How I built a browser game with R7 Orbit","description":"What actually happened when I directed a team of AI agents to build a browser game, including the parts that went wrong","datePublished":"2026-10-05","dateModified":"2026-10-05","image":["https://r7orbit.io/media/screenshot-2026-10-03-195701.png"],"author":{"@type":"Organization","name":"R7","description":"Orbit AI Agent","url":"https://r7orbit.io/authors/r7/"},"publisher":{"@type":"Organization","name":"R7 Orbit","url":"https://r7orbit.io/"},"mainEntityOfPage":"https://r7orbit.io/blog/test/","timeRequired":"PT6M"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://r7orbit.io/blog/"},{"@type":"ListItem","position":3,"name":"How I built a browser game with R7 Orbit","item":"https://r7orbit.io/blog/test/"}]}]}</script>
 </head>
 == /blog/test/ header
@@ -1838,9 +1838,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"Building a browser game with a team of AI agents in R7 Orbit","description":"How Vesper Drift, a browser game, was built in R7 Orbit by a team of AI agents directed by one person.","thumbnailUrl":["https://r7orbit.io/media/vlogs/building-vesper-drift/poster.jpg"],"uploadDate":"2026-10-05","author":{"@type":"Organization","name":"R7","description":"Orbit AI Agent","url":"https://r7orbit.io/authors/r7/"},"duration":"PT10M52S","contentUrl":"https://www.youtube.com/watch?v=Isq_EHdXpaY","embedUrl":"https://www.youtube-nocookie.com/embed/Isq_EHdXpaY"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Vlogs","item":"https://r7orbit.io/vlogs/"},{"@type":"ListItem","position":3,"name":"Building a browser game with a team of AI agents in R7 Orbit","item":"https://r7orbit.io/vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit/"}]}</script>
 </head>
@@ -1957,9 +1957,9 @@ document.documentElement.classList.add('js');
 <script>
 document.documentElement.classList.add('js');
 </script>
-<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":["VideoGame","SoftwareApplication"],"name":"Vesper Drift","description":"A browser game where you start as a drifting pebble and grow through 12 forms, from Meteorite to Black Hole, absorbing what is smaller.","mainEntityOfPage":"https://r7orbit.io/projects/vesper-drift/","url":"https://vesper.r7orbit.io/","applicationCategory":"Game","operatingSystem":"Web browser","datePublished":"2026-10-05","keywords":"JavaScript, Three.js, WebGL2, vesper-drift, r7-orbit, ai-agents, games","author":{"@type":"Person","name":"Hunter Newton","url":"https://r7orbit.io/authors/hunter-newton/","image":"https://r7orbit.io/media/about/hunter-newton.jpg","sameAs":["https://www.youtube.com/@R7Creatives"]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://r7orbit.io/projects/"},{"@type":"ListItem","position":3,"name":"Vesper Drift","item":"https://r7orbit.io/projects/vesper-drift/"}]}]}</script>
 </head>
 == /projects/vesper-drift/ header

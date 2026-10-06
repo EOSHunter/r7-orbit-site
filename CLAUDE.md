@@ -100,6 +100,9 @@ npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + 
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
                          # run it alone: npm run build && npm run test:lighthouse (serves dist/ on 127.0.0.1:4398; if that port is taken,
                          # check with Get-NetTCPConnection -LocalPort 4398 and use $env:LIGHTHOUSE_PORT=4397 in PowerShell / LIGHTHOUSE_PORT=4397 in bash).
+                         # About 8 minutes for every route; to re-check a few, LIGHTHOUSE_ROUTES="/blog/test/,/about/" (paths from tests/routes.js,
+                         # same assertions). An empty archive, /latest/, /games/ or /tags/ is noindex, and routes.js reads that from dist/,
+                         # so its SEO category (69 by design) is not asserted.
                          # Throttling is simulated, so results repeat; LCP counts every byte before it (fonts, and any picture a card draws:
                          # covers and posters go through the srcset of build-made WebP copies, src/lib/media-srcset.ts)
 ```

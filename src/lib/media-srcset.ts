@@ -27,4 +27,7 @@ export const SIZES = {
   page: '(min-width: 1180px) 1120px, 92vw',
   /** The portrait column (.portrait: at most 20rem, 4:5); `object-fit: cover` draws a square picture at the frame's height, 25rem. */
   portrait: '25rem',
+  /** An author's photo as an avatar (.avatar in site.css: --s-5 + --s-2), and the large one on the author's page (--s-8 + --s-5). */
+  avatar: '32px',
+  avatarLarge: '88px',
 } as const;

@@ -62,10 +62,10 @@ const rows = layoutSections(sections).map((r) =>
 
 <div class="sections" data-layout={layout === 'column' ? 'column' : undefined}>
   {
-    rows.map((row) =>
+    rows.map((row, index) =>
       row.kind === 'split' ? (
         <div class={rowClass}>
-          <PortraitBlock block={row.portrait} ctx={row.portraitCtx}>
+          <PortraitBlock block={row.portrait} ctx={row.portraitCtx} first={index === 0}>
             {row.lead && row.leadCtx && <HeadingBlock slot="lead" block={row.lead} ctx={row.leadCtx} />}
             {row.blocks.map(({ Block, block, ctx }) => <Block block={block} ctx={ctx} />)}
           </PortraitBlock>
