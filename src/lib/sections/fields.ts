@@ -23,7 +23,7 @@ export const OWNER_NAME_PATTERN = /^[\w.-]+\/[\w.-]+$/;
 /** `width:height`, e.g. 16:9. */
 export const ASPECT_PATTERN = /^[1-9]\d{0,2}:[1-9]\d{0,2}$/;
 
-export const LINK_MESSAGE = 'use a full https:// address, or a page on this site that starts with a single /, e.g. /subscribe/';
+export const LINK_MESSAGE = 'use a full https:// address, or a page on this site that starts with a single /, e.g. /about/';
 export const HTTPS_MESSAGE = 'use a full address starting with https://';
 export const IMAGE_MESSAGE = 'use a picture from this site: choose it in the editor, which writes a path like /media/name.jpg';
 export const ALT_MESSAGE = 'this image needs alt text: describe it, or tick "Decorative" if it is purely ornamental';

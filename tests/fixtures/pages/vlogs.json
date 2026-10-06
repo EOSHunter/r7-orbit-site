@@ -31,12 +31,6 @@
     "[content]",
     "h2: Nothing matches that.",
     "p: Try fewer words, or clear the filters.",
-    "button.btn: Clear filters",
-    "p.eyebrow: Newsletter",
-    "h2: One email when something new is worth reading",
-    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
-    "label: Email address",
-    "button.btn: Subscribe",
-    "p: "
+    "button.btn: Clear filters"
   ]
 }

@@ -267,7 +267,7 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
     const head = `<div class="feed-head"><h2 class="section-title">${headingText(d.heading)}</h2><span class="spacer"></span></div>`;
     const body = standIn(
       `Latest feed: the ${d.count} newest posts of every kind, the newest marked New, with a filter by kind.`,
-      `The cards are chosen when the site is built. While nothing is posted, the page says: “${d.emptyHeading}” ${d.emptyText}`,
+      `The cards are chosen when the site is built. While nothing is posted, the page says: “${d.emptyHeading}”${d.emptyText ? ` ${d.emptyText}` : ''}`,
     );
     const browse = d.browseLabel
       ? `<nav class="feed-kinds" aria-label="${attr(d.browseLabel)}"><span class="eyebrow">${escapeHtml(d.browseLabel)}</span><ul><li><span class="chip">A link to each kind's archive that has posts</span></li></ul></nav>`
@@ -296,14 +296,6 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
       .join('');
     const chip = who.agent ? `<span class="chip ai-written">${icon('agent')}AI-written</span>` : '';
     return `<aside class="author-note author-box"><span class="avatar initials" aria-hidden="true"><span>${escapeHtml(initials)}</span></span><div class="author-note-body"><p class="author-note-head"><a class="author-name" href="#">${escapeHtml(who.name)}</a>${who.subtitle ? `<span class="author-sub">${escapeHtml(who.subtitle)}</span>` : ''}${chip}</p><p>${escapeHtml(who.bio)}</p></div></aside>`;
-  },
-  newsletter: (d) => {
-    const heading = d.heading || 'One email when something new is worth reading';
-    const text = d.text || 'New posts and videos, a few times a month. No tracking, and you can leave in one click.';
-    // Not a <form>: a submit inside the editor would navigate the preview frame.
-    const fields = `<div class="field"><label>Email address</label><div class="subscribe-row"><input class="input" type="email" placeholder="you@example.com" disabled /><button class="btn solid" type="button" tabindex="-1">Subscribe</button></div></div>`;
-    if (d.style === 'form') return `<section class="sec-newsletter"><h2>${headingText(heading)}</h2><p>${escapeHtml(text)}</p>${fields}</section>`;
-    return `<section class="band"><div class="container wide"><div class="subscribe"><div><p class="eyebrow">Newsletter</p><h2 style="margin-top: var(--s-3)">${escapeHtml(heading)}</h2><p>${escapeHtml(text)}</p></div>${fields}</div></div></section>`;
   },
 };
 

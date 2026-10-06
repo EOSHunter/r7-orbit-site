@@ -1,7 +1,7 @@
-// The preview of the fixed-frame pages (subscribe, privacy, 404, search): the About preview (about-preview.ts) drawn from the
+// The preview of the fixed-frame pages (privacy, 404, search): the About preview (about-preview.ts) drawn from the
 // page's data as the reader gets it, with the settings tokens filled from src/data/site.json and only the blocks whose
 // `{if newsletter …}` condition holds (src/lib/page-copy.ts, the same functions the pages use). The blocks are drawn one after
-// another, as on About: the page's frame (the eyebrow, the form beside the text, the search box, the orbit) is not, and a line
+// another, as on About: the page's frame (the eyebrow, the search box, the orbit) is not, and a line
 // above the preview says so. A token that does not exist is shown as typed, with the build's message above the page.
 import { createElement as h } from 'react';
 import type { PreviewTemplateComponentProps } from 'decap-cms-core';
@@ -40,7 +40,7 @@ export function framedPreview(name: string, options: AboutPreviewOptions) {
       h(
         'p',
         { className: 'admin-preview-note' },
-        'This page keeps its own frame around these blocks (the eyebrow, the sign-up form or search box, the orbit), which the preview does not draw: the hint above the blocks says where each one sits. Site settings such as the email are filled in.',
+        'This page keeps its own frame around these blocks (the eyebrow, the search box, the orbit), which the preview does not draw: the hint above the blocks says where each one sits. Site settings such as the email are filled in.',
       ),
       problem && h('p', { className: 'admin-preview-note', role: 'alert' }, `Fix before saving: ${problem}`),
       h(AboutPreview, { ...props, entry }),

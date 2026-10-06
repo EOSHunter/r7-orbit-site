@@ -17,7 +17,6 @@ import PostCard from './PostCard.astro';
 import ProjectJsonLd from './ProjectJsonLd.astro';
 import Sections from './Sections.astro';
 import StatusMark from './StatusMark.astro';
-import SubscribeBand from './SubscribeBand.astro';
 import { localImage, toCard, type ProjectData, type RepoData } from './detailCards';
 import { authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
@@ -320,6 +319,4 @@ const path = `/projects/${post.id}/`;
       </section>
     )
   }
-
-  <SubscribeBand />
 </BaseLayout>

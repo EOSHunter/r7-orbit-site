@@ -23,12 +23,6 @@
     "h2.visually-hidden: Tags with a page",
     "[content]",
     "h2.eyebrow: Used once",
-    "[content]",
-    "p.eyebrow: Newsletter",
-    "h2: One email when something new is worth reading",
-    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
-    "label: Email address",
-    "button.btn: Subscribe",
-    "p: "
+    "[content]"
   ]
 }

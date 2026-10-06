@@ -22,9 +22,9 @@ const keepOnPage = (event: MouseEvent) => {
 const authors = adminAuthors.map((a) => ({ slug: a.slug, name: a.name, bio: a.bio, agent: a.kind === 'agent', subtitle: a.subtitle }));
 
 const NOTE: Record<SitePage['shape'], string> = {
-  home: 'Preview: the home page with the site’s own styles. The header, the footer, the newsletter band at the end and the orbit beside the headline are not shown. The rows that are made from the posts (pinned post, latest feed, latest posts, games) show a stand-in that says what goes there.',
-  listing: 'Preview: the page with the site’s own styles. The header, the footer and the newsletter band at the end are not shown. The list itself is made from the posts when the site is built, so a stand-in says what goes there, followed by your words for when there is nothing to list.',
-  games: 'Preview: the page with the site’s own styles. The header, the footer and the newsletter band at the end are not shown. The games are made from the projects when the site is built, so a stand-in says what goes there, followed by your words for when there is no game and for the card beside a single game.',
+  home: 'Preview: the home page with the site’s own styles. The header, the footer and the orbit beside the headline are not shown. The rows that are made from the posts (pinned post, latest feed, latest posts, games) show a stand-in that says what goes there.',
+  listing: 'Preview: the page with the site’s own styles. The header and the footer are not shown. The list itself is made from the posts when the site is built, so a stand-in says what goes there, followed by your words for when there is nothing to list.',
+  games: 'Preview: the page with the site’s own styles. The header and the footer are not shown. The games are made from the projects when the site is built, so a stand-in says what goes there, followed by your words for when there is no game and for the card beside a single game.',
 };
 
 export interface PagePreviewOptions {

@@ -1,7 +1,6 @@
 ---
 import Icon from '../../components/Icon.astro';
 import PostCard from '../../components/PostCard.astro';
-import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { authorsWithPosts } from '../../lib/authors';
 import { getAuthors } from '../../lib/authors-queries';
@@ -90,7 +89,6 @@ const groups = KINDS.map((info) => ({
     </p>
   </div>
   <div class="archive-end"></div>
-  <SubscribeBand />
 </BaseLayout>
 
 <script>

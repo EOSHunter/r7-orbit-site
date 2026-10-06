@@ -36,7 +36,7 @@ test.describe('the current section is found by address', () => {
     ['/games/', '/games/'],
     ['/about/', '/about/'],
     ['/latest/', null],
-    ['/subscribe/', null],
+    ['/privacy/', null],
     ['/search/', null],
   ];
   for (const [path, current] of cases) {

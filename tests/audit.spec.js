@@ -117,7 +117,7 @@ test('print stylesheet for a post', async ({ page }) => {
   await page.goto(articlePaths[0], { waitUntil: 'networkidle' });
   await page.emulateMedia({ media: 'print' });
   const hidden = await page.evaluate(() =>
-    ['.site-header', '.site-footer', '.band', '.share'].map((s) => {
+    ['.site-header', '.site-footer', '.share'].map((s) => {
       const el = document.querySelector(s);
       return [s, !el || getComputedStyle(el).display === 'none'];
     }),
@@ -137,7 +137,7 @@ test('print stylesheet for a post', async ({ page }) => {
 // Forced colors (Windows high contrast): nothing overflows and the page still has its landmarks.
 test('forced colors', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' });
-  for (const path of ['/', ...articlePaths.slice(0, 1), '/subscribe/']) {
+  for (const path of ['/', ...articlePaths.slice(0, 1), '/privacy/']) {
     await page.goto(path, { waitUntil: 'networkidle' });
     const ok = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
     expect(ok, `${path} overflows in forced colors`).toBe(true);

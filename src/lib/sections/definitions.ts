@@ -37,7 +37,7 @@ import {
 
 
 /** Where a block sits on the page. `prose` is the reading column; `wide` and `full` leave it (one block, one row); `band` is a
- *  full-width section with its own spacing (the newsletter); `portrait` starts a picture-beside-text row. */
+ *  full-width section with its own spacing (the home page's rows); `portrait` starts a picture-beside-text row. */
 export type Placement = 'prose' | 'wide' | 'full' | 'band' | 'portrait';
 
 /** What the editor groups blocks under (the order here is the order of the "Add section" menu). */
@@ -76,7 +76,7 @@ function defineBlock<const Id extends string, Shape extends z.ZodRawShape>(
 }
 
 const MARKDOWN_HINT = 'Paragraphs, **bold**, *italic*, links and lists. Leave a blank line between paragraphs.';
-const ADDRESS_HINT = 'https://… for another site, or /subscribe/ for a page on this site.';
+const ADDRESS_HINT = 'https://… for another site, or /about/ for a page on this site.';
 
 // The parts the section-style blocks share (Latest posts in its section frame, Pinned post, Games row, Latest feed): the small line
 // over the heading and the link at the end of the heading row ("All projects" → /projects/), drawn when both its words and its
@@ -120,7 +120,7 @@ const lead = defineBlock(
     description: 'The opening line of a page or section: larger and a little quieter than body text.',
     summary: "Lead: {{fields.text | truncate(48, '…')}}",
     placement: 'prose',
-    example: { text: 'A lead paragraph sets the scene in a sentence or two, with **bold** and a [link](/subscribe/) if needed.' },
+    example: { text: 'A lead paragraph sets the scene in a sentence or two, with **bold** and a [link](/about/) if needed.' },
   },
   {
     text: text({
@@ -128,7 +128,7 @@ const lead = defineBlock(
       widget: 'text',
       format: 'inline',
       max: 400,
-      hint: 'One short paragraph, 400 characters at most. **bold**, *italic*, `code` and [links](/subscribe/) work.',
+      hint: 'One short paragraph, 400 characters at most. **bold**, *italic*, `code` and [links](/about/) work.',
     }),
   },
 );
@@ -142,7 +142,7 @@ const body = defineBlock(
     summary: "Text: {{fields.text | truncate(48, '…')}}",
     placement: 'prose',
     example: {
-      text: 'Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/subscribe/).\n\n- a list item\n- another list item\n\nA second paragraph with a long unbroken address: https://example.com/a/very/long/path/that/keeps/going/and/going/and/going/for/a/while',
+      text: 'Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/about/).\n\n- a list item\n- another list item\n\nA second paragraph with a long unbroken address: https://example.com/a/very/long/path/that/keeps/going/and/going/and/going/for/a/while',
     },
     previewNote: 'Text is read by a simplified Markdown reader (headings, paragraphs, lists, bold, italic, code, links). The page reads all of Markdown.',
   },
@@ -539,7 +539,7 @@ const links = defineBlock(
     placement: 'prose',
     example: {
       items: [
-        { label: 'A page on this site', url: '/subscribe/' },
+        { label: 'A page on this site', url: '/about/' },
         { label: 'Another site, with a note', url: 'https://example.com/', note: 'video' },
       ],
     },
@@ -567,7 +567,7 @@ const button = defineBlock(
     example: { label: 'A button to another site', url: 'https://example.com/' },
   },
   {
-    label: text({ label: 'Button text', max: 40, hint: 'Short, e.g. "Subscribe".' }),
+    label: text({ label: 'Button text', max: 40, hint: 'Short, e.g. "Read more".' }),
     url: link('Address', ADDRESS_HINT),
   },
 );
@@ -676,7 +676,6 @@ const feed = defineBlock(
       heading: 'Latest',
       count: 8,
       emptyHeading: 'Nothing is posted yet.',
-      emptyText: 'Subscribe below and I will send an email when the first post is up.',
       browseLabel: 'Browse by kind',
       moreLabel: 'Browse everything',
       moreUrl: '/latest/',
@@ -688,7 +687,7 @@ const feed = defineBlock(
     heading: text({ label: 'Heading', max: 80, hint: 'e.g. Latest. Put one phrase in *asterisks* for the italic brass accent.' }),
     count: count({ label: 'How many', min: 1, max: 12, fallback: 8, hint: 'Between 1 and 12. The newest is marked New.' }),
     emptyHeading: text({ label: 'When nothing is posted: heading', max: 100, hint: 'Shown instead of the cards while the site has no posts at all.' }),
-    emptyText: text({ label: 'When nothing is posted: text', widget: 'text', max: 300, hint: 'A sentence under that heading.' }),
+    emptyText: text({ label: 'When nothing is posted: text', widget: 'text', optional: true, max: 300, hint: 'Optional. A sentence under that heading.' }),
     browseLabel: text({
       label: 'Archive links title',
       optional: true,
@@ -756,25 +755,6 @@ const author = defineBlock(
   },
 );
 
-const newsletter = defineBlock(
-  'newsletter',
-  {
-    label: 'Newsletter sign-up',
-    group: 'From the site',
-    description: 'The newsletter sign-up: the full-width band, or just the form in the text. It sends nothing until the newsletter provider is connected (src/data/site.json).',
-    summary: 'Newsletter: {{fields.style}}',
-    placement: (d) => (d.style === 'form' ? 'prose' : 'band'),
-    placementNote: 'The Band is a full-width section with its own spacing; the Form sits in the reading column.',
-    example: { style: 'band', heading: 'One email when something new is worth reading', text: 'New posts and videos, a few times a month.' },
-    previewNote: 'The preview shows the sign-up without a working form.',
-  },
-  {
-    style: choice(['band', 'form'], { band: 'Band: a full-width section', form: 'Form: just the form, in the text' }, { label: 'Style' }),
-    heading: text({ label: 'Heading', optional: true, max: 100, hint: 'Optional. The site\'s own line is used if left empty.' }),
-    text: text({ label: 'Text', optional: true, widget: 'text', max: 220, hint: 'Optional. A sentence under the heading.' }),
-  },
-);
-
 // ---- The list -----------------------------------------------------------------------------------------------------------
 
 /** Every block, in the order of the editor's "Add section" menu (grouped, in the order of GROUPS). */
@@ -804,7 +784,6 @@ export const definitions = [
   pinned,
   gamesRow,
   author,
-  newsletter,
 ] as const;
 
 export type Definition = (typeof definitions)[number];

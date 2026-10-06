@@ -7,7 +7,6 @@
 // - `links.rss`: the feed the site builds, /rss.xml; the page head links it directly.
 // - where the editor itself commits and signs in (CMS_REPO, CMS_BRANCH, CMS_AUTH_URL in config.ts), and every secret, are not in
 //   site.json at all.
-// `newsletter.formAction` is here: it is the public address the sign-up form posts to, printed in every page's HTML, not a secret.
 import type { CmsCollection, CmsField } from 'decap-cms-core';
 import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
@@ -88,7 +87,7 @@ const settingsFields: CmsField[] = [
         label: 'Email',
         widget: 'string',
         pattern: EMAIL,
-        hint: 'Printed on the Privacy page for questions and unsubscribe requests.',
+        hint: 'Printed on the Privacy page for questions.',
       }),
     ],
   }),
@@ -172,34 +171,12 @@ const settingsFields: CmsField[] = [
       }),
     ],
   }),
-  field({
-    name: 'newsletter',
-    label: 'Newsletter',
-    widget: 'object',
-    collapsed: true,
-    fields: [
-      field({
-        name: 'provider',
-        label: 'Provider',
-        widget: 'string',
-        hint: "The service that stores subscribers' addresses, as the Privacy page names it, e.g. buttondown.",
-      }),
-      field({
-        name: 'formAction',
-        label: 'Form address',
-        widget: 'string',
-        required: false,
-        pattern: HTTPS,
-        hint: 'The https:// address the provider gives for its sign-up form. Empty: the form is a sample that sends nothing.',
-      }),
-    ],
-  }),
 ];
 
 export const settingsCollection = {
   name: 'settings',
   label: 'Site settings',
-  description: 'The site name, your details, profile links, navigation, footer and newsletter: used on every page.',
+  description: 'The site name, your details, profile links, navigation, and footer: used on every page.',
   delete: false,
   // Pictures chosen here go to public/media/site/, written as /media/site/x.jpg (docs/IMAGES.md).
   media_folder: '/public/media/site',

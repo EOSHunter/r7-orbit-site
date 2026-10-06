@@ -4,5 +4,5 @@ seoTitle: Repos
 description: Open-source repositories from my work with AI, with stats from GitHub.
 lead: Open-source repositories, with stats from GitHub refreshed daily.
 emptyHeading: No repos yet.
-emptyText: Check back soon, or subscribe below and I will send an email when something is posted.
+emptyText: Check back soon.
 ---

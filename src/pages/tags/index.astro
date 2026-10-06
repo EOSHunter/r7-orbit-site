@@ -3,7 +3,6 @@
 // title and description, the empty state, and blocks above and below the list. The chips and "Used once" are code.
 import Sections from '../../components/Sections.astro';
 import TagIndex from '../../components/TagIndex.astro';
-import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { tagCounts } from '../../lib/content';
 import { getAllPosts } from '../../lib/content-queries';
@@ -51,5 +50,4 @@ const ld = [
   }
   {outroSections.length > 0 && <Sections sections={outroSections} source="tags.md (outroSections)" />}
   <div class="archive-end"></div>
-  <SubscribeBand />
 </BaseLayout>

@@ -81,7 +81,7 @@ const CALLOUT_LABEL = { info: 'Note', tip: 'Tip', warn: 'Warning' } as const;
 interface Projection<K extends SectionType> {
   /** The block's words as a reader reads them, one string per paragraph-ish piece. Code, alt text and site chrome are not counted. */
   text: (block: SectionOf<K>) => string[];
-  /** The block as Markdown for a feed reader. '' when it means nothing outside the page (a spacer, the latest posts, a sign-up form). */
+  /** The block as Markdown for a feed reader. '' when it means nothing outside the page (a spacer, the latest posts). */
   markdown: (block: SectionOf<K>) => string;
 }
 
@@ -156,7 +156,6 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   pinned: nothing,
   games: nothing,
   author: nothing,
-  newsletter: nothing,
 };
 
 const projectionOf = <K extends SectionType>(block: SectionOf<K>) => BLOCKS[block.type as K] as Projection<K>;

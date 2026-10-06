@@ -40,7 +40,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -95,13 +95,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -153,7 +146,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -208,13 +201,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -267,7 +253,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -322,13 +308,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -380,7 +359,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -435,13 +414,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -493,7 +465,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -548,13 +520,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -606,7 +571,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/" aria-current="page">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -661,13 +626,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -720,7 +678,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/" aria-current="page">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -775,13 +733,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -833,7 +784,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/" aria-current="page">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -888,13 +839,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -946,7 +890,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1001,13 +945,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -1059,7 +996,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/" aria-current="page">About</a>
+<a href="/about/" aria-current="page">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1114,126 +1051,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
-</ul>
-</nav>
-<p class="footer-legal">
-<span>© YEAR</span>
-<span>Made with R7 Orbit</span>
-</p>
-</div>
-</div>
-</footer>
-== /subscribe/ head
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Subscribe · R7 Orbit</title>
-<meta name="description" content="Get an email when R7 Orbit publishes something new. A few times a month, and one click to leave.">
-<link rel="canonical" href="https://r7orbit.io/subscribe/">
-<meta name="theme-color" content="#09090a">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/favicon.ico" sizes="48x48">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-<link rel="alternate" type="application/rss+xml" title="R7 Orbit" href="/rss.xml">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="R7 Orbit">
-<meta property="og:title" content="Subscribe">
-<meta property="og:description" content="Get an email when R7 Orbit publishes something new. A few times a month, and one click to leave.">
-<meta property="og:url" content="https://r7orbit.io/subscribe/">
-<meta property="og:image" content="https://r7orbit.io/og-default.png">
-<meta property="og:image:alt" content="R7 Orbit: the R7 mark inside a ring with one orbiting dot, beside the words &quot;News, builds and the things in between.&quot;">
-<meta name="twitter:card" content="summary_large_image">
-<script>
-document.documentElement.classList.add('js');
-</script>
-<link rel="preload" href="/fonts/inter-core-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-core-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cormorant-garamond-core-400-italic.woff2" as="font" type="font/woff2" crossorigin>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://r7orbit.io/"},{"@type":"ListItem","position":2,"name":"Subscribe","item":"https://r7orbit.io/subscribe/"}]}</script>
-</head>
-== /subscribe/ header
-<header class="site-header">
-<div class="container wide bar">
-<a class="wordmark" href="/" aria-label="R7 Orbit, home">
-<img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
-<nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
-<a href="/blog/">Blog</a>
-<a href="/vlogs/">Vlogs</a>
-<a href="/projects/">Projects</a>
-<a href="/games/">Games</a>
-<a href="/repos/">Repos</a>
-<a href="/about/">About</a>
-</nav>
-<div class="header-tools">
-<!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
-<a class="btn quiet icon" href="/search/" aria-label="Search" data-search-open>
-<svg class="ico" aria-hidden="true">
-<use href="#i-search">
-</use>
-</svg>
-</a>
-<button class="btn quiet icon menu-toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
-<svg class="ico i-menu" aria-hidden="true">
-<use href="#i-menu">
-</use>
-</svg>
-<svg class="ico i-close" aria-hidden="true">
-<use href="#i-close">
-</use>
-</svg>
-</button>
-</div>
-</div>
-</header>
-== /subscribe/ footer
-<footer class="site-footer">
-<div class="container wide">
-<div class="footer-grid">
-<div class="footer-brand">
-<a class="wordmark" href="/">
-<img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
-<p>News, builds and the things in between: writing, videos, projects and code about building with AI.</p>
-</div>
-<nav aria-label="Footer">
-<ul class="footer-links">
-<li>
-<a href="/games/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Games</a>
-</li>
-<li>
-<a href="/rss.xml">
-<svg class="ico" aria-hidden="true">
-<use href="#i-rss">
-</use>
-</svg>RSS</a>
-</li>
-<li>
-<a href="https://www.youtube.com/@R7Creatives" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-vlog">
-</use>
-</svg>YouTube</a>
-</li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -1285,7 +1102,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1340,13 +1157,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -1398,7 +1208,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1453,13 +1263,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -1511,7 +1314,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1566,13 +1369,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -1624,7 +1420,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1679,13 +1475,6 @@ document.documentElement.classList.add('js');
 </use>
 </svg>YouTube</a>
 </li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
-</li>
 </ul>
 </nav>
 <p class="footer-legal">
@@ -1738,7 +1527,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1792,13 +1581,6 @@ document.documentElement.classList.add('js');
 <use href="#i-vlog">
 </use>
 </svg>YouTube</a>
-</li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
 </li>
 </ul>
 </nav>
@@ -1857,7 +1639,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -1911,13 +1693,6 @@ document.documentElement.classList.add('js');
 <use href="#i-vlog">
 </use>
 </svg>YouTube</a>
-</li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
 </li>
 </ul>
 </nav>
@@ -1975,7 +1750,7 @@ document.documentElement.classList.add('js');
 <a href="/projects/" aria-current="page">Projects</a>
 <a href="/games/">Games</a>
 <a href="/repos/">Repos</a>
-<a href="/about/">About</a>
+<a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
 <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
@@ -2029,13 +1804,6 @@ document.documentElement.classList.add('js');
 <use href="#i-vlog">
 </use>
 </svg>YouTube</a>
-</li>
-<li>
-<a href="/subscribe/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-mail">
-</use>
-</svg>Subscribe</a>
 </li>
 </ul>
 </nav>

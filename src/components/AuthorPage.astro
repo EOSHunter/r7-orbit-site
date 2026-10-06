@@ -4,7 +4,6 @@
 import AgentChip from './AgentChip.astro';
 import ArchiveList from './ArchiveList.astro';
 import AuthorAvatar from './AuthorAvatar.astro';
-import SubscribeBand from './SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { authorProfilePageLd, isAgent, type Author } from '../lib/authors';
@@ -85,5 +84,4 @@ const ld = [
     />
   </div>
   <div class="archive-end"></div>
-  <SubscribeBand />
 </BaseLayout>

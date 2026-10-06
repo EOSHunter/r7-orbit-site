@@ -39,7 +39,6 @@ const PRESENT = {
   pinned: 'section[data-pinned] .card',
   games: 'section[data-games-teaser] .game-card',
   author: 'aside.author-box',
-  newsletter: 'section.band form[data-newsletter]',
 };
 
 const YT_PAGE = '<!doctype html><title>Video</title><p>video</p>';
@@ -93,8 +92,8 @@ test('blocks that need room leave the reading column; text blocks share it', asy
   for (const id of ['lead', 'quote', 'pullquote', 'callout', 'code', 'video', 'links', 'button', 'toc', 'author']) {
     expect(await page.locator(`main ${PRESENT[id]}`).first().evaluate((el) => !!el.closest('.prose')), `${id} is in .prose`).toBe(true);
   }
-  // The newsletter band is a section of its own, outside the container too.
-  expect(await page.locator('section.band').evaluate((el) => !el.closest('.prose') && !!el.closest('.sec-row-band'))).toBe(true);
+  // The latest feed is a section of its own, outside the container too.
+  expect(await page.locator('section#latest').evaluate((el) => !el.closest('.prose') && !!el.closest('.sec-row-band'))).toBe(true);
 });
 
 test('two columns sit side by side from 720px up and stack below it', async ({ page }) => {
@@ -223,14 +222,6 @@ test('the author box links to the author page, and names an agent as AI-written'
   await expect(box.locator('a.author-name')).toHaveAttribute('href', '/authors/hunter-newton/');
   await expect(box.locator('.chip.ai-written')).toHaveCount(0);
   await expect(box).not.toHaveAttribute('data-author-note', /.*/);
-});
-
-test('the newsletter band and the form block have labelled fields, and the band is a labelled region', async ({ page }) => {
-  await page.goto(PAGE);
-  const band = page.locator('section.band');
-  await expect(band).toHaveAttribute('aria-labelledby', /.+/);
-  await expect(band.getByLabel('Email address')).toBeVisible();
-  await expect(band.getByRole('heading', { level: 2 })).toHaveText('One email when something new is worth reading');
 });
 
 test('the GitHub stats are a row of numbers, or a plain link when GitHub could not be reached at build time', async ({ page }) => {

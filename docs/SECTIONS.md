@@ -68,7 +68,7 @@ Each definition has a `placement`, and `layoutSections` (`src/lib/sections/layou
 - **prose**: the reading column (`.prose`, 68 characters wide). Consecutive prose blocks share one column.
 - **wide**: a row of its own, the width of the page (image row, gallery, game, two columns, latest posts, a Wide image).
 - **full**: a row that reaches both edges of the window (a Full image).
-- **band**: a full-width section with its own spacing (the newsletter band).
+- **band**: a full-width section with its own spacing (the home page's rows).
 - **portrait**: a picture in a side column with the text beside it. The Heading directly above a portrait, the portrait's text and every block after it stay in that column until a divider, a block that leaves the column (wide, full, band) or the next portrait ends it. That is how About keeps its picture beside both of its sections.
 
 ## Decisions
@@ -78,11 +78,10 @@ Each definition has a `placement`, and `layoutSections` (`src/lib/sections/layou
 - **The game block uses the existing `PlayPanel`** (click-to-load facade, sandboxed frame, no request until Play is pressed). The frame rule is the one projects follow: an embedded game's origin must be in the `frame-src` of `public/_headers`. The build checks it; `public/_headers` and the admin's Content-Security-Policy are not changed by this library. Add a host there, explicitly, before using a new game.
 - **Latest posts reads `getAllPosts`**, so drafts and future-dated posts are left out exactly as on the archives (in `astro dev` they show, labelled). Tags and authors are checked against every post and author, drafts included, so a block naming the tag of a post that goes live next week does not fail today.
 - **GitHub stats** use the build-time loader (`src/lib/github.ts`): cached, never fetched in the reader's browser, and the build passes with the network off (the row then falls back to a plain link).
-- **Newsletter** draws `SubscribeBand` (band) or `NewsletterForm` (form); it sends nothing until the provider is connected in `src/data/site.json`.
 - **Author box** shows the author's bio from `src/content/authors`; it never writes an agent's note or label wording itself (CLAUDE.md, "Content rules").
 - **The home page's rows are blocks** that hold configuration (which posts, how many, the words around them) and query the posts when the site is built (so, like Latest posts, they add nothing to a post's reading time or feed item: `sections-to-content.ts`): **Latest feed** (`feed`), **Pinned post** (`pinned`), **Games row** (`games`), and **Latest posts** with its section frame, order and "leave out when empty" (`latest`, the Projects and Repos rows). A Latest feed carries the page's `#latest` anchor and its kind filter, so a page holds one (`once` in the definition; `onceProblems` in `checks.ts` stops the build on a second one, and the preview warns). A link at the end of a heading row shows only when both its text and its address are filled in: any optional box may be left empty on its own (the library's rule), so a half-filled link is left out rather than refused, and the preview says so.
 - **The home hero is not a block.** Its headline is the page's `h1`, and a block could put a second `h1` on another page; the hero is the home entry's own fields (`title`, `eyebrow`, `lead`, `buttons`), like a listing page's head. There is no "browse by kind" block either: the links to each kind's archive are part of the Latest feed, as on the page.
-- **Not blocks**, because they are page chrome, one-per-page, or built from a route's own data: the header and footer, the archive list with its filters and pagination, the post-page pieces (share row, previous/next, related posts, series navigation, hero), the `/games/` hub's grid with its "More games coming" card, the newsletter band at the foot of the listing pages, and the README block (it needs a repository per page). A later task can add one if a page needs it.
+- **Not blocks**, because they are page chrome, one-per-page, or built from a route's own data: the header and footer, the archive list with its filters and pagination, the post-page pieces (share row, previous/next, related posts, series navigation, hero), the `/games/` hub's grid with its "More games coming" card, and the README block (it needs a repository per page). A later task can add one if a page needs it.
 
 ## What the editor preview approximates
 
@@ -90,7 +89,7 @@ The preview draws the page with the site's own stylesheets, the same classes and
 
 - the header and footer are not drawn, and the pane is narrower than a screen, so a portrait beside the text may sit above it;
 - text is read by a simplified Markdown reader (headings, paragraphs, lists, bold, italic, code, links): the page reads all of Markdown;
-- blocks that need the built site show a stand-in, and say so under themselves (`previewNote` in the definition): Latest posts, Latest feed, Pinned post, Games row, GitHub stats row, Playable game, Video embed, Code block (no syntax colours), Lightbox gallery (no full-size window), Table of contents, Newsletter (no working form).
+- blocks that need the built site show a stand-in, and say so under themselves (`previewNote` in the definition): Latest posts, Latest feed, Pinned post, Games row, GitHub stats row, Playable game, Video embed, Code block (no syntax colours), Lightbox gallery (no full-size window), Table of contents.
 
 ## The catalogue
 
@@ -126,12 +125,12 @@ Sits: In the reading column, with the other text blocks.
 
 | Field | Box | Required | Notes |
 | --- | --- | --- | --- |
-| `text` | Several lines (inline Markdown) | yes | One short paragraph, 400 characters at most. **bold**, *italic*, `code` and [links](/subscribe/) work. At most 400 characters. |
+| `text` | Several lines (inline Markdown) | yes | One short paragraph, 400 characters at most. **bold**, *italic*, `code` and [links](/about/) work. At most 400 characters. |
 
 ```yaml
 sections:
   - type: lead
-    text: "A lead paragraph sets the scene in a sentence or two, with **bold** and a [link](/subscribe/) if needed."
+    text: "A lead paragraph sets the scene in a sentence or two, with **bold** and a [link](/about/) if needed."
 ```
 
 #### Text (`text`)
@@ -148,7 +147,7 @@ Sits: In the reading column, with the other text blocks. In the editor preview: 
 sections:
   - type: text
     text: |-
-      Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/subscribe/).
+      Plain paragraphs, **bold**, *italic*, `inline code` and [a link](/about/).
 
       - a list item
       - another list item
@@ -479,7 +478,7 @@ Sits: In the reading column, with the other text blocks.
 | --- | --- | --- | --- |
 | `items` | List of rows (1 to 20) | yes | One row per link, in order. |
 | `items[].label` | One line | yes | What the link says, e.g. "My YouTube channel". At most 120 characters. |
-| `items[].url` | One line (checked) | yes | https://… for another site, or /subscribe/ for a page on this site. |
+| `items[].url` | One line (checked) | yes | https://… for another site, or /about/ for a page on this site. |
 | `items[].note` | One line | no | Optional. A few words shown at the end of the row, e.g. "video". |
 
 ```yaml
@@ -487,7 +486,7 @@ sections:
   - type: links
     items:
       - label: A page on this site
-        url: /subscribe/
+        url: /about/
       - label: Another site, with a note
         url: "https://example.com/"
         note: video
@@ -501,8 +500,8 @@ Sits: In the reading column, with the other text blocks.
 
 | Field | Box | Required | Notes |
 | --- | --- | --- | --- |
-| `label` | One line | yes | Short, e.g. "Subscribe". At most 40 characters. |
-| `url` | One line (checked) | yes | https://… for another site, or /subscribe/ for a page on this site. |
+| `label` | One line | yes | Short, e.g. "Read more". At most 40 characters. |
+| `url` | One line (checked) | yes | https://… for another site, or /about/ for a page on this site. |
 
 ```yaml
 sections:
@@ -564,7 +563,7 @@ Sits: In a row of its own, the width of the page, when the frame is "In the page
 | `order` | Menu | no | Last updated first suits repos: a repo with no GitHub data counts from the date of its entry. Choices: `newest`, `updated`. Default `newest`. |
 | `look` | Menu | no | Choices: `plain`, `section`. Default `plain`. |
 | `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All projects". It shows only when both its text and its address are filled in. At most 40 characters. |
-| `moreUrl` | One line (checked) | no | https://… for another site, or /subscribe/ for a page on this site. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
 | `ifEmpty` | Menu | no | Choices: `say`, `hide`. Default `say`. |
 
 ```yaml
@@ -588,10 +587,10 @@ Sits: A full-width section with its own spacing, in a row of its own. In the edi
 | `heading` | One line | yes | e.g. Latest. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
 | `count` | Number | no | Between 1 and 12. The newest is marked New. Default `8`. 1 to 12. |
 | `emptyHeading` | One line | yes | Shown instead of the cards while the site has no posts at all. At most 100 characters. |
-| `emptyText` | Several lines | yes | A sentence under that heading. At most 300 characters. |
+| `emptyText` | Several lines | no | Optional. A sentence under that heading. At most 300 characters. |
 | `browseLabel` | One line | no | Optional. The small title over the links to each kind's archive (only kinds with posts get a link), e.g. Browse by kind. They stand in for the kind filter when JavaScript is off, so most readers never see them. Leave it empty for no links. At most 60 characters. |
 | `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "Browse everything". It shows only when both its text and its address are filled in. At most 40 characters. |
-| `moreUrl` | One line (checked) | no | https://… for another site, or /subscribe/ for a page on this site. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
 
 ```yaml
 sections:
@@ -599,7 +598,6 @@ sections:
     heading: Latest
     count: 8
     emptyHeading: Nothing is posted yet.
-    emptyText: Subscribe below and I will send an email when the first post is up.
     browseLabel: Browse by kind
     moreLabel: Browse everything
     moreUrl: /latest/
@@ -635,7 +633,7 @@ Sits: A full-width section with its own spacing, in a row of its own. In the edi
 | `heading` | One line | yes | e.g. Games. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
 | `count` | Number | no | Between 1 and 12. Default `3`. 1 to 12. |
 | `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All games". It shows only when both its text and its address are filled in. At most 40 characters. |
-| `moreUrl` | One line (checked) | no | https://… for another site, or /subscribe/ for a page on this site. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
 
 ```yaml
 sections:
@@ -661,26 +659,6 @@ Sits: In the reading column, with the other text blocks.
 sections:
   - type: author
     author: hunter-newton
-```
-
-#### Newsletter sign-up (`newsletter`)
-
-The newsletter sign-up: the full-width band, or just the form in the text. It sends nothing until the newsletter provider is connected (src/data/site.json).
-
-Sits: The Band is a full-width section with its own spacing; the Form sits in the reading column. In the editor preview: The preview shows the sign-up without a working form.
-
-| Field | Box | Required | Notes |
-| --- | --- | --- | --- |
-| `style` | Menu | no | Choices: `band`, `form`. Default `band`. |
-| `heading` | One line | no | Optional. The site's own line is used if left empty. At most 100 characters. |
-| `text` | Several lines | no | Optional. A sentence under the heading. At most 220 characters. |
-
-```yaml
-sections:
-  - type: newsletter
-    style: band
-    heading: One email when something new is worth reading
-    text: New posts and videos, a few times a month.
 ```
 
 <!-- catalogue:end -->

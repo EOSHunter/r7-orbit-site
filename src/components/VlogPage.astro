@@ -10,7 +10,6 @@ import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import MediaPlaceholder from './MediaPlaceholder.astro';
 import PostCard from './PostCard.astro';
-import SubscribeBand from './SubscribeBand.astro';
 import Sections from './Sections.astro';
 import YouTubeFacade from './YouTubeFacade.astro';
 import VideoJsonLd from './vlog/VideoJsonLd.astro';
@@ -197,23 +196,20 @@ const breadcrumbs = JSON.stringify({
         <AuthorNote author={author} />
       </div>
 
-      <aside class="sticky">
-        <div class="facts">
-          <h2 class="eyebrow">Follow along</h2>
-          <div class="links">
-            {
-              youtube && (
+      {
+        youtube && (
+          <aside class="sticky">
+            <div class="facts">
+              <h2 class="eyebrow">Follow along</h2>
+              <div class="links">
                 <a class="btn" href={youtube} rel="noopener">
                   <Icon name="vlog" />Subscribe on YouTube<Icon name="external" />
                 </a>
-              )
-            }
-            <a class="btn" href="/subscribe/">
-              <Icon name="mail" />Get new videos by email<Icon name="arrow" />
-            </a>
-          </div>
-        </div>
-      </aside>
+              </div>
+            </div>
+          </aside>
+        )
+      }
     </div>
   </div>
 
@@ -260,6 +256,4 @@ const breadcrumbs = JSON.stringify({
       </section>
     )
   }
-
-  <SubscribeBand />
 </BaseLayout>

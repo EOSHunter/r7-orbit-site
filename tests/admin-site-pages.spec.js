@@ -49,7 +49,7 @@ test('home page: opens with today\'s words, previews the hero and stand-ins for 
   const preview = page.locator('iframe').first().contentFrame();
   await expect(preview.locator('section.hero h1')).toHaveText('Plain notes on building with AI agents.', { timeout: 15_000 });
   await expect(preview.locator('section.hero h1 em')).toHaveText('AI agents');
-  await expect(preview.locator('.hero .cluster a.btn')).toHaveText(['Start with the latest', 'Subscribe']);
+  await expect(preview.locator('.hero .cluster a.btn')).toHaveText(['Start with the latest']);
   await expect(preview.locator('.hero .eyebrow')).toHaveText(JSON.parse(SITE_JSON).tagline);
   await expect(preview.locator('.hero .t-lead')).toHaveText(JSON.parse(SITE_JSON).description);
   // Every row made from the posts says so: a stand-in in its frame, and the note under it.

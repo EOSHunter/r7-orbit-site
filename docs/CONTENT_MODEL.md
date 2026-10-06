@@ -175,7 +175,7 @@ Body sections the template expects (as `##` headings): **Why I built it**, **How
 
 ## Pages (`src/content/pages/`)
 
-A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`), the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `games.md`, `tags.md` (see "The home page and the listing pages" below), and `subscribe.md`, `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All of them use the same schema. Each file is front matter only (no body).
+A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`), the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `games.md`, `tags.md` (see "The home page and the listing pages" below), and `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All of them use the same schema. Each file is front matter only (no body).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -192,7 +192,7 @@ A page that is not a post, made of **blocks** the author adds, removes and re-or
 | `image`, `image-row`, `gallery`, `portrait`, `video`, `game` | A picture (narrow, wide or full), two or three pictures in a row, a lightbox gallery, a picture beside text, a YouTube video behind a click-to-load player, a playable game behind a Play button |
 | `columns`, `divider`, `spacer` | Two Markdown columns, a hairline or three dots, empty space |
 | `links`, `button` | A list of links, a solid button |
-| `toc`, `stats`, `latest`, `author`, `newsletter` | A contents list of the page's headings, a GitHub repository's numbers (fetched at build time), the newest posts by kind, tag and/or author (drafts and future-dated posts left out; in the page, or as a ruled section with an eyebrow and an "All …" link; newest or last updated first; it can leave itself out when empty), an author's box, the newsletter sign-up |
+| `toc`, `stats`, `latest`, `author` | A contents list of the page's headings, a GitHub repository's numbers (fetched at build time), the newest posts by kind, tag and/or author (drafts and future-dated posts left out; in the page, or as a ruled section with an eyebrow and an "All …" link; newest or last updated first; it can leave itself out when empty), an author's box |
 | `feed`, `pinned`, `games` | The home page's Latest feed (the newest posts with a kind filter, links to each kind's archive when JavaScript is off, a link to everything; one per page, anchor `#latest`), the featured post as a large card (left out with no featured post or only one post), the first published games as game cards (left out with none) |
 
 The nine blocks About already used (`heading`, `text`, `image`, `portrait`, `quote`, `callout`, `links`, `button`, `divider`) keep their names and fields; the new fields on `image` (`align`, `size`) are optional.
@@ -202,7 +202,7 @@ Rules the build enforces (the form does too where Decap can):
 - **Alt text.** Every picture needs `alt`. An empty `alt` is allowed only when the block has `decorative: true` (image, portrait and the pictures of an image row); a gallery picture always needs alt text.
 - **Addresses.** A button's or link's `url` is `https://...` or a page on this site starting with a single `/`. `http:`, `//host`, `mailto:` and `javascript:` are refused. A game's `playUrl` is `https://...` only. A picture's `image` is a file of this site (`/media/x.jpg`, in `public/media/`); another site's picture is refused, as for `Figure`. The file must exist: the build reads its size so the page reserves the space (no layout shift).
 - **Things the site has.** A `latest` block's `tag` must be carried by some post and its `author` must be an author; an `author` block's author must exist; an embedded `game`'s origin must be in the `frame-src` of `public/_headers`. Each fails the build with the block's number and what exists.
-- **Which blocks sit beside a portrait.** A `portrait` starts a side-by-side row: the `heading` directly above it, the portrait's own text, and every block after it stay in the text column until a `divider`, a block that leaves the column (a wide or full `image`, an `image-row`, `gallery`, `game`, `columns`, `latest`, the newsletter band) or the next `portrait` ends it (`layoutSections`). That is how About keeps its picture beside both of its sections.
+- **Which blocks sit beside a portrait.** A `portrait` starts a side-by-side row: the `heading` directly above it, the portrait's own text, and every block after it stay in the text column until a `divider`, a block that leaves the column (a wide or full `image`, an `image-row`, `gallery`, `game`, `columns`, `latest`) or the next `portrait` ends it (`layoutSections`). That is how About keeps its picture beside both of its sections.
 
 The About page's text is fixed by a test: `tests/about.spec.js` compares the rendered page with `tests/fixtures/about-text.txt` line by line. Change the fixture in the same commit as a deliberate change to the words. The Person structured data on /about/ still reads the name and bio from `src/data/site.json` (the author's profile), not from the page text, so a change to the bio in both places is two edits.
 
@@ -219,9 +219,9 @@ These files add the fields of `sitePageFields` (`src/lib/site-pages.ts`). The sc
 | `description` | string | yes | yes | yes | Meta description |
 | `eyebrow` | string | no | | | Hero: the brass line over the headline. At most 80 characters |
 | `lead` | string | no | yes | yes | The sentence under the heading (plain text). At most 300 |
-| `buttons` | `{label, url}[]` | no | | | Hero: up to two; the first solid. `url` is `https://…`, `/page/` or `#anchor` (`#latest` is the Latest feed, `#subscribe` the newsletter band) |
+| `buttons` | `{label, url}[]` | no | | | Hero: up to two; the first solid. `url` is `https://…`, `/page/` or `#anchor` (`#latest` is the Latest feed) |
 | `sections` | block[] | yes (the rows) | | | The rows under the hero |
-| `introSections`, `outroSections` | block[] | | no | no | Blocks between the lead and the list, and between the list and the newsletter band. Every numbered page repeats them |
+| `introSections`, `outroSections` | block[] | | no | no | Blocks between the lead and the list, and between the list and the foot of the page. Every numbered page repeats them |
 | `emptyHeading`, `emptyText` | string | | yes | yes | Said when there is nothing to list (at most 100 and 300) |
 | `emptyLinkLabel` | string | | | yes | The empty state's button (it goes to `/projects/`) |
 | `soonEyebrow`, `soonTitle`, `soonText` | string | | | yes | The card beside a single game ("Next up", "More games coming", …) |
@@ -232,22 +232,21 @@ The words in these files were moved from code unchanged (`KINDS` in `src/lib/lis
 
 The settings tokens of the next section work in these files too: `home.md` writes the hero's eyebrow and lead and its description as `{site.tagline}` and `{site.description}`, and `latest.md` its description as `{site.description}`, so the tagline and description stay in Site settings. `loadSitePage` (`src/lib/site-pages-queries.ts`) fills them; a unit test checks that no page file types a settings value out.
 
-### Pages with a fixed frame: subscribe, privacy, 404, search
+### Pages with a fixed frame: privacy, 404, search
 
-`src/content/pages/subscribe.md`, `privacy.md`, `404.md` and `search.md` hold the **words** of those pages; the frame (eyebrow, newsletter form, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Subscribe", "Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
+`src/content/pages/privacy.md`, `404.md` and `search.md` hold the **words** of those pages; the frame (eyebrow, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
 
 | Page | Blocks |
 |---|---|
-| `subscribe.md` | Leading `lead` under the heading; blocks up to the first `newsletter` block beside the form (that block only marks the place: its `heading`/`text` are unused here); blocks after it under the box, `text` as small print |
 | `privacy.md` | Leading `lead` under the heading; the rest in one `.prose` column; a `text` block at the very end as small print ("Last updated ...") |
 | `404.md` | Leading `lead` under the heading; anything else after it, above the search box |
 | `search.md` | Every block is the note shown only without JavaScript (inside `<noscript>`, `text` paragraphs as `.search-note`) |
 
-**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}` or `{newsletter.provider}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
+**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.email}`, `{links.rss}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: `privacy.md` writes the contact as `[{author.email}](mailto:{author.email})`, never the address itself (a unit test checks). An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
 
-**Newsletter condition.** A block whose text starts with the line `{if newsletter connected}` is kept only when `newsletter.formAction` is set; `{if newsletter not connected}` only when it is empty. The line is removed; any other `{if ...}` fails the build. This is how `privacy.md` keeps its two newsletter variants.
+**Legacy newsletter lines.** There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected". Any other `{if ...}` fails the build.
 
-Tests: `tests/pages.spec.js` compares the built pages with `tests/fixtures/pages/<page>.txt` (captured before the move), `src/lib/page-copy.vitest.ts` covers tokens, conditions, slots and the "connected" privacy wording, `tests/admin-pages.spec.js` opens each file in the real editor.
+Tests: `tests/pages.spec.js` compares the built pages with `tests/fixtures/pages/<page>.txt` (captured before the move), `src/lib/page-copy.vitest.ts` covers tokens, conditions, slots and the legacy privacy wording, `tests/admin-pages.spec.js` opens each file in the real editor.
 
 ## Typed schema (Astro content collections)
 
@@ -320,12 +319,10 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
   ],
   "footer": {
     "links": [
-      { "label": "RSS", "social": "rss", "icon": "rss" },
-      { "label": "Subscribe", "href": "/subscribe/", "icon": "mail" }
+      { "label": "RSS", "social": "rss", "icon": "rss" }
     ],
     "note": "Made with R7 Orbit"
-  },
-  "newsletter": { "provider": "buttondown", "formAction": "" }
+  }
 }
 ```
 
@@ -341,12 +338,10 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
 | `nav[]`: `label`, `href`, `footer`, `icon` | yes | the header links in order. `href` is a page of this site (`/blog/`, `/#latest`) or `https://…`; a site path must exist under `src/pages` or `public` (the build names the item and the address if not); no two items with the same `href`. `footer: true` also lists it in the footer, first, with `icon` (required then) |
 | `footer.links[]`: `label`, `icon`, `href` or `social` | yes | after the nav items marked `footer`. Either an `href` (same rules as nav) or `social`, one of the profile links or `rss`, which is left out while that link is empty. Not both. No two footer links to the same address |
 | `footer.note` | yes | the line after the year; empty shows nothing |
-| `newsletter.provider` | yes | the service's name, as the Privacy page prints it |
-| `newsletter.formAction` | yes | empty (the sample form that sends nothing) or the provider's `https://` form address. It is public (it is in every page's HTML), not a secret |
 
 **The nav is matched by address, never by label.** A page says which section it belongs to with `current="/blog/"` (the `href` of the nav item), and `Header.astro` marks the item whose `href` equals it (`isCurrent` in `src/lib/site-settings.ts`). The search page picks its archive chips by address too (`searchKinds`). So renaming "Blog" in /admin keeps the highlight and the chips; changing an item's `href` is what moves it. `/styleguide/nav/` (noindex, unlinked) draws the nav with every label renamed, and `tests/site-settings.spec.js` checks it.
 
-Not settings: the CMS repository, branch and sign-in address (`CMS_REPO`, `CMS_BRANCH`, `CMS_AUTH_URL` in `src/admin/config.ts`), any token or secret, the game hosts in `public/_headers`, `public/site.webmanifest` (it repeats the name and description: change it by hand if the name changes), and the words of the subscribe band, header controls and post-page chrome.
+Not settings: the CMS repository, branch and sign-in address (`CMS_REPO`, `CMS_BRANCH`, `CMS_AUTH_URL` in `src/admin/config.ts`), any token or secret, the game hosts in `public/_headers`, `public/site.webmanifest` (it repeats the name and description: change it by hand if the name changes), and the words of the header controls and post-page chrome.
 
 Nothing about the author is hard-coded in components: it comes from this file.
 

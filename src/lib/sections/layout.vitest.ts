@@ -70,18 +70,15 @@ describe('where each block sits (its definition decides)', () => {
     expect(placementOf({ type: 'portrait' })).toBe('portrait');
   });
 
-  it('lets an image choose by its width, and the newsletter by its style', () => {
+  it('lets an image choose by its width, and nothing else', () => {
     expect(placementOf({ type: 'image', width: 'narrow' })).toBe('prose');
     expect(placementOf({ type: 'image' })).toBe('prose');
     expect(placementOf({ type: 'image', width: 'wide' })).toBe('wide');
     expect(placementOf({ type: 'image', width: 'full' })).toBe('full');
-    expect(placementOf({ type: 'newsletter', style: 'band' })).toBe('band');
-    expect(placementOf({ type: 'newsletter', style: 'form' })).toBe('prose');
   });
 
-  it('draws the newsletter band, a gallery and a game each in a row of their own, ending a portrait row', () => {
-    expect(shape(layoutSections([text('a'), { type: 'newsletter', style: 'band' }, text('b')]))).toEqual(['prose(text)', 'band(newsletter)', 'prose(text)']);
-    expect(shape(layoutSections([text('a'), { type: 'newsletter', style: 'form' }, text('b')]))).toEqual(['prose(text,newsletter,text)']);
+  it('draws the latest feed, a gallery and a game each in a row of their own, ending a portrait row', () => {
+    expect(shape(layoutSections([text('a'), { type: 'feed' }, text('b')]))).toEqual(['prose(text)', 'band(feed)', 'prose(text)']);
     expect(shape(layoutSections([{ type: 'gallery' }, { type: 'game' }]))).toEqual(['wide(gallery)', 'wide(game)']);
   });
 

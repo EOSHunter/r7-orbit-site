@@ -15,7 +15,6 @@ sections:
     heading: Latest
     count: 8
     emptyHeading: Nothing is posted yet.
-    emptyText: Subscribe below and I will send an email when the first post is up.
     browseLabel: Browse by kind
     moreLabel: Browse everything
     moreUrl: /latest/

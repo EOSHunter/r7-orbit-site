@@ -12,3 +12,7 @@
 
 # Without the trailing slash the admin would 404.
 /admin      /admin/             301
+
+# The subscribe page was removed with the newsletter (docs/DECISIONS.md). Both forms, so neither depends on how Pages treats the trailing slash.
+/subscribe  /                   301
+/subscribe/ /                   301

@@ -35,11 +35,6 @@ One or two sentences, ≤ 155 characters, that say what the reader will get. Not
 | Where | Say | Not |
 |---|---|---|
 | Primary button, home | Start with the latest | Get started now! |
-| Subscribe button | Subscribe | Join the revolution |
-| Subscribe helper | One email when something new is worth reading. Unsubscribe any time. | We'll never spam you!!! |
-| Subscribe success | You're on the list. Check your email to confirm. | Success! |
-| Subscribe error | That didn't go through. Check the address and try again. | Error 422 |
-| Invalid email | That doesn't look like an email address. | Invalid input |
 | Search placeholder | Search posts | Type to search… |
 | No results | Nothing matches that. Try fewer words, or clear the filters. | 0 results found |
 | Copy button | Copy → *Copied* (1.6 s) | Copy to clipboard |

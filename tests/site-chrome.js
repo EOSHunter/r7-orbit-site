@@ -24,7 +24,6 @@ export const CHROME_PAGES = [
   '/games/',
   '/tags/',
   '/about/',
-  '/subscribe/',
   '/privacy/',
   '/search/',
   '/authors/hunter-newton/',

@@ -28,7 +28,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 | Ship the light "Ivory" theme, or dark only? | **Dark only.** The Ivory theme, its toggle, the `[data-theme='light']` tokens and the saved `r7-theme` preference were removed. | |
 | Framework | Astro | |
 | Tailwind or plain CSS? | Plain CSS from the design system | |
-| Newsletter provider | Buttondown | |
+| Newsletter provider | Buttondown | **Superseded:** no newsletter for now (2026-10-06), see section E |
 | Analytics | None at launch; add Cloudflare Web Analytics later if wanted | |
 | Comments | None at launch | |
 | Hosting | Cloudflare Pages | **Decided:** Cloudflare Pages at `https://r7orbit.io` (production branch `main`, `npm run build` → `dist`, `NODE_VERSION=22`). Setup: `docs/DEPLOY_CLOUDFLARE.md` |
@@ -54,7 +54,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 | Item | Notes |
 |---|---|
 | First content set | See the minimum in `PROJECT_BRIEF.md` §7 |
-| Newsletter welcome email | One short message from the author |
+| Newsletter welcome email | One short message from the author (not needed: no newsletter for now, see section E) |
 | Social profiles ready to link | Avatar and banners are in `brand/social/` |
 | Launch announcement | A news/blog post about why the site exists |
 

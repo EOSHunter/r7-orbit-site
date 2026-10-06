@@ -21,12 +21,6 @@
     "em: use",
     "p.t-lead: Open-source repositories, with stats from GitHub refreshed daily.",
     "h2: No repos yet.",
-    "p: Check back soon, or subscribe below and I will send an email when something is posted.",
-    "p.eyebrow: Newsletter",
-    "h2: One email when something new is worth reading",
-    "p: New posts and videos, a few times a month. No tracking, and you can leave in one click.",
-    "label: Email address",
-    "button.btn: Subscribe",
-    "p: "
+    "p: Check back soon."
   ]
 }

@@ -68,7 +68,6 @@ const routes = [
   { path: '/authors/hunter-newton/' },
   { path: '/authors/r7/' },
   { path: '/about/' },
-  { path: '/subscribe/' },
   { path: '/privacy/' },
   { path: '/search/', noindex: true },
   // Any unknown path: `astro preview` serves dist/404.html with HTTP 404.

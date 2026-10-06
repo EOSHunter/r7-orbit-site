@@ -4,7 +4,6 @@
     (b) mobile menu             [data-menu-toggle]       controls #site-nav
     (c) list filtering          [data-list]              home feed and archive: kind, tags, search, sort, count, empty state
     (d) copy buttons            [data-copy]              "#id" copies that element's text, "@url" copies this page's address, anything else is copied as is
-    (e) newsletter form         form[data-newsletter]    placeholder only, nothing is sent
     (f) table of contents       .toc a[href^="#"]        highlights the heading you are reading
     (g) video poster            [data-player]            loads an iframe on click when data-embed is set
     (h) search loader           [data-search-open], "/"   loads search.js (the dialog and /search/ page) on first use
@@ -250,36 +249,6 @@
           btn.removeAttribute('data-copied');
         }, 1600);
       });
-    });
-  });
-
-  /* ------------------------------------------------------------------------------------- (e) newsletter */
-  $$('form[data-newsletter]').forEach(function (form) {
-    var input = $('input[type="email"]', form);
-    var msg = $('[data-newsletter-msg]', form);
-    function say(text, cls) {
-      if (!msg) return;
-      msg.textContent = text;
-      msg.className = 'hint' + (cls ? ' ' + cls : '');
-    }
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (!input) return;
-      if (!input.value || !input.checkValidity()) {
-        input.setAttribute('aria-invalid', 'true');
-        say('That does not look like an email address yet.', 'error');
-        input.focus();
-        return;
-      }
-      input.removeAttribute('aria-invalid');
-      // TODO: wire a real service here (Buttondown, ConvertKit, Mailchimp, a form endpoint of your own):
-      //   fetch('https://YOUR-SERVICE/subscribe', { method: 'POST', body: new FormData(form) }).then(...)
-      // Until then nothing leaves the page.
-      say('Thank you, you are on the list. (Sample only: nothing was sent.)', 'ok');
-      form.reset();
-    });
-    if (input) input.addEventListener('input', function () {
-      if (input.getAttribute('aria-invalid')) { input.removeAttribute('aria-invalid'); say(''); }
     });
   });
 

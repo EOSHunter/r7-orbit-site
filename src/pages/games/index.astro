@@ -5,7 +5,6 @@
 import GamesSection from '../../components/GamesSection.astro';
 import Icon from '../../components/Icon.astro';
 import Sections from '../../components/Sections.astro';
-import SubscribeBand from '../../components/SubscribeBand.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { site } from '../../data/site';
 import { getGames } from '../../lib/content-queries';
@@ -47,5 +46,4 @@ const copy = gamesCopy(entry);
   }
   {outroSections.length > 0 && <Sections sections={outroSections} source="games.md (outroSections)" />}
   <div class="archive-end"></div>
-  <SubscribeBand />
 </BaseLayout>

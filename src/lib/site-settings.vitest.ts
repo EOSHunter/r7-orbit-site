@@ -45,15 +45,14 @@ describe('the settings file as it is', () => {
     ]);
   });
 
-  it('keeps the footer it had: Games, RSS, (GitHub when filled in), YouTube, Subscribe', () => {
+  it('keeps the footer it had: Games, RSS, (GitHub when filled in), YouTube', () => {
     expect(footerLinks(site)).toEqual([
       { label: 'Games', href: '/games/', icon: 'play', external: false },
       { label: 'RSS', href: '/rss.xml', icon: 'rss', external: false },
       { label: 'YouTube', href: 'https://www.youtube.com/@R7Creatives', icon: 'vlog', external: true },
-      { label: 'Subscribe', href: '/subscribe/', icon: 'mail', external: false },
     ]);
     const withGithub = edit((s) => (s.links.github = 'https://github.com/someone'));
-    expect(footerLinks(withGithub).map((l) => l.label)).toEqual(['Games', 'RSS', 'GitHub', 'YouTube', 'Subscribe']);
+    expect(footerLinks(withGithub).map((l) => l.label)).toEqual(['Games', 'RSS', 'GitHub', 'YouTube']);
   });
 
   it('warns (without failing) that the email is still the example placeholder', () => {
@@ -107,9 +106,6 @@ describe('what the schema refuses', () => {
     ]) {
       expect(problems(edit((s) => (s.links.x = bad))).join(), bad).toMatch(/^links\.x: .*https:\/\//);
     }
-    expect(problems(edit((s) => (s.newsletter.formAction = 'http://example.org/form'))).join()).toMatch(
-      /newsletter\.formAction/,
-    );
   });
 
   it('takes a nav address on this site (/…) or another (https://…), and nothing else', () => {
@@ -132,22 +128,26 @@ describe('what the schema refuses', () => {
     expect(problems(edit((s) => (s.nav[1].href = '/blog/')))).toEqual([
       'nav: two nav links go to /blog/: each page is in the nav once',
     ]);
-    const twice = edit((s) => s.footer.links.push({ label: 'Again', href: '/subscribe/', icon: 'mail' }));
-    expect(problems(twice).join()).toMatch(/two footer links go to \/subscribe\//);
+    const twice = edit((s) => {
+      s.footer.links.push({ label: 'One', href: '/about/', icon: 'mail' });
+      s.footer.links.push({ label: 'Again', href: '/about/', icon: 'mail' });
+    });
+    expect(problems(twice).join()).toMatch(/two footer links go to \/about\//);
   });
 
   it('needs a footer link to have an address or a profile link, not both and not neither', () => {
-    expect(problems(edit((s) => (s.footer.links[3].social = 'github'))).join()).toMatch(
-      /"Subscribe" needs either .* not both/,
+    expect(problems(edit((s) => (s.footer.links[0].href = '/rss.xml'))).join()).toMatch(
+      /"RSS" needs either .* not both/,
     );
-    expect(problems(edit((s) => delete s.footer.links[3].href)).join()).toMatch(
-      /"Subscribe" needs either .* not neither/,
+    expect(problems(edit((s) => delete s.footer.links[0].social)).join()).toMatch(
+      /"RSS" needs either .* not neither/,
     );
   });
 
   it('reads a field the editor cleared ("" or null) as absent', () => {
     const cleared = edit((s) => {
       Object.assign(s.nav[0], { footer: null, icon: '' });
+      s.footer.links.push({ label: 'Elsewhere', href: '/about/', icon: 'mail' });
       Object.assign(s.footer.links[3], { social: '' });
     });
     expect(problems(cleared)).toEqual([]);
@@ -190,10 +190,10 @@ describe('links to pages that do not exist', () => {
     ).toEqual(['nav.2 ("Blog"): /blgo/ is not a page or file of this site']);
     expect(
       siteLinkProblems(
-        edit((s) => (s.footer.links[3].href = '/subscribe-now/')),
+        edit((s) => s.footer.links.push({ label: 'Elsewhere', href: '/about-me/', icon: 'mail' })),
         real,
       ),
-    ).toEqual(['footer.links.3 ("Subscribe"): /subscribe-now/ is not a page or file of this site']);
+    ).toEqual(['footer.links.3 ("Elsewhere"): /about-me/ is not a page or file of this site']);
     expect(
       siteLinkProblems(
         edit((s) => (s.defaultOgImage = '/missing.png')),

@@ -129,7 +129,7 @@ describe('sectionsHtml', () => {
     const out = html([
       { type: 'quote', text: 'A <b>line</b>', attribution: 'Someone' },
       { type: 'callout', kind: 'tip', title: 'Heads up', text: 'Body' },
-      { type: 'links', items: [{ label: 'One', url: 'https://example.com', note: 'video' }, { label: 'Two', url: '/subscribe/' }] },
+      { type: 'links', items: [{ label: 'One', url: 'https://example.com', note: 'video' }, { label: 'Two', url: '/about/' }] },
       { type: 'button', label: 'Go', url: 'https://example.com' },
       { type: 'divider', style: 'dots' },
     ]);
@@ -277,15 +277,6 @@ describe('each block of the library', () => {
     expect(html([{ type: 'author', author: 'ghost' }], authors)).toContain('No author "ghost".');
   });
 
-  it('newsletter: the band in its own row, or the form in the text, never a real <form> (a submit would navigate the preview)', () => {
-    const band = html([example('newsletter')]);
-    expect(band).toContain('<div class="sec-row sec-row-band"><section class="band">');
-    expect(band).not.toContain('<form');
-    const form = html([{ type: 'newsletter', style: 'form' }]);
-    expect(form).toContain('<section class="sec-newsletter"><h2>');
-    expect(form).not.toContain('<form');
-  });
-
   it('puts a block that leaves the column in a row of its own, ending a picture-beside-text row', () => {
     const out = html([
       { type: 'portrait', image: '/a.jpg', alt: 'A', text: 'Beside' },
@@ -321,7 +312,7 @@ describe('the preview\'s markup against the site\'s stylesheets', () => {
     );
     const classes = new Set([...everything.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(' ')));
     // Hooks the markup carries without a rule of their own (or that the design system styles through an element selector).
-    const hooks = new Set(['art-p', 'gallery-wrap', 'sec-button', 'ico', 'latest-posts', 'sec-newsletter', 'sec-row-band', 'lang', 'mono', 'cluster', 'where']);
+    const hooks = new Set(['art-p', 'gallery-wrap', 'sec-button', 'ico', 'latest-posts', 'sec-row-band', 'lang', 'mono', 'cluster', 'where']);
     for (const name of classes) {
       if (hooks.has(name)) continue;
       expect(css, `.${name} is defined`).toMatch(new RegExp(`\\.${name}(?![\\w-])`));
@@ -333,7 +324,6 @@ describe('the preview\'s markup against the site\'s stylesheets', () => {
       'gallery-wrap': readFileSync('src/components/Gallery.astro', 'utf8'),
       'play-stage': readFileSync('src/components/PlayPanel.astro', 'utf8'),
       'author-note': readFileSync('src/components/AuthorBox.astro', 'utf8'),
-      band: readFileSync('src/components/SubscribeBand.astro', 'utf8'),
       stats: readFileSync('src/components/StatsRow.astro', 'utf8'),
       'art-toc': readFileSync('src/components/article/Toc.astro', 'utf8'),
       'art-pullquote': readFileSync('src/components/article/Pullquote.astro', 'utf8'),

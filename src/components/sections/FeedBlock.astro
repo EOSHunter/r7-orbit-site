@@ -70,7 +70,7 @@ const KIND_HREF: Record<Kind, string> = {
     ) : (
       <div class="empty">
         <h3 class="t-h3">{block.emptyHeading}</h3>
-        <p>{block.emptyText}</p>
+        {block.emptyText && <p>{block.emptyText}</p>}
       </div>
     )}
     {browseKinds.length > 0 && (

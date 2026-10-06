@@ -7,7 +7,6 @@
 import ArchiveList from './ArchiveList.astro';
 import Icon from './Icon.astro';
 import Sections from './Sections.astro';
-import SubscribeBand from './SubscribeBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import type { CollectionName } from '../lib/content';
 import { authorsWithPosts } from '../lib/authors';
@@ -108,5 +107,4 @@ const ld = [
   }
   {outroSections.length > 0 && <Sections sections={outroSections} source={`${source} (outroSections)`} />}
   <div class="archive-end"></div>
-  <SubscribeBand />
 </BaseLayout>

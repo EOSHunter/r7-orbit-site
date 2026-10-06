@@ -4,12 +4,11 @@ import { test, expect } from '@playwright/test';
 // what the entries drive: the hero's buttons reach their targets, the home rows come in the entry's order, and an archive draws
 // the blocks above and below its list where they belong (on the fixture /styleguide/listing/, as no real page has any yet).
 
-test('home: the hero buttons go to parts of the page that exist (#latest is the Latest feed, #subscribe the newsletter band)', async ({ page }) => {
+test('home: the hero buttons go to parts of the page that exist (#latest is the Latest feed)', async ({ page }) => {
   await page.goto('/');
   const hrefs = await page.locator('.hero .cluster a.btn').evaluateAll((links) => links.map((a) => a.getAttribute('href')));
-  expect(hrefs).toEqual(['#latest', '#subscribe']);
+  expect(hrefs).toEqual(['#latest']);
   await expect(page.locator('section#latest[data-list]')).toHaveCount(1);
-  await expect(page.locator('section.band#subscribe')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
 });
 
@@ -36,12 +35,10 @@ test('an archive draws the blocks above its list after the lead, and the blocks 
   const intro = await y(page.getByRole('heading', { level: 2, name: 'Above the list' }));
   const empty = await y(page.getByRole('heading', { level: 2, name: 'Nothing in the fixture.' }));
   const outro = await y(page.getByText('An outro block, from outroSections.'));
-  const band = await y(page.locator('section.band#subscribe'));
   expect(lead).toBeGreaterThan(0);
   expect(intro, 'intro after the lead').toBeGreaterThan(lead);
   expect(empty, 'the list after the intro').toBeGreaterThan(intro);
   expect(outro, 'outro after the list').toBeGreaterThan(empty);
-  expect(band, 'the newsletter band last').toBeGreaterThan(outro);
   await expect(page.getByText('The fixture has no posts, so its own empty words show.')).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
 });
