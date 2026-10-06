@@ -1,6 +1,6 @@
-// The previews of the home page and the listing pages (archives, Latest, Games, Tags) in the editor, the same approach as the About
+// The previews of the home page and the listing pages (archives, Latest, Apps, Tags) in the editor, the same approach as the About
 // preview (about-preview.ts): the page with the site's own CSS (main.ts loads it into the preview pane), drawn from the entry as
-// the author types. What comes from the posts (the cards, the pinned post, the games, the tags) cannot be drawn in the editor, so
+// the author types. What comes from the posts (the cards, the pinned post, the apps, the tags) cannot be drawn in the editor, so
 // each such part is a stand-in that says what goes there (page-preview-html.ts, and the blocks' `previewNote`). Settings tokens
 // (`{site.tagline}`, …) are filled from src/data/site.json with the functions the pages use (src/lib/page-copy.ts); one that does
 // not exist is shown as typed, with the build's message above the page.
@@ -22,9 +22,9 @@ const keepOnPage = (event: MouseEvent) => {
 const authors = adminAuthors.map((a) => ({ slug: a.slug, name: a.name, bio: a.bio, agent: a.kind === 'agent', subtitle: a.subtitle }));
 
 const NOTE: Record<SitePage['shape'], string> = {
-  home: 'Preview: the home page with the site’s own styles. The header, the footer and the orbit beside the headline are not shown. The rows that are made from the posts (pinned post, latest feed, latest posts, games) show a stand-in that says what goes there.',
+  home: 'Preview: the home page with the site’s own styles. The header, the footer and the orbit beside the headline are not shown. The rows that are made from the posts (pinned post, latest feed, latest posts, apps) show a stand-in that says what goes there.',
   listing: 'Preview: the page with the site’s own styles. The header and the footer are not shown. The list itself is made from the posts when the site is built, so a stand-in says what goes there, followed by your words for when there is nothing to list.',
-  games: 'Preview: the page with the site’s own styles. The header and the footer are not shown. The games are made from the projects when the site is built, so a stand-in says what goes there, followed by your words for when there is no game and for the card beside a single game.',
+  apps: 'Preview: the page with the site’s own styles. The header and the footer are not shown. The apps are made from the projects when the site is built, so a stand-in says what goes there, followed by your words for when there is no app and for the card beside a single app.',
 };
 
 export interface PagePreviewOptions {
@@ -32,7 +32,7 @@ export interface PagePreviewOptions {
   sprite: string;
 }
 
-/** The preview of one site page (`page` says which, and its shape: home, a listing, or the Games hub). */
+/** The preview of one site page (`page` says which, and its shape: home, a listing, or the Apps hub). */
 export function pagePreview(page: SitePage, { sprite }: PagePreviewOptions) {
   const settings = pageSettingsOf(site);
   return function PagePreview({ entry, getAsset, fields }: PreviewTemplateComponentProps) {

@@ -345,9 +345,9 @@ describe('the home page blocks', () => {
     bad({ type: 'feed', heading: 'Latest', emptyHeading: 'E', emptyText: 'X', count: 13 }, /at most 12/);
   });
 
-  it('pinned and games: a heading is needed; the eyebrow and link are optional', () => {
+  it('pinned and apps: a heading is needed; the eyebrow and link are optional', () => {
     ok({ type: 'pinned', heading: 'Start here' });
     bad({ type: 'pinned', eyebrow: 'Pinned' }, /"Heading" is required/);
-    expect(sectionSchema.parse({ type: 'games', heading: 'Games' })).toMatchObject({ count: 3 });
+    expect(sectionSchema.parse({ type: 'apps', heading: 'Apps' })).toMatchObject({ count: 3 });
   });
 });

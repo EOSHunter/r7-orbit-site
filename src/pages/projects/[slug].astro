@@ -1,15 +1,15 @@
 ---
 import ProjectPage from '../../components/ProjectPage.astro';
-import { getAllPosts, getGames, getPosts } from '../../lib/content-queries';
+import { getAllPosts, getApps, getPosts } from '../../lib/content-queries';
 
 export async function getStaticPaths() {
   const projects = await getPosts('projects');
   const all = await getAllPosts();
-  const games = await getGames();
-  return projects.map((post) => ({ params: { slug: post.id }, props: { post, all, games } }));
+  const apps = await getApps();
+  return projects.map((post) => ({ params: { slug: post.id }, props: { post, all, apps } }));
 }
 
-const { post, all, games } = Astro.props;
+const { post, all, apps } = Astro.props;
 ---
 
-<ProjectPage post={post} all={all} games={games} />
+<ProjectPage post={post} all={all} apps={apps} />

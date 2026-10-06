@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { pageText } from './page-text.js';
 
-// The home page, the archives, /latest/, /games/ and /tags/ are built from src/content/pages/*.md (edited in /admin, "Pages").
+// The home page, the archives, /latest/, /apps/ and /tags/ are built from src/content/pages/*.md (edited in /admin, "Pages").
 // Their wording must not change by accident: tests/fixtures/pages/<name>.json holds the words of each page as it was before it
 // became editable (captured from main), line for line, with what comes from the posts masked (tests/page-text.js).
 //
-// Which parts a page shows still depends on the posts (an empty state, the pinned post, the Games row), so a fixture also records
+// Which parts a page shows still depends on the posts (an empty state, the pinned post, the Apps row), so a fixture also records
 // the published posts it was captured with. With the same posts, the whole page must match. With other posts (the author has
 // published something since), only the page head is compared, the part every state has, and the test says so.
 //
@@ -23,7 +23,7 @@ const PAGES = {
   vlogs: '/vlogs/',
   projects: '/projects/',
   repos: '/repos/',
-  games: '/games/',
+  apps: '/apps/',
   tags: '/tags/',
 };
 

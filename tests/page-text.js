@@ -55,7 +55,7 @@ export async function pageText(page) {
   return page.evaluate(
     ({ MASK, TEXT, NAMED, KINDS }) => {
       const clean = (s) => (s ?? '').replace(/\s+/g, ' ').trim();
-      // An element that wraps a card (a game's <li>) reads without it: the card is the posts', not the page's.
+      // An element that wraps a card (an app's <li>) reads without it: the card is the posts', not the page's.
       const textOf = (el) => {
         if (!el.querySelector(MASK)) return clean(el.textContent);
         const copy = el.cloneNode(true);

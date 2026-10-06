@@ -20,7 +20,7 @@
 /* A long address pasted into the text must wrap rather than push the page wider than the window. */
 .sections .prose { overflow-wrap: anywhere; }
 
-/* A band (the section-style blocks of the home page: Latest feed, Pinned post, Games row, Latest posts in its
+/* A band (the section-style blocks of the home page: Latest feed, Pinned post, Apps row, Latest posts in its
    section frame) has its own spacing, so its row adds none, first and last included; two bands in a row would touch, which is the
    page's business. */
 .sections > .sec-row-band,

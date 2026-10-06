@@ -1,18 +1,19 @@
-// Maps published games (projects with a playUrl) onto GameCard props.
-import type { GameCardData } from './cards';
+// Maps published apps (projects with a playUrl) onto AppCard props.
+import type { AppCardData } from './cards';
 import { postUrl, previewLabel, type Post } from './content';
-import { playLink } from './games';
+import { playLink, typeOf } from './apps';
 import type { PlayFields } from './play';
 import { coverOf } from './post-cards';
 
 // content.config.ts builds each schema from a loosely typed `extra` shape, so the project fields are not in the inferred types.
-type GameData = PlayFields & { summary: string; cover?: string; coverAlt?: string };
+type AppData = PlayFields & { summary: string; cover?: string; coverAlt?: string };
 
-export function toGameCard(post: Post): GameCardData {
-  const data = post.data as unknown as GameData & Post['data'];
+export function toAppCard(post: Post): AppCardData {
+  const data = post.data as unknown as AppData & Post['data'];
   return {
     href: postUrl(post),
     play: playLink({ ...post, data }),
+    type: typeOf(post),
     title: data.title,
     summary: data.summary,
     cover: coverOf(data),
@@ -21,4 +22,4 @@ export function toGameCard(post: Post): GameCardData {
   };
 }
 
-export const toGameCards = (posts: Post[]): GameCardData[] => posts.map(toGameCard);
+export const toAppCards = (posts: Post[]): AppCardData[] => posts.map(toAppCard);

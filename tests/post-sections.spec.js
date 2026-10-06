@@ -35,7 +35,7 @@ const FIXTURES = {
   projects: {
     word: 'pulsarfinch',
     jsonLd: 'SoftwareApplication',
-    chrome: ['nav.breadcrumb', 'header.project-head', '#play .play-section', 'section[aria-labelledby="changelog-h"]', 'aside.sticky .facts', '[data-more-games]', 'aside.author-note'],
+    chrome: ['nav.breadcrumb', 'header.project-head', '#play .play-section', 'section[aria-labelledby="changelog-h"]', 'aside.sticky .facts', '[data-more-apps]', 'aside.author-note'],
   },
   repos: {
     word: 'magnetarvole',

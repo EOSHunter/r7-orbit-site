@@ -47,7 +47,7 @@ export const heroPaths = articlePaths.filter((path) =>
 );
 
 /**
- * A listing (an archive, /latest/, /games/, /tags/) is noindex while it has nothing to list, and indexable once it does, so
+ * A listing (an archive, /latest/, /apps/, /tags/) is noindex while it has nothing to list, and indexable once it does, so
  * whether it is noindex is read from the build, not written here: `{ path, noindex: true }` for an empty one.
  */
 const listing = (/** @type {string} */ path) => {
@@ -62,7 +62,7 @@ const routes = [
   listing('/latest/'),
   ...KINDS.flatMap((kind) => [listing(`/${kind}/`), ...postPaths(kind).map((path) => ({ path }))]),
   ...secondPages.map((dir) => ({ path: `/${dir}/page/2/` })),
-  listing('/games/'), // noindex while no game is published (empty state); the layout variants are tested on /styleguide/games/
+  listing('/apps/'), // noindex while no app is published (empty state); the layout variants are tested on /styleguide/apps/
   listing('/tags/'),
   ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
   { path: '/authors/hunter-newton/' },
@@ -75,7 +75,7 @@ const routes = [
   { path: '/styleguide/', noindex: true },
   { path: '/styleguide/specimen/', noindex: true },
   { path: '/styleguide/article-components/', noindex: true },
-  { path: '/styleguide/games/', noindex: true }, // fixture for tests/games.spec.js: the games hub with 0, 1, 2 and 5 games
+  { path: '/styleguide/apps/', noindex: true }, // fixture for tests/apps.spec.js: the apps hub with 0, 1, 2 and 5 apps, one type and two
   { path: '/styleguide/author-empty/', noindex: true }, // fixture for tests/authors.spec.js: an author with no posts
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
   { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections

@@ -33,7 +33,7 @@ test.describe('the current section is found by address', () => {
     ['/blog/test/', '/blog/'],
     ['/vlogs/', '/vlogs/'],
     ['/projects/vesper-drift/', '/projects/'],
-    ['/games/', '/games/'],
+    ['/apps/', '/apps/'],
     ['/about/', '/about/'],
     ['/latest/', null],
     ['/privacy/', null],
@@ -68,9 +68,9 @@ test.describe('a nav label renamed in /admin', () => {
         .evaluateAll((as) => as.map((a) => [a.textContent.trim(), a.getAttribute('href')]));
       expect(links).toEqual(NAV.map((i) => [`Renamed ${i.label.toLowerCase()}`, i.href]));
       // The footer link that comes from the nav, and the search page's archive chips, follow the new labels.
-      await expect(page.locator('.site-footer').getByRole('link', { name: 'Renamed games' })).toHaveAttribute(
+      await expect(page.locator('.site-footer').getByRole('link', { name: 'Renamed apps' })).toHaveAttribute(
         'href',
-        '/games/',
+        '/apps/',
       );
       const chips = await page
         .locator('.search-kinds a')

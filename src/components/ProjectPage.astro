@@ -6,8 +6,8 @@ import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AuthorByline from './AuthorByline.astro';
 import AuthorNote from './AuthorNote.astro';
+import AppGrid from './AppGrid.astro';
 import Gallery from './Gallery.astro';
-import GameGrid from './GameGrid.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import MediaPlaceholder from './MediaPlaceholder.astro';
@@ -23,8 +23,9 @@ import { getAuthorMap } from '../lib/authors-queries';
 import type { SitePost } from '../lib/content-queries';
 import { relatedPosts } from '../lib/content';
 import { loadGitHubRepo } from '../lib/github';
-import { toGameCards } from '../lib/game-cards';
-import { GAMES_PATH } from '../lib/games';
+import { toAppCards } from '../lib/app-cards';
+import { APP_TYPES } from '../lib/app-types';
+import { APPS_PATH, typeOf } from '../lib/apps';
 import { isPlayable } from '../lib/play';
 import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
@@ -35,13 +36,13 @@ interface Props {
   post: SitePost<'projects'>;
   /** Published posts of every kind, newest first: related posts and the repo page this project's code is on. */
   all: SitePost[];
-  /** Published games in hub order, for the "More games" strip under a playable project. */
-  games: SitePost<'projects'>[];
+  /** Published apps (games and apps) in hub order, for the "More apps" strip under a playable project. */
+  apps: SitePost<'projects'>[];
   /** The tests' fixture page: kept out of search engines. */
   noindex?: boolean;
 }
 
-const { post, all, games, noindex = false } = Astro.props;
+const { post, all, apps, noindex = false } = Astro.props;
 const data = post.entry.data as unknown as ProjectData;
 // The write-up: the sections when the project has any (then the Markdown body is empty: getPosts checks), else the Markdown.
 const sections = hasSections(data) ? (data.sections ?? []) : undefined;
@@ -83,8 +84,10 @@ const playProps = data.playUrl
       platforms: data.platforms,
     }
   : undefined;
-// The other games, for the strip under a playable project (up to three; the link to /games/ shows even with none).
-const moreGames = playable ? toGameCards(games.filter((g) => g.id !== post.id).slice(0, 3)) : [];
+// The other apps of any type, for the strip under a playable project (up to three; the link to /apps/ shows even with none).
+const moreApps = playable ? toAppCards(apps.filter((a) => a.id !== post.id).slice(0, 3)) : [];
+// Game or app (src/lib/app-types.ts): its structured data and its label in search results.
+const appType = playable ? typeOf(post) : undefined;
 const hasBody = Boolean(sections) || Boolean(post.body?.trim());
 const path = `/projects/${post.id}/`;
 ---
@@ -110,6 +113,7 @@ const path = `/projects/${post.id}/`;
     liveUrl={data.liveUrl}
     codeRepository={githubUrl}
     playUrl={data.playUrl}
+    appType={appType}
     author={author}
   />
   <div class="container">
@@ -122,8 +126,9 @@ const path = `/projects/${post.id}/`;
     </nav>
 
     <header class="project-head">
-      <p class="eyebrow" data-pagefind-meta={playable ? 'kind:Game' : undefined}>
-        <span class="kind"><Icon name="project" />Project</span>
+      {/* A playable project's result in search reads as its type (src/scripts/search.js); one Pagefind meta key per element. */}
+      <p class="eyebrow" data-pagefind-meta={appType ? `kind:${APP_TYPES[appType].label}` : undefined}>
+        <span class="kind" data-pagefind-meta={appType ? `kindIcon:${APP_TYPES[appType].icon}` : undefined}><Icon name="project" />Project</span>
         {playable && <PlayableBadge />}
         <PreviewBadge post={post} />
       </p>
@@ -302,19 +307,19 @@ const path = `/projects/${post.id}/`;
 
   {
     playable && (
-      <section class="section ruled" aria-labelledby="more-games-h" data-more-games>
+      <section class="section ruled" aria-labelledby="more-apps-h" data-more-apps>
         <div class="container">
-          <div class:list={['section-head', moreGames.length === 0 && 'flush']}>
+          <div class:list={['section-head', moreApps.length === 0 && 'flush']}>
             <div>
               <p class="eyebrow">Play in the browser</p>
-              <h2 class="section-title" id="more-games-h">More games</h2>
+              <h2 class="section-title" id="more-apps-h">More apps</h2>
             </div>
-            <a class="more-link" href={GAMES_PATH}>
-              All games
+            <a class="more-link" href={APPS_PATH}>
+              All apps
               <Icon name="arrow" />
             </a>
           </div>
-          {moreGames.length > 0 && <GameGrid games={moreGames} level={3} />}
+          {moreApps.length > 0 && <AppGrid apps={moreApps} level={3} />}
         </div>
       </section>
     )

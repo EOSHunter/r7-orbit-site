@@ -144,19 +144,22 @@ Body: the written notes, links and resources mentioned in the video (Markdown, o
 | `playAspect` | string `w:h` | no | Default `16:9`. The shape of the game frame, e.g. `4:3`. Embed only |
 | `controls` | `{ key, action }[]` | no | The controls legend under the game, e.g. `{ key: 'Space', action: 'Fire' }` |
 | `playNote` | string, 120 characters at most | no | One line shown with the game, e.g. `Best on desktop with a mouse` |
-| `platforms` | `('desktop' | 'mobile')[]` | no | Shown as small labels with the game, and on its card on `/games/` |
-| `order` | number | no | Position on `/games/` and the home Games strip: lower comes first; games without one follow, newest first. Needs `playUrl` |
+| `platforms` | `('desktop' | 'mobile')[]` | no | Shown as small labels with the game, and on its card on `/apps/` |
+| `order` | number | no | Position on `/apps/` and the home Apps row: lower comes first; those without one follow, newest first. Needs `playUrl` |
+| `appType` | one of `APP_TYPES` (today `'game' \| 'app'`) | no | What it is on `/apps/`: its type chip, the type filter, the card's button word and the page's structured data. Left out on a playable project, it is `app`. Needs `playUrl` |
 
-`controls`, `playNote`, `platforms` and `order` need `playUrl`: set without it, the build fails (they would show nowhere). All the play fields are optional, so existing projects are unchanged.
+`controls`, `playNote`, `platforms`, `order` and `appType` need `playUrl`: set without it, the build fails (they would show nowhere). All the play fields are optional, so existing projects are unchanged.
 
-**Playable projects.** A project with a `playUrl` is a game people can play in the browser, hosted on its own address (a separate static site, e.g. `https://vesper.r7orbit.io/`). The address is data: it lives in the project's front matter, not in code. What changes:
+**Types (`appType`).** The allowed values are defined once, in `APP_TYPES` (`src/lib/app-types.ts`): each type's label ("Game", "App"), plural for the filter ("Games", "Apps"), icon, button word ("Play", "Open") and structured data. The schema, the editor's **Type** menu, the filter on `/apps/`, the cards, the search label and the JSON-LD all read that list, so adding a type (say `tool`) is one line there; this page lists the values that exist when it was written, `APP_TYPES` is the authority. Vesper Drift is `appType: game`.
+
+**Playable projects.** A project with a `playUrl` is a game or an app people use in the browser, hosted on its own address (a separate static site, e.g. `https://vesper.r7orbit.io/`). The address is data: it lives in the project's front matter, not in code. What changes:
 
 - The page gets a **Play** section in place of the cover image: a click-to-load facade (the cover as poster, a Play button). Nothing is requested from the game until the button is pressed, so the iframe and the game's download stay out of the page load. Then a sandboxed iframe (`sandbox="allow-scripts allow-same-origin allow-pointer-lock"`, `allow="fullscreen; gamepad; autoplay"`) replaces it, keyboard focus moves into it, and a Fullscreen button appears. An "Open in a new tab" link, the controls legend, the note and the platform labels sit around it. Without JavaScript the facade is hidden and a plain link to the game takes its place. With `playMode: link` there is no facade and no iframe, only the Play button (a link that opens a new tab), plus the note, platforms and controls.
-- The game is listed on the **Games hub** (`/games/`, `docs/PAGES.md`): a card with the cover as poster, summary, `platforms`, a **Play** button (to this page's Play section, or straight to `playUrl` in a new tab with `playMode: link`) and a **Details** link. Only published games are listed (`draft` and a future `date` apply as everywhere), sorted by `order`, then newest first. There is no `games` collection: the hub is every project with a `playUrl`. A **More games** strip on this page links back to the hub.
+- It is listed on the **Apps hub** (`/apps/`, `docs/PAGES.md`): a card with the cover as poster, its type chip (icon and label), summary, `platforms`, a primary button (**Play** for a game, **Open** for an app; to this page's Play section, or straight to `playUrl` in a new tab with `playMode: link`) and a **Details** link. Only published entries are listed (`draft` and a future `date` apply as everywhere), sorted by `order`, then newest first; with two or more types published, a filter by type sits above them. There is no `apps` collection: the hub is every project with a `playUrl`. A **More apps** strip on this page lists up to three others (of any type) and links back to the hub.
 - The project card and the page header show a **Playable** badge (play icon and label, brass like every other accent).
-- The page's JSON-LD is a `VideoGame` and `SoftwareApplication` (`applicationCategory: Game`, `operatingSystem: Web browser`, `url` = the play address, `author`).
-- **Framing.** `public/_headers` lets `/projects/*` frame one origin through `frame-src` (`https://vesper.r7orbit.io`). An embedded game on any other origin is blocked by the browser, so adding a game means adding its host to `frame-src` in `public/_headers` (an explicit host, no wildcard; one per game, separated by spaces). `tests/playable.spec.js` fails when an embedded `playUrl` in `src/content/projects/` is not on that list. `playMode: link` needs no entry.
-- The game itself must allow being framed by this site (no `X-Frame-Options: DENY`, and a `frame-ancestors` that includes `https://r7orbit.io`).
+- The page's JSON-LD follows the type: a game is a `VideoGame` and `SoftwareApplication` with `applicationCategory: Game`; an app is a `SoftwareApplication` with `applicationCategory: WebApplication`. Both have `operatingSystem: Web browser`, `url` = the play address, and the `author` of the authors system (Hunter unless the post names another author; an agent is an `Organization`).
+- **Framing.** `public/_headers` lets `/projects/*` frame the origins listed in `frame-src` (today `https://vesper.r7orbit.io https://housepainter.r7orbit.io`; House Painter's host is there ahead of its project page). Anything embedded from another origin is blocked by the browser, so adding a game or an app means adding its host to `frame-src` in `public/_headers` (an explicit host, no wildcard; one per app, separated by spaces; nothing else on that line or in the `/admin/*` block changes). `tests/playable.spec.js` fails when an embedded `playUrl` in `src/content/projects/` is not on that list, and `tests/headers.spec.js` holds the exact line, so update it in the same change. `playMode: link` needs no entry.
+- The game or app itself must allow being framed by this site (no `X-Frame-Options: DENY`, and a `frame-ancestors` that includes `https://r7orbit.io`).
 
 Body sections the template expects (as `##` headings): **Why I built it**, **How it works**, **What I learned**. Others are fine; these three get anchors in the page.
 
@@ -174,7 +177,7 @@ Body sections the template expects (as `##` headings): **Why I built it**, **How
 
 ## Pages (`src/content/pages/`)
 
-A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`), the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `games.md`, `tags.md` (see "The home page and the listing pages" below), and `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All of them use the same schema. Each file is front matter only (no body).
+A page that is not a post, made of **blocks** the author adds, removes and re-orders in /admin (**Pages**). The files are `about.md` (a page of blocks, drawn by `src/components/Sections.astro`), the home page and listing pages `home.md`, `latest.md`, `news.md`, `blog.md`, `vlogs.md`, `projects.md`, `repos.md`, `apps.md`, `tags.md` (see "The home page and the listing pages" below), and `privacy.md`, `404.md`, `search.md` (the words of a page that keeps its own frame; see "Pages with a fixed frame" below). All of them use the same schema. Each file is front matter only (no body).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -192,7 +195,7 @@ A page that is not a post, made of **blocks** the author adds, removes and re-or
 | `columns`, `divider`, `spacer` | Two Markdown columns, a hairline or three dots, empty space |
 | `links`, `button` | A list of links, a solid button |
 | `toc`, `stats`, `latest`, `author` | A contents list of the page's headings, a GitHub repository's numbers (fetched at build time), the newest posts by kind, tag and/or author (drafts and future-dated posts left out; in the page, or as a ruled section with an eyebrow and an "All …" link; newest or last updated first; it can leave itself out when empty), an author's box |
-| `feed`, `pinned`, `games` | The home page's Latest feed (the newest posts with a kind filter, links to each kind's archive when JavaScript is off, a link to everything; one per page, anchor `#latest`), the featured post as a large card (left out with no featured post or only one post), the first published games as game cards (left out with none) |
+| `feed`, `pinned`, `apps` | The home page's Latest feed (the newest posts with a kind filter, links to each kind's archive when JavaScript is off, a link to everything; one per page, anchor `#latest`), the featured post as a large card (left out with no featured post or only one post), the first published apps and games as cards with their type (left out with none) |
 
 The nine blocks About already used (`heading`, `text`, `image`, `portrait`, `quote`, `callout`, `links`, `button`, `divider`) keep their names and fields; the new fields on `image` (`align`, `size`) are optional.
 
@@ -211,7 +214,7 @@ The About page's text is fixed by a test: `tests/about.spec.js` compares the ren
 
 These files add the fields of `sitePageFields` (`src/lib/site-pages.ts`). The schema accepts them on any page; which page **needs** which, and which it **draws**, is checked when the page is built (`pageProblems`): a needed field that is missing or empty, or a filled-in field the page does not draw, stops the build with the file and the field (`src/content/pages/blog.md: "emptyHeading" is missing (the heading shown when there is nothing to list).`). An optional box left empty in the editor arrives as `""` and means "not set".
 
-| Field | Type | Home | Listings | Games | Notes |
+| Field | Type | Home | Listings | Apps | Notes |
 |---|---|---|---|---|---|
 | `title` | string | yes | yes | yes | The page's one `h1` (on the home page, the hero headline). One `*phrase*` in asterisks is italic brass |
 | `seoTitle` | string | no (not drawn) | no | no | The browser title, "· {site name}" is added. Today the kind's name ("Blog"). Empty: the heading. The home page's browser title is `{site name} · {tagline}` from `site.json` |
@@ -223,11 +226,11 @@ These files add the fields of `sitePageFields` (`src/lib/site-pages.ts`). The sc
 | `introSections`, `outroSections` | block[] | | no | no | Blocks between the lead and the list, and between the list and the foot of the page. Every numbered page repeats them |
 | `emptyHeading`, `emptyText` | string | | yes | yes | Said when there is nothing to list (at most 100 and 300) |
 | `emptyLinkLabel` | string | | | yes | The empty state's button (it goes to `/projects/`) |
-| `soonEyebrow`, `soonTitle`, `soonText` | string | | | yes | The card beside a single game ("Next up", "More games coming", …) |
+| `soonEyebrow`, `soonTitle`, `soonText` | string | | | yes | The card beside a single app ("Next up", "More apps coming", …) |
 
-"Listings" are `latest`, `news`, `blog`, `vlogs`, `projects`, `repos` and `tags`. A blank cell means the page does not draw the field (and the build refuses it). What is made from the posts stays in code and is not a field: the list, its filters, counts and pagination, the games grid, the tag chips, the kind's label and icon over the heading (the nav label), "Used once" on `/tags/`, and the filters' "Nothing matches that." messages.
+"Listings" are `latest`, `news`, `blog`, `vlogs`, `projects`, `repos` and `tags`. A blank cell means the page does not draw the field (and the build refuses it). What is made from the posts stays in code and is not a field: the list, its filters, counts and pagination, the apps grid and its type filter (the type names are `APP_TYPES`), the tag chips, the kind's label and icon over the heading (the nav label), "Used once" on `/tags/`, and the filters' "Nothing matches that." messages.
 
-The words in these files were moved from code unchanged (`KINDS` in `src/lib/listing.ts`, `GAMES_COPY` in `src/lib/games.ts`, the literals in `index.astro`, `ArchivePage.astro`, `ArchiveList.astro` and `tags/index.astro`). `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`: change the fixture in the same commit as a deliberate change of words (`npm run build && UPDATE_PAGE_TEXT=1 npx playwright test page-text`, then read the diff). When the published posts differ from the ones a fixture was captured with, only the page head is compared.
+The words in these files were moved from code unchanged (`KINDS` in `src/lib/listing.ts`, `GAMES_COPY` in what was `src/lib/games.ts`, the literals in `index.astro`, `ArchivePage.astro`, `ArchiveList.astro` and `tags/index.astro`). `tests/page-text.spec.js` compares each page's rendered words with `tests/fixtures/pages/<id>.json`: change the fixture in the same commit as a deliberate change of words (`npm run build && UPDATE_PAGE_TEXT=1 npx playwright test page-text`, then read the diff). When the published posts differ from the ones a fixture was captured with, only the page head is compared.
 
 The settings tokens of the next section work in these files too: `home.md` writes the hero's eyebrow and lead and its description as `{site.tagline}` and `{site.description}`, and `latest.md` its description as `{site.description}`, so the tagline and description stay in Site settings. `loadSitePage` (`src/lib/site-pages-queries.ts`) fills them; a unit test checks that no page file types a settings value out.
 
@@ -314,7 +317,7 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
   "links": { "github": "", "youtube": "https://www.youtube.com/@R7Creatives" },
   "nav": [
     { "label": "Latest", "href": "/#latest" },
-    { "label": "Games", "href": "/games/", "footer": true, "icon": "play" }
+    { "label": "Apps", "href": "/apps/", "footer": true, "icon": "play" }
   ],
   "footer": {
     "links": [

@@ -281,10 +281,10 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
       standIn('Pinned post: the post marked Featured, as a large card.', 'Chosen when the site is built. Left out when no post is featured, or when only one post is published.'),
       false,
     ),
-  games: (d) =>
+  apps: (d) =>
     sectionBandHtml(
       sectionHeadHtml(d),
-      standIn(`Games row: the first ${d.count} published games, in the order of the Games page.`, 'Chosen when the site is built. Left out while no game is published.'),
+      standIn(`Apps row: the first ${d.count} published apps, in the order of the Apps page.`, 'Chosen when the site is built. Left out while none is published.'),
     ),
   author: (d, env) => {
     const who = env.authors.find((a) => a.slug === d.author);

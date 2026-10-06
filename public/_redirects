@@ -23,6 +23,11 @@
 # Without the trailing slash the admin would 404.
 /admin      /admin/             301
 
+# The Games hub became the Apps hub (docs/DECISIONS.md). Both forms, like the subscribe lines below. `astro preview` and the e2e
+# tests do not read this file (Cloudflare Pages does): tests/redirects.spec.js reads it the way Pages does.
+/games      /apps/              301
+/games/     /apps/              301
+
 # The subscribe page was removed with the newsletter (docs/DECISIONS.md). Both forms, so neither depends on how Pages treats the trailing slash.
 /subscribe  /                   301
 /subscribe/ /                   301

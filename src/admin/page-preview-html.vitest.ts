@@ -35,7 +35,7 @@ describe('the home page preview', () => {
   });
 
   it('uses classes the site\'s stylesheets have', () => {
-    for (const cls of ['hero', 'hero-grid', 'plate-grid', 't-display', 'cluster', 'page-head', 'game-soon', 'game-grid']) expect(css, cls).toContain(`.${cls}`);
+    for (const cls of ['hero', 'hero-grid', 'plate-grid', 't-display', 'cluster', 'page-head', 'app-soon', 'app-grid']) expect(css, cls).toContain(`.${cls}`);
   });
 });
 
@@ -54,14 +54,14 @@ describe('a listing page preview', () => {
     expect(html).toMatch(/<strong>Stand-in\.<\/strong> The posts are listed here/);
     expect(html).toContain('Made when the site is built');
     expect(html).toContain('<h2>No posts yet.</h2><p>Check back soon.</p>');
-    expect(html).not.toContain('game-soon');
+    expect(html).not.toContain('app-soon');
   });
 
-  it('on the Games page, also shows the empty state button and the card beside a single game', () => {
-    const html = listingStandInHtml(sitePage('games'), { emptyLinkLabel: 'See the projects', soonEyebrow: 'Next up', soonTitle: 'More games coming', soonText: 'Soon.' });
-    expect(html).toContain('The published games are shown here');
+  it('on the Apps page, also shows the empty state button and the card beside a single app', () => {
+    const html = listingStandInHtml(sitePage('apps'), { emptyLinkLabel: 'See the projects', soonEyebrow: 'Next up', soonTitle: 'More apps coming', soonText: 'Soon.' });
+    expect(html).toContain('The published apps and games are shown here');
     expect(html).toContain('<a class="btn" href="#">See the projects</a>');
-    expect(html).toContain('<p class="eyebrow">Next up</p><h2 class="card-title">More games coming</h2>');
+    expect(html).toContain('<p class="eyebrow">Next up</p><h2 class="card-title">More apps coming</h2>');
   });
 
   it('lists what the build would stop on: a missing field, and a bad block above or below the list, each said where', () => {

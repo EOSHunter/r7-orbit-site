@@ -14,14 +14,15 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 
-# Playable projects embed a game from its own address (the playUrl field, docs/CONTENT_MODEL.md). frame-src is the only
-# directive: this page may frame that one origin and no other, and nothing else about scripts or images is restricted. It is on
+# Playable projects embed a game or an app from its own address (the playUrl field, docs/CONTENT_MODEL.md). frame-src is the only
+# directive: this page may frame those origins and no other, and nothing else about scripts or images is restricted. It is on
 # /projects/* and not on /*, because the YouTube player on vlog and blog pages is a frame too and would be blocked, and because
 # /admin/* sets its own policy (rules are cumulative: a second CSP there would be enforced as well as the admin's and break its
-# preview frame). Adding a game means adding its host here (explicit, no wildcard), and if a game moves, change it to match its playUrl: tests/headers.spec.js fails when an embedded
-# playUrl in src/content/projects/ is not covered by this line.
+# preview frame). Adding a game or an app means adding its host here, space-separated (explicit, no wildcard), and if one moves,
+# change it to match its playUrl: tests/headers.spec.js fails when an embedded playUrl in src/content/projects/ is not covered by
+# this line. https://housepainter.r7orbit.io is House Painter's, listed ahead of its project page.
 /projects/*
-  Content-Security-Policy: frame-src https://vesper.r7orbit.io
+  Content-Security-Policy: frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io
 
 # Built assets have a content hash in the file name, so they never change under the same URL.
 /_astro/*

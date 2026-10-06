@@ -1,6 +1,6 @@
 // Markup for the previews of the home page and the listing pages in the editor (src/admin/page-previews.ts): the hero or the page
-// head as index.astro, ArchivePage.astro, games/index.astro and tags/index.astro draw them (same elements and classes, so the
-// site's CSS styles them), the blocks through sectionsHtml, and, where the page lists posts, games or tags, a stand-in that says
+// head as index.astro, ArchivePage.astro, apps/index.astro and tags/index.astro draw them (same elements and classes, so the
+// site's CSS styles them), the blocks through sectionsHtml, and, where the page lists posts, apps or tags, a stand-in that says
 // so in words. Nothing that comes from the posts can be drawn here: the editor has the page's entry, not the site. Pure functions,
 // no DOM and no Decap: they run under Vitest.
 import { pageProblems, type SitePage } from '../lib/site-pages';
@@ -36,22 +36,22 @@ export function pageHeadHtml(page: Pick<SitePage, 'label' | 'icon'>, data: Loose
 
 /** What each kind of listing page draws from the site where the stand-in is. */
 function listedThing(page: Pick<SitePage, 'id' | 'shape'>): string {
-  if (page.shape === 'games') return 'The published games are shown here, in their order, as cards with a Play button.';
+  if (page.shape === 'apps') return 'The published apps and games are shown here, in their order, as cards with their type and a Play or Open button, with a filter by type when there are two types or more.';
   if (page.id === 'tags') return 'Every tag in use is listed here, with how many posts carry it.';
   return 'The posts are listed here, newest first, with search, sort and filters, twelve to a page.';
 }
 
 /**
- * The stand-in for the listing (ArchiveList, GamesSection, TagIndex): what goes there, and the page's own words for when there is
- * nothing to list (and, on the Games page, the card beside a single game), drawn with the classes the page uses.
+ * The stand-in for the listing (ArchiveList, AppsSection, TagIndex): what goes there, and the page's own words for when there is
+ * nothing to list (and, on the Apps page, the card beside a single app), drawn with the classes the page uses.
  */
 export function listingStandInHtml(page: Pick<SitePage, 'id' | 'shape'>, data: Loose): string {
   const what = `<div class="empty"><p><strong>Stand-in.</strong> ${escapeHtml(listedThing(page))}</p><p class="t-meta">Made when the site is built, so the editor cannot show it.</p></div>`;
-  const button = page.shape === 'games' && str(data.emptyLinkLabel) ? `<a class="btn" href="#">${escapeHtml(str(data.emptyLinkLabel))}</a>` : '';
+  const button = page.shape === 'apps' && str(data.emptyLinkLabel) ? `<a class="btn" href="#">${escapeHtml(str(data.emptyLinkLabel))}</a>` : '';
   const empty = `<p class="admin-preview-note">With nothing to list, the page says:</p><div class="empty"><h2>${escapeHtml(str(data.emptyHeading))}</h2><p>${escapeHtml(str(data.emptyText))}</p>${button}</div>`;
   const soon =
-    page.shape === 'games'
-      ? `<p class="admin-preview-note">With exactly one game, a card beside it says:</p><ul class="game-grid few"><li><div class="game-soon"><p class="eyebrow">${escapeHtml(str(data.soonEyebrow))}</p><h2 class="card-title">${escapeHtml(str(data.soonTitle))}</h2><p class="card-text">${escapeHtml(str(data.soonText))}</p></div></li></ul>`
+    page.shape === 'apps'
+      ? `<p class="admin-preview-note">With exactly one app, a card beside it says:</p><ul class="app-grid few"><li><div class="app-soon"><p class="eyebrow">${escapeHtml(str(data.soonEyebrow))}</p><h2 class="card-title">${escapeHtml(str(data.soonTitle))}</h2><p class="card-text">${escapeHtml(str(data.soonText))}</p></div></li></ul>`
       : '';
   return `<div class="container wide">${what}${empty}${soon}</div>`;
 }

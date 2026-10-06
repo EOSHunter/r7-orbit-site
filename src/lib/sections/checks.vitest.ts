@@ -52,7 +52,7 @@ describe('the frame-src rule for a game', () => {
   const headers = readFileSync('public/_headers', 'utf8');
 
   it('reads the hosts public/_headers lets the site frame', () => {
-    expect(frameSrcOrigins(headers)).toEqual(['https://vesper.r7orbit.io']);
+    expect(frameSrcOrigins(headers)).toEqual(['https://vesper.r7orbit.io', 'https://housepainter.r7orbit.io']);
     expect(frameSrcOrigins('/*\n  X: y\n')).toEqual([]);
   });
 
