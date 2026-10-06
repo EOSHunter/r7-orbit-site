@@ -2,10 +2,6 @@
   "defaultOgImage": "/og-default.png",
   "nav": [
     {
-      "label": "Latest",
-      "href": "/#latest"
-    },
-    {
       "label": "News",
       "href": "/news/"
     },
@@ -28,10 +24,6 @@
       "icon": "play"
     },
     {
-      "label": "Repos",
-      "href": "/repos/"
-    },
-    {
       "label": "About R7 Orbit",
       "href": "/about/"
     }
@@ -51,11 +43,6 @@
   },
   "footer": {
     "links": [
-      {
-        "label": "GitHub",
-        "social": "github",
-        "icon": "github"
-      },
       {
         "label": "YouTube",
         "social": "youtube",
