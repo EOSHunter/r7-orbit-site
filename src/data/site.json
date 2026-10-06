@@ -2,10 +2,6 @@
   "defaultOgImage": "/og-default.png",
   "nav": [
     {
-      "label": "Latest",
-      "href": "/#latest"
-    },
-    {
       "label": "News",
       "href": "/news/"
     },
@@ -20,16 +16,6 @@
     {
       "label": "Projects",
       "href": "/projects/"
-    },
-    {
-      "label": "Apps",
-      "href": "/apps/",
-      "footer": true,
-      "icon": "play"
-    },
-    {
-      "label": "Repos",
-      "href": "/repos/"
     },
     {
       "label": "About R7 Orbit",
@@ -51,11 +37,6 @@
   },
   "footer": {
     "links": [
-      {
-        "label": "GitHub",
-        "social": "github",
-        "icon": "github"
-      },
       {
         "label": "YouTube",
         "social": "youtube",
