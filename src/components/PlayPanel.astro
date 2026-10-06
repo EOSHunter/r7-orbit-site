@@ -6,6 +6,7 @@
 import Icon from './Icon.astro';
 import MediaPlaceholder from './MediaPlaceholder.astro';
 import { PLATFORM_LABEL, aspectRatio, type PlayFields } from '../lib/play';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Props extends PlayFields {
   /** The play address (an https URL). */
@@ -22,6 +23,7 @@ interface Props extends PlayFields {
 
 const { playUrl, title, poster, playMode = 'embed', playAspect, controls = [], playNote, platforms = [], id: idProp, showHeading = true } = Astro.props;
 const embed = playMode !== 'link';
+const srcset = await publicSrcset(poster);
 // Ids are made from the title so two panels on one page (the fixture page) never share one.
 const id = idProp ? `play-${idProp}` : 'play-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 ---
@@ -33,7 +35,7 @@ const id = idProp ? `play-${idProp}` : 'play-' + title.toLowerCase().replace(/[^
     embed ? (
       <>
         <div class="play-stage" style={`--play-aspect: ${aspectRatio(playAspect)}`}>
-          {poster ? <img class="play-poster" src={poster} alt="" data-play-facade /> : <MediaPlaceholder />}
+          {poster ? <img class="play-poster" src={poster} srcset={srcset} sizes={srcset && SIZES.page} alt="" data-play-facade /> : <MediaPlaceholder />}
           <button class="btn solid play-start" type="button" data-play-start data-play-facade>
             <Icon name="play" />Play {title}
           </button>

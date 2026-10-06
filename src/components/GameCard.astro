@@ -9,6 +9,7 @@ import PreviewBadge from './PreviewBadge.astro';
 import type { GameCardData } from '../lib/cards';
 import { PLATFORM_LABEL } from '../lib/play';
 import { plainTitle } from '../lib/text';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Props {
   game: GameCardData;
@@ -22,6 +23,7 @@ const { game, level = 2, eager = false } = Astro.props;
 const Heading = `h${level}` as 'h2' | 'h3';
 const title = plainTitle(game.title);
 const { play } = game;
+const srcset = await publicSrcset(game.cover?.src);
 ---
 
 <article class="card game-card">
@@ -29,6 +31,8 @@ const { play } = game;
     {game.cover ? (
       <img
         src={game.cover.src}
+        srcset={srcset}
+        sizes={srcset && SIZES.card}
         alt={game.cover.alt}
         width={game.cover.width}
         height={game.cover.height}

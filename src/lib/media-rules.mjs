@@ -32,6 +32,34 @@ export const MAX_WIDTH = 2000;
 /** Pictures in public/media smaller than this are left exactly as they are. */
 export const RECOMPRESS_ABOVE_BYTES = 300 * 1024;
 
+// ---- Smaller copies -------------------------------------------------------------------------------------------------
+// A cover, poster or portrait is a plain file from public/, often a 2000px original. After the build, scripts/media.mjs dist
+// writes WebP copies of every picture from public/ at these widths next to it (/media/x.png -> /media/x.720w.webp), and the
+// components that draw such a picture offer them in a srcset (src/lib/media-srcset.ts), so a card downloads a few kB instead
+// of the original. Both sides read the widths from here, so they cannot disagree.
+
+/** Widths of the WebP copies. A card is about 380 CSS px wide on a phone, which the 720 copy covers at the phone's density. */
+export const VARIANT_WIDTHS = [480, 720, 960, 1280];
+
+/** Formats that get copies (an SVG is drawn at any size as it is). */
+export const VARIANT_SOURCE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+
+/**
+ * The copies a picture `width` pixels wide gets: the widths below its own, and one at its own width (after the build's 2000px
+ * cap), so the largest choice in a srcset is a WebP too, never the original JPG or PNG. None for a picture narrower than the
+ * smallest width (an icon): it is small already.
+ */
+export function variantWidths(width) {
+  const own = Math.min(width, MAX_WIDTH);
+  return own >= VARIANT_WIDTHS[0] ? [...VARIANT_WIDTHS.filter((w) => w < own), own] : [];
+}
+
+/** Where the copy of `path` at `width` is served: `/media/x.png`, 720 -> `/media/x.720w.webp`. */
+export const variantPath = (path, width) => `${String(path).replace(/\.[^./\\]+$/, '')}.${width}w.webp`;
+
+/** A copy the build made, not an author's picture. */
+export const isVariant = (path) => /\.\d+w\.webp$/.test(String(path));
+
 /** `photo.JPG` -> `jpg`. '' when there is no extension. */
 export const extensionOf = (name) => {
   const base = String(name).split(/[\\/]/).pop() ?? '';

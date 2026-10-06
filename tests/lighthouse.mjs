@@ -9,7 +9,8 @@ import { join } from 'node:path';
 import { chromium } from '@playwright/test';
 import routes from './routes.js';
 
-const PORT = 4398;
+// LIGHTHOUSE_PORT=4397 (any free port) when something else, such as another checkout's run, already listens on 4398.
+const PORT = Number(process.env.LIGHTHOUSE_PORT ?? 4398);
 const base = `http://127.0.0.1:${PORT}`;
 const minScore = ['error', { minScore: 0.95 }];
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');

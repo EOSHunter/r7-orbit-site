@@ -7,6 +7,8 @@
 //                                  the originals in git are never touched): anything wider than 2000px is scaled to 2000px, a big
 //                                  photo is recompressed, the camera's GPS and other metadata is removed, a sideways phone photo is
 //                                  turned upright. Then it stops if any picture the site would serve is still over 2 MB.
+//                                  First it writes smaller WebP copies of every picture from public/ (x.png -> x.720w.webp) for
+//                                  the srcset of covers, posters and portraits (src/lib/media-srcset.ts).
 //
 // The rules (formats, limits, messages) are in src/lib/media-rules.mjs, shared with the admin. docs/IMAGES.md explains it all.
 import { createHash } from 'node:crypto';
@@ -19,10 +21,14 @@ import {
   MAX_WIDTH,
   RECOMPRESS_ABOVE_BYTES,
   REJECTED_EXTENSIONS,
+  VARIANT_SOURCE_EXTENSIONS,
   checkShippedFile,
   checkSourceFile,
   extensionOf,
   formatBytes,
+  isVariant,
+  variantPath,
+  variantWidths,
 } from '../src/lib/media-rules.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -101,10 +107,30 @@ async function shrink(file) {
   return { data, from: `${meta.width}x${meta.height} ${formatBytes(original.length)}`, to: `${info.width}x${info.height} ${formatBytes(data.length)}` };
 }
 
+/** Writes the smaller WebP copies of one picture from public/ next to it (the widths and names are in media-rules.mjs). */
+async function variants(file) {
+  if (!VARIANT_SOURCE_EXTENSIONS.includes(extensionOf(file)) || isVariant(file)) return 0;
+  const original = await readFile(file);
+  // The width the pages read from public/ (src/lib/media-srcset.ts), before any resize, so both pick the same widths.
+  const { width = 0 } = await sharp(original, { failOn: 'none' }).metadata();
+  const widths = variantWidths(width);
+  for (const w of widths) {
+    const data = await sharp(original, { failOn: 'none' }).rotate().resize({ width: w }).webp({ quality: 78 }).toBuffer();
+    await writeFile(variantPath(file, w), data);
+  }
+  return widths.length;
+}
+
 async function dist() {
   const dir = join(root, 'dist');
+  // Everything outside _astro/ (Astro's own output) and pagefind/ came from public/.
+  const fromPublic = (await walk(dir)).filter((f) => !/^(_astro|pagefind)[\\/]/.test(relative(dir, f)) && isPicture(f));
+  let copies = 0;
+  for (const file of fromPublic) copies += await variants(file);
+  console.log(`[media] ${copies} smaller WebP copies written for srcset`);
   const media = (await walk(join(dir, 'media'))).filter(isPicture);
   for (const file of media) {
+    if (isVariant(file)) continue;
     const result = await shrink(file);
     if (!result) continue;
     await writeFile(file, result.data);

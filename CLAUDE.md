@@ -98,7 +98,13 @@ npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + 
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
                   # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=4401 if another checkout already uses it: Playwright reuses a server it finds there and would test that one's dist/); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
+                         # run it alone: npm run build && npm run test:lighthouse (serves dist/ on 127.0.0.1:4398; if that port is taken,
+                         # check with Get-NetTCPConnection -LocalPort 4398 and use $env:LIGHTHOUSE_PORT=4397 in PowerShell / LIGHTHOUSE_PORT=4397 in bash).
+                         # Throttling is simulated, so results repeat; LCP counts every byte before it (fonts, and any picture a card draws:
+                         # covers and posters go through the srcset of build-made WebP copies, src/lib/media-srcset.ts)
 ```
+
+Line endings: text fixtures under `tests/fixtures/` are LF on every checkout (`.gitattributes`); a spec that reads a fixture line by line still splits on `/\r?\n/`.
 
 Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it is not linked from anywhere.
 

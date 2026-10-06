@@ -26,6 +26,7 @@ import type { SitePost } from '../lib/content-queries';
 import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import '../styles/markdown.css';
@@ -62,6 +63,7 @@ const minutes = readTime(post);
 const base = (Astro.site ?? new URL(site.url)).href;
 const url = absoluteUrl(Astro.url.pathname, base);
 const cover = data.cover ? { src: data.cover, alt: data.coverAlt ?? '' } : undefined;
+const coverSrcset = await publicSrcset(cover?.src);
 // Blog only: an optional hero image behind the headline. It is the og:image when the post has no cover of its own.
 const featured = (data as { featuredImage?: ImageMetadata }).featuredImage;
 const featuredAlt = (data as { featuredImageAlt?: string }).featuredImageAlt ?? '';
@@ -149,7 +151,7 @@ const assist = assistNote(data.aiAssist, author);
   <div class="container">
     {cover && (
       <div class="media framed post-hero">
-        <img src={cover.src} alt={cover.alt} width="1280" height="720" />
+        <img src={cover.src} srcset={coverSrcset} sizes={coverSrcset && SIZES.page} alt={cover.alt} width="1280" height="720" />
       </div>
     )}
 
