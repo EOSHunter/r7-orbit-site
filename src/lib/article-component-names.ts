@@ -8,6 +8,10 @@ export const ARTICLE_COMPONENT_NAMES = [
   'TwoColumn',
   'VideoEmbed',
   'Divider',
+  'Pullquote',
+  'AgentCards',
+  'OrbitDiagram',
+  'StatDial',
 ] as const;
 
 export type ArticleComponentName = (typeof ARTICLE_COMPONENT_NAMES)[number];

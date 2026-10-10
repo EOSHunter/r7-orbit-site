@@ -51,6 +51,31 @@ describe('blocks', () => {
     ['TwoColumn', { left: 'Left **text**', right: 'Right\n\ntext', ratio: '2:1' }],
     ['VideoEmbed', { id: 'dQw4w9WgXcQ', title: 'A video', caption: 'Watch this' }],
     ['Divider', { variant: 'dots' }],
+    ['Divider', { variant: 'orbit' }],
+    ['Pullquote', { body: 'Basically mission control for your AI coders.', cite: 'R7', ring: 'mission control' }],
+    [
+      'AgentCards',
+      {
+        cards: [
+          { task: 'Add a dark mode', agent: 'Quasar', tool: 'Claude', model: 'Sonnet 5.5', effort: 'Medium', state: 'finished', report: 'I fixed `dayOf` in "src/streak.js" {x}.' },
+          { task: 'Npm start', agent: 'Laika', tool: 'PowerShell', state: 'interrupted', note: 'Orbit closed while this ran.' },
+        ],
+        caption: 'From the video.',
+      },
+    ],
+    [
+      'OrbitDiagram',
+      {
+        hub: 'lumen',
+        meta: 'main · 9 agents',
+        agents: [
+          { agent: 'Quasar', task: 'Add a dark mode', tool: 'Claude', state: 'finished' },
+          { agent: 'Atlas', task: 'Fix the timezone bug in…', tool: 'Claude', state: 'working' },
+        ],
+        caption: 'The canvas.',
+      },
+    ],
+    ['StatDial', { value: '17', unit: 's', caption: 'In the video, that agent finished in 17 seconds.', source: 'From the video' }],
   ];
 
   it.each(cases)('%s survives write then read', (id, data) => {
@@ -82,9 +107,32 @@ describe('blocks', () => {
   });
 
   it('reads a block that was just inserted with empty fields (Decap does this on insert)', () => {
-    for (const id of ['Callout', 'Quote', 'Figure', 'VideoEmbed', 'ImageGallery', 'TwoColumn', 'Divider']) {
+    for (const id of ['Callout', 'Quote', 'Figure', 'VideoEmbed', 'ImageGallery', 'TwoColumn', 'Divider', 'Pullquote', 'AgentCards', 'OrbitDiagram', 'StatDial']) {
       const { match } = roundTrip(id, {});
       expect(match, id).not.toBeNull();
+    }
+  });
+
+  it('writes the brand blocks as the components expect them', () => {
+    expect(byId('Pullquote').toBlock({ body: 'One\nscreen {now}', ring: 'One screen' })).toBe('<Pullquote ring="One screen">One screen now</Pullquote>');
+    expect(byId('AgentCards').toBlock({ cards: [{ task: 'T', agent: 'A', tool: '', model: ' ' }] })).toBe('<AgentCards cards={[{"task":"T","agent":"A"}]} />');
+    expect(byId('StatDial').toBlock({ value: '18', unit: 'commits', caption: 'Eighteen.' })).toBe('<StatDial value="18" unit="commits" caption="Eighteen." />');
+    expect(byId('Divider').toBlock({ variant: 'orbit' })).toBe('<Divider variant="orbit" />');
+  });
+
+  it('reads the brand blocks exactly as they are written in the post', () => {
+    // Line endings as Decap sees them (the file may be checked out with CRLF on Windows).
+    const post = readFileSync('src/content/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten.mdx', 'utf8').replace(/\r\n/g, '\n');
+    for (const id of ['AgentCards', 'OrbitDiagram', 'StatDial', 'Pullquote']) {
+      const block = byId(id);
+      const starts = [...post.matchAll(new RegExp(String.raw`^<${id}\b`, 'gm'))].map((m) => m.index ?? 0);
+      expect(starts.length, id).toBeGreaterThan(0);
+      for (const at of starts) {
+        const match = block.pattern.exec(post.slice(at));
+        expect(match, `${id} at ${at}`).not.toBeNull();
+        // Writing what was read gives back the same text: an edit in the admin leaves the block as it was.
+        expect(block.toBlock(block.fromBlock(match as RegExpMatchArray) as BlockData), id).toBe(match?.[0]);
+      }
     }
   });
 

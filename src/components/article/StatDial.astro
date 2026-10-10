@@ -1,0 +1,22 @@
+---
+// One number inside the brand ring, like the R7 inside the logo. The dial is decorative; the caption says the number in words
+// and is what a screen reader reads. One a section at most (docs/ARTICLE_COMPONENTS.md). Markup in src/lib/article-brand.ts.
+import '../../styles/article.css';
+import { statDialHtml, statDialProblems } from '../../lib/article-brand';
+
+interface Props {
+  /** The number, as it should be printed: "17", "18", "1.25". */
+  value: string;
+  /** A short unit after it: "s", "commits". */
+  unit?: string;
+  caption: string;
+  /** Where the number comes from, in small print. */
+  source?: string;
+}
+
+const { value, unit, caption, source } = Astro.props;
+const problems = statDialProblems(value, caption);
+if (problems.length) throw new Error(`StatDial: ${problems.join(' ')}`);
+---
+
+<Fragment set:html={statDialHtml({ value, unit, caption, source })} />

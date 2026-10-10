@@ -99,3 +99,112 @@ div.art-divider span { width: var(--s-1); height: var(--s-1); border-radius: var
 
 /* ArticleTemplate: reading column and sidebar */
 .art-template .post-main { gap: var(--s-6); }
+
+/* ---- The brand in the words (docs/IMAGE_STYLE.md section 8.3). Markup: src/lib/article-brand.ts. ---------------------- */
+/* Inside .prose, a figure gets a frame and a list gets bullets; these pieces are figures and lists of their own, so undo that. */
+.prose .art-agents, .prose .art-orbit, .prose .art-stat, .art-agents, .art-orbit, .art-stat { clear: both; margin-inline: 0; overflow: visible; background: none; border: 0; border-radius: 0; }
+.prose > .art-agents, .prose > .art-orbit { margin-block: var(--s-6); }
+.prose .art-agents figcaption, .prose .art-orbit figcaption, .prose .art-stat figcaption { margin: var(--s-3) 0 0; padding: 0; border: 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--text-3); }
+.prose .art-agents-list, .prose .art-orbit-agents, .art-agents-list, .art-orbit-agents { margin: 0; padding: 0; list-style: none; }
+.prose .art-agent, .prose .art-orbit-agent { margin-top: 0; }
+.art-agent p, .art-orbit-agent p, .art-orbit-hub p { margin: 0; }
+
+/* Orbit divider: the logo's small ring and dot between two fading hairlines */
+div.art-divider[data-variant='orbit'] { align-items: center; gap: var(--s-4); margin-block: var(--s-7); }
+div.art-divider[data-variant='orbit']::before, div.art-divider[data-variant='orbit']::after { content: ''; flex: 1; height: var(--bw); background: linear-gradient(to right, transparent, var(--line-strong)); }
+div.art-divider[data-variant='orbit']::after { background: linear-gradient(to left, transparent, var(--line-strong)); }
+.art-orbit-mark { flex: none; width: var(--s-7); height: auto; overflow: visible; }
+.art-orbit-mark path { fill: none; stroke: var(--brass-dim); stroke-width: calc(var(--bw) * 1.5); }
+.art-orbit-mark circle { fill: var(--brass-highlight); }
+
+/* The ring round words in a pull quote. It draws itself as the quote comes into view; with less motion it is simply there. */
+.art-ring { position: relative; display: inline-block; margin-inline: 0.3em 0.36em; white-space: nowrap; }
+.art-ring-line { position: absolute; left: -0.42em; top: -0.2em; width: calc(100% + 0.84em); max-width: none; height: calc(100% + 0.36em); overflow: visible; pointer-events: none; }
+.art-ring-line ellipse { fill: none; stroke: var(--brass); stroke-width: calc(var(--bw) * 1.5); }
+.art-ring-dot {
+  position: absolute; right: -0.42em; top: 44%; width: max(var(--s-1), 0.16em); height: max(var(--s-1), 0.16em); translate: 50% -50%;
+  border-radius: var(--r-full); background: var(--brass-highlight); box-shadow: var(--glow-dot);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .art-ring-line ellipse { stroke-dasharray: 100; animation: art-ring-draw linear both; animation-timeline: view(); animation-range: entry 25% entry 100%; }
+    .art-ring-dot { animation: art-ring-dot linear both; animation-timeline: view(); animation-range: entry 85% entry 100%; }
+  }
+}
+@keyframes art-ring-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes art-ring-dot { from { opacity: 0; scale: 0.4; } to { opacity: 1; scale: 1; } }
+
+/* Agent cards: the card from the R7 Orbit canvas. The rail on the left takes the state's colour, as in the app. */
+.art-agents-list { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.art-agents[data-count='1'] .art-agents-list { grid-template-columns: minmax(0, 30rem); }
+.art-agent {
+  position: relative; display: flex; flex-direction: column; gap: var(--s-2);
+  padding: var(--s-4) var(--s-4) var(--s-4) calc(var(--s-4) + var(--bw-accent));
+  background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md);
+}
+.art-agent::before { content: ''; position: absolute; left: var(--s-2); top: var(--s-3); bottom: var(--s-3); width: var(--bw-accent); border-radius: var(--r-xs); background: var(--line-strong); }
+.art-agent[data-state='finished']::before { background: var(--st-done); }
+.art-agent[data-state='working']::before { background: var(--brass); }
+.art-agent[data-state='needs'] { border-color: var(--line-brass); box-shadow: var(--glow-brass); }
+.art-agent[data-state='needs']::before { background: var(--brass-bright); }
+.art-agent-task { display: flex; align-items: flex-start; gap: var(--s-2); font: var(--fw-semibold) var(--fs-md)/1.35 var(--font-ui); color: var(--text); }
+.art-agent-task .mark { margin-top: 0.12em; }
+.art-agent-who { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); font-size: var(--fs-xs); line-height: 1.5; color: var(--text-3); }
+.art-agent-who .chip { padding-block: 0; }
+.art-agent-name { font-weight: var(--fw-semibold); color: var(--brass); }
+.art-agent-tool { font-size: var(--fs-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.art-agent-state { font: var(--fs-2xs)/1.4 var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-2); }
+.art-agent[data-state='needs'] .art-agent-state { color: var(--brass-bright); }
+.art-agent-note { font-size: var(--fs-sm); line-height: 1.5; color: var(--brass); }
+.art-agent-report { font-size: var(--fs-sm); line-height: 1.55; color: var(--text); }
+/* Code in a report is mono brass, as on the canvas; the prose code chip would break a narrow card into choppy lines */
+.prose .art-agent-report code, .art-agent-report code { padding: 0; background: none; border: 0; font-size: 0.92em; color: var(--brass-bright); }
+
+/* Orbit diagram: a list on a rail in a narrow column; from 560px of column, the canvas with the project in the middle */
+.art-orbit { container-type: inline-size; }
+.art-orbit-map { position: relative; display: grid; gap: var(--s-4); }
+.art-orbit-lines { display: none; }
+.art-orbit-hub { display: grid; justify-items: center; gap: var(--s-1); text-align: center; }
+.prose .art-orbit-hub img, .art-orbit-hub img { width: var(--s-8); height: auto; border: 0; border-radius: 0; }
+.art-orbit-name { font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); color: var(--text); overflow-wrap: anywhere; }
+.art-orbit-meta { font: var(--fs-2xs)/1.4 var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.prose .art-orbit-agents, .art-orbit-agents { display: grid; gap: var(--s-3); padding-left: var(--s-5); border-left: var(--bw) solid var(--line-strong); }
+.art-orbit-agent { display: grid; gap: var(--s-1); padding: var(--s-3); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md); }
+.art-orbit-agent .art-agent-task { font-size: var(--fs-sm); }
+.art-orbit figcaption { text-align: center; }
+@container (min-width: 560px) {
+  .art-orbit-map { display: block; }
+  .art-orbit-lines { display: block; position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--line-strong); }
+  .prose .art-orbit-agents, .art-orbit-agents {
+    position: relative; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto minmax(10rem, auto) auto;
+    grid-template-areas: 'tl t tr' 'l . r' 'bl b br'; align-items: center; gap: var(--s-4); padding: 0; border: 0;
+  }
+  .art-orbit-agent[data-slot='tl'] { grid-area: tl; } .art-orbit-agent[data-slot='t'] { grid-area: t; } .art-orbit-agent[data-slot='tr'] { grid-area: tr; }
+  .art-orbit-agent[data-slot='l'] { grid-area: l; } .art-orbit-agent[data-slot='r'] { grid-area: r; }
+  .art-orbit-agent[data-slot='bl'] { grid-area: bl; } .art-orbit-agent[data-slot='b'] { grid-area: b; } .art-orbit-agent[data-slot='br'] { grid-area: br; }
+  .art-orbit-hub { position: absolute; left: 50%; top: 50%; z-index: 1; translate: -50% -50%; padding: var(--s-2) var(--s-3); background: var(--bg); border-radius: var(--r-lg); }
+}
+
+/* Stat dial: the number inside the ring, the far half behind it, the near half and the dot in front */
+.art-stat { display: grid; justify-items: center; width: min(100%, 22rem); margin: var(--s-6) auto; text-align: center; }
+.prose > .art-stat { margin-inline: auto; }
+.art-stat-dial { position: relative; width: 100%; aspect-ratio: 2 / 1; }
+.art-stat-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.art-stat-ring path { fill: none; stroke: var(--brass); stroke-width: calc(var(--bw) * 1.5); vector-effect: non-scaling-stroke; }
+.art-stat-ring[data-part='back'] path { stroke: var(--brass-dim); opacity: 0.7; }
+.art-stat-ring circle { fill: var(--brass-highlight); filter: drop-shadow(0 0 var(--s-1) var(--brass)); }
+.prose .art-stat-value, .art-stat-value { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; font: var(--fw-medium) var(--fs-5xl)/1 var(--font-display); color: var(--text); }
+.art-stat-unit { margin-left: 0.08em; font-size: 0.4em; font-style: italic; font-weight: var(--fw-regular); color: var(--brass-bright); }
+.prose .art-stat figcaption, .art-stat figcaption { display: grid; gap: var(--s-1); max-width: 36ch; margin: var(--s-3) auto 0; font-size: var(--fs-sm); color: var(--text-2); text-align: center; }
+.art-stat-source { font: var(--fs-xs) var(--font-mono); color: var(--text-3); }
+
+@media (forced-colors: active) {
+  .art-orbit-mark path, .art-ring-line ellipse, .art-stat-ring path, .art-orbit-lines { stroke: CanvasText; }
+  .art-orbit-mark circle, .art-stat-ring circle { fill: CanvasText; }
+  .art-ring-dot { background: CanvasText; }
+  .art-agent::before { background: CanvasText; }
+}
+@media print {
+  .art-ring-line ellipse, .art-ring-dot { animation: none; }
+  .art-agent, .art-orbit-agent { break-inside: avoid; }
+}

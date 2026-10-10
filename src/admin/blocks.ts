@@ -13,10 +13,14 @@ import type { ArticleComponentName } from '../lib/article-component-names';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import {
   calloutHtml,
+  agentCardsHtml,
   dividerHtml,
   figureHtml,
   imageRowHtml,
+  orbitDiagramHtml,
+  pullquoteHtml,
   quoteHtml,
+  statDialHtml,
   twoColumnHtml,
   videoHtml,
   type GetAsset,
@@ -297,11 +301,169 @@ const videoEmbed: BlockEditorComponentOptions = {
 const divider: BlockEditorComponentOptions = {
   id: 'Divider',
   label: 'Divider',
-  fields: [field({ name: 'variant', label: 'Style', widget: 'select', options: ['rule', 'dots'], default: 'rule' })],
+  fields: [
+    field({
+      name: 'variant',
+      label: 'Style',
+      widget: 'select',
+      options: ['rule', 'dots', 'orbit'],
+      default: 'rule',
+      hint: 'orbit: the small ring and dot, for the main breaks of a post.',
+    }),
+  ],
   pattern: selfClosing('Divider'),
   fromBlock: (m) => parseAttrs(m[1]),
   toBlock: (d: BlockData) => tag('Divider', [optionAttr('variant', d.variant, 'rule')]),
   toPreview: preview((d) => dividerHtml(d)),
+};
+
+// ---- The brand pieces (docs/IMAGE_STYLE.md section 8.3) ----------------------------------------------------------------
+
+/** The text inside a one-line tag: line breaks become spaces, and the characters MDX would read as markup are dropped. */
+const inlineChild = (v: unknown) =>
+  text(v)
+    .trim()
+    .replace(/\s*\n\s*/g, ' ')
+    .replace(/[{}<>]/g, '');
+
+const pullquote: BlockEditorComponentOptions = {
+  id: 'Pullquote',
+  label: 'Pull quote',
+  fields: [
+    field({
+      name: 'body',
+      label: 'Quote',
+      widget: 'string',
+      hint: 'A line that is already in the post, set large. Screen readers skip it, because it repeats the text.',
+    }),
+    field({ name: 'cite', label: 'Who said it', widget: 'string', required: false }),
+    field({
+      name: 'ring',
+      label: 'Ring round these words',
+      widget: 'string',
+      required: false,
+      hint: 'Optional. One to three words of the quote, copied exactly, get the brand ring. Once a post at most.',
+    }),
+  ],
+  pattern: new RegExp(String.raw`^<Pullquote${ATTRS}>([^\n]*?)</Pullquote>`),
+  fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
+  toBlock: (d: BlockData) => `<Pullquote${stringAttr('cite', d.cite)}${stringAttr('ring', d.ring)}>${inlineChild(d.body)}</Pullquote>`,
+  toPreview: preview((d) => pullquoteHtml(d)),
+};
+
+const stateField = field({
+  name: 'state',
+  label: 'State',
+  widget: 'select',
+  options: [
+    { label: 'Finished', value: 'finished' },
+    { label: 'Working', value: 'working' },
+    { label: 'Needs you', value: 'needs' },
+    { label: 'Interrupted', value: 'interrupted' },
+  ],
+  default: 'finished',
+});
+const agentField = field({ name: 'agent', label: 'Agent', widget: 'string', hint: 'The name on the card: Quasar, Atlas...' });
+const taskField = field({ name: 'task', label: 'Task', widget: 'string', hint: 'The title on the card, as the app shows it.' });
+const toolField = field({ name: 'tool', label: 'Runs on', widget: 'string', required: false, default: 'Claude', hint: 'Claude, Codex, PowerShell...' });
+
+/** A list item with only the fields that hold something, in a fixed order. */
+const picked = (item: unknown, keys: string[]) => {
+  const source = (item ?? {}) as BlockData;
+  const out: BlockData = {};
+  for (const key of keys) if (text(source[key]).trim()) out[key] = text(source[key]).trim();
+  return out;
+};
+const listOf = (v: unknown) => (Array.isArray(v) ? v : []);
+
+const agentCards: BlockEditorComponentOptions = {
+  id: 'AgentCards',
+  label: 'Agent cards',
+  fields: [
+    field({
+      name: 'cards',
+      label: 'Cards',
+      widget: 'list',
+      min: 1,
+      max: 3,
+      hint: 'One to three cards from the R7 Orbit canvas, side by side. Copy what the app showed; never write a report for an agent.',
+      fields: [
+        taskField,
+        agentField,
+        toolField,
+        field({ name: 'model', label: 'Model', widget: 'string', required: false, hint: 'Sonnet 5.5, Opus 5.5...' }),
+        field({ name: 'effort', label: 'Effort', widget: 'string', required: false, hint: 'Low, Medium or High, if the card shows it.' }),
+        stateField,
+        field({ name: 'note', label: 'Note in brass', widget: 'string', required: false, hint: 'The line the app adds when something stopped it.' }),
+        field({ name: 'report', label: 'What it reported', widget: 'text', required: false, hint: 'Copied from the card. `code` in backticks shows as code.' }),
+      ],
+    }),
+    field({ name: 'caption', label: 'Caption', widget: 'string', required: false }),
+  ],
+  pattern: selfClosing('AgentCards'),
+  fromBlock: (m) => {
+    const read = parseAttrs(m[1]);
+    return { ...read, cards: listOf(read.cards) };
+  },
+  toBlock: (d: BlockData) =>
+    tag('AgentCards', [
+      jsonAttr('cards', listOf(d.cards).map((c) => picked(c, ['task', 'agent', 'tool', 'model', 'effort', 'state', 'note', 'report']))),
+      stringAttr('caption', d.caption),
+    ]),
+  toPreview: preview((d) => agentCardsHtml(d)),
+};
+
+const orbitDiagram: BlockEditorComponentOptions = {
+  id: 'OrbitDiagram',
+  label: 'Orbit diagram',
+  fields: [
+    field({ name: 'hub', label: 'Project in the middle', widget: 'string' }),
+    field({ name: 'meta', label: 'Line under it', widget: 'string', required: false, hint: 'For example: main · 9 agents' }),
+    field({
+      name: 'agents',
+      label: 'Agents',
+      widget: 'list',
+      min: 1,
+      max: 8,
+      hint: 'Up to eight agents round the project. Real agents and tasks only.',
+      fields: [agentField, taskField, toolField, stateField],
+    }),
+    field({ name: 'caption', label: 'Caption', widget: 'string', required: false }),
+  ],
+  pattern: selfClosing('OrbitDiagram'),
+  fromBlock: (m) => {
+    const read = parseAttrs(m[1]);
+    return { ...read, agents: listOf(read.agents) };
+  },
+  toBlock: (d: BlockData) =>
+    tag('OrbitDiagram', [
+      stringAttr('hub', d.hub),
+      stringAttr('meta', d.meta),
+      jsonAttr('agents', listOf(d.agents).map((a) => picked(a, ['agent', 'task', 'tool', 'state']))),
+      stringAttr('caption', d.caption),
+    ]),
+  toPreview: preview((d) => orbitDiagramHtml(d)),
+};
+
+const statDial: BlockEditorComponentOptions = {
+  id: 'StatDial',
+  label: 'Stat dial',
+  fields: [
+    field({ name: 'value', label: 'Number', widget: 'string', hint: 'As it should be printed: 17, 18, 1.25.' }),
+    field({ name: 'unit', label: 'Unit', widget: 'string', required: false, hint: 'Short: s, commits.' }),
+    field({
+      name: 'caption',
+      label: 'Caption',
+      widget: 'string',
+      hint: 'Say the number in words here: it is what a screen reader reads (the dial itself is decoration).',
+    }),
+    field({ name: 'source', label: 'Source', widget: 'string', required: false, hint: 'Where the number comes from, in small print.' }),
+  ],
+  pattern: selfClosing('StatDial'),
+  fromBlock: (m) => parseAttrs(m[1]),
+  toBlock: (d: BlockData) =>
+    tag('StatDial', [stringAttr('value', d.value), stringAttr('unit', d.unit), stringAttr('caption', d.caption), stringAttr('source', d.source)]),
+  toPreview: preview((d) => statDialHtml(d)),
 };
 
 // The "Image" block for the Markdown bodies (news, vlogs, projects, repos), which have no article components. It replaces
@@ -347,4 +509,8 @@ export const blocks: BlockEditorComponentOptions[] = [
   twoColumn,
   videoEmbed,
   divider,
+  pullquote,
+  agentCards,
+  orbitDiagram,
+  statDial,
 ];

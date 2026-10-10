@@ -29,7 +29,11 @@ That's the whole reason Hunter built **R7 Orbit**.
 
 R7 Orbit is a desktop app that's basically **mission control for your AI coders**. You hand out jobs, they all work at the same time, and nobody trips over anybody.
 
+<Pullquote ring="mission control">Basically mission control for your AI coders.</Pullquote>
+
 Every task gets its own agent (they even get little names, like Quasar, Atlas and Polaris, so you can tell them apart), and every agent works in **its own copy of your project**. So five agents can be changing five different things at once and none of them breaks the others' stuff. Your real project stays untouched until the work is done.
+
+<OrbitDiagram hub="lumen" meta="main · 9 agents" agents={[{"agent":"Quasar","task":"Add a dark mode","tool":"Claude","state":"finished"},{"agent":"Dune","task":"Favicon and page titles","tool":"Claude","state":"finished"},{"agent":"Rigel","task":"Mobile-friendly habit list","tool":"Claude","state":"finished"},{"agent":"Atlas","task":"Fix the timezone bug in…","tool":"Claude","state":"finished"},{"agent":"Ember","task":"Write CHANGELOG for…","tool":"Claude","state":"finished"},{"agent":"Briar","task":"Add a section to the RE…","tool":"Claude","state":"finished"},{"agent":"Voyager","task":"Build a stats page A","tool":"Claude","state":"finished"},{"agent":"Polaris","task":"Write tests for current…","tool":"Claude","state":"finished"}]} caption="Lumen, the demo project in the video, on the canvas: eight of its nine agents, each in its own copy of the project. Names and tasks as the app showed them." />
 
 Everything happens on one big canvas with your project sitting in the middle, and a little gold dot orbiting the logo. It speeds up when agents are busy and pulses when one of them needs you. (Yes, we're a little proud of the dot.)
 
@@ -37,9 +41,13 @@ Everything happens on one big canvas with your project sitting in the middle, an
 
 Seriously, that's it. There's a box at the bottom. You type something like "add a dark mode with a toggle in the header, and remember the choice," hit enter, and a card pops onto the canvas with an agent already on it.
 
-In the video, that agent finished in 17 seconds.
+<AgentCards cards={[{"task":"Add a dark mode","agent":"Quasar","tool":"Claude","model":"Sonnet 5.5","effort":"Medium","state":"finished","report":"I added a dark mode with a toggle button in the header, next to the title. I haven't run the app or opened it in a browser, so it's…"}]} caption="The dark-mode agent's card on the canvas when it finished, as the video shows it." />
+
+<StatDial value="17" unit="s" caption="In the video, that agent finished in 17 seconds." />
 
 Need more done? Send more. In the demo we fired off a timezone bug fix, a batch of tests and a README update back to back, and they all ran side by side.
+
+<AgentCards cards={[{"task":"Fix the timezone bug in…","agent":"Atlas","tool":"Claude","model":"Sonnet 5.5","effort":"Medium","state":"finished","report":"I fixed `dayOf` in `src/streak.js`. It now takes the day from the local calendar date instead of the UTC day, so a check-in at, say, 9pm…"},{"task":"Write tests for current…","agent":"Polaris","tool":"Claude","model":"Sonnet 5.5","effort":"Medium","state":"finished","report":"I added 15 tests for `currentStreak` and `longestStreak` in `src/streak.test.js`, and all 15 pass with `npm test`."},{"task":"Add a section to the RE…","agent":"Briar","tool":"Claude","model":"Sonnet 5.5","effort":"Medium","state":"finished","report":"I added a \"How streaks work\" section to `README.md`, based on `src/streak.js`. I haven't committed or pushed it. It covers…"}]} caption="The timezone fix, the tests and the README update, side by side on the canvas when they finished." />
 
 ## *They don't go rogue*
 
@@ -63,6 +71,8 @@ When they're done you get a comparison view: how long each took, what it cost, w
 
 When an agent builds something, you don't have to go open Chrome. Orbit has a browser built right in. In the video, the agent built a stats page with a little weekly chart and opened it in Orbit's browser by itself.
 
+<AgentCards cards={[{"task":"Build a stats page A","agent":"Voyager","tool":"Claude","model":"Sonnet 5.5","effort":"Medium","state":"finished","report":"I built the stats page and opened it in Orbit's browser. I haven't looked at how it renders, so check the chart there."}]} caption="The stats-page agent's card: it opened its own work in Orbit's browser." />
+
 You can flip it between desktop, tablet and phone widths, open normal websites in web tabs, and if you start a dev server in one of Orbit's terminals, the browser just pops open with your app running. Real terminals too, by the way: PowerShell, Claude Code, Codex CLI, whatever you like, each in its own safe copy of the project.
 
 ## *Or skip all that. Give Orbit a goal.*
@@ -70,6 +80,8 @@ You can flip it between desktop, tablet and phone widths, open normal websites i
 This one's my favorite. There's an assistant called **Ask Orbit**, and in Coordinate mode you just give it a goal.
 
 We typed "Get Lumen ready for launch: add a favicon and proper page titles, make the habit list work well on phones, and write a changelog." Ask Orbit read through the project, came back with a plan of three agents, we hit Approve once, and it launched all three.
+
+<AgentCards cards={[{"task":"Favicon and page titles","agent":"Dune","tool":"Claude","model":"Sonnet 5.5","state":"finished","report":"Both pages now have a favicon link, a new title and a meta description. I didn't load either page in a browser…"},{"task":"Mobile-friendly habit list","agent":"Rigel","tool":"Claude","model":"Sonnet 5.5","state":"finished","report":"I made the habit list mobile-friendly with CSS only. I appended the rules to `src/styles.css` and didn't touch `app.js`…"},{"task":"Write CHANGELOG for…","agent":"Ember","tool":"Claude","model":"Sonnet 5.5","state":"finished","report":"I created `CHANGELOG.md` with a 0.4.0 entry dated 2026-10-09 and bumped `package.json` to 0.4.0."}]} caption="Favicon and titles, the habit list on phones, the changelog: the three parts of that goal, finished on the canvas in the video." />
 
 It'll even sketch things out on a **whiteboard**. We asked it to draw how a check-in turns into a streak, and it drew the whole flow, color-coded boxes and arrows and all.
 
@@ -83,7 +95,9 @@ In the video we said, "Hey Orbit… start a task to add a weekly summary email�
 
 Finished work goes into your project automatically. If two agents happened to touch the same lines, the one that finished second gets asked to sort it out. Every card tells you plainly where its work is: still in its own copy, in your project, or up on GitHub.
 
-Then one click on the GitHub button and it's pushed. In the video, that was 18 commits up to a private repo in about two seconds.
+Then one click on the GitHub button and it's pushed.
+
+<StatDial value="18" unit="commits" caption="In the video, that was 18 commits up to a private repo in about two seconds." />
 
 ## *Too many cards? Organize the chaos.*
 
@@ -110,6 +124,6 @@ R7 Orbit lets you hand out coding jobs to a whole team of AI agents, watch them 
 
 Your whole AI team. One screen. That's R7 Orbit.
 
----
+<Divider variant="orbit" />
 
 *Everything in this post (and the video) is the real app running real agents on a real little demo project, a habit tracker called Lumen. No mockups.*
