@@ -102,6 +102,10 @@ describe('pageProblems', () => {
     expect(pageProblems(sitePage('home'), { title: 'T', description: 'D', seoTitle: 'S' })[0]).toMatch(/"seoTitle" .* is not used/);
     // Empty lists and empty boxes are "not set", not a problem.
     expect(pageProblems(blog, { ...complete, buttons: [], soonTitle: '' })).toEqual([]);
+    // The hero's waitlist switch is the home page's: on elsewhere it is refused, left off it is not set.
+    expect(pageProblems(blog, { ...complete, waitlist: true })[0]).toMatch(/"waitlist" \(the waitlist form in the hero\) is not used/);
+    expect(pageProblems(blog, { ...complete, waitlist: false })).toEqual([]);
+    expect(pageProblems(sitePage('home'), { title: 'T', description: 'D', waitlist: true })).toEqual([]);
   });
 
   it('asks the Apps page for its own words: the empty state button and the card beside a single app', () => {

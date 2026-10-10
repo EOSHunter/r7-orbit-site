@@ -13,6 +13,7 @@ import ProjectJsonLd from './ProjectJsonLd.astro';
 import ReadmeBlock from './ReadmeBlock.astro';
 import Sections from './Sections.astro';
 import StatsRow from './StatsRow.astro';
+import WaitlistForm from './WaitlistForm.astro';
 import { toCard, type RepoData } from './detailCards';
 import { authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
@@ -21,6 +22,7 @@ import { relatedPosts } from '../lib/content';
 import { loadGitHubRepo } from '../lib/github';
 import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
+import { waitlist } from '../lib/waitlist-queries';
 import { longDate } from '../lib/text';
 import '../styles/markdown.css';
 
@@ -51,6 +53,8 @@ const useLocal = data.readme === 'local';
 const readmeHtml = gh.status === 'ok' ? gh.readmeHtml : null;
 
 const related = relatedPosts(post, all);
+// The waitlist band after the body, before the related posts: asked for by the post and shown only while the waitlist is on.
+const showWaitlist = post.data.waitlist && waitlist.show;
 const path = `/repos/${post.id}/`;
 const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 ---
@@ -184,6 +188,8 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
       </aside>
     </div>
   </div>
+
+  {showWaitlist && <WaitlistForm variant="band" source="other" />}
 
   {
     related.length > 0 && (

@@ -1,0 +1,5 @@
+# Copy this file to .dev.vars (git ignores .dev.vars) to try the waitlist endpoints on your computer with
+# `npx wrangler pages dev` (docs/DEPLOY_CLOUDFLARE.md, section 10, "Trying it on your computer").
+# This is Cloudflare's published Turnstile TEST secret: it accepts any token. Never use it on the live site:
+# the live secret is set in the Cloudflare dashboard (Pages project > Settings > Variables and Secrets).
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

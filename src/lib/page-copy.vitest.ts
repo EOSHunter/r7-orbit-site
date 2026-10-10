@@ -18,6 +18,7 @@ const settings: PageSettings = {
   siteDescription: 'A description.',
   newsletterProvider: 'a provider',
   newsletterConnected: false,
+  waitlistOn: false,
 };
 const connected = { ...settings, newsletterConnected: true };
 
@@ -142,5 +143,22 @@ describe('the page files', () => {
     for (const name of ['privacy', '404', 'search']) {
       expect(() => fillPage(read(name), pageSettingsOf(site), `${name}.md`), name).not.toThrow();
     }
+  });
+});
+
+describe('the waitlist condition', () => {
+  const blocks = [text('{if waitlist on}\nOn.'), text('{if waitlist off}\nOff.'), text('Always.')];
+
+  it('shows a block only while the live site shows the waitlist, or only while it does not', () => {
+    expect(textsOf(fillPage(page(blocks), settings, 'x.md'))).toEqual(['Off.', 'Always.']);
+    expect(textsOf(fillPage(page(blocks), { ...settings, waitlistOn: true }, 'x.md'))).toEqual(['On.', 'Always.']);
+  });
+
+  it('reads "on" from the settings: switched on AND with a site key', () => {
+    const waitlist = (enabled: boolean, turnstileSiteKey: string) => pageSettingsOf({ ...site, waitlist: { enabled, turnstileSiteKey } }).waitlistOn;
+    expect(pageSettingsOf(site).waitlistOn).toBe(site.waitlist.enabled && site.waitlist.turnstileSiteKey !== '');
+    expect(waitlist(true, '0x4AAAAAAABkMYinukE8nzY')).toBe(true);
+    expect(waitlist(true, '')).toBe(false);
+    expect(waitlist(false, '0x4AAAAAAABkMYinukE8nzY')).toBe(false);
   });
 });

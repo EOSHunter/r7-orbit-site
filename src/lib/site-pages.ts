@@ -32,6 +32,9 @@ export const sitePageFields = {
     )
     .max(2, 'the hero holds two buttons at most')
     .optional(),
+  /** Home hero: the waitlist form under the lead and buttons. Drawn only while the waitlist is on in the site settings
+   *  (src/lib/waitlist.ts); its words are the settings' too. */
+  waitlist: z.boolean().optional(),
   /** Listing pages: blocks above the listing, and below it. */
   introSections: sectionsSchema,
   outroSections: sectionsSchema,
@@ -52,7 +55,7 @@ export type SitePageField = keyof typeof sitePageFields | 'title' | 'seoTitle' |
 export type PageShape = 'home' | 'listing' | 'apps';
 
 const SHAPES: Record<PageShape, { required: SitePageField[]; optional: SitePageField[] }> = {
-  home: { required: ['title', 'description'], optional: ['eyebrow', 'lead', 'buttons', 'sections'] },
+  home: { required: ['title', 'description'], optional: ['eyebrow', 'lead', 'buttons', 'waitlist', 'sections'] },
   listing: { required: ['title', 'description', 'lead', 'emptyHeading', 'emptyText'], optional: ['seoTitle', 'introSections', 'outroSections'] },
   apps: {
     required: ['title', 'description', 'lead', 'emptyHeading', 'emptyText', 'emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText'],
@@ -69,6 +72,7 @@ const WHAT: Record<SitePageField, string> = {
   eyebrow: 'the small line over the headline',
   lead: 'the paragraph under the heading',
   buttons: 'the hero buttons',
+  waitlist: 'the waitlist form in the hero',
   introSections: 'the sections above the list',
   outroSections: 'the sections below the list',
   emptyHeading: 'the heading shown when there is nothing to list',
@@ -117,8 +121,9 @@ export const sitePage = (id: string): SitePage => {
 /** The fields a page of this shape needs, and the ones it may have. */
 export const fieldsOf = (shape: PageShape) => SHAPES[shape];
 
+/** Filled in: not empty, not an empty list, and not a switch left off. */
 const isSet = (value: unknown): boolean =>
-  value !== undefined && value !== null && !(typeof value === 'string' && !value.trim()) && !(Array.isArray(value) && value.length === 0);
+  value !== undefined && value !== null && value !== false && !(typeof value === 'string' && !value.trim()) && !(Array.isArray(value) && value.length === 0);
 
 /**
  * What is wrong with a page's entry for its shape: a field it needs that is missing or empty, and a field it does not draw that is

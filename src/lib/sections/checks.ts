@@ -2,17 +2,20 @@
 // functions over data handed in, so they run under Vitest; the Astro components load the data and throw what these return,
 // each message starting with where the block is ("about.md, block 4 (Latest posts): …").
 import { definitionOf, POST_KINDS } from './definitions';
+import { TURNSTILE_ORIGIN } from '../waitlist';
 
 /** "about.md, block 4 (Latest posts)": the start of every build error about a block. Blocks are counted from 1, as the editor shows them. */
 export const whereOf = (source: string, index: number, label: string) => `${source}, block ${index + 1} (${label})`;
 
-/** The hosts public/_headers lets the site frame: the `frame-src` of its /projects/* block. */
+/** The game hosts public/_headers lets the site frame: the `frame-src` of its /projects/* block, without Turnstile's (the waitlist
+ *  form's spam check is a frame too, but no game lives there). */
 export function frameSrcOrigins(headers: string): string[] {
   const lines = headers.split(/\r?\n/);
   const at = lines.findIndex((l) => l.trim() === '/projects/*');
   if (at < 0) return [];
   const csp = lines[at + 1]?.split(':').slice(1).join(':').trim() ?? '';
-  return /^frame-src\s/.test(csp) ? csp.replace(/^frame-src/, '').trim().split(/\s+/) : [];
+  if (!/^frame-src\s/.test(csp)) return [];
+  return csp.replace(/^frame-src/, '').trim().split(/\s+/).filter((origin) => origin !== TURNSTILE_ORIGIN);
 }
 
 /** What is wrong with an embedded game's address, or undefined. A link-mode game is only a button, so it needs no frame permission. */

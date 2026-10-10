@@ -12,6 +12,7 @@ Cloudflare moves its dashboard menus around from time to time. The names in **bo
 | The editor | https://r7orbit.io/admin/ | Decap CMS; saves posts as commits or pull requests on GitHub |
 | The sign-in Worker | https://cms-auth.r7orbit.io | Does the one server-side step GitHub login needs (`workers/cms-auth/`) |
 | A daily rebuild | GitHub Actions → Pages Deploy Hook | Publishes posts dated in the future when their day arrives |
+| The waitlist (off until you turn it on) | `/api/waitlist`, `/api/waitlist-remove` (Pages Functions), a D1 database, a Turnstile widget | Collects addresses for access to R7 Orbit: section 10 |
 
 You will need: the GitHub repository (`EOSHunter/r7-orbit-site`), a Cloudflare account with the `r7orbit.io` zone in it (DNS is already on Cloudflare), and Node 22.12 or newer on your computer for step 4.
 
@@ -224,6 +225,10 @@ Notes: GitHub runs scheduled workflows on a best-effort basis, often a few minut
 | Response headers | `public/_headers` | Security headers everywhere; a Content-Security-Policy and `noindex` on `/admin/*`; long cache for `/_astro/*` |
 | Redirects | `public/_redirects` | The removed feed addresses, `/admin` and the removed `/subscribe/` |
 | Sign-in Worker | `workers/cms-auth/` | `wrangler.toml` holds the domain and `ALLOWED_DOMAINS` |
+| Waitlist endpoints | `functions/api/` (the rules in `src/lib/waitlist-api.ts`), `public/_routes.json` | Only `/api/*` runs a Function; every page stays a static file |
+| Waitlist table | `migrations/0001_waitlist.sql` | Applied once to the D1 database (section 10) |
+| Waitlist switch, site key and words | `src/data/site.json` → `waitlist` (Admin → Site settings → Waitlist) | Off, no key |
+| Waitlist database binding and secret | Cloudflare dashboard only | `WAITLIST_DB` (D1 binding), `TURNSTILE_SECRET_KEY` (secret) |
 
 A build can override the first three with `PUBLIC_CMS_REPO`, `PUBLIC_CMS_BRANCH` and `PUBLIC_CMS_AUTH_URL`; they are visible in the browser, so never put a secret in them.
 
@@ -276,3 +281,117 @@ Repository → **Actions** → **Scheduled deploy**. If it says the workflow is 
 
 **Rolling back**
 In Cloudflare, **Deployments** → pick an earlier successful deployment → **Rollback to this deployment**. To remove the sign-in, delete the OAuth App on GitHub, or revoke access at <https://github.com/settings/applications>.
+
+## 10. The waitlist (D1 and Turnstile)
+
+The site has a waitlist for access to R7 Orbit: a form under the home page headline (and at the end of any post with **Waitlist form at the end** ticked) where readers leave their email address, and a page, `/waitlist/remove/`, where they take it off again. **It is off.** Until you finish these steps and turn it on in the admin, no page shows a form, nothing loads from Cloudflare, `/waitlist/remove/` is the 404 page, and the two endpoints answer "not available" or "not open". Everything in the repository is ready; what is left is three things in your Cloudflare account, one paragraph on the Privacy page, and a switch.
+
+How it fits together:
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| The form | `src/components/WaitlistForm.astro` | Words from Admin → Site settings → Waitlist. Loads Turnstile only when a reader comes to the form |
+| The endpoints | `functions/api/waitlist.ts`, `functions/api/waitlist-remove.ts` | Cloudflare Pages Functions: Pages builds them from `functions/` on every deploy, no setting needed. `public/_routes.json` limits them to `/api/*` |
+| The list | A D1 database bound as `WAITLIST_DB` | One table, `waitlist`: `email`, `created_at`, `source` (hero, blog, vlog or other). No IP address, no browser details |
+| Spam protection | A Turnstile widget (its site key in the settings, its secret key as `TURNSTILE_SECRET_KEY`) + a hidden honeypot box | Most readers never see Turnstile; it shows a checkbox only when Cloudflare is unsure |
+
+No email is ever sent: there is no email service. The list is yours to read and export (below).
+
+### a. Create the database and its table
+
+1. Dashboard → **Storage & Databases** → **D1 SQL Database** (in older menus: **Workers & Pages** → **D1**) → **Create** (or **Create database**).
+2. Name: `r7-orbit-waitlist`. Location: leave it on automatic. Click **Create**.
+3. Open the new database, then its **Console** tab. Paste the whole content of `migrations/0001_waitlist.sql` (from `CREATE TABLE` to the closing `);`) and click **Execute**. It answers with a success message.
+
+   From a terminal instead (in the repository folder, after `npx wrangler login`): `npx wrangler d1 execute r7-orbit-waitlist --remote --file=migrations/0001_waitlist.sql`. If wrangler says it cannot find the database, use the Console.
+4. Check, in the Console: `SELECT * FROM waitlist;` answers with no rows (and no error).
+
+### b. Create the Turnstile widget
+
+1. Dashboard → **Turnstile** (in the account's left menu; search for it if it has moved) → **Add widget**.
+2. Fill in:
+
+   | Field | Value |
+   | --- | --- |
+   | Widget name | `R7 Orbit waitlist` |
+   | Hostnames | `r7orbit.io` |
+   | Widget mode | **Managed** |
+   | Pre-clearance | **No** |
+
+3. Click **Create**. Copy the **Site Key** (starts with `0x`; public: it goes in the admin in step e) and the **Secret Key** (private: step c). The secret can be shown again later from the widget's settings.
+
+### c. Connect the database and the secret to the site
+
+1. **Workers & Pages** → `r7-orbit-site` → **Settings** → **Bindings** → **Add** → **D1 database**. Variable name: `WAITLIST_DB` (exactly). Database: `r7-orbit-waitlist`. **Save**. Do it for **Production**; preview deployments cannot use the form anyway (below).
+2. Same project → **Settings** → **Variables and Secrets** → **Add**. Type: **Secret**. Name: `TURNSTILE_SECRET_KEY`. Value: the Secret Key from step b. Environment: **Production**. **Save**.
+3. Bindings and secrets apply to the next deployment: **Deployments** → the latest production deployment → **⋯** → **Retry deployment** (or wait for the next push to `main`).
+4. Check that the site sees them (any terminal):
+
+   ```
+   curl -s -X POST https://r7orbit.io/api/waitlist -H "Origin: https://r7orbit.io" -d "email=test@example.com"
+   ```
+
+   - `{"ok":false,"message":"The waitlist is not open."}`: **ready**. The database and the secret are found; the form is just still off.
+   - `{"ok":false,"message":"The waitlist is not available right now. ..."}`: the binding or the secret is missing or misspelt, or the deployment is older than step 3.
+   - The site's 404 page (HTML): the deployment has no Functions yet; check that the latest deployment is from a commit that has the `functions/` folder.
+
+### d. Say on the Privacy page what happens to the addresses
+
+The Privacy page says the site collects nothing and loads nothing from other companies. Once the form is on, that is no longer the whole story: the address is stored in your Cloudflare D1 database, and Turnstile (Cloudflare) runs when a reader uses the form. The wording is yours. In the admin, **Pages** → **Privacy page**, add a **Text** block whose first line is `{if waitlist on}`: it is shown only while the waitlist is on, so you can write it now. A block whose first line is `{if waitlist off}` is shown only while it is off. Say at least what is stored (the address, the date, which form), where (Cloudflare), what for, and that `/waitlist/remove/` takes an address off. Update "Last updated".
+
+### e. Turn it on
+
+1. Admin → **Site settings** → **Waitlist**: paste the **Site Key** into **Turnstile site key**, turn **Show the waitlist** on, read the words (they are interim; change any of them), and **Publish**.
+2. After the build: the form is under the home page headline (the home page's **Waitlist form** switch, in **Pages** → **Home page**, is already on), at the end of every post with **Waitlist form at the end** ticked, and `/waitlist/remove/` exists.
+3. Try it on https://r7orbit.io with your own address: "You are on the list." Then in the D1 Console, `SELECT * FROM waitlist;` shows it. Remove it at `/waitlist/remove/` and check again.
+
+The build refuses Cloudflare's test keys (`1x…`, `2x…`, `3x…`) and anything not shaped like a site key in that box, and nothing is drawn while the box is empty.
+
+### Reading and exporting the list
+
+- **Dashboard**: the database's **Console**: `SELECT email, created_at, source FROM waitlist ORDER BY created_at;`
+- **Terminal**, as JSON: `npx wrangler d1 execute r7-orbit-waitlist --remote --json --command "SELECT email, created_at, source FROM waitlist ORDER BY created_at" > waitlist.json`. Keep the file out of the repository.
+- **Removing someone by hand**: `DELETE FROM waitlist WHERE email = 'name@example.com';` (addresses are stored lowercased).
+
+### Turning it off
+
+Turn **Show the waitlist** off and publish. The forms and `/waitlist/remove/` disappear with the next build and the endpoints answer "not open"; the addresses stay in D1 until you delete them (`DELETE FROM waitlist;`, or delete the database).
+
+### What the endpoints answer
+
+Both answer JSON, never cached: `{"ok":true}` or `{"ok":false,"message":"…"}`. They only say `ok` once the address is stored (or was already there), or, for removal, is gone. A duplicate gets the same answer as a new address, and removal answers the same whether or not the address was there, so nobody can find out who is on the list.
+
+| Status | Meaning |
+| --- | --- |
+| 200 `ok: true` | Stored (or already there); removed (or was not there); or the honeypot was filled (nothing stored) |
+| 400 | The address is not a plain address, the Turnstile check failed, or the request could not be read. The form shows the message |
+| 403 | The request did not come from a page of `https://r7orbit.io` (the `Origin` header) |
+| 404 | The waitlist is off in the settings of the deployed commit (the bindings are fine) |
+| 405 | Not a POST |
+| 413 | Body over 4 KB |
+| 500 | The database write failed (for example, the table was never created: step a) |
+| 503 | `WAITLIST_DB` or `TURNSTILE_SECRET_KEY` is missing (step c) |
+
+Preview deployments (`*.r7-orbit-site.pages.dev`) refuse the form with 403: the endpoints accept only the site's own address.
+
+### Costs
+
+The free plans cover a waitlist many times over: Pages Functions count as Workers requests (100,000 a day), and only `/api/*` runs one; D1 allows 100,000 writes and 5 million reads a day and 5 GB; Turnstile is free.
+
+### Trying it on your computer
+
+The live switch can stay off for all of this.
+
+1. `npm run dev` draws the forms on every page that asks for one, with a dashed "Dev only" note when the live site would not show them, using Cloudflare's test site key `1x00000000000000000000AA` (always passes). `astro dev` runs no Functions, so sending says "Something went wrong": that is expected there.
+2. For the whole path (form → Turnstile → Function → database), build with the forms forced on and serve the build with wrangler (from the repository folder):
+
+   ```
+   WAITLIST_PREVIEW=1 npm run build      # PowerShell: $env:WAITLIST_PREVIEW='1'; npm run build; Remove-Item Env:WAITLIST_PREVIEW
+   cp .dev.vars.example .dev.vars        # Cloudflare's test secret; git ignores .dev.vars
+   npx wrangler d1 execute WAITLIST_DB --local -c scripts/wrangler.waitlist-local.toml --persist-to .wrangler/state --file=migrations/0001_waitlist.sql
+   npx wrangler pages dev dist --d1 WAITLIST_DB=r7-orbit-waitlist
+   ```
+
+   Open the address wrangler prints (`http://127.0.0.1:8788`). Locally the endpoints accept pages on localhost and ignore the live switch. See the rows with `npx wrangler d1 execute WAITLIST_DB --local -c scripts/wrangler.waitlist-local.toml --persist-to .wrangler/state --command "SELECT * FROM waitlist"`. Run `npm run build` again afterwards so `dist/` is the normal site.
+
+**`WAITLIST_PREVIEW=1` is for tests and local runs only.** It puts the forms on every page with a test key that lets anyone through. Never add it to the Cloudflare Pages project: a Pages build that sees it stops with a message saying so. CI uses it for a second build that runs `tests/waitlist.spec.js` and Lighthouse on the pages with forms.

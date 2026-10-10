@@ -58,7 +58,8 @@ describe('the Site settings collection', () => {
   });
 
   it('holds nothing about where the editor commits or signs in, and no secret', () => {
-    const text = JSON.stringify(settingsCollection);
+    // The hints may name a secret to say where it goes instead (the Turnstile secret key): the fields and values may not.
+    const text = JSON.stringify(settingsCollection, (key, value) => (key === 'hint' ? undefined : value));
     for (const secret of [CMS_REPO, CMS_AUTH_URL, 'token', 'secret', 'CF_DEPLOY_HOOK'])
       expect(text).not.toContain(secret);
     expect(paths(fields)).not.toContain('url');
@@ -80,6 +81,8 @@ describe('the Site settings collection', () => {
         'footer.links.href',
         'footer.links.social',
         'footer.note',
+        'waitlist.enabled',
+        'waitlist.turnstileSiteKey',
       ].sort(),
     );
   });
@@ -110,10 +113,40 @@ describe('the Site settings collection', () => {
   });
 
   it('has no email field and offers only GitHub and YouTube as profile links', () => {
-    expect(paths(fields).some((p) => /email|mail/i.test(p))).toBe(false);
+    // The waitlist's `emailLabel` is the label of the box readers type their own address into, not an address.
+    expect(paths(fields).filter((p) => /email|mail/i.test(p))).toEqual(['waitlist.emailLabel']);
     expect(named(named(fields, 'links').fields!, 'github')).toBeTruthy();
     expect(named(fields, 'links').fields!.map((f) => f.name)).toEqual(['github', 'youtube']);
     const social = named(named(named(fields, 'footer').fields!, 'links').fields!, 'social');
     expect((social.options as { value: string }[]).map((o) => o.value)).toEqual(['github', 'youtube']);
+  });
+
+  it('has the waitlist group: off by default, the public site key only, and every word', () => {
+    const waitlist = named(fields, 'waitlist').fields!;
+    expect(waitlist.map((f) => f.name)).toEqual(Object.keys(site.waitlist));
+    expect(named(waitlist, 'enabled')).toMatchObject({ widget: 'boolean', default: false });
+    expect(site.waitlist.enabled).toBe(false);
+    expect(site.waitlist.turnstileSiteKey).toBe('');
+    expect(paths(fields).some((p) => /secret/i.test(p))).toBe(false);
+    for (const f of waitlist) expect(String(f.hint ?? ''), f.name).toMatch(/\S/);
+  });
+
+  it('checks the site key and the words in the form the way the build does', () => {
+    const waitlist = named(fields, 'waitlist').fields!;
+    const accepts = (change: (s: typeof site) => void) => {
+      const copy = structuredClone(site);
+      change(copy);
+      return siteSchema.safeParse(copy).success;
+    };
+    const key = named(waitlist, 'turnstileSiteKey');
+    for (const value of ['', '0x4AAAAAAABkMYinukE8nzY', '1x00000000000000000000AA', '3x00000000000000000000FF', '0x4AAA AAAA', 'secret', 'https://x.test']) {
+      expect(new RegExp(key.pattern![0]).test(value), value).toBe(accepts((s) => (s.waitlist.turnstileSiteKey = value)));
+    }
+    const heading = named(waitlist, 'heading');
+    for (const value of ['Join the waitlist', '', 'x'.repeat(80), 'x'.repeat(81)]) {
+      expect(new RegExp(heading.pattern![0]).test(value), value).toBe(accepts((s) => (s.waitlist.heading = value)));
+    }
+    // The form is a little stricter than the schema: one line, no leading space.
+    expect(new RegExp(heading.pattern![0]).test('two\nlines')).toBe(false);
   });
 });

@@ -1,0 +1,65 @@
+---
+// The form itself, inside every variant of WaitlistForm.astro (which decides whether it is drawn at all): the email box and
+// button, the honeypot, the spot Turnstile floats in, the noscript sentence, the status line and the remove link. Whatever is
+// passed in the slot (the band's heading and sentence) comes first. The behaviour is src/scripts/waitlist.js.
+import { site } from '../../data/site';
+import { HONEYPOT_FIELD, REMOVE_PATH, TURNSTILE_SCRIPT, type WaitlistSource } from '../../lib/waitlist';
+
+interface Props {
+  /** Names the ids: two forms on a page need different ones. */
+  id: string;
+  variant: 'hero' | 'band' | 'remove';
+  siteKey: string;
+  /** Where the form posts (/api/waitlist or /api/waitlist-remove). */
+  endpoint: string;
+  /** Turnstile's `action`, so the token says which form it was made for. */
+  action: string;
+  buttonLabel: string;
+  successMessage: string;
+  /** Sent with the address; left out on the remove form. */
+  source?: WaitlistSource;
+  /** Shows the small "Remove my email" link under the form. */
+  removeLink?: boolean;
+  /** Says the form is only here because this is `astro dev`. */
+  devNote?: boolean;
+}
+
+const { id, variant, siteKey, endpoint, action, buttonLabel, successMessage, source, removeLink = false, devNote = false } = Astro.props;
+const words = site.waitlist;
+---
+
+<div
+  class="waitlist"
+  data-variant={variant}
+  data-waitlist
+  data-sitekey={siteKey}
+  data-script={TURNSTILE_SCRIPT}
+  data-endpoint={endpoint}
+  data-action={action}
+  data-success={successMessage}
+  data-error={words.errorMessage}
+>
+  <slot />
+  {devNote && <p class="waitlist-dev">Dev only: the live site does not show this form (Site settings &gt; Waitlist is off or has no site key). It uses Cloudflare's test key.</p>}
+  <form class="waitlist-form" method="post" action={endpoint} data-waitlist-form>
+    <div class="waitlist-row">
+      <div class="field">
+        <label for={`${id}-email`}>{words.emailLabel}</label>
+        <input class="input" id={`${id}-email`} type="email" name="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required />
+      </div>
+      <button class="btn solid lg" type="submit">{buttonLabel}</button>
+    </div>
+    <div class="waitlist-hp"><input type="text" name={HONEYPOT_FIELD} tabindex="-1" autocomplete="off" aria-hidden="true" /></div>
+    {source && <input type="hidden" name="source" value={source} />}
+    <div class="waitlist-challenge" data-waitlist-challenge></div>
+  </form>
+  <p class="waitlist-nojs">{words.noscriptMessage}</p>
+  <div class="waitlist-foot">
+    <p class="waitlist-status" role="status" data-waitlist-status></p>
+    {removeLink && <a class="waitlist-remove" href={REMOVE_PATH}>{words.removeLinkLabel}</a>}
+  </div>
+</div>
+
+<script>
+  import '../../scripts/waitlist.js';
+</script>

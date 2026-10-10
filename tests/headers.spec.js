@@ -26,10 +26,10 @@ test('every page gets the baseline security headers, and no header is set twice'
   }
 });
 
-test('project pages may frame the play origins (Vesper Drift, House Painter) and nothing else; no other page gets a policy of its own', () => {
+test('project pages may frame the play origins (Vesper Drift, House Painter) and Turnstile (the waitlist form), and nothing else; no other page gets a policy of its own', () => {
   const csp = headersFor('/projects/vesper-drift/')['content-security-policy'];
   // Each host listed explicitly: adding a game or an app adds its host here (docs/PUBLISHING.md).
-  expect(csp).toBe('frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io');
+  expect(csp).toBe('frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io https://challenges.cloudflare.com');
   expect(headersFor('/projects/house-painter/')['content-security-policy']).toBe(csp);
   // Not script-src, so nothing about scripts is loosened.
   expect(csp).not.toMatch(/script-src|default-src|\*/);

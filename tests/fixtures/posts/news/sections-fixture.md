@@ -2,6 +2,7 @@
 title: A news item written as *sections*
 date: 2026-10-02
 summary: Fixture for the tests, not part of the site. A news item whose body is a list of blocks instead of Markdown.
+waitlist: true
 sourceUrl: https://example.com/fixture-source/
 sourceName: Example source
 take: A fixture take, shown beside the source link as on any news item.

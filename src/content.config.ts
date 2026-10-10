@@ -41,6 +41,9 @@ const common = {
   coverAlt: z.string().optional(),
   featured: z.boolean().default(false),
   draft: z.boolean().default(false),
+  // The waitlist band for R7 Orbit after the body (src/components/WaitlistForm.astro). Drawn only while the waitlist is on in the
+  // site settings; off by default.
+  waitlist: z.boolean().default(false),
   readTime: z.number().int().positive().optional(),
   // Who the post is credited to: the slug of a file in src/content/authors/. `prefault` runs the default through `reference`, so an
   // absent field reads as { collection: 'authors', id: 'hunter-newton' }. That the slug exists is checked in lib/content-queries.ts.

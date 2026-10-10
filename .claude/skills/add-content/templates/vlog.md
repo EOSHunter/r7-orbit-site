@@ -21,6 +21,7 @@ transcriptText: |-            # only with sections; Markdown
   <transcript>
 updated: <YYYY-MM-DD>
 featured: false
+waitlist: false               # true: the waitlist form for R7 Orbit after the body (shows only while it is on in Site settings)
 # sections: [...]             # instead of the body, never both
 ---
 <Short intro to the video, the links and resources it mentions. Do not transcribe the video here.>

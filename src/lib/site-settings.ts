@@ -6,6 +6,7 @@
 // The admin form for these settings is src/admin/settings.ts; settings.vitest.ts keeps the two in step.
 import { z } from 'astro/zod';
 import { ICON_NAMES } from '../components/icons';
+import { isTestSiteKey, SITE_KEY_PATTERN } from './waitlist';
 
 /** The profile links, in the order the admin shows them. Empty means "I have none": no icon, no link, no JSON-LD `sameAs`. */
 export const SOCIAL_KEYS = ['github', 'youtube'] as const;
@@ -31,6 +32,41 @@ const optional = <T extends z.ZodType>(schema: T) =>
   z.preprocess((value) => (value === '' || value === null ? undefined : value), schema.optional());
 const label = z.string().trim().min(1, 'is required').max(30, 'is too long: 30 characters at most');
 const icon = z.enum(ICON_NAMES, { error: `use one of the site's icons: ${ICON_NAMES.join(', ')}` });
+
+/** One line of the waitlist's words: required, plain text. */
+const words = (max: number) =>
+  z.string().trim().min(1, 'is required').max(max, `is too long: ${max} characters at most`);
+
+/**
+ * The waitlist for R7 Orbit (src/lib/waitlist.ts, docs/CONTENT_MODEL.md "Site settings"). Off by default: while `enabled` is off or
+ * the site key is empty, no form is drawn anywhere and nothing loads. The secret key is never here: it is a Cloudflare secret.
+ */
+export const waitlistSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    turnstileSiteKey: z
+      .string()
+      .trim()
+      .refine((key) => key === '' || SITE_KEY_PATTERN.test(key), {
+        message: 'leave it empty, or paste the site key Cloudflare shows for the Turnstile widget (it starts with 0x)',
+      })
+      .refine((key) => !isTestSiteKey(key), {
+        message:
+          "this is one of Cloudflare's test keys: paste the site key of your own Turnstile widget (it starts with 0x)",
+      }),
+    heading: words(80),
+    text: words(300),
+    buttonLabel: words(40),
+    emailLabel: words(40),
+    successMessage: words(200),
+    errorMessage: words(200),
+    removeLinkLabel: words(40),
+    removeHeading: words(80),
+    removeButtonLabel: words(40),
+    removeSuccessMessage: words(200),
+    noscriptMessage: words(200),
+  })
+  .strict();
 
 const navItem = z
   .object({
@@ -72,6 +108,7 @@ export const siteSchema = z
     links: z.object({ github: optionalHttps, youtube: optionalHttps }).strict(),
     nav: z.array(navItem).min(1, 'needs at least one link'),
     footer: z.object({ links: z.array(footerLink), note: z.string().trim() }).strict(),
+    waitlist: waitlistSchema,
   })
   .strict()
   .superRefine((site, ctx) => {

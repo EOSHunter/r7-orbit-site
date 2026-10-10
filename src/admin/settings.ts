@@ -10,6 +10,7 @@ import type { CmsCollection, CmsField } from 'decap-cms-core';
 import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS } from '../lib/site-settings';
+import { SITE_KEY_PATTERN } from '../lib/waitlist';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
 
@@ -32,6 +33,19 @@ const iconField = (required: boolean, hint: string) =>
 
 const imageField = (name: string, label: string, hint: string) =>
   field({ name, label, widget: 'image', choose_url: false, hint, media_library: IMAGE_LIBRARY });
+
+/** A site key, or empty. The build also refuses Cloudflare's test keys (they start with 1x, 2x or 3x). */
+const WAITLIST_KEY = new RegExp(`^$|${SITE_KEY_PATTERN.source.replace('\\d', '0')}`);
+
+/** One of the waitlist's words: required, plain text, at most `max` characters (the schema's limits). */
+const waitlistWords = (name: string, label: string, max: number, hint: string, widget: 'string' | 'text' = 'string') =>
+  field({
+    name,
+    label,
+    widget,
+    pattern: [`^\\S[^\\n]{0,${max - 1}}$`, `Required, one line, ${max} characters at most`],
+    hint,
+  });
 
 const settingsFields: CmsField[] = [
   field({
@@ -158,12 +172,78 @@ const settingsFields: CmsField[] = [
       }),
     ],
   }),
+  field({
+    name: 'waitlist',
+    label: 'Waitlist',
+    widget: 'object',
+    collapsed: true,
+    hint: 'The form where readers join the waitlist for R7 Orbit, under the home page headline and at the end of posts that ask for it. Nothing shows anywhere until "Show the waitlist" is on AND the site key is filled in. Setting it up in Cloudflare: docs/DEPLOY_CLOUDFLARE.md, section 10.',
+    fields: [
+      field({
+        name: 'enabled',
+        label: 'Show the waitlist',
+        widget: 'boolean',
+        required: false,
+        default: false,
+        hint: 'Off: no form anywhere, the remove page does not exist, and nothing extra loads. Turn it on only after the Cloudflare setup is done (database, Turnstile widget and secret) and the Privacy page says what happens to the addresses.',
+      }),
+      field({
+        name: 'turnstileSiteKey',
+        label: 'Turnstile site key',
+        widget: 'string',
+        required: false,
+        pattern: [WAITLIST_KEY.source, 'Empty, or the site key from Cloudflare (it starts with 0x)'],
+        hint: 'The public "Site Key" of the Turnstile widget in Cloudflare (it starts with 0x). Never paste the Secret Key here: that one goes in the Pages project\'s settings as TURNSTILE_SECRET_KEY.',
+      }),
+      waitlistWords('heading', 'Heading', 80, 'Over the form at the end of a post.'),
+      waitlistWords('text', 'Text', 300, 'One sentence under that heading, at the end of a post.', 'text'),
+      waitlistWords('buttonLabel', 'Button', 40, 'The button that sends the address, on every waitlist form.'),
+      waitlistWords(
+        'emailLabel',
+        'Email box label',
+        40,
+        'The label of the box the address is typed into. The box itself stays empty: no example address.',
+      ),
+      waitlistWords(
+        'successMessage',
+        'Message after joining',
+        200,
+        'Shown once the address is saved. Only shown when the server says it worked.',
+      ),
+      waitlistWords(
+        'errorMessage',
+        'Message when it fails',
+        200,
+        'Shown when the address could not be saved (the server or the network failed). A mistyped address gets its own short message.',
+      ),
+      waitlistWords(
+        'removeLinkLabel',
+        'Remove link',
+        40,
+        'The small link under each form, to the page where a reader takes their address off the list.',
+      ),
+      waitlistWords('removeHeading', 'Remove page: heading', 80, 'The heading of that page (/waitlist/remove/).'),
+      waitlistWords('removeButtonLabel', 'Remove page: button', 40, 'The button on that page.'),
+      waitlistWords(
+        'removeSuccessMessage',
+        'Remove page: message after removing',
+        200,
+        'Shown after the button is pressed. It must not say whether the address was on the list, so nobody can find out who is.',
+      ),
+      waitlistWords(
+        'noscriptMessage',
+        'Message without JavaScript',
+        200,
+        'Shown instead of the form when the browser runs no JavaScript (the spam check needs it).',
+      ),
+    ],
+  }),
 ];
 
 export const settingsCollection = {
   name: 'settings',
   label: 'Site settings',
-  description: 'The site name, your details, profile links, navigation, and footer: used on every page.',
+  description: 'The site name, your details, profile links, navigation, footer and waitlist: used on every page.',
   delete: false,
   // Pictures chosen here go to public/media/site/, written as /media/site/x.jpg (docs/IMAGES.md).
   media_folder: '/public/media/site',

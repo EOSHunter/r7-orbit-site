@@ -2,6 +2,7 @@
 title: A blog post written as *sections*
 date: 2026-10-01
 summary: Fixture for the tests, not part of the site. A blog post whose body is a list of blocks instead of Markdown.
+waitlist: true
 tags:
   - fixture-sections
 author: r7

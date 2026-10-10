@@ -18,6 +18,8 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /about/                        About
 /sitemap-index.xml  /robots.txt  /404.html
 /privacy/                      Privacy (when there is a form or analytics)
+/waitlist/remove/              Leave the waitlist (noindex; built only while the waitlist is on: see "Waitlist")
+/api/waitlist  /api/waitlist-remove   POST endpoints (Cloudflare Pages Functions; the only server code; not pages)
 ```
 
 Navigation (header): **Latest · News · Blog · Vlogs · Projects · Apps · Repos · About**, then search; the footer links to Apps too. A section whose archive has fewer than three items is not in the header.
@@ -53,7 +55,7 @@ The browser title of the home page is still `{site name} · {tagline}` from `src
 
 Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each data row is a block of the shared library (`SECTIONS.md`): Pinned post (`pinned`), Latest feed (`feed`, one per page; its anchor is `#latest`), Latest posts with a section frame (`latest`, Projects newest first, Repos by last push), Apps row (`apps`).
 
-1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, one button ("Start with the latest", solid). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
+1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, one button ("Start with the latest", solid), and the waitlist form when `home.md` has `waitlist: true` and the waitlist is on (see "Waitlist"). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
 2. **Pinned:** the one `featured: true` post as a large horizontal card (media left, text right; stacked on mobile). Hidden if none.
 3. **Latest:** `.seg` filter (All · News · Blogs · Vlogs · Projects · Repos), then the 8 newest across kinds in the card grid; the newest has `.fresh`. "See everything" link to `/archive` (or the `All` archive).
 4. **Projects strip:** 3 newest projects (card with status mark). "All projects →".
@@ -179,11 +181,24 @@ Layout: the page head, then one row per run of blocks (`Sections.astro`): a read
 
 Words: `src/content/pages/404.md` (**Pages > Page not found (404)**): the heading (`title`), the browser title (`seoTitle`, "Page not found"), the description, and a Lead paragraph under the heading (other blocks follow it, above the search box). The orbit (`orbit.js`), the eyebrow "Error 404", the search form and the two buttons are code. The page stays `noindex`, and the host still answers unknown addresses with `dist/404.html` and a 404 status.
 
+## Waitlist
+
+A waitlist for access to R7 Orbit (the author's desktop app). **Off until the author turns it on** (Site settings → Waitlist, with a Turnstile site key; setup in `DEPLOY_CLOUDFLARE.md` section 10). While off, no page carries any of its markup, CSS or script, and `/waitlist/remove/` is not built (it is the 404 page), so the site is exactly what it was.
+
+- **Where:** the home hero (`waitlist: true` in `home.md`, variant `hero`: the email box and button on one row, wrapping on phones), and a ruled band after the body of any post with `waitlist: true` (variant `band`: heading, sentence, form), before related posts and previous/next, on blog and news posts (`ArticlePage`), vlogs, projects and repos. Not a block of the library: it is page chrome driven by a switch, like the share row.
+- **The form** (`src/components/WaitlistForm.astro` + `waitlist/WaitlistFields.astro`, behaviour `src/scripts/waitlist.js`, styles `src/styles/waitlist.css` printed inline only on a page that draws a form): a labelled email box (no placeholder), the button, a hidden honeypot box (`company`), a status line (`role="status"`), the noscript sentence, and a small link to `/waitlist/remove/`. Every word is Site settings'. Targets are 44px; the status line and the link share a row that is always 44px tall, so a message appearing shifts nothing.
+- **Turnstile:** loaded from `challenges.cloudflare.com` only when the reader focuses, touches or points at the form, or scrolls with it near (never with the page, so LCP, TBT and CLS are untouched; the home form, on screen at load, waits for a scroll too). Each form renders an `interaction-only` widget: invisible, unless Cloudflare needs the reader to tick it, and then it floats over the page in a panel (`--shadow-float`) instead of pushing content down. A token is used once; the widget resets after every answer. `public/_headers` lets `/projects/*` frame it.
+- **Sending:** `fetch` POST to `/api/waitlist` (form-encoded: `email`, `source`, `company`, `cf-turnstile-response`). The button is `aria-disabled` while it waits (focus stays). Success is said only when the answer is `{ ok: true }`, and the box is cleared; a 400 shows the server's message; anything else, the settings' error message. Without JavaScript the form is hidden and the noscript sentence shown (Turnstile cannot run).
+- **`/waitlist/remove/`:** `h1` and form only, posting to `/api/waitlist-remove`; noindex, out of the sitemap and of search. Always the same neutral sentence after removal.
+- **The endpoints** (`functions/api/`, rules in `src/lib/waitlist-api.ts`): POST only, same origin, Turnstile Siteverify with `TURNSTILE_SECRET_KEY`, D1 `WAITLIST_DB`, `INSERT OR IGNORE` (a duplicate answers like a new address), JSON `no-store` answers; nothing stored but address, date, source; no email sent. Table: `migrations/0001_waitlist.sql`.
+
+Tests: `src/lib/waitlist.vitest.ts`, `src/lib/waitlist-api.vitest.ts` (both endpoints against SQLite from the real migration), `tests/waitlist.spec.js` (the normal build carries none of it; a `WAITLIST_PREVIEW=1` build: lazy loading, sending, every failure, no-JS, the band on every post kind, the remove page, axe, widths, no layout shift). CI runs the second build.
+
 ## Privacy `/privacy/`
 
 Plain-language: what the site collects (nothing, or what an analytics provider collects).
 
-Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The file still carries two legacy newsletter paragraphs (`{if newsletter connected}` / `{if newsletter not connected}`); there is no newsletter, so only the "not connected" one is shown, and the author may rewrite the page.
+Words: `src/content/pages/privacy.md` (**Pages > Privacy page**). A Lead paragraph at the top sits under the heading; the rest is the policy in one `.prose` column; a Text block at the very end is the small print ("Last updated ..."). The file still carries two legacy newsletter paragraphs (`{if newsletter connected}` / `{if newsletter not connected}`); there is no newsletter, so only the "not connected" one is shown, and the author may rewrite the page. Before the waitlist is turned on, the page needs the author's paragraph about it: a Text block starting with `{if waitlist on}` is shown only while the waitlist is on.
 
 ## Pages with a fixed frame (privacy, 404, search)
 

@@ -216,6 +216,7 @@ What you can change there:
 - **Profile links**: GitHub and YouTube. Each is a full address starting with `https://`, or empty. An empty one leaves its icon and link out everywhere.
 - **Header navigation**: the links across the top, in order. Each has a **Label** (the word shown) and an **Address** (`/blog/` for a page of this site, or `https://…`). Drag to re-order. **You can rename a label freely**: the site finds the current section by its address, so the highlight and the search page keep working. Change an address only if you mean to send the link somewhere else. Turn on **Also in the footer** (and pick an **Icon**) to list the link in the footer too, before the footer links.
 - **Footer**: the **Footer links** (each with a label, an icon, and either an **Address** or a **Profile link**, not both: a profile link stays hidden while that profile is empty) and the **Note** after the year ("Made with R7 Orbit").
+- **Waitlist**: the switch, the Turnstile site key and every word of the waitlist forms. Section 14.
 
 What is not there on purpose: the site's address (`https://r7orbit.io`, which every link and search result is built on), and where the editor itself saves and signs in. Those are changed in code by whoever maintains the site, so an edit here cannot break your sign-in or move the site.
 
@@ -289,3 +290,14 @@ The **Apps** page (`/apps/`, in the menu as **Apps**; it was the Games page, and
 7. **Save** and **Publish** as in section 1. As soon as two types have a published entry (a game and an app), the Apps page shows a **Type** filter (All, Games, Apps) above the cards; with one type there is no filter.
 
 The words of the Apps page itself (heading, lead, the empty state and the card beside a single app) are in **Pages > Apps page** (section 11). Its lead is still the interim line written for the rename; change it there.
+
+## 14. The waitlist
+
+The waitlist collects email addresses from readers who want access to R7 Orbit. It is **off** today, and nothing about it shows on the site until you turn it on.
+
+1. **Once, in Cloudflare:** create the database, the Turnstile widget, and connect them to the site: `docs/DEPLOY_CLOUDFLARE.md` section 10, steps a to c (about fifteen minutes).
+2. **Privacy:** in **Pages > Privacy page**, add a Text block whose first line is `{if waitlist on}` and say, in your words, what happens to the addresses (it shows only once the waitlist is on).
+3. **Turn it on:** **Site settings > Waitlist**: paste the Turnstile **site key**, turn **Show the waitlist** on, and read the words. They are interim (written for you to replace): the heading "Join the waitlist", the sentence "Get access to R7 Orbit.", the button, the box label, the messages after joining, after a failure and after removing, the remove link and page, and the sentence shown without JavaScript. Publish.
+4. **Where it shows:** under the home page headline (**Pages > Home page > Waitlist form**, on), and at the end of any post where you tick **Waitlist form at the end** (every kind of post has the box; it is off by default).
+5. **Reading the list:** the D1 database's Console in Cloudflare (`SELECT email, created_at, source FROM waitlist ORDER BY created_at;`), or the export command in that section. No email is sent to anyone: the site has no email service.
+6. **Turning it off:** switch **Show the waitlist** off and publish. The addresses stay in the database until you delete them.
