@@ -9,8 +9,8 @@ buttons:
 description: "{site.description}"
 sections:
   - type: pinned
-    eyebrow: Pinned
-    heading: The first *vlog*
+    eyebrow: ""
+    heading: "*Pinned*"
   - type: feed
     heading: Latest
     count: 8
