@@ -22,6 +22,7 @@ import { getAuthorMap } from '../lib/authors-queries';
 import type { VlogCardData } from '../lib/cards';
 import { adjacentPosts, postUrl, relatedPosts } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
+import { coverOf } from '../lib/post-cards';
 import { hasSections } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
@@ -68,15 +69,19 @@ const [notesHtml, transcriptHtml] = await Promise.all([renderMarkdown(notes, sou
 const poster = data.poster ?? data.cover;
 const imageUrl = data.cover ? new URL(data.cover, base).href : undefined;
 
-const card = (p: SitePost<'vlogs'>): VlogCardData => ({
-  kind: 'vlog',
-  href: postUrl(p),
-  title: p.data.title,
-  summary: p.data.summary,
-  date: p.data.date,
-  tags: p.data.tags,
-  duration: durationOf(p),
-});
+const card = (p: SitePost<'vlogs'>): VlogCardData => {
+  const { poster, cover, coverAlt } = p.data as { poster?: string; cover?: string; coverAlt?: string };
+  return {
+    kind: 'vlog',
+    href: postUrl(p),
+    title: p.data.title,
+    summary: p.data.summary,
+    date: p.data.date,
+    tags: p.data.tags,
+    duration: durationOf(p),
+    cover: coverOf({ cover: poster ?? cover, coverAlt }),
+  };
+};
 const related = relatedPosts(post, vlogs, 3);
 const { newer, older } = adjacentPosts(post, vlogs);
 const youtube = site.links.youtube;

@@ -5,8 +5,9 @@ import type { CardData, ProjectStatus } from '../lib/cards';
 import { postUrl, readTime } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { isPlayable, type PlayFields } from '../lib/play';
+import { coverOf } from '../lib/post-cards';
 
-/** The post as a card. Covers are left to the placeholder: their pixel size is not known here. */
+/** The post as a card, with its cover drawn at the same 16:9 as every other card (coverOf). */
 export function toCard(post: SitePost): CardData {
   const base = {
     href: postUrl(post),
@@ -15,13 +16,16 @@ export function toCard(post: SitePost): CardData {
     date: post.data.date,
     tags: post.data.tags,
   };
+  const cover = coverOf(post.data as { cover?: string; coverAlt?: string });
   switch (post.collection) {
     case 'news':
-      return { ...base, kind: 'news', readTime: readTime(post) };
+      return { ...base, kind: 'news', readTime: readTime(post), cover };
     case 'blog':
-      return { ...base, kind: 'blog', readTime: readTime(post) };
-    case 'vlogs':
-      return { ...base, kind: 'vlog', duration: (post.data as unknown as { duration: string }).duration };
+      return { ...base, kind: 'blog', readTime: readTime(post), cover };
+    case 'vlogs': {
+      const vlog = post.data as unknown as { duration: string; poster?: string; cover?: string; coverAlt?: string };
+      return { ...base, kind: 'vlog', duration: vlog.duration, cover: coverOf({ cover: vlog.poster ?? vlog.cover, coverAlt: vlog.coverAlt }) };
+    }
     case 'projects':
       return {
         ...base,
@@ -29,6 +33,7 @@ export function toCard(post: SitePost): CardData {
         status: (post.data as unknown as { status: ProjectStatus }).status,
         stack: (post.data as unknown as { stack: string[] }).stack,
         playable: isPlayable(post.data as unknown as PlayFields),
+        cover,
       };
     case 'repos':
       return { ...base, kind: 'repo', repo: (post.data as unknown as { repo: string }).repo };
