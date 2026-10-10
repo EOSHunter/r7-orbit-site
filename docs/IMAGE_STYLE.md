@@ -1,12 +1,12 @@
 # Image style: article imagery
 
-**Status: proposed, not decided.** The author picks a direction; nothing on the live site has changed. The prototype is at `/styleguide/imagery/` (noindex, unlinked). Screenshots are in `docs/screenshots/imagery-*.png`.
+**Status: proposed, not decided.** The author picks; nothing on the live site has changed. Round 1 (three directions) is at `/styleguide/imagery/`; round 2 (variety, the editor's picker, the brand in the words, agent cards: section 8) is at `/styleguide/imagery/v2/`. Both are noindex and unlinked. Screenshots are in `docs/screenshots/imagery-*.png`.
 
 How to look at it:
 
 ```
 npm run build
-npm run preview          # then open http://localhost:4321/styleguide/imagery/
+npm run preview          # then open http://localhost:4321/styleguide/imagery/ and http://localhost:4321/styleguide/imagery/v2/
 # or, without a build:  npm run dev   (same address; pictures load without their small WebP copies)
 ```
 
@@ -213,3 +213,93 @@ The brand shapes stay out of the source pictures. The share image is composed du
 4. **Share images.** `src/pages/og/[...slug].png.ts`, `src/lib/og-image.ts` (+ test), kind-label PNGs in `brand/` and `brand/source/`, `ArticlePage.astro`, `VlogPage.astro`, `ProjectPage.astro`, `src/lib/seo.ts`, `docs/SEO_AND_SHARING.md`; an e2e check of every `og:image`.
 
 When the rollout is done: delete `src/pages/styleguide/imagery/`, `src/styles/imagery-prototype.css` and its line in `tests/routes.js`, and mark the decision in `docs/DECISIONS.md`.
+
+---
+
+## 8. Round 2: variety, the editor and the brand in the words
+
+The author's feedback on round 1: the looks are liked, but one treatment on every picture gets repetitive and the cards will not stand out from each other; the author wants to choose the look per post in the editor; and the brand should show in the words of a post too, with the app's cards where they fit. Round 2 answers all three. The prototype is `/styleguide/imagery/v2/`.
+
+### 8.1 Variety: one family, many looks
+
+The three directions stop being rivals and become one family. They share the ring and the dot, and each kind of post has its own.
+
+| Kind | Style on Auto | Why |
+| --- | --- | --- |
+| Blog, news | Transit | Mostly screenshots: they keep their colour, the arc sits in a corner. |
+| Vlog | Eclipse | The play button sits in the planet; a video poster does not need to be read at card size. |
+| Project, app, repo | Dial | An instrument for a game frame; the colour comes back on hover. |
+| Any | Plain | The picture alone, for a picture strong enough without a shape. Chosen, never Auto. |
+
+- **Four corners.** Each style can put its shape in any corner (bottom right, bottom left, top right, top left). Only the shape and its veil turn; **the picture is never mirrored** (that would flip the text in a screenshot). Three styles × four corners, plus Plain, makes 13 looks for one picture (`imagery-v2-variants-1440.png`).
+- **The Auto rule.** The style comes from the kind. The corner comes from a hash of the post's address (FNV-1a, modulo 4), so a post looks the same on its card, its page and its share image, on every build. In a list, a card that would repeat its left neighbour's style *and* corner takes the next corner. Nothing is random at view time.
+- **Share images** keep the shape on the picture's side, because the words are on the left: there, Transit takes only the vertical flip.
+- A video's duration badge moves to whichever bottom corner the arc leaves free.
+- Still kept: brass only, and kinds told apart by icon and label. The style follows the kind, but it is never the only thing that says the kind.
+
+### 8.2 Choosing it in the editor
+
+A **Picture** group next to the cover in /admin. Every field starts on Auto, so a post nobody touches still gets its kind's look.
+
+| Field | Values | Default |
+| --- | --- | --- |
+| Style | Auto, Transit, Eclipse, Dial, Plain | Auto (the kind's style) |
+| Ring position | Auto, bottom right, bottom left, top right, top left | Auto (from the address) |
+| Focus point | 3×3: the nine points at 15%, 50% and 85% | Centre |
+| Zoom | 1 to 2 (1.3 to 1.6 for busy screenshots) | 1 |
+
+The editor's preview shows the card and the share image as they will be. The prototype's picker does exactly this in CSS alone (`:has()`), so it works with JavaScript off; nothing is saved. In Decap: two `select` widgets, a `select` of nine points for the focus (a 3×3 custom widget is possible later: Decap already ships React for custom widgets), and a `number` for the zoom. Front matter: an optional `picture: { style, corner, focus, zoom }`, validated by the schema.
+
+### 8.3 The brand in the words
+
+Five pieces, each rationed so it keeps its effect. The sample post in the prototype uses all five; its words are quoted from R7's published post, and the agents are copied from the screenshot in it.
+
+| Piece | What it is | Rule |
+| --- | --- | --- |
+| **Word ring** | An ellipse drawn round one to three words, a little tilted, with the dot at its right end. It draws itself as the words come fully into view. Written `==words==` in Markdown (a remark plugin), or `<Ring>` in MDX. | Once a post. In a headline (instead of the italic-brass phrase, never both), a section heading, the lead or a pull quote. **Never in running text**: the ring would cross the lines above and below. |
+| **Orbit divider** | The logo's small orbit between two fading hairlines. | Between the main parts of a post. It could replace every `---` in `.prose`: a site-wide change, so the author's call. |
+| **Agent card** | The card from the app: status mark, task, agent name in brass, tool, model chip, branch in mono, state, what it reported. | Only to quote what a real agent reported, copied, never written for it. |
+| **Orbit diagram** | The canvas as a figure: the R7 hub in the middle, up to six agents around it, joined by hairlines. A list on a rail on phones. | For posts about agents at work. Real agents and tasks only. |
+| **Stat dial** | One number inside the brand ring, like the R7 inside the logo: the far half of the ring behind it, the near half and the dot in front. | One a post, for the number the post hangs on, with its source under it. |
+
+The pull quote gets the small orbit as its mark instead of a quotation glyph.
+
+Accessibility: every ring, line and dot is `aria-hidden`; the words stay plain text. With reduced motion the ring is simply there. In forced colours the lines and dots take `CanvasText`. The diagram is a `figure` with a real list of agents; the divider is `role="separator"`. Browsers without scroll-driven animations (Firefox today) draw the ring at once.
+
+### 8.4 R7's posts as agent cards
+
+A post whose author is an agent (`kind: "agent"` in `src/content/authors/`; today only R7) is drawn as the app's agent card in every list: the rail along its body, the done mark, the title in Inter, "R7 · Orbit AI Agent" with the existing **AI-written** chip, the post's address where the branch goes, "Published", the summary, then the kind, date and minutes. A post by Hunter keeps the editorial card with its serif title. The picture treatment is the same for both. Who wrote a post shows before you read a word.
+
+The name, role and label are the author's own text (`r7.json` and `AGENT_LABEL`); nothing new is worded for the agent.
+
+### 8.5 Recommendation (updated)
+
+Ship the **family**, not one direction: Auto by kind (Transit, Eclipse, Dial), four corners by address, plus Plain and the per-post override in the editor. Round 1's case for Transit still holds for screenshots, which is why blog posts and news get it. The other two go where they suit the picture: Eclipse's porthole hides the detail of a busy screenshot, which matters less behind a play button; Dial's grade turns a dark screenshot to mud, and a game frame is not dark in that way.
+
+For the words: the **divider, stat dial and agent card** first (they are blocks; no existing text changes), the **word ring** next (it needs a Markdown syntax), the **orbit diagram** last (the biggest block). **Agent cards for R7's posts** are recommended (honest and on-brand), but they change how three of today's five cards look, so that is the author's call.
+
+### 8.6 Rollout, revised
+
+This replaces the task list in section 7; the "What changes" table there still applies to the picture treatments.
+
+1. **The picture family on cards.** `src/lib/orbit.ts` (geometry, the Auto rule, the neighbour rule; unit-tested), `OrbitDefs.astro`, `BaseLayout.astro`, `CardMedia.astro` (style and corner per card), `AppCard.astro`, `VlogCard.astro`, `MediaPlaceholder.astro`, `post-cards.ts` (the looks for a list), `site.css`; the tokens in `tokens.css`, `tokens.json`, `DESIGN_SYSTEM.md`.
+2. **The Picture fields in the editor.** `content.config.ts` (the `picture` object), `src/lib/front-matter.ts` (blank fields dropped), `src/admin/config.ts`, `post-preview.ts` and `preview.css` (card and share image in the preview), `docs/CONTENT_MODEL.md`.
+3. **Hero and share images** that follow the post's look: `ArticleHero.astro`, `src/pages/og/[...slug].png.ts` + `src/lib/og-image.ts` (sharp; no title in phase 1, see section 7), `ArticlePage`, `VlogPage`, `ProjectPage`, `seo.ts`, `docs/SEO_AND_SHARING.md`.
+4. **The brand in the words.** Section blocks and MDX components for the agent card, orbit diagram and stat dial (`src/lib/sections/definitions.ts`, `src/components/sections/`, `src/components/article/`, `src/admin/blocks.ts`, `docs/SECTIONS.md`, `docs/ARTICLE_COMPONENTS.md`); the divider; the `==words==` remark plugin in `src/lib/markdown/` with its unit test.
+5. **Agent cards for agents' posts**, if the author wants them: `PostCard.astro` (a switch on the author's kind), a new `AgentPostCard.astro`, `site.css`.
+
+One pull request each. 1 comes before 2 and 3; 4 and 5 stand alone.
+
+### 8.7 What was checked in round 2
+
+Checked:
+
+- Looked at the page at 1440×900 and 390×844 (13 screenshots, `docs/screenshots/imagery-v2-*.png`), including the picker after changing its choices (`imagery-v2-editor-eclipse-1440.png`). Fixed what looked wrong along the way: the word ring was clamped to the word's width by the site's `svg { max-width: 100% }`, and it crowded the next word.
+- The e2e checks on the route (smoke, axe at 375 and 1280 px, the layout audit at 320–1480 px, head and headings, budgets, keyboard, reduced motion) all pass. axe: 0 violations; no console errors.
+- Lighthouse (mobile, simulated): performance 99, accessibility 100, best practices 100, CLS 0, **LCP 1958 ms: under the 2000 ms budget, but by less than one step**. What costs the time: the feed's six pictures sit within Chrome's lazy-load distance on a phone and start before the first paint, and the document is 19.7 kB gzipped (one round trip more than a page under 14.6 kB). If it flips over 2000 ms, move the Variety section below "The brand in the words", or take the route out of `tests/routes.js`. Round 1's page is unchanged (LCP 1879 ms).
+- **Nothing live changed.** Round 1's built HTML is byte-identical after its helpers moved to `_prototype.ts`, and every other built HTML, CSS, JS and XML file is identical to the build before round 2; the only new file is `dist/styleguide/imagery/v2/index.html`.
+- `npm run check` and `npm run lint` are clean.
+
+Not checked: Safari and Firefox (Firefox has no scroll-driven animations, so its word ring is drawn at once, by design); the picker's CSS-only behaviour with a screen reader (the radios are labelled in fieldsets with legends, and work with the keyboard); the real editor (Decap), which this round only mocks.
+
+Screenshots: `imagery-v2-overview-1440`, `-feed-1440`, `-variants-1440`, `-editor-1440`, `-editor-eclipse-1440`, `-sample-post-1440`, `-word-ring-1440`, `-stat-dials-1440`, `-agent-cards-1440`, `-feed-390`, `-editor-390`, `-diagram-390`, `-agent-card-390`.

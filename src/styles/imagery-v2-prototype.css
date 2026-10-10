@@ -1,0 +1,210 @@
+/*
+  Article imagery, round 2 (docs/IMAGE_STYLE.md, "Round 2"): variety, the editor's picker, the brand in the words, agent cards.
+  On top of imagery-prototype.css (round 1); imported only by src/pages/styleguide/imagery/v2.astro, so nothing here reaches
+  the live site. Everything is scoped under .ix2 or an ix- class. Tokens only: every colour is a token, every alpha is color-mix().
+*/
+
+/* ---------------------------------------------------------------------------------------------------------------- Page */
+.ix-note { margin: 0 0 var(--s-4); max-width: var(--w-prose); }
+.ix-caption { margin: var(--s-2) 0 0; font: var(--fs-xs)/1.4 var(--font-mono); color: var(--text-3); }
+.ix-feed-item { display: grid; grid-template-rows: 1fr auto; }
+.ix-variants { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+.ix-variants .ix-thumb { width: 100%; }
+.ix-variant figcaption { margin: 0; }
+
+/* ----------------------------------------------------------------------------------------------------------- Variety */
+/* The brand shape mirrored into another corner: data-flip on the picture frame ("x", "y" or "x y"); the picker sets the same
+   two variables. Only the shape and its veil turn; the picture never does. */
+.ix2 [data-flip~='x'] { --ix-sx: -1; }
+.ix2 [data-flip~='y'] { --ix-sy: -1; }
+.ix2 .ix-orbit, .ix2 .ix-veil { scale: var(--ix-sx, 1) var(--ix-sy, 1); }
+/* The share image keeps the shape on the picture's side (the words are on the left): only the vertical flip applies */
+.ix2 .ix-transit .ix-media[data-ctx='og'] :is(.ix-orbit, .ix-veil) { scale: 1 var(--ix-sy, 1); }
+/* A video's duration moves to the corner the arc leaves free */
+.ix2 .ix-transit .ix-media[data-flip~='x'] .duration { left: auto; right: var(--s-3); }
+
+/* ------------------------------------------------------------------------------------------------------------ Picker */
+.ix-picker { display: grid; gap: var(--s-6); align-items: start; }
+@media (min-width: 900px) { .ix-picker { grid-template-columns: minmax(0, 21rem) minmax(0, 1fr); } }
+.ix-picker-form { display: grid; gap: var(--s-5); padding: var(--s-5); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); }
+.ix-picker-title { margin: 0; padding-bottom: var(--s-4); border-bottom: var(--bw) solid var(--line); font: var(--fw-semibold) var(--fs-sm)/var(--lh-ui) var(--font-ui); color: var(--text); }
+.ix-field { display: grid; gap: var(--s-2); min-width: 0; margin: 0; padding: 0; border: 0; }
+.ix-field legend { margin-bottom: var(--s-2); padding: 0; font: var(--fs-2xs)/1.4 var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-3); }
+.ix-options { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.ix-option {
+  position: relative; display: inline-flex; align-items: center; min-height: var(--s-6); padding: 0 var(--s-3);
+  border: var(--bw) solid var(--line-strong); border-radius: var(--r-sm); font-size: var(--fs-sm); color: var(--text-2); cursor: pointer;
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.ix-option.mono { font-family: var(--font-mono); font-size: var(--fs-xs); }
+.ix-option:hover { color: var(--text); border-color: var(--line-brass); }
+/* The radio covers its whole label, so the label is the target (and the audit's 24px rule measures the real size) */
+.ix-option input, .ix-focus-cell input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.ix-option:has(input:checked) { color: var(--brass-bright); border-color: var(--line-brass); background: var(--brass-wash-2); }
+.ix-option:has(input:focus-visible), .ix-focus-cell:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.ix-focus-grid {
+  display: grid; grid-template-columns: repeat(3, var(--s-7)); grid-template-rows: repeat(3, var(--s-6)); gap: var(--s-1); width: max-content;
+  padding: var(--s-1); background: var(--plate-gradient); border: var(--bw) solid var(--line-strong); border-radius: var(--r-sm);
+}
+.ix-focus-cell { position: relative; display: grid; place-items: center; border-radius: var(--r-xs); cursor: pointer; }
+.ix-focus-cell:hover { background: var(--brass-wash-2); }
+.ix-focus-cell::after { content: ''; width: var(--s-2); height: var(--s-2); border: var(--bw) solid var(--line-strong); border-radius: var(--r-full); }
+.ix-focus-cell:has(input:checked)::after { background: var(--brass-highlight); border-color: var(--brass-bright); box-shadow: var(--glow-dot); }
+.ix-hint { margin: 0; font-size: var(--fs-xs); color: var(--text-3); }
+
+/* The preview: one block per style, the chosen one shown. Auto is the block marked data-auto (the kind's style). */
+.ix-live { display: grid; gap: var(--s-3); min-width: 0; }
+.ix-live-style { display: none; gap: var(--s-3); min-width: 0; }
+.ix-live-style > .card { max-width: 26rem; }
+.ix-live-style > .eyebrow { margin-top: var(--s-2); }
+.ix-picker:has([name='ix-style'][value='auto']:checked) .ix-live-style[data-auto],
+.ix-picker:has([name='ix-style'][value='transit']:checked) .ix-live-style[data-style='transit'],
+.ix-picker:has([name='ix-style'][value='eclipse']:checked) .ix-live-style[data-style='eclipse'],
+.ix-picker:has([name='ix-style'][value='dial']:checked) .ix-live-style[data-style='dial'],
+.ix-picker:has([name='ix-style'][value='plain']:checked) .ix-live-style[data-style='plain'] { display: grid; }
+
+.ix-picker:has([name='ix-pos'][value='br']:checked) .ix-live .ix-media { --ix-sx: 1; --ix-sy: 1; }
+.ix-picker:has([name='ix-pos'][value='bl']:checked) .ix-live .ix-media { --ix-sx: -1; --ix-sy: 1; }
+.ix-picker:has([name='ix-pos'][value='tr']:checked) .ix-live .ix-media { --ix-sx: 1; --ix-sy: -1; }
+.ix-picker:has([name='ix-pos'][value='tl']:checked) .ix-live .ix-media { --ix-sx: -1; --ix-sy: -1; }
+
+.ix-picker:has([name='ix-focus'][value='tl']:checked) .ix-live .ix-media { --ix-at: 15% 15%; }
+.ix-picker:has([name='ix-focus'][value='t']:checked) .ix-live .ix-media { --ix-at: 50% 15%; }
+.ix-picker:has([name='ix-focus'][value='tr']:checked) .ix-live .ix-media { --ix-at: 85% 15%; }
+.ix-picker:has([name='ix-focus'][value='l']:checked) .ix-live .ix-media { --ix-at: 15% 50%; }
+.ix-picker:has([name='ix-focus'][value='c']:checked) .ix-live .ix-media { --ix-at: 50% 50%; }
+.ix-picker:has([name='ix-focus'][value='r']:checked) .ix-live .ix-media { --ix-at: 85% 50%; }
+.ix-picker:has([name='ix-focus'][value='bl']:checked) .ix-live .ix-media { --ix-at: 15% 85%; }
+.ix-picker:has([name='ix-focus'][value='b']:checked) .ix-live .ix-media { --ix-at: 50% 85%; }
+.ix-picker:has([name='ix-focus'][value='br']:checked) .ix-live .ix-media { --ix-at: 85% 85%; }
+
+.ix-picker:has([name='ix-zoom'][value='1']:checked) .ix-live .ix-media { --ix-zoom: 1; }
+.ix-picker:has([name='ix-zoom'][value='1.25']:checked) .ix-live .ix-media { --ix-zoom: 1.25; }
+.ix-picker:has([name='ix-zoom'][value='1.5']:checked) .ix-live .ix-media { --ix-zoom: 1.5; }
+.ix-picker:has([name='ix-zoom'][value='1.75']:checked) .ix-live .ix-media { --ix-zoom: 1.75; }
+.ix-picker:has([name='ix-zoom'][value='2']:checked) .ix-live .ix-media { --ix-zoom: 2; }
+
+/* --------------------------------------------------------------------------------------------- The app's agent card */
+.ix-agent-title { display: flex; align-items: flex-start; gap: var(--s-2); margin: 0; font: var(--fw-semibold) var(--fs-base)/1.3 var(--font-ui); letter-spacing: 0; color: var(--text); }
+.ix-agent-title .mark { margin-top: 0.15em; }
+.ix-agent-who { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0; font-size: var(--fs-xs); color: var(--text-3); }
+.ix-agent-name { font-weight: var(--fw-semibold); color: var(--brass); }
+.ix-agent-role { font-size: var(--fs-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.ix-agent-branch { margin: 0; font: var(--fs-xs)/1.4 var(--font-mono); color: var(--text-3); overflow-wrap: anywhere; }
+.ix-agent-state { margin: 0; font: var(--fs-2xs)/1.4 var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-2); }
+.ix-agent-where { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+.ix-agent-note { margin: 0; font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--brass); }
+.ix-agent-text { margin: 0; font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--text); }
+
+/* A post by an agent: the card with the app's rail along its body */
+.ix-agentpost .card-body { position: relative; gap: var(--s-2); }
+.ix-agentpost .card-body::before {
+  content: ''; position: absolute; left: 0; top: var(--s-5); bottom: var(--s-5); width: var(--bw-accent); border-radius: var(--r-xs);
+  background: var(--line-strong); transition: background var(--dur) var(--ease);
+}
+.ix-agentpost:is(:hover, :focus-visible) .card-body::before { background: var(--brass); }
+.ix-agentpost .card-text { margin-top: var(--s-1); }
+.ix-agentpost .card-foot .kind { font-size: var(--fs-2xs); }
+
+/* An agent's report quoted in a post */
+.ix-agents { display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); margin-block: var(--s-6); }
+.ix-agent { display: grid; gap: var(--s-2); align-content: start; margin: 0; }
+.ix-agent figcaption, .ix-diagram figcaption { font-size: var(--fs-xs); color: var(--text-3); }
+.ix-agent-card {
+  position: relative; display: grid; gap: var(--s-2); padding: var(--s-4) var(--s-5) var(--s-4) calc(var(--s-5) + var(--bw-accent));
+  background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md);
+}
+.ix-agent-card::before { content: ''; position: absolute; left: 0; top: var(--s-3); bottom: var(--s-3); width: var(--bw-accent); border-radius: var(--r-xs); background: var(--line-strong); }
+.ix-agent-card.ix-agent-waiting::before { background: var(--brass-dim); }
+
+/* ------------------------------------------------------------------------------------------------- The orbit diagram */
+/* Phone: the hub, then the agents in a list on a rail. From 760px: the canvas, the hub in the middle and the agents around it. */
+.ix-diagram { display: grid; gap: var(--s-4); margin: var(--s-7) 0; }
+.ix-diagram-map { position: relative; display: grid; gap: var(--s-4); }
+.ix-diagram-lines { display: none; }
+.ix-diagram-hub { display: grid; justify-items: center; gap: var(--s-1); text-align: center; }
+.ix-diagram-hub img { width: var(--s-9); height: auto; }
+.ix-diagram-repo { margin: 0; font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); color: var(--text); overflow-wrap: anywhere; }
+.ix-diagram-meta { margin: 0; font: var(--fs-2xs)/1.4 var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.ix-diagram-agents { display: grid; gap: var(--s-3); margin: 0; padding: 0 0 0 var(--s-5); list-style: none; border-left: var(--bw) solid var(--line-strong); }
+.ix-mini { display: grid; gap: var(--s-1); padding: var(--s-3) var(--s-4); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md); }
+.ix-mini > p { margin: 0; }
+.ix-mini-task { display: flex; align-items: center; gap: var(--s-2); font: var(--fw-semibold) var(--fs-sm)/1.3 var(--font-ui); color: var(--text); }
+.ix-diagram figcaption { text-align: center; }
+@media (min-width: 760px) {
+  .ix-diagram-map { display: block; }
+  .ix-diagram-lines { display: block; position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--line-strong); }
+  .ix-diagram-agents {
+    position: relative; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto minmax(11rem, auto) auto;
+    grid-template-areas: '. top .' 'left . right' '. bottom .'; align-items: center; gap: var(--s-4) var(--s-6); padding: 0; border: 0;
+  }
+  .ix-at-top { grid-area: top; } .ix-at-left { grid-area: left; } .ix-at-right { grid-area: right; } .ix-at-bottom { grid-area: bottom; }
+  .ix-diagram-hub { position: absolute; left: 50%; top: 50%; z-index: 1; translate: -50% -50%; padding: var(--s-3) var(--s-4); background: var(--bg); border-radius: var(--r-lg); }
+}
+
+/* ------------------------------------------------------------------------------------------------ The words: samples */
+.ix-sample { overflow-x: clip; padding: var(--s-6) var(--s-5); border: var(--bw) solid var(--line); border-radius: var(--r-lg); }
+@media (min-width: 900px) { .ix-sample { padding: var(--s-8); } }
+.ix-sample > .prose, .ix-sample-title, .ix-sample-lead { max-width: var(--w-prose); }
+.ix-sample-title { margin: 0 0 var(--s-4); font: var(--fw-medium) var(--fs-3xl)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); color: var(--text); }
+.ix-sample-lead { margin: 0 0 var(--s-6); font-size: var(--fs-lg); line-height: var(--lh-ui); color: var(--text-2); }
+.ix-sample h4 { margin: 0 0 0.6em; font: var(--fw-medium) var(--fs-2xl)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); color: var(--text); }
+
+/* The word ring: an ellipse round one to three words, with the dot at its right end. It draws itself as it scrolls into view. */
+.ix-word { position: relative; display: inline-block; margin-inline: 0.3em 0.36em; white-space: nowrap; }   /* room for the ring and its dot */
+.ix-word-ring { position: absolute; left: -0.42em; top: -0.2em; width: calc(100% + 0.84em); max-width: none; height: calc(100% + 0.36em); overflow: visible; pointer-events: none; }
+.ix-word-ring ellipse { fill: none; stroke: var(--brass); stroke-width: calc(var(--bw) * 1.5); }
+.ix-word-dot {
+  position: absolute; right: -0.42em; top: 44%; width: max(var(--s-1), 0.16em); height: max(var(--s-1), 0.16em); translate: 50% -50%;
+  border-radius: var(--r-full); background: var(--brass-highlight); box-shadow: var(--glow-dot);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .ix-word-ring ellipse { stroke-dasharray: 100; animation: ix-draw linear both; animation-timeline: view(); animation-range: entry 25% entry 100%; }
+    .ix-word-dot { animation: ix-dot-in linear both; animation-timeline: view(); animation-range: entry 85% entry 100%; }
+  }
+}
+@keyframes ix-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes ix-dot-in { from { opacity: 0; scale: 0.4; } to { opacity: 1; scale: 1; } }
+
+.ix-ring-specimens { display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+.ix-spec { display: grid; gap: var(--s-4); align-content: start; margin: 0; padding: var(--s-5) var(--s-5) var(--s-6); overflow-x: clip; background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); }
+.ix-spec > p { margin: 0; }
+.ix-spec-title { font: var(--fw-medium) var(--fs-3xl)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); color: var(--text); }
+.ix-spec-heading { font: var(--fw-medium) var(--fs-2xl)/var(--lh-snug) var(--font-display); color: var(--text); }
+.ix-spec-lead { font-size: var(--fs-lg); line-height: 1.6; color: var(--text-2); }
+.ix-spec-quote, .ix-pull p { font: italic var(--fw-regular) var(--fs-2xl)/var(--lh-snug) var(--font-display); color: var(--text); }
+
+/* The divider and the pull-quote mark: the logo's small orbit between two fading hairlines */
+.ix-divider { display: flex; align-items: center; gap: var(--s-4); max-width: var(--w-prose); margin: var(--s-7) 0; }
+.ix-divider::before, .ix-divider::after { content: ''; flex: 1; height: var(--bw); background: linear-gradient(to right, transparent, var(--line-strong)); }
+.ix-divider::after { background: linear-gradient(to left, transparent, var(--line-strong)); }
+.ix-divider-mark, .ix-pull-mark { width: var(--s-7); height: auto; overflow: visible; }
+.ix-divider-mark path, .ix-pull-mark path { fill: none; stroke: var(--brass-dim); stroke-width: calc(var(--bw) * 1.5); }
+.ix-divider-mark circle, .ix-pull-mark circle { fill: var(--brass-highlight); }
+.ix-sample .prose .ix-pull { display: grid; gap: var(--s-3); margin: var(--s-6) 0; padding: 0; border: 0; }
+.ix-pull p { margin: 0; }
+
+/* The stat dial: the number inside the ring, like the R7 inside the logo */
+.ix-stats { display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+.ix-stat { position: relative; display: grid; justify-items: center; gap: var(--s-3); width: min(100%, 22rem); margin: var(--s-6) auto; text-align: center; }
+.ix-stat-ring { position: absolute; left: 0; top: 0; width: 100%; height: auto; aspect-ratio: 2 / 1; overflow: visible; pointer-events: none; }
+.ix-stat-ring path { fill: none; stroke: var(--brass); stroke-width: calc(var(--bw) * 1.5); vector-effect: non-scaling-stroke; }
+.ix-stat-back path { stroke: var(--brass-dim); opacity: 0.7; }
+.ix-stat-front circle { fill: var(--brass-highlight); filter: drop-shadow(0 0 var(--s-1) var(--brass)); }
+.ix-stat-num { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 2 / 1; margin: 0; font: var(--fw-medium) var(--fs-5xl)/1 var(--font-display); color: var(--text); }
+.ix-stat-unit { margin-left: 0.06em; font-size: 0.42em; font-style: italic; font-weight: var(--fw-regular); color: var(--brass-bright); }   /* the 400 italic the page already loads */
+.ix-stat figcaption { display: grid; gap: var(--s-1); max-width: 30ch; font-size: var(--fs-sm); color: var(--text-2); }
+.ix-stat-source { font: var(--fs-xs) var(--font-mono); color: var(--text-3); }
+
+/* ---------------------------------------------------------------------------------------- Forced colours, print */
+@media (forced-colors: active) {
+  .ix-word-ring ellipse, .ix-divider-mark path, .ix-pull-mark path, .ix-stat-ring path { stroke: CanvasText; }
+  .ix-divider-mark circle, .ix-pull-mark circle, .ix-stat-front circle { fill: CanvasText; }
+  .ix-word-dot { background: CanvasText; }
+  .ix-option:has(input:checked), .ix-focus-cell:has(input:checked) { outline: var(--bw) solid Highlight; }
+}
+@media print {
+  .ix-word-ring ellipse { animation: none; stroke-dasharray: none; }
+  .ix-word-dot { animation: none; }
+}

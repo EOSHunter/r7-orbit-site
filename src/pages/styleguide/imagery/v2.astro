@@ -1,0 +1,405 @@
+---
+// Prototype, round 2 (docs/IMAGE_STYLE.md, "Round 2"): more variety in the picture treatments, the editor's picker for them, the
+// brand in the words of a post (word ring, divider, agent card, orbit diagram, stat dial) and R7's posts as the app's agent cards.
+// Built on ./_prototype.ts and src/styles/imagery-prototype.css (round 1) plus src/styles/imagery-v2-prototype.css; only the
+// prototypes import them. No live component, card, hero or layout changes. The picker is CSS only (:has()), so nothing is saved.
+// Sample words are quoted from the published post they belong to, or copied from the screenshot in it; each block says which.
+// Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { AGENT_LABEL, type Author } from '../../../lib/authors';
+import { getAuthorMap } from '../../../lib/authors-queries';
+import { isoDate, plainTitle, shortDate } from '../../../lib/text';
+import {
+  FLIPS,
+  FLIP_LABEL,
+  KIND_LABEL,
+  KIND_STYLE,
+  MOTION,
+  autoFlip,
+  body,
+  defsSvg,
+  esc,
+  focusStyle,
+  icon,
+  loadSpecimens,
+  looksFor,
+  orbit,
+  media,
+  minutesOf,
+  noImage,
+  og,
+  type Flip,
+  type Look,
+  type Specimen,
+  type Style,
+} from './_prototype';
+import '../../../styles/imagery-prototype.css';
+import '../../../styles/imagery-v2-prototype.css';
+
+const { pinned, builtBlog, vlogGame, vlogTen, vesper } = await loadSpecimens();
+const authors = await getAuthorMap();
+
+// The Latest feed, newest first, as the home page would list it today, with the sample post that has no picture at the end.
+const feed = [pinned, vlogTen, vlogGame, builtBlog, vesper, noImage].filter((s): s is Specimen => !!s);
+const looks = looksFor(feed.map((s) => s.card));
+const lead = pinned ?? feed[0];
+
+const STYLE_NAME: Record<Style, string> = { transit: 'Transit', eclipse: 'Eclipse', dial: 'Dial', plain: 'Plain' };
+const lookStyle = (s: Specimen, look: Look) => `${focusStyle(s)}${look.style === 'plain' ? '' : `;${MOTION[look.style]}`}`;
+const lookLabel = (look: Look) =>
+  `${look.chosen ? 'Chosen' : 'Auto'} · ${STYLE_NAME[look.style]}${look.style === 'plain' ? '' : ` · ${FLIP_LABEL[look.flip]}`}`;
+
+/** A card with its look (round 1's card markup, with the style and corner of this post). */
+const lookCard = (s: Specimen, look: Look) =>
+  `<a class="card ix-${look.style}" href="${esc(s.card.href)}" style="${lookStyle(s, look)}">${media(look.style, s, 'card', look.flip)}${body(s)}</a>`;
+
+/** The app's status mark, "done": the same drawing as StatusMark. */
+const doneMark = `<span class="mark done" aria-hidden="true"><svg viewBox="0 0 14 14"><circle class="track" cx="7" cy="7" r="5.5"></circle><circle class="dot" cx="7" cy="7" r="2"></circle></svg></span>`;
+const idleMark = `<span class="mark idle" aria-hidden="true"><svg viewBox="0 0 14 14"><circle class="track" cx="7" cy="7" r="5.5"></circle></svg></span>`;
+
+/** A post by an agent, drawn as the app's agent card: rail, status, name and role, the post's address as its branch. */
+function agentCard(s: Specimen, look: Look, author: Author): string {
+  const c = s.card;
+  const minutes = minutesOf(c);
+  return (
+    `<a class="card ix-agentpost ix-${look.style}" href="${esc(c.href)}" style="${lookStyle(s, look)}">${media(look.style, s, 'card', look.flip)}` +
+    `<div class="card-body">` +
+    `<h3 class="card-title ix-agent-title">${doneMark}<span>${esc(plainTitle(c.title))}</span></h3>` +
+    `<p class="ix-agent-who"><span class="ix-agent-name">${esc(author.name)}</span><span aria-hidden="true">&middot;</span><span class="ix-agent-role">${esc(author.subtitle ?? '')}</span><span class="chip ai-written">${icon('agent', true)}${AGENT_LABEL}</span></p>` +
+    `<p class="ix-agent-branch">${esc(c.href.replace(/^\/|\/$/g, ''))}</p>` +
+    `<p class="ix-agent-state">Published</p>` +
+    `<p class="card-text">${esc(c.summary)}</p>` +
+    `<div class="card-foot"><span class="kind">${icon(c.kind)}${KIND_LABEL[c.kind]}</span><time datetime="${isoDate(c.date)}">${shortDate(c.date)}</time>${
+      minutes !== undefined ? `<span aria-hidden="true">&middot;</span><span>${minutes} min</span>` : ''
+    }<span class="spacer"></span>${icon('arrow')}</div>` +
+    `</div></a>`
+  );
+}
+
+// One post, every look
+const variantSpecimen = vesper ?? lead;
+const variants: Look[] = [
+  ...(['transit', 'eclipse', 'dial'] as const).flatMap((style) => FLIPS.map((flip): Look => ({ style, flip }))),
+  { style: 'plain', flip: '' },
+];
+
+// The editor's picker: Auto is the kind's style and the address's corner.
+const autoStyle = KIND_STYLE[lead.card.kind];
+const autoCorner: Flip = autoFlip(lead.card.href);
+const PICKER_STYLES: Style[] = ['transit', 'eclipse', 'dial', 'plain'];
+const CORNERS: { value: string; label: string }[] = [
+  { value: 'auto', label: `Auto (${FLIP_LABEL[autoCorner]})` },
+  { value: 'br', label: 'Bottom right' },
+  { value: 'bl', label: 'Bottom left' },
+  { value: 'tr', label: 'Top right' },
+  { value: 'tl', label: 'Top left' },
+];
+const FOCUS: { value: string; label: string }[] = [
+  ['tl', 'Top left'], ['t', 'Top'], ['tr', 'Top right'],
+  ['l', 'Left'], ['c', 'Centre'], ['r', 'Right'],
+  ['bl', 'Bottom left'], ['b', 'Bottom'], ['br', 'Bottom right'],
+].map(([value, label]) => ({ value, label }));
+const ZOOMS = ['1', '1.25', '1.5', '1.75', '2'];
+
+// The ring around words: an ellipse drawn round them, a little tilted, with the dot at its right end. Decorative.
+const ringSvg = `<svg class="ix-word-ring" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true" focusable="false"><ellipse cx="50" cy="20" rx="48" ry="17" transform="rotate(-3 50 20)" pathLength="100" vector-effect="non-scaling-stroke"></ellipse></svg>`;
+const ring = (words: string) => `<span class="ix-word">${esc(words)}${ringSvg}<span class="ix-word-dot" aria-hidden="true"></span></span>`;
+// The small orbit (the logo's ring and dot) for the divider and the pull-quote mark, and the ring around a stat.
+const mini = orbit({ cx: 24, cy: 12, rx: 20 });
+const [miniX, miniY] = mini.point(18);
+const miniOrbit = (cls: string) =>
+  `<svg class="${cls}" viewBox="0 0 48 24" aria-hidden="true" focusable="false"><path d="${mini.d}"></path><circle cx="${miniX}" cy="${miniY}" r="2.4"></circle></svg>`;
+const divider = `<div class="ix-divider" role="separator">${miniOrbit('ix-divider-mark')}</div>`;
+
+/** A number with the brand ring round it, like the R7 inside the logo: the far half behind it, the near half in front. */
+const statOrbit = orbit({ cx: 120, cy: 60, rx: 100 });
+const [statX, statY] = statOrbit.point(38);
+const statRing = (part: 'back' | 'front') =>
+  `<svg class="ix-stat-ring ix-stat-${part}" viewBox="0 0 240 120" aria-hidden="true" focusable="false"><path d="${part === 'back' ? statOrbit.back : statOrbit.front}"></path>${
+    part === 'front' ? `<circle cx="${statX}" cy="${statY}" r="4.5"></circle>` : ''
+  }</svg>`;
+const stat = (value: string, unit: string, caption: string, source: string) =>
+  `<figure class="ix-stat">${statRing('back')}<p class="ix-stat-num">${esc(value)}<span class="ix-stat-unit">${esc(unit)}</span></p>${statRing('front')}` +
+  `<figcaption><span>${esc(caption)}</span><span class="ix-stat-source">${esc(source)}</span></figcaption></figure>`;
+
+// The four agents in the screenshot of the post (src/assets/blog/screenshot-2026-10-10-002457.png), as written there.
+const AGENTS = [
+  { area: 'top', task: 'Controller feel & tricks', name: 'Dune', tool: 'Claude', state: 'Finished', mark: doneMark },
+  { area: 'left', task: 'Bots & match feel', name: 'Ember', tool: 'Claude', state: 'Interrupted', mark: idleMark },
+  { area: 'right', task: 'Map fidelity & visuals', name: 'Rigel', tool: 'Claude', state: 'Interrupted', mark: idleMark },
+  { area: 'bottom', task: 'Gun & HUD juice', name: 'Flare', tool: 'Claude', state: 'Interrupted', mark: idleMark },
+];
+---
+
+<BaseLayout title="Article imagery prototype, round 2" description="Variety, the editor's picker and the brand in the words. A prototype, not part of the site." noindex>
+  <Fragment set:html={defsSvg()} />
+
+  <div class="container">
+    <header class="page-head">
+      <p class="eyebrow brass">Prototype, round 2 · not part of the site</p>
+      <h1>Article imagery: variety</h1>
+      <p class="t-lead text-2">
+        One family of looks instead of one stamp: each kind of post has its own style, the brand shape moves between four corners,
+        and the editor can choose. Then the brand in the words of a post, and R7's posts as the app's agent cards.
+      </p>
+      <p class="text-3">Round 1, with the three directions side by side: <a href="/styleguide/imagery/">/styleguide/imagery/</a>. The brief and the rules: docs/IMAGE_STYLE.md.</p>
+      <nav aria-label="On this page">
+        <ul class="ix-toc">
+          <li><a href="#variety"><span class="ix-toc-label">1</span><span class="ix-toc-name">Variety</span><span class="ix-toc-idea">A feed with each kind's style, and every look one picture can take.</span></a></li>
+          <li><a href="#editor"><span class="ix-toc-label">2</span><span class="ix-toc-name">Choosing it in the editor</span><span class="ix-toc-idea">Style, corner, focus point and zoom, with the card and share image as they will be.</span></a></li>
+          <li><a href="#words"><span class="ix-toc-label">3</span><span class="ix-toc-name">The brand in the words</span><span class="ix-toc-idea">A sample post: word ring, divider, orbit diagram, agent cards, stat dial.</span></a></li>
+          <li><a href="#agent-cards"><span class="ix-toc-label">4</span><span class="ix-toc-name">R7's posts as agent cards</span><span class="ix-toc-idea">The card from the app, for the posts an agent wrote.</span></a></li>
+        </ul>
+      </nav>
+    </header>
+  </div>
+
+  {/* ------------------------------------------------------------------------------------------------ 1. Variety */}
+  <section class="section ruled ix ix2" id="variety" aria-labelledby="variety-h">
+    <div class="container">
+      <div class="ix-head">
+        <p class="eyebrow brass">1 · Variety</p>
+        <h2 class="section-title" id="variety-h">One family, many looks</h2>
+        <p class="text-2">
+          Auto gives each kind its style: Transit for blog posts and news (screenshots keep their colour), Eclipse for vlogs (the play
+          button sits in the planet), Dial for projects and apps (an instrument for a game frame). The corner comes from the post's
+          address, so a post looks the same on its card, its page and when shared, and two cards side by side never match.
+        </p>
+      </div>
+
+      <h3 class="ix-h">The Latest feed, on Auto</h3>
+      <div class="grid-cards ix-feed">
+        {feed.map((s, i) => (
+          <div class="ix-feed-item">
+            <Fragment set:html={lookCard(s, looks[i])} />
+            <p class="ix-caption">{lookLabel(looks[i])}</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 class="ix-h">One picture, every look</h3>
+      <p class="text-2 ix-note">{plainTitle(variantSpecimen.card.title)}: three styles in four corners, and the picture alone.</p>
+      <div class="ix-variants">
+        {variants.map((look) => (
+          <figure class={`ix-figure ix-variant ix-${look.style}`} style={lookStyle(variantSpecimen, look)}>
+            <div class="ix-thumb" set:html={media(look.style, variantSpecimen, 'thumb', look.flip)} />
+            <figcaption class="ix-caption">{STYLE_NAME[look.style]}{look.style !== 'plain' && ` · ${FLIP_LABEL[look.flip]}`}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------------------------------------------ 2. Editor */}
+  <section class="section ruled ix ix2" id="editor" aria-labelledby="editor-h">
+    <div class="container">
+      <div class="ix-head">
+        <p class="eyebrow brass">2 · The editor</p>
+        <h2 class="section-title" id="editor-h">Choosing it in the editor</h2>
+        <p class="text-2">
+          A "Picture" group next to the cover in /admin. Everything starts on Auto, so a post nobody touches still looks designed.
+          This is a mock: it works here without JavaScript, and nothing is saved.
+        </p>
+      </div>
+
+      <div class="ix-picker">
+        <div class="ix-picker-form">
+          <p class="ix-picker-title">{plainTitle(lead.card.title)}</p>
+          <fieldset class="ix-field">
+            <legend>Style</legend>
+            <div class="ix-options">
+              <label class="ix-option"><input type="radio" name="ix-style" value="auto" checked />Auto ({STYLE_NAME[autoStyle]})</label>
+              {PICKER_STYLES.map((style) => (
+                <label class="ix-option"><input type="radio" name="ix-style" value={style} />{STYLE_NAME[style]}</label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset class="ix-field">
+            <legend>Ring position</legend>
+            <div class="ix-options">
+              {CORNERS.map((c, i) => (
+                <label class="ix-option"><input type="radio" name="ix-pos" value={c.value} checked={i === 0} />{c.label}</label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset class="ix-field">
+            <legend>Focus point</legend>
+            <div class="ix-focus-grid">
+              {FOCUS.map((f) => (
+                <label class="ix-focus-cell" title={f.label}><input type="radio" name="ix-focus" value={f.value} checked={f.value === 'c'} /><span class="visually-hidden">{f.label}</span></label>
+              ))}
+            </div>
+            <p class="ix-hint">Where the subject is. The crop keeps it in view.</p>
+          </fieldset>
+          <fieldset class="ix-field">
+            <legend>Zoom</legend>
+            <div class="ix-options">
+              {ZOOMS.map((z) => (
+                <label class="ix-option mono"><input type="radio" name="ix-zoom" value={z} checked={z === '1.5'} />{z}×</label>
+              ))}
+            </div>
+            <p class="ix-hint">For busy screenshots: 1.3 to 1.6.</p>
+          </fieldset>
+        </div>
+
+        <div class="ix-live" aria-label="Preview">
+          {PICKER_STYLES.map((style) => {
+            const look: Look = { style, flip: autoCorner };
+            return (
+              <div class={`ix-live-style ix-${style}`} data-style={style} data-auto={style === autoStyle ? '' : undefined} style={lookStyle(lead, look)}>
+                <p class="eyebrow">Card</p>
+                <Fragment set:html={`<a class="card ix-${style}" href="${esc(lead.card.href)}">${media(style, lead, 'card', autoCorner)}${body(lead)}</a>`} />
+                <p class="eyebrow">Share image</p>
+                <div class="ix-og-list" set:html={og(style, lead, autoCorner)} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------------------------------------------ 3. Words */}
+  <section class="section ruled ix ix2" id="words" aria-labelledby="words-h">
+    <div class="container">
+      <div class="ix-head">
+        <p class="eyebrow brass">3 · The brand in the words</p>
+        <h2 class="section-title" id="words-h">The brand in the words</h2>
+        <p class="text-2">
+          Five pieces a post can use. Each is rationed: one word ring a post, a divider between sections, the diagram and the
+          agent cards where the post is about agents at work, one stat dial for the number the post hangs on.
+        </p>
+      </div>
+
+      <h3 class="ix-h">A sample post</h3>
+      <p class="ix-note text-3">
+        Sample. The words are quoted from R7's published post "So you've got an AI that writes code", shortened; the agents and
+        what they report are copied from the screenshot in that post.
+      </p>
+      <article class="ix-sample" aria-label="Sample post">
+        <p class="ix-sample-title">So you've got an AI that writes code. Cool. What if you had <Fragment set:html={ring('ten')} />?</p>
+        <p class="ix-sample-lead">Okay, real talk. If you code with AI right now, you probably have one assistant going at a time.</p>
+        <div class="prose">
+          <h4>So what is it?</h4>
+          <p>R7 Orbit is a desktop app that's basically mission control for your AI coders. You hand out jobs, they all work at the same time, and nobody trips over anybody.</p>
+          <blockquote class="ix-pull">
+            <Fragment set:html={miniOrbit('ix-pull-mark')} />
+            <p>Every agent works in its own copy of your project.</p>
+          </blockquote>
+          <p>Every task gets its own agent (they even get little names, like Quasar, Atlas and Polaris, so you can tell them apart), and every agent works in its own copy of your project.</p>
+        </div>
+
+        <Fragment set:html={divider} />
+
+        <figure class="ix-diagram">
+          <div class="ix-diagram-map">
+          <svg class="ix-diagram-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path d="M50 50 L50 10 M50 50 L10 50 M50 50 L90 50 M50 50 L50 90" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div class="ix-diagram-hub">
+            <img src="/assets/r7-orbit-mark-transparent.svg" alt="" width="96" height="96" loading="lazy" decoding="async" />
+            <p class="ix-diagram-repo">mw2-rust-quickscoping</p>
+            <p class="ix-diagram-meta">main · 4 agents</p>
+          </div>
+          <ul class="ix-diagram-agents">
+            {AGENTS.map((a) => (
+              <li class={`ix-mini ix-at-${a.area}`}>
+                <p class="ix-mini-task"><Fragment set:html={a.mark} />{a.task}</p>
+                <p class="ix-agent-who"><span class="ix-agent-name">{a.name}</span><span aria-hidden="true">&middot;</span><span class="ix-agent-role">{a.tool}</span></p>
+                <p class="ix-agent-state">{a.state}</p>
+              </li>
+            ))}
+          </ul>
+          </div>
+          <figcaption>Four agents on one project, each on its own branch: the R7 Orbit canvas as a diagram.</figcaption>
+        </figure>
+
+        <div class="ix-agents">
+          <figure class="ix-agent">
+            <div class="ix-agent-card">
+              <p class="ix-agent-title"><Fragment set:html={doneMark} />Controller feel &amp; tricks</p>
+              <p class="ix-agent-who"><span class="ix-agent-name">Dune</span><span aria-hidden="true">&middot;</span><span class="ix-agent-role">Claude</span><span class="chip mono">Opus 5.5</span></p>
+              <p class="ix-agent-branch">controller-feel-trickshot-feasibility-21381a</p>
+              <p class="ix-agent-state">Finished</p>
+              <p class="ix-agent-where">In main · on GitHub</p>
+              <p class="ix-agent-text">A trickshot wasn't possible on a controller at any sensitivity before this change. Now it is at sensitivity 5 (the default) and above…</p>
+            </div>
+            <figcaption>What the agent reported when it finished.</figcaption>
+          </figure>
+          <figure class="ix-agent">
+            <div class="ix-agent-card ix-agent-waiting">
+              <p class="ix-agent-title"><Fragment set:html={idleMark} />Bots &amp; match feel</p>
+              <p class="ix-agent-who"><span class="ix-agent-name">Ember</span><span aria-hidden="true">&middot;</span><span class="ix-agent-role">Claude</span><span class="chip mono">Opus 5.5</span></p>
+              <p class="ix-agent-branch">bots-match-feel-trickshot-lobby-962958</p>
+              <p class="ix-agent-state">Interrupted</p>
+              <p class="ix-agent-note">Orbit closed while this ran. The conversation can be resumed; the process itself ended.</p>
+              <p class="ix-agent-text">That's 6× faster (~0.18 ms per tick for the whole match). The remaining raycasts are actual shots…</p>
+            </div>
+            <figcaption>An agent stopped mid-task, as the canvas shows it.</figcaption>
+          </figure>
+        </div>
+
+        <Fragment set:html={divider} />
+
+        <div class="prose">
+          <h4>Just type what you want</h4>
+          <p>There's a box at the bottom. You type something like "add a dark mode with a toggle in the header, and remember the choice," hit enter, and a card pops onto the canvas with an agent already on it.</p>
+        </div>
+        <Fragment set:html={stat('17', 's', 'In the video, that agent finished in 17 seconds.', 'From the post')} />
+      </article>
+
+      <h3 class="ix-h">The word ring: where it may go</h3>
+      <p class="ix-note text-3">Once a post, around one to three words. Never in running text: the ring would cross the lines above and below. Words from the published posts.</p>
+      <div class="ix-ring-specimens">
+        <figure class="ix-spec">
+          <figcaption class="eyebrow">A headline, instead of the italic phrase</figcaption>
+          <p class="ix-spec-title">How I built a browser game with <Fragment set:html={ring('R7 Orbit')} /></p>
+        </figure>
+        <figure class="ix-spec">
+          <figcaption class="eyebrow">A section heading</figcaption>
+          <p class="ix-spec-heading">Just type <Fragment set:html={ring('what you want')} /></p>
+        </figure>
+        <figure class="ix-spec">
+          <figcaption class="eyebrow">The lead</figcaption>
+          <p class="ix-spec-lead">If you code with AI right now, you probably have <Fragment set:html={ring('one assistant')} /> going at a time.</p>
+        </figure>
+        <figure class="ix-spec">
+          <figcaption class="eyebrow">A pull quote</figcaption>
+          <p class="ix-spec-quote">Basically <Fragment set:html={ring('mission control')} /> for your AI coders.</p>
+        </figure>
+      </div>
+
+      <h3 class="ix-h">Stat dials</h3>
+      <div class="ix-stats">
+        <Fragment set:html={stat('17', 's', 'One agent, one task, done.', 'So you’ve got an AI that writes code')} />
+        <Fragment set:html={stat('12', '', 'Forms, from Meteorite to Black Hole.', 'Vesper Drift')} />
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------------------------------------------ 4. Agent cards */}
+  <section class="section ruled ix ix2" id="agent-cards" aria-labelledby="agent-cards-h">
+    <div class="container">
+      <div class="ix-head">
+        <p class="eyebrow brass">4 · Agent cards</p>
+        <h2 class="section-title" id="agent-cards-h">R7's posts as agent cards</h2>
+        <p class="text-2">
+          A post written by R7 is drawn as the card from the app: the rail on the left, the status mark, the agent's name and role,
+          the post's address where the branch goes. A post by Hunter keeps the editorial card with the serif title. Who wrote it shows
+          before you read a word, next to the AI-written label the post already has.
+        </p>
+      </div>
+      <div class="grid-cards ix-feed">
+        {feed.map((s, i) => {
+          const author = s.card.author ? authors.get(s.card.author) : undefined;
+          return author?.kind === 'agent' ? (
+            <Fragment set:html={agentCard(s, looks[i], author)} />
+          ) : (
+            <Fragment set:html={lookCard(s, looks[i])} />
+          );
+        })}
+      </div>
+    </div>
+  </section>
+  <div class="archive-end"></div>
+</BaseLayout>
