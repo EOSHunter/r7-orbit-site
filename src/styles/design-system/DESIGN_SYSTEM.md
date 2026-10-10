@@ -322,8 +322,8 @@ Five kinds of post, one visual system. **The kind is a label and an icon, never 
 
 | Kind | Icon | Card | Notes |
 |---|---|---|---|
-| **News** | newspaper | Media (16:9) + sans title, 2-line summary, date · read time | Short, fast to scan. Sans title for speed |
-| **Blog** | pen | Often no image; sans title like every other card (the serif is for headlines, not card titles), 3-line summary, tags | The reading experience: `.prose`, one column |
+| **News** | newspaper | Media (16:9) + serif title, 2-line summary, date · read time | Short, fast to scan |
+| **Blog** | pen | Often no image; **serif title** (`.card-title.serif`), 3-line summary, tags | The reading experience: `.prose`, one column |
 | **Vlog** | play | Media with the `.play` ring and `.duration` badge; kind label may be `.live` | Video poster in `.card-media`; hover scales the play ring |
 | **Project** | cube | Media + name, one-line description, tech chips (`.chip.mono`), status `.mark` | Status uses the same marks as the app (in progress = turning arc, shipped = done) |
 | **Repo** | branch | No image; **mono name** (`owner/repo`), description, `.stats` (language, stars, forks), updated date | Looks like code because it is |
