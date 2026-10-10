@@ -176,6 +176,33 @@ Two thirds of the row. Anything goes here: paragraphs, lists, a figure or a code
 
 </TwoColumn>
 
+## The brand in the words
+
+Pieces that bring the R7 Orbit canvas into a post (docs/IMAGE_STYLE.md, section 8.3). The examples are copied from the Lumen
+demo in the "What if you had ten?" video.
+
+`Pullquote` takes `ring`: one to three of its words, copied exactly, get the brand ring. Once a post.
+
+<Pullquote ring="mission control">Basically mission control for your AI coders.</Pullquote>
+
+`AgentCards` shows one to three cards from the canvas: task, agent, tool, model, effort, state (`finished`, `working`, `needs`,
+`interrupted`), a `note` in brass and what the agent `report`ed. Copy what the app showed; never write a report for an agent.
+
+<AgentCards cards={[{"task":"Add a dark mode","agent":"Quasar","tool":"Claude","model":"Sonnet 5.5","effort":"Medium","state":"finished","report":"I added a dark mode with a toggle button in the header, next to the title. I haven't run the app or opened it in a browser, so it's…"},{"task":"Npm start","agent":"Laika","tool":"PowerShell","state":"interrupted","note":"Orbit closed while this ran. This provider cannot resume; the process ended."}]} caption="Two cards from the canvas: one finished, one interrupted." />
+
+`OrbitDiagram` draws the canvas: the project (`hub`, with a `meta` line) in the middle and up to eight `agents` round it,
+joined by hairlines. In a narrow column it becomes a list on a rail.
+
+<OrbitDiagram hub="lumen" meta="main · 9 agents" agents={[{"agent":"Quasar","task":"Add a dark mode","tool":"Claude","state":"finished"},{"agent":"Atlas","task":"Fix the timezone bug in…","tool":"Claude","state":"finished"},{"agent":"Polaris","task":"Write tests for current…","tool":"Claude","state":"finished"}]} caption="Three agents round one project." />
+
+`StatDial` puts one number inside the ring. The dial is decoration: its `caption` says the number in words.
+
+<StatDial value="17" unit="s" caption="In the video, that agent finished in 17 seconds." source="So you've got an AI that writes code" />
+
+`Divider` with `variant="orbit"` is the small ring and dot, for the main breaks of a post.
+
+<Divider variant="orbit" />
+
 ## Table of contents
 
 `Toc` takes `headings` and a `variant`: `block` (shown at the top of this page), `inline` (the collapsible list for narrow

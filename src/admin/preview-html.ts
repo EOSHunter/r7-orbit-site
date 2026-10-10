@@ -2,10 +2,13 @@
 // src/components/article/ produce (same elements, classes and data attributes), so the site's real CSS styles them.
 // Pure functions, no DOM and no Decap: they run under Vitest. preview-html.vitest.ts checks that every class used here
 // still exists in the component it copies, because these are copies, not the components themselves (an Astro component
-// cannot run in the browser).
+// cannot run in the browser). The brand pieces (agent cards, orbit diagram, stat dial, orbit divider, the ring) are not copies:
+// their components and this preview both draw them with src/lib/article-brand.ts.
 //
 // Decap sanitises the result with DOMPurify before showing it. That keeps `class` and `data-*`, but removes `<use>`, so
 // the one icon a block needs (the play triangle) is drawn inline here.
+
+import { agentCardsHtml, orbitDiagramHtml, orbitDividerHtml, ringPhrase, statDialHtml } from '../lib/article-brand';
 
 export const escapeHtml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -117,10 +120,23 @@ export function videoHtml(d: Record<string, unknown>): string {
 }
 
 export function dividerHtml(d: Record<string, unknown>): string {
+  if (text(d.variant) === 'orbit') return orbitDividerHtml();
   return text(d.variant) === 'dots'
     ? '<div class="art-divider" role="separator" data-variant="dots"><span></span><span></span><span></span></div>'
     : '<hr class="art-divider" data-variant="rule" />';
 }
+
+/** The pull quote (Pullquote.astro), with the ring round its `ring` words when they are in the quote. */
+export function pullquoteHtml(d: Record<string, unknown>): string {
+  const body = inlineMarkdown(text(d.body));
+  const ringed = text(d.ring).trim() ? ringPhrase(body, text(d.ring)) : body;
+  const cite = text(d.cite) ? `<p class="art-pullquote-cite">${escapeHtml(text(d.cite))}</p>` : '';
+  const warning = ringed === undefined ? '<p class="admin-alt-warning" role="alert"><strong>Ring words not found.</strong> Copy them exactly from the quote.</p>' : '';
+  return `<aside class="art-pullquote" aria-hidden="true"><p>${ringed ?? body}</p>${cite}</aside>${warning}`;
+}
+
+// The brand pieces (agent cards, orbit diagram, stat dial) are drawn by the same functions as their components, not copied.
+export { agentCardsHtml, orbitDiagramHtml, statDialHtml };
 
 // ---- Headings, for the contents list ------------------------------------------------------------------------------
 

@@ -22,13 +22,18 @@ Building blocks for blog and news articles, in `src/components/article/`. Styles
 | `ImageRow` / `ImageGallery` | `images` (2-3 of `{src, alt, caption, decorative?}`), `caption` | Stacks below 600px. Not the lightbox `Gallery`. |
 | `Callout` | `type` info/warn/tip, `title` | Same classes as `> [!NOTE]`. |
 | `Quote` | `cite`, `href` | Inline quotation. |
-| `Pullquote` | `cite` | Large display quote; `aria-hidden` (repeats body text). |
+| `Pullquote` | `cite`, `ring` | Large display quote; `aria-hidden` (repeats body text). `ring`: one to three of its words, copied exactly, get the brand ring (once a post; the build fails if they are not in the quote). |
 | `CodeBlock` | `code`, `lang`, `title` | Same bar and copy button as fenced code. |
 | `VideoEmbed` | `id`, `title`, `poster`, `duration`, `chapters`, `caption` | Wraps `YouTubeFacade` (click to load). |
-| `Divider` | `variant` rule/dots | |
+| `Divider` | `variant` rule/dots/orbit | `orbit`: the logo's small ring and dot between two fading hairlines, for the main breaks of a post. |
 | `TwoColumn` | `ratio` 1:1/2:1/1:2, `reverse`; slots `left`, `right` | Stacks below 720px. In MDX keep slot `<div>`s unindented with blank lines round Markdown. |
+| `AgentCards` | `cards` (1-3 of `{task, agent, tool?, model?, effort?, state?, note?, report?}`), `caption` | The card from the R7 Orbit canvas. `state`: finished (default), working, needs, interrupted; the rail and status mark follow it. `` `code` `` in a report shows as code. **Copy what the app showed; never write a report for an agent.** |
+| `OrbitDiagram` | `hub`, `meta`, `agents` (1-8 of `{agent, task, tool?, state?}`), `caption` | The canvas as a figure: the project in the middle with the R7 mark, the agents round it on hairlines; a list on a rail when the column is under 560px. Real agents and tasks only. |
+| `StatDial` | `value`, `unit`, `caption` (required), `source` | One number inside the brand ring. The dial is `aria-hidden`: the caption must say the number in words. At most one a section. |
 | `Toc` | `headings`, `variant` block/inline/aside, `title`, `maxDepth` | inline/aside reuse `TableOfContents`. MDX body: `<Toc headings={props.headings} />` when rendered with a `headings` prop. |
 
 ## Rules
 
 Images must be local: `/src/assets/...` (optimised) or `/media/...` (`public/media/`, served as it is); an `http(s)` source throws at build, and so does a body image with no alt text (`docs/IMAGES.md`). `getHeadings()` only sees Markdown headings (`##`), not `Heading` components, so use `##` for sections that should appear in a contents list.
+
+**The brand pieces** (`AgentCards`, `OrbitDiagram`, `StatDial`, `Divider variant="orbit"`, `Pullquote ring`) draw their markup with `src/lib/article-brand.ts`, which the editor's preview uses too, so the preview is the component itself rather than a copy. The geometry of the ring is `src/lib/orbit.ts`. All of them are editor blocks in /admin (`src/admin/blocks.ts`), and the rules for using them are in `docs/IMAGE_STYLE.md` section 8.3.

@@ -10,6 +10,7 @@ import {
   headingsOf,
   imageRowHtml,
   inlineMarkdown,
+  pullquoteHtml,
   quoteHtml,
   twoColumnHtml,
   videoHtml,
@@ -66,6 +67,15 @@ describe('block previews use the components\' own markup', () => {
     );
     expect(dividerHtml({ variant: 'dots' })).toContain('art-divider" role="separator" data-variant="dots"');
     expect(dividerHtml({})).toBe('<hr class="art-divider" data-variant="rule" />');
+    expect(dividerHtml({ variant: 'orbit' })).toContain('<div class="art-divider" role="separator" data-variant="orbit">');
+    expect(pullquoteHtml({ body: 'One screen.', cite: 'R7' })).toBe(
+      '<aside class="art-pullquote" aria-hidden="true"><p>One screen.</p><p class="art-pullquote-cite">R7</p></aside>',
+    );
+  });
+
+  it('rings the chosen words of a pull quote, and says so when they are not in it', () => {
+    expect(pullquoteHtml({ body: 'Basically mission control.', ring: 'mission control' })).toContain('<span class="art-ring">mission control');
+    expect(pullquoteHtml({ body: 'Basically mission control.', ring: 'ground control' })).toContain('Ring words not found');
   });
 
   it('shows the placeholder plate when there is no image yet', () => {
@@ -103,6 +113,8 @@ describe('block previews use the components\' own markup', () => {
       ImageRow: read('src/components/article/ImageRow.astro'),
       TwoColumn: read('src/components/article/TwoColumn.astro'),
       Divider: read('src/components/article/Divider.astro'),
+      Pullquote: read('src/components/article/Pullquote.astro'),
+      brand: read('src/lib/article-brand.ts'),
       VideoEmbed: read('src/components/article/VideoEmbed.astro'),
       YouTubeFacade: read('src/components/YouTubeFacade.astro'),
       MediaPlaceholder: read('src/components/MediaPlaceholder.astro'),
@@ -120,6 +132,8 @@ describe('block previews use the components\' own markup', () => {
       twoColumnHtml({ left: 'L', right: 'R' }),
       dividerHtml({ variant: 'dots' }),
       dividerHtml({ variant: 'rule' }),
+      dividerHtml({ variant: 'orbit' }),
+      pullquoteHtml({ body: 'One screen.', cite: 'R7', ring: 'One' }),
       videoHtml({ title: 'T', caption: 'C' }),
     ].join('');
     // `admin-*` classes exist only in the preview (preview.css), not in a component.

@@ -1,6 +1,6 @@
 # Image style: article imagery
 
-**Status: proposed, not decided.** The author picks; nothing on the live site has changed. Round 1 (three directions) is at `/styleguide/imagery/`; round 2 (variety, the editor's picker, the brand in the words, agent cards: section 8) is at `/styleguide/imagery/v2/`. Both are noindex and unlinked. Screenshots are in `docs/screenshots/imagery-*.png`.
+**Status (2026-10-10): partly decided.** The author's picks: the picture family goes on **cards and the home page only**; article heroes and share images keep the plain picture. The rest of round 2 is liked. The brand pieces for the words are **live** (section 8.3); the picture treatment is not built yet (section 8.6). Round 1 (three directions) is at `/styleguide/imagery/`; round 2 (variety, the editor's picker, the brand in the words, agent cards: section 8) is at `/styleguide/imagery/v2/`. Both are noindex and unlinked. Screenshots are in `docs/screenshots/imagery-*.png`.
 
 How to look at it:
 
@@ -256,13 +256,15 @@ Five pieces, each rationed so it keeps its effect. The sample post in the protot
 
 | Piece | What it is | Rule |
 | --- | --- | --- |
-| **Word ring** | An ellipse drawn round one to three words, a little tilted, with the dot at its right end. It draws itself as the words come fully into view. Written `==words==` in Markdown (a remark plugin), or `<Ring>` in MDX. | Once a post. In a headline (instead of the italic-brass phrase, never both), a section heading, the lead or a pull quote. **Never in running text**: the ring would cross the lines above and below. |
-| **Orbit divider** | The logo's small orbit between two fading hairlines. | Between the main parts of a post. It could replace every `---` in `.prose`: a site-wide change, so the author's call. |
-| **Agent card** | The card from the app: status mark, task, agent name in brass, tool, model chip, branch in mono, state, what it reported. | Only to quote what a real agent reported, copied, never written for it. |
-| **Orbit diagram** | The canvas as a figure: the R7 hub in the middle, up to six agents around it, joined by hairlines. A list on a rail on phones. | For posts about agents at work. Real agents and tasks only. |
-| **Stat dial** | One number inside the brand ring, like the R7 inside the logo: the far half of the ring behind it, the near half and the dot in front. | One a post, for the number the post hangs on, with its source under it. |
+| **Word ring** | An ellipse drawn round one to three words, a little tilted, with the dot at its right end. It draws itself as the words come fully into view. **Live in pull quotes**: `<Pullquote ring="words">` (the editor's Pull quote block has the field). In a headline or heading it would need a Markdown syntax (`==words==`, a remark plugin): not built. | Once a post. **Never in running text**: the ring would cross the lines above and below. |
+| **Orbit divider** | The logo's small orbit between two fading hairlines. **Live**: `<Divider variant="orbit" />`. | Between the main parts of a post. It could replace every `---` in `.prose`: a site-wide change, so the author's call. |
+| **Agent card** | The card from the app: status mark, task, agent name in brass, tool, model and effort chips, state, a note in brass, what it reported. The rail takes the state's colour, as in the app. **Live**: `<AgentCards>` (one to three side by side). | Only to quote what a real agent reported, copied, never written for it. A report the app cut short ends with "…". |
+| **Orbit diagram** | The canvas as a figure: the project and the R7 mark in the middle, up to eight agents round it, joined by hairlines. A list on a rail when the column is under 560px. **Live**: `<OrbitDiagram>`. | For posts about agents at work. Real agents and tasks only. |
+| **Stat dial** | One number inside the brand ring, like the R7 inside the logo: the far half of the ring behind it, the near half and the dot in front. **Live**: `<StatDial>`. | At most one a section, for a number the section hangs on. The dial is decoration: the caption says the number in words. |
 
-The pull quote gets the small orbit as its mark instead of a quotation glyph.
+The pull quote gets the small orbit as its mark instead of a quotation glyph (prototype only; the live pull quote keeps its hairlines).
+
+All five are article components and editor blocks: `docs/ARTICLE_COMPONENTS.md`. Their markup is `src/lib/article-brand.ts`, shared by the components and the editor's preview. The first post to use them is "So you've got an AI that writes code. Cool. What if you had ten?" (2026-10-10): the Lumen canvas as a diagram, the agents' own cards beside the sections that describe them, the 17 seconds and the 18 commits as dials, and the ring round "mission control". Every agent, task and report in it is copied from the video's frame of the canvas (`public/media/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/poster.png`).
 
 Accessibility: every ring, line and dot is `aria-hidden`; the words stay plain text. With reduced motion the ring is simply there. In forced colours the lines and dots take `CanvasText`. The diagram is a `figure` with a real list of agents; the divider is `role="separator"`. Browsers without scroll-driven animations (Firefox today) draw the ring at once.
 
@@ -282,10 +284,12 @@ For the words: the **divider, stat dial and agent card** first (they are blocks;
 
 This replaces the task list in section 7; the "What changes" table there still applies to the picture treatments.
 
+Revised again after the author's pick (2026-10-10): the treatment goes on cards and the home page only, so task 3 is dropped, and task 4 is done (the article components; section blocks for page layouts are still to come).
+
 1. **The picture family on cards.** `src/lib/orbit.ts` (geometry, the Auto rule, the neighbour rule; unit-tested), `OrbitDefs.astro`, `BaseLayout.astro`, `CardMedia.astro` (style and corner per card), `AppCard.astro`, `VlogCard.astro`, `MediaPlaceholder.astro`, `post-cards.ts` (the looks for a list), `site.css`; the tokens in `tokens.css`, `tokens.json`, `DESIGN_SYSTEM.md`.
 2. **The Picture fields in the editor.** `content.config.ts` (the `picture` object), `src/lib/front-matter.ts` (blank fields dropped), `src/admin/config.ts`, `post-preview.ts` and `preview.css` (card and share image in the preview), `docs/CONTENT_MODEL.md`.
-3. **Hero and share images** that follow the post's look: `ArticleHero.astro`, `src/pages/og/[...slug].png.ts` + `src/lib/og-image.ts` (sharp; no title in phase 1, see section 7), `ArticlePage`, `VlogPage`, `ProjectPage`, `seo.ts`, `docs/SEO_AND_SHARING.md`.
-4. **The brand in the words.** Section blocks and MDX components for the agent card, orbit diagram and stat dial (`src/lib/sections/definitions.ts`, `src/components/sections/`, `src/components/article/`, `src/admin/blocks.ts`, `docs/SECTIONS.md`, `docs/ARTICLE_COMPONENTS.md`); the divider; the `==words==` remark plugin in `src/lib/markdown/` with its unit test.
+3. ~~**Hero and share images** that follow the post's look~~ (dropped: heroes and share images keep the plain picture): `ArticleHero.astro`, `src/pages/og/[...slug].png.ts` + `src/lib/og-image.ts` (sharp; no title in phase 1, see section 7), `ArticlePage`, `VlogPage`, `ProjectPage`, `seo.ts`, `docs/SEO_AND_SHARING.md`.
+4. **The brand in the words.** Done as article components (2026-10-10). Still open: section blocks wrapping them, and the `==words==` syntax for headings. Section blocks and MDX components for the agent card, orbit diagram and stat dial (`src/lib/sections/definitions.ts`, `src/components/sections/`, `src/components/article/`, `src/admin/blocks.ts`, `docs/SECTIONS.md`, `docs/ARTICLE_COMPONENTS.md`); the divider; the `==words==` remark plugin in `src/lib/markdown/` with its unit test.
 5. **Agent cards for agents' posts**, if the author wants them: `PostCard.astro` (a switch on the author's kind), a new `AgentPostCard.astro`, `site.css`.
 
 One pull request each. 1 comes before 2 and 3; 4 and 5 stand alone.

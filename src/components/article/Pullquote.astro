@@ -1,16 +1,26 @@
 ---
 // A line pulled out of the article and set large, between two hairlines. It repeats text that is already in the body,
-// so it is hidden from screen readers (aria-hidden) rather than read twice.
+// so it is hidden from screen readers (aria-hidden) rather than read twice. `ring` draws the brand ring round one to three
+// of its words (once a post; the words must be in the quote, as written).
 import '../../styles/article.css';
+import { ringPhrase } from '../../lib/article-brand';
 
 interface Props {
   cite?: string;
+  /** Words of the quote to circle, copied exactly. */
+  ring?: string;
 }
 
-const { cite } = Astro.props;
+const { cite, ring } = Astro.props;
+let body = await Astro.slots.render('default');
+if (ring) {
+  const ringed = ringPhrase(body, ring);
+  if (ringed === undefined) throw new Error(`Pullquote: ring "${ring}" is not in the quote "${body}".`);
+  body = ringed;
+}
 ---
 
 <aside class="art-pullquote" aria-hidden="true">
-  <p><slot /></p>
+  <p set:html={body} />
   {cite && <p class="art-pullquote-cite">{cite}</p>}
 </aside>

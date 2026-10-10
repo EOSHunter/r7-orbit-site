@@ -9,52 +9,14 @@ import { getPosts } from '../../../lib/content-queries';
 import { SIZES, publicSrcset } from '../../../lib/media-srcset';
 import { variantPath } from '../../../lib/media-rules.mjs';
 import { toCard } from '../../../lib/post-cards';
+import { orbit, type Orbit } from '../../../lib/orbit';
 import { isoDate, plainTitle, shortDate, titleParts } from '../../../lib/text';
 
 // ------------------------------------------------------------------------------------------------------------------ Geometry
-// The brand ring is the logo's: an ellipse 2.94 times as wide as it is tall, tilted -24 degrees (src/scripts/orbit.js, RING).
-// Every overlay draws in a 320 x 180 box (a 16:9 card at 1x). The dot is a zero-length dash with round caps on the ring path
-// (pathLength 100), so moving it is a change of stroke-dashoffset: it slides along the exact curve, with CSS only.
-interface Ellipse {
-  cx: number;
-  cy: number;
-  rx: number;
-}
-const RATIO = 2.94;
-const TILT = -24;
-
-export function orbit(e: Ellipse) {
-  const ry = e.rx / RATIO;
-  const r = (TILT * Math.PI) / 180;
-  const point = (deg: number): [number, number] => {
-    const t = (deg * Math.PI) / 180;
-    const x = e.rx * Math.cos(t);
-    const y = ry * Math.sin(t);
-    return [e.cx + x * Math.cos(r) - y * Math.sin(r), e.cy + x * Math.sin(r) + y * Math.cos(r)];
-  };
-  const xy = (deg: number) => point(deg).map((n) => n.toFixed(2)).join(' ');
-  const arc = `${e.rx} ${ry.toFixed(2)} ${TILT} 0 1`;
-  // Arc length from angle 0, sampled every degree, so a position on the ring can be given as an angle.
-  const lengths = [0];
-  for (let deg = 1; deg <= 360; deg++) {
-    const [ax, ay] = point(deg - 1);
-    const [bx, by] = point(deg);
-    lengths.push(lengths[deg - 1] + Math.hypot(bx - ax, by - ay));
-  }
-  return {
-    /** The whole ring from angle 0, clockwise on screen. */
-    d: `M${xy(0)}A${arc} ${xy(180)}A${arc} ${xy(0)}Z`,
-    /** The far half (180 to 360 degrees: the upper arc), drawn behind what the ring circles. */
-    back: `M${xy(180)}A${arc} ${xy(0)}`,
-    /** The near half (0 to 180 degrees: the lower arc), drawn in front of it. */
-    front: `M${xy(0)}A${arc} ${xy(180)}`,
-    /** Where an angle falls along the path, out of 100. */
-    at: (deg: number) => +((lengths[Math.round(((deg % 360) + 360) % 360)] / lengths[360]) * 100).toFixed(2),
-    /** The point at an angle, rounded for markup. */
-    point: (deg: number) => point(deg).map((n) => +n.toFixed(2)) as [number, number],
-  };
-}
-type Orbit = ReturnType<typeof orbit>;
+// The brand ring is the logo's (src/lib/orbit.ts). Every overlay draws in a 320 x 180 box (a 16:9 card at 1x). The dot is a
+// zero-length dash with round caps on the ring path (pathLength 100), so moving it is a change of stroke-dashoffset: it slides
+// along the exact curve, with CSS only.
+export { orbit };
 
 // A, Transit: a big ring whose left tip curls inside the bottom-right of the frame; the rest of it is outside.
 export const transit = orbit({ cx: 372, cy: 80, rx: 190 });

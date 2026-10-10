@@ -1,0 +1,22 @@
+---
+// The R7 Orbit canvas as a figure: the project in the middle with the R7 mark, up to eight agents round it, joined by hairlines.
+// A list on a rail when the column is narrow. Real agents and tasks only (docs/ARTICLE_COMPONENTS.md). Markup in
+// src/lib/article-brand.ts, shared with the editor's preview.
+import '../../styles/article.css';
+import { orbitDiagramHtml, orbitDiagramProblems, type OrbitAgent } from '../../lib/article-brand';
+
+interface Props {
+  /** The project in the middle. */
+  hub: string;
+  /** The line under it, e.g. "main · 9 agents". */
+  meta?: string;
+  agents: OrbitAgent[];
+  caption?: string;
+}
+
+const { hub, meta, agents, caption } = Astro.props;
+const problems = orbitDiagramProblems(hub, agents);
+if (problems.length) throw new Error(`OrbitDiagram: ${problems.join(' ')}`);
+---
+
+<Fragment set:html={orbitDiagramHtml({ hub, meta, agents, caption })} />

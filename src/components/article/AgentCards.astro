@@ -1,0 +1,18 @@
+---
+// One to three agent cards from the R7 Orbit canvas, side by side: status mark, task, agent, tool, model, state and what the
+// agent reported. Copy what the app showed; never write a report for an agent (docs/ARTICLE_COMPONENTS.md). Markup in
+// src/lib/article-brand.ts, shared with the editor's preview.
+import '../../styles/article.css';
+import { agentCardsHtml, agentCardsProblems, type AgentCardData } from '../../lib/article-brand';
+
+interface Props {
+  cards: AgentCardData[];
+  caption?: string;
+}
+
+const { cards, caption } = Astro.props;
+const problems = agentCardsProblems(cards);
+if (problems.length) throw new Error(`AgentCards: ${problems.join(' ')}`);
+---
+
+<Fragment set:html={agentCardsHtml({ cards, caption })} />
