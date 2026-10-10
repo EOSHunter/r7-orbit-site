@@ -44,6 +44,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 | License for written content | CC BY 4.0 (people can share with credit), or "All rights reserved" | |
 | License for code in posts and repos | MIT | |
 | Image sources | The author's own screenshots, diagrams and captures. No stock photography. Generated art only if the author approves each image | |
+| Image style (2026-10-10: proposed, not decided) | Three directions for a branded treatment of every article picture, prototyped as CSS/SVG overlays at `/styleguide/imagery/`: Transit (an orbit arc and dot across the corner; recommended), Eclipse (the picture as a planet inside the ring), Dial (brass duotone with etched rings). Brief, rules and rollout plan: `docs/IMAGE_STYLE.md`. Nothing live has changed | |
 | Sponsorship / affiliate links | None at launch; if ever, label them clearly | |
 | Privacy policy page | Needed as soon as there is a newsletter form or analytics; short and plain | |
 | Cookie banner | Not needed if there are no tracking cookies. Don't add scripts that would require one | |

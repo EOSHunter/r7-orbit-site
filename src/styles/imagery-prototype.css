@@ -1,0 +1,231 @@
+/*
+  Article imagery: the prototype of three directions (docs/IMAGE_STYLE.md). Imported only by src/pages/styleguide/imagery/,
+  so nothing here reaches the live site. Tokens only: every colour is a token, every alpha is color-mix() over a token.
+
+  How the overlays work
+    .ix-media      the picture frame (a .card-media on cards). --ix-at / --ix-zoom: the subject and how far to crop in.
+    .ix-orbit      an SVG over the frame, viewBox 320 x 180 (a card at 1x). It draws the page's ring paths with <use>.
+    .ix-dot        a zero-length dash with round caps on the ring (pathLength 100): its stroke-dashoffset is its place on the
+                   ring, so a change of --ix-pos slides it along the curve. --ix-from / --ix-to / --ix-gap come from the page.
+    --ix-dot       the dot's diameter in viewBox units (it scales with the frame); --ix-ring the ring's stroke in px (it does not).
+*/
+
+/* ---------------------------------------------------------------------------------------------------------------- Page */
+.ix-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.ix-toc { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: var(--s-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+.ix-toc a {
+  display: grid; gap: var(--s-1); align-content: start; height: 100%; padding: var(--s-4) var(--s-5);
+  background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); color: var(--text);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.ix-toc a:hover { border-color: var(--line-strong); background: var(--surface-2); color: var(--text); }
+.ix-toc-label { font: var(--fs-2xs)/1.4 var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--brass); }
+.ix-toc-name { font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); }
+.ix-toc-idea { font-size: var(--fs-sm); line-height: var(--lh-ui); color: var(--text-2); }
+
+.ix-head { display: grid; gap: var(--s-3); max-width: var(--w-prose); }
+.ix-head > p { margin: 0; }
+.ix-h {
+  margin: var(--s-7) 0 var(--s-4); padding-top: var(--s-4); border-top: var(--bw) solid var(--line);
+  font: var(--fw-semibold) var(--fs-sm)/var(--lh-ui) var(--font-ui); letter-spacing: 0; color: var(--text-2);
+}
+.ix-pair, .ix-states { display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.ix-pair { max-width: 52rem; }
+.ix-figure { margin: 0; display: grid; grid-template-rows: auto 1fr; gap: var(--s-2); }
+.ix-thumbs { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s-4); }
+.ix-micros { margin-top: var(--s-4); }
+.ix-thumb { width: min(100%, 320px); border: var(--bw) solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.ix-thumb.ix-micro { width: 160px; border-radius: var(--r-sm); }
+.ix-thumb > .card-media { border-bottom: 0; }
+
+/* The two demo states, drawn without the pointer: the live card hover (components.css) and the focus ring */
+.ix .card.ix-state-hover { border-color: var(--line-strong); background: var(--surface-2); box-shadow: var(--shadow-raise); transform: translateY(-2px); }
+.ix .card.ix-state-focus { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+/* --------------------------------------------------------------------------------------------------- Shared overlay */
+.ix-media { position: relative; overflow: hidden; isolation: isolate; background: var(--plate-gradient); --ix-pos: var(--ix-from); --ix-dot: 7; --ix-ring: var(--bw); }
+.ix-media .ix-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  object-position: var(--ix-at, 50% 50%); transform: scale(var(--ix-zoom, 1)); transform-origin: var(--ix-at, 50% 50%);
+}
+.ix-media[data-ctx='pinned'] { --ix-dot: 5; --ix-ring: calc(var(--bw) * 1.25); }
+.ix-media[data-ctx='thumb'] { --ix-dot: 8; }
+.ix-media[data-ctx='micro'] { --ix-dot: 13; }
+.ix-media[data-ctx='hero'] { --ix-dot: 5; --ix-ring: calc(var(--bw) * 1.5); }
+.ix-media[data-ctx='og'] { --ix-dot: 5; --ix-ring: calc(var(--bw) * 2); }
+
+.ix-orbit { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.ix-orbit use { fill: none; }
+.ix-ring { stroke: var(--brass); stroke-width: var(--ix-ring); opacity: 0.7; transition: opacity var(--dur) var(--ease); }
+.ix-dot, .ix-tail, .ix-glow {
+  stroke-linecap: round; stroke-dasharray: 0 100; stroke-dashoffset: calc(-1 * var(--ix-pos));
+  transition: stroke-dashoffset var(--dur-slow) var(--ease);
+}
+.ix-dot { stroke: var(--brass-highlight); stroke-width: var(--ix-dot); }
+.ix-tail { stroke: var(--brass); stroke-width: calc(var(--ix-dot) * (1 - var(--k) * 0.22)); opacity: calc(0.8 - var(--k) * 0.2); stroke-dashoffset: calc(-1 * (var(--ix-pos) - var(--k) * var(--ix-gap))); }
+.ix-glow { stroke: var(--brass-bright); stroke-width: calc(var(--ix-dot) * 3.5); opacity: 0.5; }
+
+/* Hover and keyboard focus: the dot advances along the ring and the ring brightens. Someone who asked for less motion gets only the brightening. */
+.ix a.card:is(:hover, :focus-visible) .ix-media, .ix .ix-state-hover .ix-media, .ix .ix-state-focus .ix-media { --ix-pos: var(--ix-to); }
+.ix a.card:is(:hover, :focus-visible) .ix-ring, .ix .ix-state-hover .ix-ring, .ix .ix-state-focus .ix-ring { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ix a.card:is(:hover, :focus-visible) .ix-media, .ix .ix-state-hover .ix-media, .ix .ix-state-focus .ix-media { --ix-pos: var(--ix-from); }
+}
+
+/* No picture: the plate, the dot grid fading out, and the kind's icon in a hairline ring (the logo's place) */
+.ix-ph { position: absolute; inset: 0; display: grid; place-items: center; background: var(--plate-gradient); }
+.ix-ph::before {
+  content: ''; position: absolute; inset: 0; background-image: var(--grid-dot); background-size: var(--grid-size) var(--grid-size);
+  mask-image: radial-gradient(closest-side, var(--bg), transparent);
+}
+.ix-ph-icon { position: relative; display: grid; place-items: center; width: 18%; aspect-ratio: 1; border: var(--bw) solid var(--line-brass); border-radius: var(--r-full); color: var(--brass); }
+.ix-ph-icon .ico { width: 42%; height: 42%; }
+
+/* The kind as a seal: its icon in a small ring with the dot on it (Eclipse and Dial). Decorative: the card body says the kind. */
+.ix-seal {
+  position: absolute; left: var(--s-3); top: var(--s-3); z-index: 2; display: grid; place-items: center; width: var(--s-6); height: var(--s-6);
+  border: var(--bw) solid var(--line-brass); border-radius: var(--r-full); background: var(--scrim); color: var(--brass-bright); backdrop-filter: blur(6px);
+}
+.ix-seal::after {
+  content: ''; position: absolute; top: calc(var(--s-1) / 2); right: calc(var(--s-1) / 2); width: var(--s-1); height: var(--s-1);
+  border-radius: var(--r-full); background: var(--brass-highlight); box-shadow: var(--glow-dot);
+}
+.ix .play, .ix .duration { z-index: 3; }
+
+/* ------------------------------------------------------------------------------------------------------- A: Transit */
+/* A veil that darkens the corner the arc crosses (so a 1px brass line reads on any picture) and settles the edges into the card */
+.ix-transit .ix-veil {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(70% 120% at 100% 75%, color-mix(in srgb, var(--bg) 70%, transparent) 0%, transparent 75%),
+    radial-gradient(140% 120% at 30% 20%, transparent 55%, color-mix(in srgb, var(--bg) 45%, transparent) 100%);
+}
+.ix-transit .ix-ring { stroke: var(--brass-bright); }
+.ix-transit .duration { right: auto; left: var(--s-3); }   /* the bottom-right corner belongs to the orbit */
+.ix-transit .ix-empty .ix-veil { background: radial-gradient(45% 70% at 66% 88%, var(--brass-wash-3), transparent 70%); }
+
+/* --------------------------------------------------------------------------------------------------- B: Eclipse */
+/* A blurred copy of the picture (the 160px file) as a coloured plate; the porthole and the ring on a 16:9 stage */
+.ix-eclipse .ix-media .ix-backdrop {
+  position: absolute; inset: -10%; width: 120%; height: 120%; object-fit: cover; filter: blur(14px) saturate(0.8) brightness(0.42);
+}
+.ix-eclipse .ix-plate {
+  position: absolute; inset: 0;
+  background: radial-gradient(closest-side, transparent 40%, color-mix(in srgb, var(--bg) 70%, transparent)), var(--grid-dot);
+  background-size: auto, var(--grid-size) var(--grid-size);
+}
+.ix-eclipse .ix-stage { position: absolute; inset: 0; container-type: size; }
+/* The porthole is 130 of the 180 units high, on the same scale as the SVG (meet): min() of the two axes */
+.ix-eclipse .ix-porthole {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: min(40.625cqw, 72.2cqh); aspect-ratio: 1;
+  border-radius: var(--r-full); overflow: hidden; background: var(--plate-gradient);
+  box-shadow: 0 0 0 var(--bw) var(--line-strong), var(--shadow-float);
+}
+.ix-eclipse .ix-ring-back { stroke: var(--brass-dim); opacity: 0.55; }
+.ix-eclipse .ix-ring { stroke: var(--brass); }
+.ix-eclipse .ix-porthole .ix-ph-icon { width: 34%; }
+.ix-eclipse .ix-media[data-ctx='micro'] .ix-ph-icon { border: 0; }
+
+/* ------------------------------------------------------------------------------------------------------- C: Dial */
+/* The house grade: grey, multiplied by brass (whites turn brass), then lightened to obsidian (blacks turn --bg). Colour returns on hover. */
+.ix-dial .ix-media .ix-img { filter: grayscale(1) contrast(1.2) brightness(1.05); transition: filter var(--dur-slow) var(--ease); }
+.ix-dial .ix-tone {
+  /* A gradient, not a background colour: contrast checkers cannot see blend modes, and a flat colour reads to them as the text's ground */
+  position: absolute; inset: 0; background-image: linear-gradient(var(--brass-bright), var(--brass-bright)); mix-blend-mode: multiply;
+  transition: opacity var(--dur-slow) var(--ease);
+}
+.ix-dial .ix-tone::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(130% 110% at 50% 50%, transparent 45%, color-mix(in srgb, var(--bg) 70%, transparent) 100%);
+}
+.ix-dial .ix-empty .ix-tone { display: none; }
+.ix-dial .ix-ring-0 { opacity: 0.6; }
+.ix-dial .ix-ring-1 { opacity: 0.45; }
+.ix-dial .ix-ring-2 { opacity: 0.28; }
+.ix-dial .ix-glow { stroke-width: calc(var(--ix-dot) * 5); opacity: 0.6; }
+.ix-dial a.card:is(:hover, :focus-visible) .ix-img, .ix-dial .ix-state-hover .ix-img, .ix-dial .ix-state-focus .ix-img { filter: none; }
+.ix-dial a.card:is(:hover, :focus-visible) .ix-tone, .ix-dial .ix-state-hover .ix-tone, .ix-dial .ix-state-focus .ix-tone { opacity: 0; }
+.ix-dial a.card:is(:hover, :focus-visible) .ix-ring-1, .ix-dial .ix-state-hover .ix-ring-1, .ix-dial .ix-state-focus .ix-ring-1 { opacity: 0.8; }
+
+/* ------------------------------------------------------------------------------------------------------- Hero */
+.ix-hero { position: relative; isolation: isolate; display: grid; align-items: end; min-height: 36rem; overflow: hidden; border-block: var(--bw) solid var(--line); }
+.ix-hero > .ix-media { position: absolute; inset: 0; z-index: -1; }
+.ix-hero-body { display: grid; gap: var(--s-4); justify-items: start; padding-block: var(--s-9) var(--s-7); }
+.ix-hero-title { margin: 0; max-width: 16ch; font: var(--fw-medium) var(--fs-4xl)/var(--lh-tight) var(--font-display); letter-spacing: var(--tracking-tight); color: var(--text); }
+.ix-hero-title em, .ix-og-title em { font-style: italic; color: var(--brass-bright); }
+.ix-hero-lead { margin: 0; max-width: 44ch; font-size: var(--fs-lg); line-height: var(--lh-ui); color: var(--text-2); }
+.ix-hero-meta { margin: 0; font-size: var(--fs-xs); color: var(--text-3); }
+
+/* Text sits on the left: the veil is near solid there and opens up to the right, where the picture and the brand shape are.
+   On a phone the text spans the frame, so the veil is near solid wherever text can be. */
+.ix-media[data-ctx='hero'] .ix-veil, .ix-dial .ix-media[data-ctx='hero'] .ix-tone::after, .ix-media[data-ctx='og'] .ix-veil, .ix-dial .ix-media[data-ctx='og'] .ix-tone::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--bg) 94%, transparent) 30%, color-mix(in srgb, var(--bg) 55%, transparent) 75%, color-mix(in srgb, var(--bg) 30%, transparent));
+}
+@media (min-width: 900px) {
+  .ix-media[data-ctx='hero'] .ix-veil, .ix-dial .ix-media[data-ctx='hero'] .ix-tone::after {
+    background: linear-gradient(90deg, var(--bg) 0%, var(--bg) 30%, color-mix(in srgb, var(--bg) 88%, transparent) 44%, color-mix(in srgb, var(--bg) 25%, transparent) 72%, transparent);
+  }
+  /* The picture fills the right two thirds, so its subject sits beside the words, not under them */
+  .ix-media[data-ctx='hero'] > :is(.ix-img, .ix-ph) { left: auto; width: 68%; transform: scale(1.15); }
+  .ix-media[data-ctx='hero'] > .ix-ph { background: none; transform: none; }
+  .ix-transit .ix-media[data-ctx='hero'] .ix-orbit { inset: auto 0 0 auto; width: min(100%, 64rem); height: auto; aspect-ratio: 16 / 9; }
+  .ix-eclipse .ix-media[data-ctx='hero'] .ix-stage { left: 46%; }
+  /* The rings stay in the right half: they never cross the text column */
+  .ix-dial .ix-media[data-ctx='hero'] .ix-orbit { inset: 50% 0 auto auto; translate: 0 -50%; width: 52%; height: auto; aspect-ratio: 16 / 9; }
+}
+/* Dial's tone is a separate layer in the hero: the veil goes on its ::after, which must not multiply */
+.ix-dial .ix-media:is([data-ctx='hero'], [data-ctx='og']) .ix-tone::after { mix-blend-mode: normal; }
+.ix-eclipse .ix-media[data-ctx='hero'] .ix-plate { background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 80%, transparent), transparent 70%), var(--grid-dot); background-size: auto, var(--grid-size) var(--grid-size); }
+@media (max-width: 899px) {
+  /* A phone: the picture and its ring take a 16:9 band at the top; the words sit on the solid ground below it */
+  .ix-media[data-ctx='hero'] > .ix-img, .ix-transit .ix-media[data-ctx='hero'] .ix-orbit, .ix-dial .ix-media[data-ctx='hero'] .ix-orbit { inset: 0 0 auto; height: auto; aspect-ratio: 16 / 9; }
+  .ix-media[data-ctx='hero'] .ix-veil, .ix-dial .ix-media[data-ctx='hero'] .ix-tone::after { background: linear-gradient(to bottom, transparent 20%, var(--bg) 42%); }
+  .ix-dial .ix-media[data-ctx='hero'] .ix-ring-2 { display: none; }
+  .ix-eclipse .ix-media[data-ctx='hero'] .ix-stage { inset: 0 0 auto; height: auto; aspect-ratio: 16 / 9; }
+  .ix-eclipse .ix-media[data-ctx='hero'] .ix-plate { background: linear-gradient(to top, var(--bg) 45%, transparent 75%), var(--grid-dot); }
+  .ix-hero { min-height: 0; }
+  .ix-hero-body { padding-top: calc(56.25vw + var(--s-5)); }   /* below the 16:9 band (the frame is the full width) */
+}
+
+/* ---------------------------------------------------------------------------------------------- Share image */
+/* A fixed 1200 x 630 canvas: --u is one canvas pixel at whatever width it is drawn, so the preview is the image, scaled. */
+.ix-og-list { display: grid; gap: var(--s-5); max-width: 1200px; container-type: inline-size; }
+.ix-og { --u: calc(100cqw / 1200); position: relative; aspect-ratio: 1200 / 630; overflow: hidden; border: var(--bw) solid var(--line); border-radius: var(--r-md); }
+.ix-og > .ix-media { position: absolute; inset: 0; }
+.ix-og-text { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: calc(var(--u) * 20); max-width: calc(var(--u) * 760); padding: calc(var(--u) * 64) calc(var(--u) * 72); }
+.ix-og-text > p { margin: 0; }
+.ix-og-brand { position: absolute; top: calc(var(--u) * 60); left: calc(var(--u) * 72); display: flex; align-items: center; gap: calc(var(--u) * 16); font: var(--fw-medium) calc(var(--u) * 17)/1 var(--font-ui); letter-spacing: var(--tracking-wordmark); text-transform: uppercase; color: var(--text-2); }
+.ix-og-brand img { width: calc(var(--u) * 34); height: auto; }
+.ix-og-kind { display: inline-flex; align-items: center; gap: calc(var(--u) * 12); font: calc(var(--u) * 16)/1 var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--brass); }
+.ix-og-kind .ico { width: calc(var(--u) * 22); height: calc(var(--u) * 22); }
+.ix-og-title {
+  font: var(--fw-medium) calc(var(--u) * 62)/1.08 var(--font-display); letter-spacing: var(--tracking-tight); color: var(--text); text-wrap: balance;
+  display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ix-og-meta { font: calc(var(--u) * 17)/1 var(--font-mono); color: var(--text-3); }
+.ix-og .ix-seal, .ix-hero .ix-seal { display: none; }
+/* Eclipse: the planet on the right, the words on the plate */
+.ix-eclipse .ix-og .ix-stage { left: 48%; }
+.ix-eclipse .ix-og .ix-plate { background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 85%, transparent), transparent 75%), var(--grid-dot); background-size: auto, var(--grid-size) var(--grid-size); }
+.ix-media[data-ctx='og'] .ix-veil, .ix-dial .ix-media[data-ctx='og'] .ix-tone::after {
+  background: linear-gradient(90deg, var(--bg) 0%, var(--bg) 30%, color-mix(in srgb, var(--bg) 88%, transparent) 48%, color-mix(in srgb, var(--bg) 20%, transparent) 80%, transparent);
+}
+.ix-media[data-ctx='og'] > :is(.ix-img, .ix-ph) { left: auto; width: 68%; }
+.ix-media[data-ctx='og'] > .ix-ph { background: none; }
+/* In wide frames Dial keeps its two inner rings: the outer one would cross the words */
+.ix-dial .ix-media:is([data-ctx='hero'], [data-ctx='og']) .ix-ring-2 { display: none; }
+.ix-transit .ix-media[data-ctx='og'] .ix-orbit { inset: auto 0 0 auto; width: 70%; height: auto; aspect-ratio: 16 / 9; }
+.ix-dial .ix-media[data-ctx='og'] .ix-orbit { inset: 50% 0 auto auto; translate: 0 -50%; width: 68%; height: auto; aspect-ratio: 16 / 9; }
+
+/* ---------------------------------------------------------------------------------------- Forced colours, print */
+@media (forced-colors: active) {
+  .ix-orbit, .ix-tone, .ix-plate, .ix-backdrop, .ix-seal, .ix-ph::before { display: none; }
+  .ix-media .ix-img { filter: none; }
+  .ix-veil { background: Canvas; opacity: 0.85; }
+  .ix-media:is([data-ctx='card'], [data-ctx='pinned'], [data-ctx='thumb'], [data-ctx='micro']) .ix-veil { display: none; }
+  .ix-ph-icon { border-color: CanvasText; color: CanvasText; }
+}
+@media print {
+  .ix-orbit, .ix-veil, .ix-tone, .ix-plate, .ix-backdrop, .ix-seal { display: none; }
+  .ix-media .ix-img { filter: none; }
+}
