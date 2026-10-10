@@ -1,0 +1,27 @@
+---
+// /waitlist/remove/: where a reader takes their address off the waitlist (the form posts to /api/waitlist-remove; the answer
+// never says whether the address was there). A dynamic route only so that it is not built at all while the waitlist is off:
+// then /waitlist/remove/ is the site's 404 page, like any address that does not exist. noindex, out of the sitemap (dynamic
+// routes are not listed, and src/lib/sitemap.ts excludes /waitlist/) and out of search (pagefind.yml indexes posts only).
+// Its words are Site settings > Waitlist.
+import WaitlistForm from '../../components/WaitlistForm.astro';
+import { site } from '../../data/site';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { titleParts } from '../../lib/text';
+import { waitlist } from '../../lib/waitlist-queries';
+
+export function getStaticPaths() {
+  return waitlist.show ? [{ params: { page: 'remove' } }] : [];
+}
+
+const heading = site.waitlist.removeHeading;
+---
+
+<BaseLayout title={heading} noindex>
+  <div class="container wide waitlist-page" style="padding-bottom: var(--s-8)">
+    <header class="page-head">
+      <h1>{titleParts(heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+    </header>
+    <WaitlistForm variant="remove" />
+  </div>
+</BaseLayout>

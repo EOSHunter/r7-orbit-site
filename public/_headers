@@ -21,8 +21,11 @@
 # preview frame). Adding a game or an app means adding its host here, space-separated (explicit, no wildcard), and if one moves,
 # change it to match its playUrl: tests/headers.spec.js fails when an embedded playUrl in src/content/projects/ is not covered by
 # this line. https://housepainter.r7orbit.io is House Painter's, listed ahead of its project page.
+# https://challenges.cloudflare.com is Cloudflare Turnstile, the spam check of the waitlist form a project page may end with
+# (docs/PAGES.md "Waitlist"): its widget is a frame too. Nothing is requested from it unless the waitlist is on and the reader
+# comes to the form.
 /projects/*
-  Content-Security-Policy: frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io
+  Content-Security-Policy: frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io https://challenges.cloudflare.com
 
 # Built assets have a content hash in the file name, so they never change under the same URL.
 /_astro/*

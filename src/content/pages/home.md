@@ -6,6 +6,7 @@ lead: "News, builds and the things in between: videos, projects, code and
 buttons:
   - label: Start with the latest
     url: "#latest"
+waitlist: true
 description: "{site.description}"
 sections:
   - type: pinned

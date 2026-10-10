@@ -1,0 +1,65 @@
+---
+// The waitlist form for R7 Orbit (docs/PAGES.md "Waitlist"; the rules in src/lib/waitlist.ts, the server in src/lib/waitlist-api.ts).
+//   hero    an email box and a button on one row (it wraps on phones), under the home page's headline
+//   band    a ruled band with the heading and sentence from the settings, at the end of a post that asks for it
+//   remove  the form of /waitlist/remove/, which takes an address off the list
+// Draws nothing unless this build shows the waitlist (`waitlist` from waitlist-queries.ts: on in Site settings with a site key,
+// `astro dev`, or a WAITLIST_PREVIEW=1 build), so while it is off a page carries none of its markup, CSS or script. Every word
+// comes from Site settings > Waitlist.
+//
+// Turnstile needs JavaScript, so without it the reader sees the noscript sentence instead of the form. With it, nothing is
+// requested from Cloudflare until the reader focuses, touches or points at the form, or scrolls (src/scripts/waitlist.js).
+import WaitlistFields from './waitlist/WaitlistFields.astro';
+import { site } from '../data/site';
+import { waitlist as state } from '../lib/waitlist-queries';
+import { API_JOIN, API_REMOVE, type WaitlistSource } from '../lib/waitlist';
+import { titleParts } from '../lib/text';
+import css from '../styles/waitlist.css?raw';
+
+interface Props {
+  variant: 'hero' | 'band' | 'remove';
+  /** Where a signup came from (stored with the address). Not used by `remove`. */
+  source?: WaitlistSource;
+}
+
+const { variant, source = 'other' } = Astro.props;
+const words = site.waitlist;
+const id = `waitlist-${variant}`;
+const remove = variant === 'remove';
+const fields = state.show && {
+  id,
+  variant,
+  siteKey: state.siteKey,
+  endpoint: remove ? API_REMOVE : API_JOIN,
+  action: remove ? 'waitlist-remove' : 'waitlist',
+  buttonLabel: remove ? words.removeButtonLabel : words.buttonLabel,
+  successMessage: remove ? words.removeSuccessMessage : words.successMessage,
+  source: remove ? undefined : source,
+  removeLink: !remove,
+  devNote: state.note === 'dev',
+};
+// The stylesheet without its comments and line breaks: it is printed in the page, next to the form, and nowhere else.
+const style = css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim();
+---
+
+{
+  fields && (
+    <>
+      <style is:inline set:html={style} />
+      {variant === 'band' ? (
+        <section class="section ruled waitlist-band" aria-labelledby={`${id}-h`}>
+          <div class="container">
+            <WaitlistFields {...fields}>
+              <h2 class="section-title" id={`${id}-h`}>
+                {titleParts(words.heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}
+              </h2>
+              <p class="waitlist-text">{words.text}</p>
+            </WaitlistFields>
+          </div>
+        </section>
+      ) : (
+        <WaitlistFields {...fields} />
+      )}
+    </>
+  )
+}

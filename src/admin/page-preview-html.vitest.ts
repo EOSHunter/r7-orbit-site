@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { sitePage } from '../lib/site-pages';
-import { heroHtml, listingStandInHtml, pageHeadHtml, pagePreviewProblems } from './page-preview-html';
+import { escapeHtml } from './preview-html';
+import { HERO_WAITLIST_NOTE, heroHtml, listingStandInHtml, pageHeadHtml, pagePreviewProblems } from './page-preview-html';
 
 // The previews of the home page and the listing pages: the same markup as the pages, the author's words escaped, and a stand-in
 // that says in words what the build fills in.
@@ -32,6 +33,13 @@ describe('the home page preview', () => {
     expect(heroHtml(data)).toContain('A &lt;b&gt;lead&lt;/b&gt;.');
     expect(() => heroHtml({})).not.toThrow();
     expect(heroHtml({})).not.toMatch(/undefined|\[object/);
+  });
+
+  it('says where the waitlist form goes when the hero asks for it, and when it shows', () => {
+    expect(heroHtml({ title: 'T', waitlist: true })).toContain(`<p class="admin-preview-note" data-hero-waitlist>${escapeHtml(HERO_WAITLIST_NOTE)}</p>`);
+    expect(HERO_WAITLIST_NOTE).toMatch(/Site settings > Waitlist/);
+    expect(heroHtml({ title: 'T', waitlist: false })).not.toContain('data-hero-waitlist');
+    expect(heroHtml({ title: 'T' })).not.toContain('data-hero-waitlist');
   });
 
   it('uses classes the site\'s stylesheets have', () => {

@@ -54,6 +54,8 @@ describe('the frame-src rule for a game', () => {
   it('reads the hosts public/_headers lets the site frame', () => {
     expect(frameSrcOrigins(headers)).toEqual(['https://vesper.r7orbit.io', 'https://housepainter.r7orbit.io']);
     expect(frameSrcOrigins('/*\n  X: y\n')).toEqual([]);
+    // Turnstile (the waitlist form) is framed on project pages too, but it is not a place a game can be.
+    expect(frameSrcOrigins('/projects/*\n  Content-Security-Policy: frame-src https://a.test https://challenges.cloudflare.com\n')).toEqual(['https://a.test']);
   });
 
   it('accepts an embedded game on an allowed host, and any link-mode game (it is only a button)', () => {

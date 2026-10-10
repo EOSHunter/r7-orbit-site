@@ -4,14 +4,18 @@
 // docs/SECTIONS.md): Pinned post, Latest feed, Latest posts (Projects, Repos), Apps row. The blocks query the posts when the site
 // is built.
 import Sections from '../components/Sections.astro';
+import WaitlistForm from '../components/WaitlistForm.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
 import { loadSitePage } from '../lib/site-pages-queries';
 import { jsonLdString, websiteLd } from '../lib/seo';
 import { titleParts } from '../lib/text';
+import { waitlist } from '../lib/waitlist-queries';
 
 const home = await loadSitePage('home');
 const { title, description, sections, buttons = [] } = home.data;
+// The waitlist form under the buttons: asked for by the page (`waitlist: true`) and shown only while the waitlist is on.
+const heroWaitlist = home.data.waitlist === true && waitlist.show;
 const eyebrow = home.text('eyebrow');
 const lead = home.text('lead');
 ---
@@ -34,6 +38,7 @@ const lead = home.text('lead');
               ))}
             </div>
           )}
+          {heroWaitlist && <WaitlistForm variant="hero" source="hero" />}
         </div>
         <div class="orbit" data-orbit="busy"></div>
       </div>

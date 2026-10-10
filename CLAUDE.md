@@ -22,6 +22,8 @@ astro.config.mjs              static output, trailing slashes; "site" comes from
 scripts/media.mjs             picture guard (before Astro) and dist/media shrinker + 2 MB limit (after); rules in src/lib/media-rules.mjs; see docs/IMAGES.md
 scripts/no-contact.mjs        after the build: fails if a public page (not /admin/, not /styleguide/) has a mailto: link or an email address; rule in src/lib/no-contact.mjs
 workers/cms-auth/             Cloudflare Worker: GitHub OAuth for /admin (deployed with wrangler; outside the Astro build, lint, check and tests)
+functions/api/                the waitlist's two Cloudflare Pages Functions (waitlist.ts, waitlist-remove.ts): thin wrappers over src/lib/waitlist-api.ts, the site's only server code; public/_routes.json limits Functions to /api/*
+migrations/0001_waitlist.sql  the waitlist's D1 table (applied once by the author: docs/DEPLOY_CLOUDFLARE.md section 10); scripts/wrangler.waitlist-local.toml + .dev.vars.example are for local runs only (never a root wrangler.toml)
 src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, Icon + IconSprite, MediaPlaceholder, StatusMark,
@@ -33,7 +35,8 @@ src/
                               PageBlocks (library blocks drawn in place inside a page's own frame: privacy, 404, search),
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               VlogPage, ProjectPage, RepoPage (the vlog, project and repo pages; their routes only fetch, like ArticlePage's),
-                              PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow
+                              PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow,
+                              WaitlistForm (hero, band, remove; draws nothing while the waitlist is off) + waitlist/WaitlistFields (docs/PAGES.md "Waitlist")
   admin/                      Decap CMS for /admin: settings.ts (the "Site settings" file collection over src/data/site.json), config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry);
                               post-body.ts (a post's body for the previews, written as Markdown or sections; the save check that refuses both), post-preview.ts (the preview of news, vlogs, projects and repos),
@@ -42,7 +45,7 @@ src/
   pages/                      index, authors/<slug>/ (+ page/N/), latest/, news/ blog/ vlogs/ projects/ repos/ (archive, page/N/, [slug]), apps/ (hub of playable projects: games and apps), tags/, about,
                               privacy, 404, robots.txt, sitemap-index.xml + sitemap-0.xml,
                               styleguide/ (noindex, unlinked: an iframe of styleguide/specimen/; fixtures sections/, apps/, listing/, nav/ and others for the tests; styleguide/posts/<kind>/ draws the tests' fixture posts)
-  data/site.json              the site settings: name, tagline, description, default share image, author, profile links, nav (label + href), footer links + note;
+  data/site.json              the site settings: name, tagline, description, default share image, author, profile links, nav (label + href), footer links + note, waitlist (switch, Turnstile site key, words; off by default);
                               edited in /admin as "Site settings" (admin/settings.ts) except `url`. site.ts parses it with siteSchema (lib/site-settings.ts) and every reader imports site.ts; nav.ts gives navItems + footerItems
   content/                    authors/ (hunter-newton.json, r7.json: who a post is credited to), news/ blog/ vlogs/ projects/ repos/ (the author's real posts, written through /admin; a kind may be empty and every page has an empty state; a post's body is Markdown OR a `sections` list, never both), pages/ (about.md as blocks; home.md = hero fields + rows as blocks; latest, news, blog, vlogs, projects, repos, apps, tags .md = each listing's words, empty state and blocks above/below its list; privacy.md, 404.md, search.md = the words of those pages, their frame stays in src/pages/; all edited in /admin); site.json stays in src/data/
   content.config.ts           collection schemas (strict; a bad field fails the build with a readable message)
@@ -59,19 +62,23 @@ src/
                               site-pages.ts (the home and listing pages' extra fields, which page needs which: pageProblems; unit-tested) + site-pages-queries.ts (loadSitePage),
                               seo.ts (canonical, OG fallbacks, JSON-LD builders), listing.ts (archive paging),
                               sitemap.ts, github.ts (build-time repo data with cache; offline-safe), post-cards.ts
+                              waitlist.ts (the waitlist's shared rules: sources, address check, test keys, waitlistState = when a build draws the forms; dependency free, bundled by functions/) + waitlist-api.ts (both endpoints as functions of a Request: checks, Siteverify, D1) + waitlist-queries.ts (this build's state: settings, astro dev, WAITLIST_PREVIEW; build only); unit-tested, the API against SQLite from the real migration
                               orbit.ts (the brand ring's geometry: the logo's tilted ellipse, its halves and points; unit-tested) + article-brand.ts (the markup of the article's brand pieces: AgentCards, OrbitDiagram, StatDial, the orbit Divider, the ring in a Pullquote; drawn by the components and by the editor's preview alike; unit-tested)
   styles/design-system/       tokens.css, components.css, tokens.json, DESIGN_SYSTEM.md (moved from design-system/; the source of truth for the look)
   styles/sections.css         the few rules a page of blocks needs on top of site.css and article.css (portrait on the right, full-width image, long addresses)
   styles/markdown.css         Markdown output (code theme from tokens, callouts, figures, anchors); import it where a post body is rendered
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
   scripts/                    site.js (menu, filters, copy; bundled by Astro), orbit.js (hero and 404 only),
-                              gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro)
+                              gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro),
+                              waitlist.js (the waitlist forms: loads Turnstile on first interaction, sends with fetch)
+  styles/waitlist.css         the waitlist form; printed inline by WaitlistForm only on a page that draws one
 tests/                        fixtures/posts/<kind>/ (one post per kind written as sections: read by the fixture* collections in content.config.ts, never part of the site),
                               post-sections.spec.js (those fixtures through the real post pages: blocks, chrome, contents list, reading time, JSON-LD, axe and widths, Pagefind search),
                               sections.spec.js (every block drawn on /styleguide/sections/: axe, widths, behaviour), admin-sections.spec.js (adds each block type in the real editor, GitHub mocked),
                               page-text.spec.js + page-text.js (the words of home, archives, Latest, Apps, Tags against tests/fixtures/pages/<id>.json; refresh with UPDATE_PAGE_TEXT=1),
                               site-pages.spec.js (hero anchors, row order, blocks around a list on /styleguide/listing/), admin-site-pages.spec.js (those pages in the real editor), routes.js (the fixed routes, plus the post and tag pages it finds in dist/: no slugs listed), helpers.js; Playwright specs: smoke, a11y (axe), budgets, audit (widths 320-1480,
                               head tags, JSON-LD, links, headings, print, forced colors), keyboard (focus, skip link, reduced motion), no-contact (no mailto: link or email address in any public page of dist/),
+                              waitlist (the normal build carries none of it; a WAITLIST_PREVIEW=1 build: lazy Turnstile, sending, failures, no-JS, the band per post kind, the remove page, axe),
                               admin (noindex, out of robots/sitemap), admin-images (uploading pictures through the real editor under its CSP, GitHub mocked via admin-mock.js), images (what readers get: optimised pictures, size limit), about (the rendered /about/ text against tests/fixtures/about-text.txt, JSON-LD, layout), pages (privacy, 404, search text against tests/fixtures/pages/*.txt via page-text.js, 404 status, layout), admin-pages (those three in the real editor), apps (the hub on the fixture /styleguide/apps/: 0, 1, 2, 5 apps and one type; type filter, chips, Play/Open, JSON-LD per type), admin-apps (the Type menu in the real editor), headers (reads public/_headers; the admin runs under its CSP), redirects (reads public/_redirects: /games/ to /apps/; astro preview ignores that file), theme (a stored light preference changes nothing), hero-contrast (AA over the featured image);
                               lighthouse.mjs; screenshots.mjs (writes docs/screenshots/)
 docs/screenshots/             quality-pass screenshots, named page-width.png (see its README)
@@ -102,6 +109,8 @@ npm run test:e2e  # Playwright on every route in tests/routes.js: smoke + axe + 
                   # audit (320-1480px, head tags, JSON-LD, links), keyboard, no-contact, robots/sitemap
                   # needs a build first and browsers once: npm run build && npx playwright install chromium
                   # serves dist/ itself via `npm run preview` (port 4399, or E2E_PORT=4401 if another checkout already uses it: Playwright reuses a server it finds there and would test that one's dist/); EXTRA_ROUTES="/x/,/y/" adds routes without editing the list
+WAITLIST_PREVIEW=1 npm run build   # the waitlist forms forced on with Cloudflare's TEST key, for tests/waitlist.spec.js and Lighthouse only
+                                   # (never in Cloudflare Pages: a Pages build with it stops). PowerShell: $env:WAITLIST_PREVIEW='1'; npm run build
 npm run test:lighthouse  # Lighthouse CI (mobile): all categories >= 95, LCP < 2s, CLS 0 on every route; needs a build; uses Playwright's Chromium
                          # run it alone: npm run build && npm run test:lighthouse (serves dist/ on 127.0.0.1:4398; if that port is taken,
                          # check with Get-NetTCPConnection -LocalPort 4398 and use $env:LIGHTHOUSE_PORT=4397 in PowerShell / LIGHTHOUSE_PORT=4397 in bash).
@@ -141,8 +150,8 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 
 ## Engineering rules
 
-- **Static output.** No server runtime, no database. Build-time data only (GitHub stats, README) with a cache and graceful failure: the build must pass with the network off.
-- **No third-party requests on page load.** No CDNs, no Google Fonts, no analytics script unless the author chooses one in `docs/DECISIONS.md`. Video and search load only on interaction. Fonts are self-hosted woff2.
+- **Static output.** No server runtime, no database, with one exception: the waitlist's two Pages Functions (`functions/api/`) and its D1 table, which no page needs in order to render (docs/DECISIONS.md, the waitlist). Build-time data only (GitHub stats, README) with a cache and graceful failure: the build must pass with the network off.
+- **No third-party requests on page load.** No CDNs, no Google Fonts, no analytics script unless the author chooses one in `docs/DECISIONS.md`. Video, search and the waitlist's Turnstile load only on interaction. Fonts are self-hosted woff2.
 - **Progressive enhancement.** Pages read and navigate with JavaScript off (filters degrade to links; pagination is real links).
 - **Accessibility is a requirement, not a polish step.** Semantic landmarks, one `h1`, visible focus, keyboard operable, contrast from the tokens, alt text, `lang`, labels on every control. WCAG 2.2 AA.
 - **Performance budgets:** Lighthouse mobile ≥ 95 in all categories; < 50 kB gzipped JavaScript on a typical page; < 40 kB gzipped CSS.

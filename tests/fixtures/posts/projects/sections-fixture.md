@@ -2,6 +2,7 @@
 title: A project written as *sections*
 date: 2026-10-04
 summary: Fixture for the tests, not part of the site. A playable project whose write-up is a list of blocks instead of Markdown.
+waitlist: true
 status: building
 stack:
   - Astro

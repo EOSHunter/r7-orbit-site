@@ -22,6 +22,15 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm test
       - run: npm run test:lighthouse
+      # The waitlist forms are off in Site settings, so the steps above test the site without them. Build again with them forced
+      # on (Cloudflare's test key; never for production: docs/DEPLOY_CLOUDFLARE.md section 10) and test the forms themselves.
+      - run: npm run build
+        env:
+          WAITLIST_PREVIEW: '1'
+      - run: npx playwright test tests/waitlist.spec.js
+      - run: npm run test:lighthouse
+        env:
+          LIGHTHOUSE_ROUTES: /,/waitlist/remove/,/styleguide/posts/blog/,/styleguide/posts/vlogs/
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

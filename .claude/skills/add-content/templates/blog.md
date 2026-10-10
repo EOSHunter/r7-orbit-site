@@ -12,6 +12,7 @@ draft: true                   # false only when the author says it goes live
 subtitle: "<up to 140 chars>"
 updated: <YYYY-MM-DD>
 featured: false               # only one post at a time may be true
+waitlist: false               # true: the waitlist form for R7 Orbit after the body (shows only while it is on in Site settings)
 readTime: <minutes, whole number; omit to compute>
 toc: <true|false>             # omit: contents list at 3+ h2
 series: "<series name>"

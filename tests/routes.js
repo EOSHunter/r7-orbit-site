@@ -70,6 +70,8 @@ const routes = [
   { path: '/about/' },
   { path: '/privacy/' },
   { path: '/search/', noindex: true },
+  // Built only while the waitlist is shown (on in Site settings, or a WAITLIST_PREVIEW=1 build): tests/waitlist.spec.js.
+  ...(existsSync(join(dist, 'waitlist', 'remove', 'index.html')) ? [{ path: '/waitlist/remove/', noindex: true }] : []),
   // Any unknown path: `astro preview` serves dist/404.html with HTTP 404.
   { path: '/no-such-page/', status: 404, noindex: true, lighthouse: '/404.html' },
   { path: '/styleguide/', noindex: true },

@@ -2,6 +2,7 @@
 title: A vlog written as *sections*
 date: 2026-10-03
 summary: Fixture for the tests, not part of the site. A vlog whose notes are a list of blocks and whose transcript is its own field.
+waitlist: true
 youtubeId: dQw4w9WgXcQ
 duration: "3:32"
 chapters:

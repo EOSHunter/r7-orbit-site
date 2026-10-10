@@ -8,6 +8,9 @@
 // - The newsletter switch, kept only so the Privacy page (whose words are the author's to change) still builds: there is no newsletter
 //   (docs/DECISIONS.md), so it is never connected. `{if newsletter connected}` hides a block, `{if newsletter not connected}` shows it, and
 //   `{newsletter.provider}` is empty. Remove this with the Privacy page's newsletter paragraphs.
+// - The waitlist switch. `{if waitlist on}` shows a block only while the live site shows the waitlist (Site settings > Waitlist:
+//   on, with a site key), `{if waitlist off}` only while it does not: so the Privacy page can say what happens to the addresses
+//   from the day the form appears, and not before. The wording is the author's.
 // - Slots. Which blocks sit where in the page's frame: the Lead paragraphs at the top go under the page heading, and so on per
 //   page (the functions below say how).
 //
@@ -21,12 +24,15 @@ export interface PageSettings {
   siteDescription: string;
   newsletterProvider: string;
   newsletterConnected: boolean;
+  /** The live site shows the waitlist forms (src/lib/waitlist.ts, `waitlistState` without dev or preview). */
+  waitlistOn: boolean;
 }
 
 interface SiteLike {
   name: string;
   tagline: string;
   description: string;
+  waitlist?: { enabled?: boolean; turnstileSiteKey?: string };
 }
 
 /** The settings from src/data/site.json (`site` from src/data/site.ts, or the JSON itself in the admin). */
@@ -37,6 +43,7 @@ export function pageSettingsOf(site: SiteLike): PageSettings {
     siteDescription: site.description,
     newsletterProvider: '',
     newsletterConnected: false,
+    waitlistOn: Boolean(site.waitlist?.enabled && site.waitlist.turnstileSiteKey?.trim()),
   };
 }
 
@@ -53,6 +60,8 @@ export const PAGE_TOKENS = Object.keys(TOKENS).map((name) => `{${name}}`);
 const CONDITIONS: Record<string, (s: PageSettings) => boolean> = {
   'if newsletter connected': (s) => s.newsletterConnected,
   'if newsletter not connected': (s) => !s.newsletterConnected,
+  'if waitlist on': (s) => s.waitlistOn,
+  'if waitlist off': (s) => !s.waitlistOn,
 };
 
 /** The condition lines a block's text may start with. */

@@ -2,6 +2,7 @@
 title: A repo written as sections
 date: 2026-10-04
 summary: Fixture for the tests, not part of the site. A repo whose notes are a list of blocks, shown instead of the README.
+waitlist: true
 repo: EOSHunter/r7-orbit-site
 readme: local
 tags:

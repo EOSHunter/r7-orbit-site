@@ -12,6 +12,7 @@ import MediaPlaceholder from './MediaPlaceholder.astro';
 import PostCard from './PostCard.astro';
 import Sections from './Sections.astro';
 import YouTubeFacade from './YouTubeFacade.astro';
+import WaitlistForm from './WaitlistForm.astro';
 import VideoJsonLd from './vlog/VideoJsonLd.astro';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -26,6 +27,7 @@ import { coverOf } from '../lib/post-cards';
 import { hasSections } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
+import { waitlist } from '../lib/waitlist-queries';
 import '../styles/markdown.css';
 
 // content.config.ts builds the vlog schema through a helper that widens the extra fields; this is their real shape.
@@ -83,6 +85,8 @@ const card = (p: SitePost<'vlogs'>): VlogCardData => {
   };
 };
 const related = relatedPosts(post, vlogs, 3);
+// The waitlist band after the body, before the related posts: asked for by the post and shown only while the waitlist is on.
+const showWaitlist = post.data.waitlist && waitlist.show;
 const { newer, older } = adjacentPosts(post, vlogs);
 const youtube = site.links.youtube;
 
@@ -217,6 +221,8 @@ const breadcrumbs = JSON.stringify({
       }
     </div>
   </div>
+
+  {showWaitlist && <WaitlistForm variant="band" source="vlog" />}
 
   {
     related.length > 0 && (

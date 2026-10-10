@@ -17,6 +17,7 @@ import PostCard from './PostCard.astro';
 import ProjectJsonLd from './ProjectJsonLd.astro';
 import Sections from './Sections.astro';
 import StatusMark from './StatusMark.astro';
+import WaitlistForm from './WaitlistForm.astro';
 import { localImage, toCard, type ProjectData, type RepoData } from './detailCards';
 import { authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
@@ -29,6 +30,7 @@ import { APPS_PATH, typeOf } from '../lib/apps';
 import { isPlayable } from '../lib/play';
 import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
+import { waitlist } from '../lib/waitlist-queries';
 import { isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import '../styles/markdown.css';
 
@@ -51,6 +53,8 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 
 const repos = all.filter((p): p is SitePost<'repos'> => p.collection === 'repos');
 const related = relatedPosts(post, all);
+// The waitlist band after the body, before the related posts: asked for by the post and shown only while the waitlist is on.
+const showWaitlist = post.data.waitlist && waitlist.show;
 
 // Source: this site's repo page when there is one, else the repo URL, else the GitHub address of `repo`.
 const repoName = data.repo?.toLowerCase();
@@ -284,6 +288,8 @@ const path = `/projects/${post.id}/`;
       </aside>
     </div>
   </div>
+
+  {showWaitlist && <WaitlistForm variant="band" source="other" />}
 
   {
     related.length > 0 && (

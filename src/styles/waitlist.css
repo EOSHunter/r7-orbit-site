@@ -1,0 +1,47 @@
+/*
+  The waitlist form (src/components/WaitlistForm.astro). The component prints this inline, and only on a page that draws a form,
+  so while the waitlist is off no page carries any of it. Tokens and the design system's classes (.field, .input, .btn) only.
+
+  No layout shift: the status line and the remove link share one row that is always 44px tall, and Turnstile's box floats
+  over the page (it is a floating thing, so it gets --shadow-float) instead of pushing content down when Cloudflare asks
+  the reader to tick it. Most readers never see it: the widget is invisible unless it needs them.
+*/
+.waitlist { display: grid; gap: var(--s-3); max-width: 36rem; }
+.waitlist-form { position: relative; display: grid; gap: var(--s-2); }
+.waitlist-row { display: flex; flex-wrap: wrap; align-items: end; gap: var(--s-3); }
+.waitlist-row .field { flex: 1 1 15rem; min-width: 0; }
+.waitlist .field > label { color: var(--text-2); }
+.waitlist .input { height: 46px; }
+.waitlist-row .btn { flex: 0 0 auto; }
+.waitlist-hp { display: none; }
+
+.waitlist-challenge { position: absolute; top: calc(100% + var(--s-2)); left: 0; z-index: 5; max-width: 100%; visibility: hidden; }
+.waitlist-challenge[data-open] {
+  visibility: visible; padding: var(--s-3); background: var(--surface-2); border: var(--bw) solid var(--line-strong);
+  border-radius: var(--r-md); box-shadow: var(--shadow-float);
+}
+
+.waitlist-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s-4); min-height: 44px; }
+.waitlist-status { flex: 1 1 14rem; margin: 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--text); }
+.waitlist-status[data-tone='error'] { color: var(--st-failed-text); }
+.waitlist-remove {
+  display: inline-flex; align-items: center; min-height: 44px; margin-left: auto; font-size: var(--fs-sm); color: var(--text-2);
+  text-decoration: underline; text-underline-offset: 0.2em;
+}
+.waitlist-remove:hover { color: var(--brass-bright); }
+.waitlist-dev { margin: 0; padding: var(--s-2) var(--s-3); border: var(--bw) dashed var(--line-brass); border-radius: var(--r-sm); font: var(--fs-xs) var(--font-mono); color: var(--text-2); }
+
+.waitlist-nojs { display: none; margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+html:not(.js) .waitlist-nojs { display: block; }
+html:not(.js) .waitlist-form, html:not(.js) .waitlist-status { display: none; }
+
+/* Under the home page's headline, lead and buttons. */
+.hero .waitlist { margin-top: var(--s-6); }
+/* At the end of a post: a ruled band with a heading and a sentence. */
+.waitlist-band .waitlist { max-width: 40rem; }
+.waitlist-band .section-title { margin: 0; }
+.waitlist-band .waitlist-text { margin: 0; color: var(--text-2); }
+/* The remove page: the form under the page heading. */
+.waitlist-page .waitlist { margin-top: var(--s-5); }
+
+@media (prefers-reduced-motion: reduce) { .waitlist *, .waitlist *::before { transition: none; animation: none; } }

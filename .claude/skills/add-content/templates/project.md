@@ -23,6 +23,7 @@ gallery:
 timeline:
   - { date: <YYYY-MM-DD>, text: "<short changelog line>" }
 featured: false
+waitlist: false               # true: the waitlist form for R7 Orbit after the body (shows only while it is on in Site settings)
 # sections: [...]             # instead of the body, never both
 ---
 ## Why I built it

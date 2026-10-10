@@ -15,6 +15,7 @@ import Sections from './Sections.astro';
 import SeriesNav from './SeriesNav.astro';
 import ShareRow from './ShareRow.astro';
 import TableOfContents from './TableOfContents.astro';
+import WaitlistForm from './WaitlistForm.astro';
 import { articleComponents } from './article/mdx';
 import { site } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -25,6 +26,8 @@ import type { SitePost } from '../lib/content-queries';
 import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
+import { sourceForKind } from '../lib/waitlist';
+import { waitlist } from '../lib/waitlist-queries';
 import { SIZES, publicSrcset } from '../lib/media-srcset';
 import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
@@ -80,6 +83,7 @@ const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceNa
 
 const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 const assist = assistNote(data.aiAssist, author);
+const showWaitlist = data.waitlist && waitlist.show;
 ---
 
 <BaseLayout
@@ -192,6 +196,8 @@ const assist = assistNote(data.aiAssist, author);
       {toc && <TableOfContents headings={headings} variant="aside" />}
     </div>
   </div>
+
+  {showWaitlist && <WaitlistForm variant="band" source={sourceForKind(kind)} />}
 
   <RelatedPosts posts={related} />
 

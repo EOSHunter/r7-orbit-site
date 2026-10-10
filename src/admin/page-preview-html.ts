@@ -14,6 +14,10 @@ const icon = (name: string) => `<svg class="ico" aria-hidden="true"><use href="#
 /** Only addresses a visitor may follow, and a part of the page (#latest): anything else is not made a link. */
 const safeHref = (url: string): string => (/^(https:\/\/\S+|\/(?!\/)\S*|#[A-Za-z][\w-]*)$/.test(url) ? url : '#');
 
+/** The waitlist form in the hero: a stand-in that says where it goes and when it shows (the form and its words are Site settings'). */
+export const HERO_WAITLIST_NOTE =
+  'The waitlist form goes here, under the lead and the buttons. It shows on the site only while the waitlist is on in Site settings > Waitlist, with the words set there.';
+
 /** The home page's hero (index.astro), from the entry's fields. The orbit beside it is drawn by a script on the page only. */
 export function heroHtml(data: Loose): string {
   const eyebrow = str(data.eyebrow) ? `<p class="eyebrow brass">${escapeHtml(str(data.eyebrow))}</p>` : '';
@@ -23,7 +27,8 @@ export function heroHtml(data: Loose): string {
     .filter((b) => str(b?.label))
     .map((b, i) => `<a class="btn${i === 0 ? ' solid' : ''} lg" href="${escapeHtml(safeHref(str(b.url)))}">${escapeHtml(str(b.label))}</a>`)
     .join('');
-  return `<section class="hero plate-grid"><div class="container wide"><div class="hero-grid"><div>${eyebrow}${title}${lead}${buttons ? `<div class="cluster">${buttons}</div>` : ''}</div></div></div></section>`;
+  const waitlist = data.waitlist === true ? `<p class="admin-preview-note" data-hero-waitlist>${escapeHtml(HERO_WAITLIST_NOTE)}</p>` : '';
+  return `<section class="hero plate-grid"><div class="container wide"><div class="hero-grid"><div>${eyebrow}${title}${lead}${buttons ? `<div class="cluster">${buttons}</div>` : ''}${waitlist}</div></div></div></section>`;
 }
 
 /** A listing page's head (ArchivePage.astro and the hub pages): the label from code, the heading and lead from the entry. */

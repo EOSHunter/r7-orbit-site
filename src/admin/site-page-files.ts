@@ -80,6 +80,14 @@ const homeFields: CmsField[] = [
       }),
     ],
   }),
+  field({
+    name: 'waitlist',
+    label: 'Waitlist form',
+    widget: 'boolean',
+    required: false,
+    default: false,
+    hint: 'On: the waitlist form for R7 Orbit sits under the lead and the buttons. It only shows while the waitlist is on in Site settings > Waitlist, and its words are set there.',
+  }),
   description(),
   sectionsField({
     label: 'Rows below the hero',

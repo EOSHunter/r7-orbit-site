@@ -16,6 +16,7 @@ relatedProject: <slug of an existing project>
 cover: /media/repos/<name>.jpg
 coverAlt: "<required when cover is set>"
 featured: false
+waitlist: false               # true: the waitlist form for R7 Orbit after the body (shows only while it is on in Site settings)
 # sections: [...]                    # instead of the body, never both
 ---
 <Only needed with readme: local. What it does in one sentence, how to install, how to use.>

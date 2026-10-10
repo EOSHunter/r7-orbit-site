@@ -41,5 +41,20 @@
     ],
     "note": "Made with R7 Orbit"
   },
-  "description": "News, builds and the things in between: writing, videos, projects and code about building with AI."
+  "description": "News, builds and the things in between: writing, videos, projects and code about building with AI.",
+  "waitlist": {
+    "enabled": false,
+    "turnstileSiteKey": "",
+    "heading": "Join the waitlist",
+    "text": "Get access to R7 Orbit.",
+    "buttonLabel": "Join the waitlist",
+    "emailLabel": "Email address",
+    "successMessage": "You are on the list.",
+    "errorMessage": "Something went wrong. Please try again.",
+    "removeLinkLabel": "Remove my email",
+    "removeHeading": "Leave the waitlist",
+    "removeButtonLabel": "Remove my email",
+    "removeSuccessMessage": "If that address was on the waitlist, it has been removed.",
+    "noscriptMessage": "JavaScript is needed to join the waitlist."
+  }
 }

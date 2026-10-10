@@ -13,6 +13,7 @@ draft: true
 take: "<one sentence verdict, shown as 'My read: ...'; the author's view, never invented>"
 updated: <YYYY-MM-DD>
 featured: false
+waitlist: false               # true: the waitlist form for R7 Orbit after the body (shows only while it is on in Site settings)
 cover: /media/news/<name>.jpg
 coverAlt: "<required when cover is set>"
 readTime: <minutes>
