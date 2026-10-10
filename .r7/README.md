@@ -1,6 +1,6 @@
 # R7 repository context: R7 Orbit site
 
-`r7-orbit-site` is the Astro site for R7 Orbit: home, news, blog, vlogs, projects, repositories, the Apps hub, authors, topic archives and search. It builds static pages from typed content collections. Its `/admin/` provides a Git-backed editor; a repository skill guides content authoring. This describes the repository at `ed1802f3813404e21f1e546c7f9831f7e379c328` on 2026-10-06, not a verified live deployment.
+`r7-orbit-site` is the Astro site for R7 Orbit: home, news, blog, vlogs, projects, repositories, the Apps hub, authors, topic archives and search. It builds static pages from typed content collections. Its `/admin/` provides a Git-backed editor; a repository skill guides content authoring. This describes the repository at `0dda24e3c6c90266ac7c325dfa653cbac46c5924` on 2026-10-10, not a verified live deployment.
 
 - `src/content.config.ts`, `src/content/`, `src/lib/content*.ts`: collection schemas, entries and queries.
 - `src/pages/`, `src/components/`, `src/layouts/`: routes, cards, articles and layouts. `src/pages/index.astro` composes the latest and featured content.
