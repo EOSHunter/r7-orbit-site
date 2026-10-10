@@ -77,9 +77,9 @@ describe('the orbit diagram', () => {
     }
   });
 
-  it('draws the hub with the R7 mark, the project and the line under it', () => {
+  it('draws the hub with the R7 mark (the file the header already loads), the project and the line under it', () => {
     const html = orbitDiagramHtml({ hub: 'lumen', meta: 'main · 9 agents', agents: agents(2), caption: 'Cap' });
-    expect(html).toContain('<img src="/assets/r7-orbit-mark-transparent.svg" alt=""');
+    expect(html).toContain('<img src="/assets/r7-mark.svg" alt=""');
     expect(html).toContain('<p class="art-orbit-name">lumen</p><p class="art-orbit-meta">main · 9 agents</p>');
     expect(html).toContain('<ul class="art-orbit-agents" role="list">');
     expect(html).toContain('<figcaption>Cap</figcaption>');
