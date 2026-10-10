@@ -102,10 +102,13 @@ interface PatternOptions<O extends boolean, F extends string | undefined> {
   fallback?: F;
 }
 
-/** A text box whose content must match `re`. Optional: '' is allowed too and means "not set"; the form's pattern skips an empty box. */
-function matching(label: string, re: RegExp, message: string, optional: boolean | undefined, max?: number) {
+/** A text box whose content must match `re`. Optional: '' is allowed too and means "not set"; the form's pattern skips an empty box.
+ *  `trim` reads a box of spaces as the empty one (an optional picture: blank is "no picture", never `src="  "`). */
+function matching(label: string, re: RegExp, message: string, optional: boolean | undefined, max?: number, trim = false) {
   const accepted = optional ? new RegExp(`^$|${re.source}`) : re;
-  let s = z.string({ error: required(label) }).regex(accepted, `"${label}": ${message}`);
+  let s = z.string({ error: required(label) });
+  if (trim) s = s.trim();
+  s = s.regex(accepted, `"${label}": ${message}`);
   if (max) s = s.max(max, tooLong(label, max));
   return optional ? s.optional() : s;
 }
@@ -137,7 +140,7 @@ export const link = <const O extends boolean = false>(label: string, hint: strin
 
 /** A picture of this site (public/media). The schema holds only the path; alt text is a separate pair, see `pictureAlt`. */
 export function image<const O extends boolean = false>(label: string, hint: string, optional?: O): Str<O> {
-  return withMetaAs<Str<O>>(matching(label, IMAGE_PATTERN, IMAGE_MESSAGE, optional), {
+  return withMetaAs<Str<O>>(matching(label, IMAGE_PATTERN, IMAGE_MESSAGE, optional, undefined, true), {
     label,
     hint,
     widget: 'image',

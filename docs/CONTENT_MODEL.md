@@ -39,6 +39,12 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | `aiAssist` | `'none' \| 'edited' \| 'drafted'` | no | If the author wants the "How this was made" line (see `DECISIONS.md` §C). Shown as a quiet note under the byline |
 | `sections` | block[] | no | The body written as blocks instead of Markdown (see "Body: Markdown or sections" below). Absent or `[]`: the Markdown under the front matter is the body |
 
+### Empty fields
+
+The admin writes an empty value (`cover: ''`, `seoTitle: ''`) when the author clears a box, and a file written by hand may have `poster:` with nothing after it. Every collection (the five kinds, pages, authors) reads a blank or whitespace-only optional field as **not set**, as if the line were not there (`normaliseFrontMatter` in `src/lib/front-matter.ts`, run before the schema in `src/content.config.ts`). A required field keeps its own message (an empty `title` still fails).
+
+Pictures and their alt text: an empty `cover` or `featuredImage` is no picture, and an alt text without its picture is ignored. A real picture whose alt key is missing (or `coverAlt:` with nothing after it) fails the build with `coverAlt is required when cover is set (use "" only for a decorative image)`; `""` (or spaces) is the explicit decorative marker. The admin leaves an emptied image field out of the file when it saves, and refuses to save a picture with no alt text (`src/admin/image-rules.ts`). In a page's or post's `sections`, an optional picture (a video or game poster) left empty, or only spaces, is no picture too. `src/lib/admin-front-matter.vitest.ts` parses admin-shaped front matter (every optional field empty) through every collection.
+
 ## Body: Markdown or sections
 
 Every kind's body is written **one of two ways**, chosen per post:

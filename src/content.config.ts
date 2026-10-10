@@ -5,11 +5,17 @@ import site from './data/site.json';
 import { APP_TYPE_IDS } from './lib/app-types';
 import { sectionsSchema } from './lib/sections';
 import { DEFAULT_AUTHOR } from './lib/authors';
+import { missingAlt, normaliseFrontMatter } from './lib/front-matter';
 import { seoTitleMax } from './lib/seo';
 import { sitePageFields } from './lib/site-pages';
 
 // Schema from docs/CONTENT_MODEL.md. `.strict()` turns a misspelt field into a readable build error
 // instead of silently dropping it.
+//
+// Every collection reads its front matter through `frontMatter`: a blank optional field (`cover: ''`, `seoTitle: ''`, `poster:`),
+// which is what the admin writes for a box the author cleared, is not set, and an alt text without its picture is dropped
+// (src/lib/front-matter.ts). A real picture still needs its alt key: `missingAlt` fails the build with a readable message.
+const frontMatter = <T extends z.ZodType>(shape: z.ZodRawShape, schema: T) => z.preprocess(normaliseFrontMatter(shape), schema);
 
 const slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'use lowercase words joined with hyphens, e.g. "ai-agents"');
 const ownerName = z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'use the form "owner/name"');
@@ -56,63 +62,65 @@ function collection(
 ) {
   return defineCollection({
     loader: glob({ pattern: '**/*.{md,mdx}', base: `./src/content/${dir}` }),
-    schema: ({ image }) =>
-      z
-        .object({ ...common, ...(typeof extra === 'function' ? extra(image) : extra) })
-        .strict()
-        .superRefine((data, ctx) => {
-          if (data.cover && data.coverAlt === undefined) {
-            ctx.addIssue({
-              code: 'custom',
-              path: ['coverAlt'],
-              message: 'coverAlt is required when cover is set (use "" only for a decorative image)',
-            });
-          }
-          refine?.(data, ctx);
-        }),
+    schema: ({ image }) => {
+      const shape = { ...common, ...(typeof extra === 'function' ? extra(image) : extra) };
+      return frontMatter(
+        shape,
+        z
+          .object(shape)
+          .strict()
+          .superRefine((data, ctx) => {
+            missingAlt(data, ctx);
+            refine?.(data, ctx);
+          }),
+      );
+    },
   });
 }
 
 // Pages made of blocks (docs/CONTENT_MODEL.md "Pages"): About (src/content/pages/about.md), and the home page, the archives, the
 // Apps hub and the tag index (`sitePageFields`, src/lib/site-pages.ts, which also says which page needs which field). The
 // blocks are the shared library in src/lib/sections/ (docs/SECTIONS.md): `sectionsSchema` is what any collection attaches to take a `sections` list.
+const pageShape = {
+  title: z.string().min(1).max(90),
+  seoTitle,
+  // The meta description (docs/SEO_AND_SHARING.md): 155 characters reads best in search results.
+  description: z.string().min(1).max(180),
+  sections: sectionsSchema,
+  ...sitePageFields,
+};
 const pages = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
-  schema: z
-    .object({
-      title: z.string().min(1).max(90),
-      seoTitle,
-      // The meta description (docs/SEO_AND_SHARING.md): 155 characters reads best in search results.
-      description: z.string().min(1).max(180),
-      sections: sectionsSchema,
-      ...sitePageFields,
-    })
-    .strict(),
+  schema: frontMatter(pageShape, z.object(pageShape).strict()),
 });
 
 // The people and agents a post can be credited to (docs/CONTENT_MODEL.md "Authors"). The file name is the slug; `slug` repeats it
 // so the editor can show it, and getAuthors() fails the build if the two differ. A person without `name`, `bio` or `avatar` is
 // read from `author` in src/data/site.json, so Hunter's text exists once.
+const authorShape = {
+  slug,
+  kind: z.enum(['person', 'agent']),
+  name: z.string().min(1).optional(),
+  subtitle: z.string().min(1).max(60).optional(),
+  bio: z.string().min(1).optional(),
+  avatar: z.string().optional(),
+  note: z.string().min(1).optional(),
+};
 const authors = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/authors' }),
   schema: () =>
-    z
-      .object({
-        slug,
-        kind: z.enum(['person', 'agent']),
-        name: z.string().min(1).optional(),
-        subtitle: z.string().min(1).max(60).optional(),
-        bio: z.string().min(1).optional(),
-        avatar: z.string().optional(),
-        note: z.string().min(1).optional(),
-      })
-      .strict()
-      .superRefine((data, ctx) => {
-        if (data.kind !== 'agent') return;
-        for (const key of ['name', 'bio'] as const) {
-          if (!data[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required for an agent (only a person is read from site.json)` });
-        }
-      }),
+    frontMatter(
+      authorShape,
+      z
+        .object(authorShape)
+        .strict()
+        .superRefine((data, ctx) => {
+          if (data.kind !== 'agent') return;
+          for (const key of ['name', 'bio'] as const) {
+            if (!data[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required for an agent (only a person is read from site.json)` });
+          }
+        }),
+    ),
 });
 
 const posts = {
@@ -133,13 +141,6 @@ const posts = {
       featuredImageAlt: z.string().optional(),
     }),
     (data, ctx) => {
-      if (data.featuredImage && data.featuredImageAlt === undefined) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['featuredImageAlt'],
-          message: 'featuredImageAlt is required when featuredImage is set (use "" only for a decorative image)',
-        });
-      }
       if (data.series && data.seriesOrder === undefined) {
         ctx.addIssue({ code: 'custom', path: ['seriesOrder'], message: 'seriesOrder is required when series is set' });
       }

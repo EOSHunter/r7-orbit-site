@@ -74,15 +74,15 @@ The live site keeps running the last good version, so there is no emergency. Fin
 
 1. Cloudflare dashboard > **Workers & Pages** > `r7-orbit-site` > **Deployments**. A failed build shows *Failed*.
 2. Click it, then open **View build log** (or scroll the log on that page). Scroll to the first red line or the line starting with `[ERROR]` just before the build stops. The same message appears in the failed **GitHub check** on the post's pull request, which is the better place to catch it before publishing.
-3. Match the message against the usual causes:
+3. Match the message against the usual causes. The three seen most often are a picture with no alt text, a bad date and an author slug that does not exist. An image field you emptied is not one of them: an empty value (`cover: ''`) is read as "no image", and so is any optional field left empty.
 
    | The log says (roughly) | Cause and fix |
    | --- | --- |
    | `Invalid frontmatter` / `Does not match schema` / `Unrecognized key` | A field is missing, too long or not allowed. Title is limited to 90 characters, summary to 180, tags to six lowercase hyphenated words. News needs a source URL and source name. Fix it in the editor and save again |
    | `has author "x", but there is no author with that slug` | The **Author** is not one of the authors. Pick one from the menu again (or add the author under **Authors** first) |
    | `use a date like 2026-10-03` / `Invalid date` | The date is empty or was typed in the wrong form. Pick it with the date picker, or write `2026-10-03` |
-   | `coverAlt is required when cover is set` / `featuredImageAlt` | An image has no alt text. Fill in the alt text field next to the image (use a short description; leave it empty only for a purely decorative cover) |
-   | `Could not find image` / `Cannot find …` an image path | The image file was deleted or the path was typed by hand. Choose the image again in the editor |
+   | `coverAlt is required when cover is set` / `featuredImageAlt is required when featuredImage is set` | A picture is set but its alt text field was never filled in. Open the post, fill in **Cover image alt text** or **Featured image alt text** with one plain sentence, save. The editor now refuses to save this, so it mostly comes from a file changed outside the editor |
+   | `Could not find requested image … Does it exist?` / `Cannot find …` an image path | The image file was deleted, the path was typed by hand, or the **same picture was uploaded for two fields in one edit** (for example the featured image and the cover): the editor keeps only one copy. Remove the image from the field the log names, save, choose it again, save again. The editor now warns about this one before saving |
    | `the image "…" has no alt text` | A picture in the post has no description. Open the post, click the picture's block, fill in **Alt text** (or tick **Decoration only**), save. [Section 6](#6-adding-images) says how to write it |
    | `HEIC is the iPhone's default format` / `is not an image format this site accepts` / `still … MB after the build resized it` | A picture is in a format browsers cannot show, or is too heavy. Export it as JPG, upload that, remove the other ([section 6](#when-the-build-complains)) |
    | `Figure: "/src/assets/…" is not in src/assets/` | The picture a block points at was deleted. Click the block and choose the image again |
@@ -155,7 +155,8 @@ You will see the message in the editor when you press Save, or on the red check 
 
 | It says | What to do |
 | --- | --- |
-| `Not saved. … has no alt text` | Click the picture's block, fill in **Alt text** (or tick **Decoration only**), Save again |
+| `Not saved. … has no alt text` | Click the picture's block, fill in **Alt text** (or tick **Decoration only**), Save again. For the cover or featured image, fill in the alt text field under it |
+| `Not saved. The … is the same picture as one uploaded for another field` | The editor keeps one copy of a picture uploaded twice in one edit. Remove the image from the field it names, save, choose it again, save again |
 | `HEIC is the iPhone's default format` | Export the photo as JPG (see Before you start), remove the HEIC from the picture box, upload the JPG |
 | `is not an image format this site accepts` | Use JPG, PNG, WebP, AVIF or SVG |
 | `… is over the 10 MB limit` | Export a smaller copy, about 2000 pixels wide, and upload that |
