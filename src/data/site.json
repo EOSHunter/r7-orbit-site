@@ -2,10 +2,6 @@
   "defaultOgImage": "/og-default.png",
   "nav": [
     {
-      "label": "News",
-      "href": "/news/"
-    },
-    {
       "label": "Blog",
       "href": "/blog/"
     },
