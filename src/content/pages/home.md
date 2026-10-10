@@ -10,7 +10,7 @@ description: "{site.description}"
 sections:
   - type: pinned
     eyebrow: ""
-    heading: "*Pinned*"
+    heading: "*Newest* post"
   - type: feed
     heading: Latest
     count: 8
