@@ -49,7 +49,7 @@ const srcset = await publicSrcset(app.cover?.src);
       <span class="chip app-type" data-app-type={app.type}><Icon name={type.icon} small />{type.label}</span>
       {app.preview && <PreviewBadge label={app.preview} />}
     </div>
-    <Heading class="card-title">{title}</Heading>
+    <Heading class="card-title serif">{title}</Heading>
     <p class="card-text">{app.summary}</p>
     {app.platforms.length > 0 && (
       <ul class="app-platforms" aria-label="Works on">

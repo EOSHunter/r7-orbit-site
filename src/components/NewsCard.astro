@@ -22,7 +22,7 @@ const { post } = Astro.props;
       News
     </span>
     {post.preview && <PreviewBadge label={post.preview} />}
-    <h3 class="card-title">{plainTitle(post.title)}</h3>
+    <h3 class="card-title serif">{plainTitle(post.title)}</h3>
     <p class="card-text">{post.summary}</p>
     <CardFoot date={post.date} minutes={post.readTime} />
   </div>
