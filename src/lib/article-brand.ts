@@ -129,7 +129,8 @@ export function orbitDiagramHtml(d: { hub?: unknown; meta?: unknown; agents?: un
   return (
     `<figure class="art-orbit" data-count="${agents.length}"><div class="art-orbit-map">` +
     (lines ? `<svg class="art-orbit-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="${lines}" vector-effect="non-scaling-stroke"></path></svg>` : '') +
-    `<div class="art-orbit-hub"><img src="/assets/r7-orbit-mark-transparent.svg" alt="" width="88" height="88" loading="lazy" decoding="async" />` +
+    // The plain mark the header already loads, so the diagram costs no request of its own (the article's LCP is at its budget).
+    `<div class="art-orbit-hub"><img src="/assets/r7-mark.svg" alt="" width="48" height="48" decoding="async" />` +
     `<p class="art-orbit-name">${escapeHtml(str(d.hub))}</p>` +
     (str(d.meta) ? `<p class="art-orbit-meta">${escapeHtml(str(d.meta))}</p>` : '') +
     `</div>` +

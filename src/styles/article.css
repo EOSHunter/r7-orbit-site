@@ -165,7 +165,7 @@ div.art-divider[data-variant='orbit']::after { background: linear-gradient(to le
 .art-orbit-map { position: relative; display: grid; gap: var(--s-4); }
 .art-orbit-lines { display: none; }
 .art-orbit-hub { display: grid; justify-items: center; gap: var(--s-1); text-align: center; }
-.prose .art-orbit-hub img, .art-orbit-hub img { width: var(--s-8); height: auto; border: 0; border-radius: 0; }
+.prose .art-orbit-hub img, .art-orbit-hub img { width: var(--s-7); height: auto; border: 0; border-radius: 0; }
 .art-orbit-name { font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); color: var(--text); overflow-wrap: anywhere; }
 .art-orbit-meta { font: var(--fs-2xs)/1.4 var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
 .prose .art-orbit-agents, .art-orbit-agents { display: grid; gap: var(--s-3); padding-left: var(--s-5); border-left: var(--bw) solid var(--line-strong); }
