@@ -164,7 +164,7 @@ const coverAlt = field({
   widget: 'string',
   required: false,
   default: '',
-  hint: 'Describe the image. Leave empty only if it is purely decorative. Needed when there is a cover image.',
+  hint: 'Only needed when you add an image. Describe the cover image in one plain sentence; leave it empty only if the image is purely decorative.',
 });
 const featured = field({
   name: 'featured',
@@ -300,7 +300,7 @@ const blogFields: CmsField[] = [
     widget: 'string',
     required: false,
     default: '',
-    hint: 'Describe the image. Leave empty only if it is purely decorative. Needed when there is a featured image.',
+    hint: 'Only needed when you add an image. Describe the featured image in one plain sentence; leave it empty only if the image is purely decorative.',
   }),
   blogCover,
   coverAlt,

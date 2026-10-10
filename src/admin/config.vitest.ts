@@ -32,7 +32,7 @@ const env = { repo: 'owner/name', branch: 'main' };
 
 /** The slice of a Zod type this file reads. */
 interface Zod {
-  def: { type: string; innerType?: Zod; element?: Zod };
+  def: { type: string; innerType?: Zod; element?: Zod; out?: Zod };
   shape?: Record<string, Zod>;
   options?: string[];
   isOptional(): boolean;
@@ -51,7 +51,9 @@ async function schemaShapes(): Promise<Record<string, Record<string, Zod>>> {
     if (name === 'pages' || name.startsWith('fixture')) continue;
     const { schema } = c as unknown as { schema: (ctx: { image: () => unknown }) => Zod };
     // `image()` is Astro's own helper; a string stands in for it.
-    out[name] = schema({ image: () => z.string() }).shape ?? {};
+    // Every collection reads its front matter through a clean-up first (src/lib/front-matter.ts): the fields are the pipe's `out`.
+    const s = schema({ image: () => z.string() });
+    out[name] = (s.def.type === 'pipe' && s.def.out ? s.def.out : s).shape ?? {};
   }
   return out;
 }

@@ -101,9 +101,10 @@ describe('who a post is credited to', () => {
     const { z } = await import('astro/zod');
     const { collections } = await import('../content.config');
     type Parse = { safeParse(v: unknown): { success: boolean; data?: unknown } };
-    type Defined = { schema: (c: { image: () => unknown }) => { shape: Record<string, Parse> } };
+    // The object of fields sits behind the front matter clean-up (a preprocess pipe, src/lib/front-matter.ts): its `out`.
+    type Defined = { schema: (c: { image: () => unknown }) => { def: { out: { shape: Record<string, Parse> } } } };
     for (const name of ['news', 'blog', 'vlogs', 'projects', 'repos']) {
-      const author = (collections as unknown as Record<string, Defined>)[name].schema({ image: () => z.string() }).shape.author;
+      const author = (collections as unknown as Record<string, Defined>)[name].schema({ image: () => z.string() }).def.out.shape.author;
       expect(author.safeParse(undefined).data, name).toEqual({ collection: 'authors', id: 'hunter-newton' });
       expect(author.safeParse('r7').data, name).toEqual({ collection: 'authors', id: 'r7' });
     }

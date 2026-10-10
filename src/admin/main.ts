@@ -16,7 +16,7 @@ import { authorNames } from './authors';
 import { blocks, markdownImage } from './blocks';
 import { buildConfig, CMS_AUTH_URL, CMS_BRANCH, CMS_REPO } from './config';
 import { framedPreview } from './framed-preview';
-import { imageSaveCheck } from './image-rules';
+import { dropEmptyImages, imageSaveCheck } from './image-rules';
 import { pagePreview } from './page-previews';
 import { FRAMED_PAGES } from './pages';
 import { bodyOrSectionsCheck } from './post-body';
@@ -41,7 +41,11 @@ if (imageWidget) {
   // The string form of registerWidget takes the schema as a fourth argument that its typings omit; it keeps the widget's own.
   (CMS.registerWidget as (...args: unknown[]) => void)('image', withAssetBridge(imageWidget.control), imageWidget.preview, imageWidget.schema);
 }
-// Refuse to save a post with a picture that has no alt text, or a HEIC or oversized upload (docs/IMAGES.md).
+// Leave an emptied image field (and the alt text of a picture that is not there) out of the file, rather than writing `cover: ''`.
+// First, so the checks below read the tidied data.
+CMS.registerEventListener({ name: 'preSave', handler: dropEmptyImages });
+// Refuse to save a post with a picture that has no alt text, a HEIC or oversized upload, or an upload the editor would drop
+// (docs/IMAGES.md).
 CMS.registerEventListener({ name: 'preSave', handler: imageSaveCheck });
 // Refuse to save a post written both ways, as sections and as a Body (docs/SECTIONS.md "Posts"); the build stops on one too.
 CMS.registerEventListener({ name: 'preSave', handler: bodyOrSectionsCheck });

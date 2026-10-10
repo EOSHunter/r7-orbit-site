@@ -17,7 +17,8 @@ vi.mock('astro:content', async () => {
 vi.mock('astro/loaders', () => ({ glob: (options: unknown) => ({ options }) }));
 
 interface Zod {
-  shape: Record<string, unknown>;
+  /** The object of fields, behind the front matter clean-up (a preprocess pipe, src/lib/front-matter.ts). */
+  def: { out: { shape: Record<string, unknown> } };
   safeParse(value: unknown): { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } };
 }
 
@@ -67,7 +68,7 @@ describe('the schema of every kind takes sections', () => {
     for (const kind of KINDS) {
       expect(collections[FIXTURE_OF[kind]].loader.options.base).toBe(`./tests/fixtures/posts/${kind}`);
       expect(collections[kind].loader.options.base).toBe(`./src/content/${kind}`);
-      expect(Object.keys(of(FIXTURE_OF[kind]).shape)).toEqual(Object.keys(of(kind).shape));
+      expect(Object.keys(of(FIXTURE_OF[kind]).def.out.shape)).toEqual(Object.keys(of(kind).def.out.shape));
     }
   });
 });
