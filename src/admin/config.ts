@@ -181,14 +181,6 @@ const draft = field({
   required: false,
   hint: 'A draft is left out of the site, archives, search and sitemap. Turn it on to hold a post back.',
 });
-const waitlist = field({
-  name: 'waitlist',
-  label: 'Waitlist form at the end',
-  widget: 'boolean',
-  default: false,
-  required: false,
-  hint: 'On: the waitlist form for R7 Orbit follows the post, before the related posts. It shows only while the waitlist is on in Site settings > Waitlist, with the words set there.',
-});
 const readTime = field({
   name: 'readTime',
   label: 'Reading time (minutes)',
@@ -198,6 +190,17 @@ const readTime = field({
   required: false,
   hint: 'Leave empty to have it worked out from the text.',
 });
+// ---- Waitlist (waitlist block: the `waitlist` switch on every post, the same name as in content.config.ts) ------------
+// When on, and the waitlist is on in Site settings > Waitlist, the post ends with the waitlist band (src/components/WaitlistForm.astro).
+const waitlist = field({
+  name: 'waitlist',
+  label: 'Waitlist form at the end',
+  widget: 'boolean',
+  default: false,
+  required: false,
+  hint: 'On: the waitlist form for R7 Orbit follows the post, before the related posts. It shows only while the waitlist is Enabled in Site settings > Waitlist, with the words set there. Use it on posts about R7 Orbit.',
+});
+
 // ---- Author (authors block: the `author` select on every post; the authors collection is further down) ---------------
 const author = field({
   name: 'author',

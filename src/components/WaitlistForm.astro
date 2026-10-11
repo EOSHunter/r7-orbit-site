@@ -20,11 +20,12 @@ interface Props {
   variant: 'hero' | 'band' | 'remove';
   /** Where a signup came from (stored with the address). Not used by `remove`. */
   source?: WaitlistSource;
+  /** Names the form's ids; defaults to `waitlist-<variant>`. Give one when a page may hold two forms (a waitlist block and a post's band). */
+  id?: string;
 }
 
-const { variant, source = 'other' } = Astro.props;
+const { variant, source = 'other', id = `waitlist-${variant}` } = Astro.props;
 const words = site.waitlist;
-const id = `waitlist-${variant}`;
 const remove = variant === 'remove';
 const fields = state.show && {
   id,

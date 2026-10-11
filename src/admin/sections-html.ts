@@ -286,6 +286,12 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
       sectionHeadHtml(d),
       standIn(`Apps row: the first ${d.count} published apps, in the order of the Apps page.`, 'Chosen when the site is built. Left out while none is published.'),
     ),
+  // A labelled placeholder: the form and its words are Site settings', and the site shows them only while the waitlist is on.
+  waitlist: (d) =>
+    `<section class="section ruled" data-waitlist-placeholder><div class="container wide">${standIn(
+      `Waitlist form (counted as ${d.source ?? 'other'}): the heading, sentence, email box and button from Site settings > Waitlist.`,
+      'Shown on the site only while the waitlist is on in Site settings > Waitlist; otherwise this block draws nothing.',
+    )}</div></section>`,
   author: (d, env) => {
     const who = env.authors.find((a) => a.slug === d.author);
     if (!who) return `<aside class="author-note author-box"><div class="author-note-body"><p>${d.author ? `No author "${escapeHtml(d.author)}".` : 'Choose an author.'}</p></div></aside>`;

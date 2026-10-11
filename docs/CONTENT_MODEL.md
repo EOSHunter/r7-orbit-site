@@ -33,7 +33,7 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | `coverAlt` | string | if `cover` | Describe what is in the image. Empty string only if purely decorative |
 | `featured` | boolean | no | Pins to the top of the home page. **At most one at a time** (the build should warn if two) |
 | `draft` | boolean | no | Default `false`. `true` = hidden in production, shown in dev with a "Draft" badge. See "Drafts and scheduled posts" |
-| `waitlist` | boolean | no | Default `false`. `true` = the waitlist band for R7 Orbit (heading, sentence, form) after the body, before related posts and previous/next. Drawn only while the waitlist is on in Site settings (`waitlist` below); the band's words are the settings'. The form sends the source `blog` from a blog post, `vlog` from a vlog, `other` from the rest |
+| `waitlist` | boolean | no | Default `false`. `true` = the waitlist band for R7 Orbit (heading, sentence, form) after the body, before related posts and previous/next. Drawn only while the waitlist is on in Site settings (`waitlist` below); the band's words are the settings'. The form sends the source `blog` from a blog post or news item, `vlog` from a vlog, `other` from a project or repo. Use it on posts about R7 Orbit (`docs/WAITLIST.md`) |
 | `readTime` | number (minutes) | no | Computed from the body if absent (≈ 220 words/min): the Markdown body, or the words of the `sections` |
 | `author` | string (author slug) | no | The slug of a file in `src/content/authors/`. Defaults to `hunter-newton`. A slug that does not exist fails the build, naming the post and listing the authors. AI-written pieces are credited to `r7`, never to Hunter |
 | `canonicalUrl` | URL | no | Only when the post was first published elsewhere |
@@ -254,7 +254,7 @@ The settings tokens of the next section work in these files too: `home.md` write
 
 **Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
 
-**The waitlist lines.** A block whose text starts with `{if waitlist on}` is shown only while the live site shows the waitlist (Site settings → Waitlist on, with a site key); `{if waitlist off}`, only while it does not. For the Privacy page's paragraph about the waitlist (`docs/DEPLOY_CLOUDFLARE.md` section 10, step d); the wording is the author's.
+**The waitlist lines.** A block whose text starts with `{if waitlist on}` is shown only while the live site shows the waitlist (Site settings → Waitlist on, with a site key); `{if waitlist off}`, only while it does not. For the Privacy page's paragraph about the waitlist (`docs/WAITLIST.md`, "Privacy"); the wording is the author's.
 
 **Legacy newsletter lines.** There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected". Any other `{if ...}` fails the build.
 
@@ -349,7 +349,7 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
 | `nav[]`: `label`, `href`, `footer`, `icon` | yes | the header links in order. `href` is a page of this site (`/blog/`, `/#latest`) or `https://…`; a site path must exist under `src/pages` or `public` (the build names the item and the address if not); no two items with the same `href`. `footer: true` also lists it in the footer, first, with `icon` (required then) |
 | `footer.links[]`: `label`, `icon`, `href` or `social` | yes | after the nav items marked `footer`. Either an `href` (same rules as nav) or `social`, either `github` or `youtube`, which is left out while that link is empty. Not both. No two footer links to the same address |
 | `footer.note` | yes | the line after the year; empty shows nothing |
-| `waitlist.enabled` | yes | the waitlist switch, `false` by default. Off, or `turnstileSiteKey` empty: no form on any page, no `/waitlist/remove/`, nothing loaded, and every built page is the same as without the feature |
+| `waitlist.enabled` | yes (**Enabled**) | the waitlist switch, `false` by default. Off, or `turnstileSiteKey` empty: no form on any page, no `/waitlist/remove/`, nothing loaded, and every built page is the same as without the feature |
 | `waitlist.turnstileSiteKey` | yes | the **public** site key of the Turnstile widget (`0x…`), or empty. Cloudflare's test keys (`1x…`, `2x…`, `3x…`) are refused. The secret key is never here: it is the Pages secret `TURNSTILE_SECRET_KEY` |
 | `waitlist.heading`, `text` | yes | the band at the end of a post: heading (80 characters; one `*phrase*` is italic brass) and one sentence (300) |
 | `waitlist.buttonLabel`, `emailLabel` | yes | the button and the label of the email box (40 each). The box has no placeholder, so no example address appears on the site (`scripts/no-contact.mjs`) |
@@ -359,7 +359,7 @@ One file holds the site-wide settings, and it is edited in /admin under **Site s
 
 **The nav is matched by address, never by label.** A page says which section it belongs to with `current="/blog/"` (the `href` of the nav item), and `Header.astro` marks the item whose `href` equals it (`isCurrent` in `src/lib/site-settings.ts`). The search page picks its archive chips by address too (`searchKinds`). So renaming "Blog" in /admin keeps the highlight and the chips; changing an item's `href` is what moves it. `/styleguide/nav/` (noindex, unlinked) draws the nav with every label renamed, and `tests/site-settings.spec.js` checks it.
 
-`src/lib/waitlist.ts` holds the rule for when a build draws the forms (`waitlistState`): the live site only with `enabled` and a site key; `astro dev` always, with Cloudflare's test key and a "Dev only" note when the live site would not; a build with `WAITLIST_PREVIEW=1` always, with the test key (tests and Lighthouse only; a Cloudflare Pages build with it set stops). Where the forms are drawn is the home page's `waitlist` field and each post's `waitlist` field.
+`src/lib/waitlist.ts` holds the rule for when a build draws the forms (`waitlistState`): the live site only with `enabled` and a site key; `astro dev` always, with Cloudflare's test key and a "Dev only" note when the live site would not; a build with `WAITLIST_PREVIEW=1` always, with the test key (tests and Lighthouse only; a Cloudflare Pages build with it set stops). Where the forms are drawn is the home page's `waitlist` field, each post's `waitlist` field, and any `waitlist` block (`docs/SECTIONS.md`). The author's guide: `docs/WAITLIST.md`.
 
 Not settings: the CMS repository, branch and sign-in address (`CMS_REPO`, `CMS_BRANCH`, `CMS_AUTH_URL` in `src/admin/config.ts`), any token or secret, the game hosts in `public/_headers`, `public/site.webmanifest` (it repeats the name and description: change it by hand if the name changes), and the words of the header controls and post-page chrome.
 

@@ -1,0 +1,13 @@
+# The waitlist's D1 database for wrangler's command line (docs/WAITLIST.md): `npm run waitlist:export`, and creating the table in
+# the local database when trying the waitlist on your computer. Passed with `-c`; it is deliberately NOT named wrangler.toml and NOT
+# at the repository root: Cloudflare Pages would read a root wrangler.toml as the project's bindings and stop using the dashboard's.
+name = "r7-orbit-site-waitlist"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "WAITLIST_DB"
+database_name = "r7-waitlist"
+# Not a real id on purpose. With --remote, wrangler finds the database by database_name in your Cloudflare account (an id that is
+# not a UUID makes it look the name up). With --local it is the name of the local copy, and it must match the id after "=" in
+# `wrangler pages dev dist --d1 WAITLIST_DB=r7-waitlist`, so both commands use the same local file.
+database_id = "r7-waitlist"

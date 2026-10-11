@@ -15,6 +15,7 @@ cover: /media/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten
 coverAlt: "The R7 Orbit app on a dark canvas: a project at the centre with agent
   cards around it and a dispatch box at the bottom"
 draft: false
+waitlist: true
 author: hunter-newton
 ---
 [So you've got an AI that writes code. Cool. What if you had ten?](/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/)

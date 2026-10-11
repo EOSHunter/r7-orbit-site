@@ -177,11 +177,11 @@ const settingsFields: CmsField[] = [
     label: 'Waitlist',
     widget: 'object',
     collapsed: true,
-    hint: 'The form where readers join the waitlist for R7 Orbit, under the home page headline and at the end of posts that ask for it. Nothing shows anywhere until "Show the waitlist" is on AND the site key is filled in. Setting it up in Cloudflare: docs/DEPLOY_CLOUDFLARE.md, section 10.',
+    hint: 'The form where readers join the waitlist for R7 Orbit, under the home page headline and at the end of posts that ask for it. Nothing shows anywhere until "Enabled" is ticked AND the site key is filled in. Setting it up in Cloudflare: docs/WAITLIST.md.',
     fields: [
       field({
         name: 'enabled',
-        label: 'Show the waitlist',
+        label: 'Enabled',
         widget: 'boolean',
         required: false,
         default: false,

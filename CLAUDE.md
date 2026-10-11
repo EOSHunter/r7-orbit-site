@@ -15,7 +15,7 @@ Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must s
 ```
 CLAUDE.md                     this file
 .claude/skills/add-content/   the skill for adding a post of any kind (SKILL.md, templates/ per kind, checklists/, examples.md)
-docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: the About page, and optionally the body of any post, is an ordered list of blocks; the catalogue, the rules, posts written as sections, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), IMAGE_STYLE (partly decided: the picture treatment on cards and the home page only, not built yet; the brand pieces in a post's words are live;  prototyped at /styleguide/imagery/ and /styleguide/imagery/v2/ (pages share src/pages/styleguide/imagery/_prototype.ts; CSS in src/styles/imagery-prototype.css and imagery-v2-prototype.css); the rules and the rollout plan), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), WAITLIST (the author's guide to the waitlist: Cloudflare setup, testing, export, off switch, troubleshooting, privacy), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: the About page, and optionally the body of any post, is an ordered list of blocks; the catalogue, the rules, posts written as sections, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), IMAGE_STYLE (partly decided: the picture treatment on cards and the home page only, not built yet; the brand pieces in a post's words are live;  prototyped at /styleguide/imagery/ and /styleguide/imagery/v2/ (pages share src/pages/styleguide/imagery/_prototype.ts; CSS in src/styles/imagery-prototype.css and imagery-v2-prototype.css); the rules and the rollout plan), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
 .github/workflows/scheduled-deploy.yml   daily Cloudflare Pages Deploy Hook (publishes future-dated posts); needs secret CF_DEPLOY_HOOK_URL
@@ -23,7 +23,8 @@ scripts/media.mjs             picture guard (before Astro) and dist/media shrink
 scripts/no-contact.mjs        after the build: fails if a public page (not /admin/, not /styleguide/) has a mailto: link or an email address; rule in src/lib/no-contact.mjs
 workers/cms-auth/             Cloudflare Worker: GitHub OAuth for /admin (deployed with wrangler; outside the Astro build, lint, check and tests)
 functions/api/                the waitlist's two Cloudflare Pages Functions (waitlist.ts, waitlist-remove.ts): thin wrappers over src/lib/waitlist-api.ts, the site's only server code; public/_routes.json limits Functions to /api/*
-migrations/0001_waitlist.sql  the waitlist's D1 table (applied once by the author: docs/DEPLOY_CLOUDFLARE.md section 10); scripts/wrangler.waitlist-local.toml + .dev.vars.example are for local runs only (never a root wrangler.toml)
+migrations/0001_waitlist.sql  the waitlist's D1 table (applied once by the author: docs/WAITLIST.md); scripts/wrangler.waitlist.toml maps WAITLIST_DB to the database r7-waitlist for wrangler's command line (never a root wrangler.toml); .dev.vars.example is for local runs
+scripts/waitlist-export.mjs   npm run waitlist:export [-- --local] [-- --out file]: the waitlist as waitlist.csv (gitignored), through wrangler
 src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, Icon + IconSprite, MediaPlaceholder, StatusMark,
@@ -31,7 +32,7 @@ src/
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               AppsSection (type filter) + AppGrid + AppCard + AppsEmpty (the /apps/ hub; it was /games/, which redirects),
                               Sections + sections/ (a page built from blocks: About, the home page's rows, the blocks around a listing, and a post's body written as sections with layout="column";
-                              one <Id>Block.astro per block, registry.ts, SectionBand.astro = the home rows' ruled section frame) + AuthorBox, TagIndex (the /tags/ list),
+                              one <Id>Block.astro per block (WaitlistBlock = the waitlist band, drawn only while the waitlist is on), registry.ts, SectionBand.astro = the home rows' ruled section frame) + AuthorBox, TagIndex (the /tags/ list),
                               PageBlocks (library blocks drawn in place inside a page's own frame: privacy, 404, search),
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               VlogPage, ProjectPage, RepoPage (the vlog, project and repo pages; their routes only fetch, like ArticlePage's),
