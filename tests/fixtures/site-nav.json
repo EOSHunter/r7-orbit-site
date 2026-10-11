@@ -1,0 +1,10 @@
+[
+  { "label": "Latest", "href": "/#latest" },
+  { "label": "News", "href": "/news/" },
+  { "label": "Blog", "href": "/blog/" },
+  { "label": "Vlogs", "href": "/vlogs/" },
+  { "label": "Projects", "href": "/projects/" },
+  { "label": "Apps", "href": "/apps/", "footer": true, "icon": "play" },
+  { "label": "Repos", "href": "/repos/" },
+  { "label": "About", "href": "/about/" }
+]

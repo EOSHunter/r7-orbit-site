@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import site from '../data/site.json';
-import { siteSchema } from '../lib/site-settings';
+import { siteSchema, waitlistSchema } from '../lib/site-settings';
 import { buildConfig, CMS_AUTH_URL, CMS_REPO } from './config';
-import { SETTINGS_FILE, settingsCollection, settingsCollections } from './settings';
+import { waitlistState } from '../lib/waitlist';
+import { SETTINGS_FILE, settingsCollection, settingsCollections, waitlistKeyError } from './settings';
 
 // The Site settings collection against the schema the build reads the file with (src/lib/site-settings.ts): the same fields under the
 // same names, the same rules, and nothing the author should not edit from a browser.
@@ -123,10 +124,13 @@ describe('the Site settings collection', () => {
 
   it('has the waitlist group: off by default, the public site key only, and every word', () => {
     const waitlist = named(fields, 'waitlist').fields!;
-    expect(waitlist.map((f) => f.name)).toEqual(Object.keys(site.waitlist));
+    // A field for every setting of the schema, and the file has no other: the editor writes the keys in its own order, so the
+    // order is not compared. Whether the waitlist is on is the author's choice, so the file's values are not either.
+    const names = waitlist.map((f) => f.name).sort();
+    expect(names).toEqual(Object.keys(waitlistSchema.shape).sort());
+    expect(Object.keys(site.waitlist).sort()).toEqual(names);
     expect(named(waitlist, 'enabled')).toMatchObject({ widget: 'boolean', default: false });
-    expect(site.waitlist.enabled).toBe(false);
-    expect(site.waitlist.turnstileSiteKey).toBe('');
+    expect(waitlistSchema.parse({ ...site.waitlist, enabled: undefined }).enabled, 'a file without the switch is off').toBe(false);
     expect(paths(fields).some((p) => /secret/i.test(p))).toBe(false);
     for (const f of waitlist) expect(String(f.hint ?? ''), f.name).toMatch(/\S/);
   });
@@ -148,5 +152,38 @@ describe('the Site settings collection', () => {
     }
     // The form is a little stricter than the schema: one line, no leading space.
     expect(new RegExp(heading.pattern![0]).test('two\nlines')).toBe(false);
+  });
+});
+
+describe('the waitlist as the editor saves it', () => {
+  const KEY = '0x4AAAAAAABkMYinukE8nzY';
+
+  it('refuses "Enabled" with an empty site key in the form, and says why', () => {
+    expect(named(named(fields, 'waitlist').fields!, 'turnstileSiteKey').widget).toBe('waitlist-key');
+    for (const key of ['', '  ', undefined, null]) {
+      expect(waitlistKeyError(true, key)?.message, String(key)).toMatch(
+        /^Waitlist: "Enabled" is ticked but the Turnstile site key is empty, so no waitlist form shows anywhere\./,
+      );
+    }
+  });
+
+  it('takes the switch off with or without a key, and on with a key', () => {
+    expect(waitlistKeyError(false, '')).toBeUndefined();
+    expect(waitlistKeyError(undefined, '')).toBeUndefined();
+    expect(waitlistKeyError(false, KEY)).toBeUndefined();
+    expect(waitlistKeyError(true, KEY)).toBeUndefined();
+  });
+
+  it('writes a file the build reads and that draws the forms: a real boolean, the keys in any order', () => {
+    // The order Decap wrote them in when the author saved the waitlist on (src/data/site.json, 2026-10-10).
+    const order = ['enabled', 'heading', 'buttonLabel', 'successMessage', 'removeSuccessMessage', 'text', 'turnstileSiteKey'];
+    const saved = Object.fromEntries(
+      [...order, ...Object.keys(site.waitlist).filter((k) => !order.includes(k))].map((k) => [k, site.waitlist[k as keyof typeof site.waitlist]]),
+    );
+    const parsed = siteSchema.parse({ ...site, waitlist: { ...saved, enabled: true, turnstileSiteKey: ` ${KEY} ` } });
+    expect(parsed.waitlist).toMatchObject({ enabled: true, turnstileSiteKey: KEY });
+    expect(waitlistState(parsed.waitlist, { dev: false, preview: false })).toEqual({ show: true, siteKey: KEY });
+    // A string from a hand edit is refused, not read as on.
+    expect(siteSchema.safeParse({ ...site, waitlist: { ...saved, enabled: 'true', turnstileSiteKey: KEY } }).success).toBe(false);
   });
 });

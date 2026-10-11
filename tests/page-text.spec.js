@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
+import { contentTextProblems, inputsDigest, staleNote } from './fixture-inputs.js';
 import { pageText } from './page-text.js';
 
 // The home page, the archives, /latest/, /apps/ and /tags/ are built from src/content/pages/*.md (edited in /admin, "Pages").
@@ -11,6 +12,10 @@ import { pageText } from './page-text.js';
 // Which parts a page shows still depends on the posts (an empty state, the pinned post, the Apps row), so a fixture also records
 // the published posts it was captured with. With the same posts, the whole page must match. With other posts (the author has
 // published something since), only the page head is compared, the part every state has, and the test says so.
+//
+// The words are the author's (the author edits them in /admin), so a fixture also records a digest of the files they come from (the page's
+// file and the site settings, tests/fixture-inputs.js). Edited since? Then the page is checked against those files (title,
+// description, heading, eyebrow, lead, buttons) instead of word for word, and the test says the fixture is out of date.
 //
 // Changed a page on purpose, or published posts? Rebuild, then refresh the fixtures and read the diff before committing it:
 //   npm run build && UPDATE_PAGE_TEXT=1 npx playwright test page-text
@@ -49,15 +54,22 @@ for (const [name, path] of Object.entries(PAGES)) {
     const { head, lines } = await pageText(page);
     const posts = publishedPosts();
     const file = join(fixtures, `${name}.json`);
+    const inputs = inputsDigest(['src/data/site.json', `src/content/pages/${name}.md`]);
 
     if (UPDATE) {
       mkdirSync(fixtures, { recursive: true });
-      writeFileSync(file, `${JSON.stringify({ path, posts, head, lines }, null, 2)}\n`);
+      writeFileSync(file, `${JSON.stringify({ path, inputs, posts, head, lines }, null, 2)}\n`);
       return;
     }
 
     const fixture = JSON.parse(readFileSync(file, 'utf8'));
-    if (JSON.stringify(fixture.posts) === JSON.stringify(posts)) {
+    if (fixture.inputs !== inputs) {
+      test.info().annotations.push({
+        type: 'note',
+        description: staleNote(`tests/fixtures/pages/${name}.json`, 'UPDATE_PAGE_TEXT=1 npx playwright test page-text'),
+      });
+      expect(contentTextProblems(lines, name, { home: name === 'home' }), 'the words its file holds').toEqual([]);
+    } else if (JSON.stringify(fixture.posts) === JSON.stringify(posts)) {
       expect(lines, 'the whole page, word for word').toEqual(fixture.lines);
     } else {
       test.info().annotations.push({

@@ -1,6 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, normalize } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import * as pagefind from 'pagefind';
@@ -168,7 +166,10 @@ test('the fixtures are not part of the site: no archive or sitemap lists them', 
 // Pagefind indexes the built pages (pagefind.yml: the five kinds' post pages, the text inside <main>). The fixtures are not in the site's
 // index, so they are indexed here the same way, with the same settings, into a separate index that the real search page then uses.
 test.describe('search', () => {
-  let dir;
+  // The index's files by path (pagefind.js, pagefind-entry.json, …), as Pagefind hands them over. In memory, not written to a
+  // folder and read back: writeFiles can resolve before its files are on disk, and under the full suite's load the page then got
+  // an empty pagefind-entry.json now and then, and found nothing.
+  let files;
   test.beforeAll(async () => {
     const config = readFileSync(new URL('../pagefind.yml', import.meta.url), 'utf8');
     const excludeSelectors = [...config.matchAll(/^\s+-\s+"([^"]+)"/gm)].map((m) => m[1]);
@@ -180,19 +181,21 @@ test.describe('search', () => {
       // The address a real post of this kind would have, so a result reads as that kind.
       await index.addHTMLFile({ url: `/${kind}/sections-fixture/`, content });
     }
-    dir = mkdtempSync(join(tmpdir(), 'r7-pagefind-'));
-    await index.writeFiles({ outputPath: dir });
+    const made = await index.getFiles();
+    expect(made.errors).toEqual([]);
+    files = new Map(made.files.map((f) => [f.path.replaceAll('\\', '/').replace(/^\/+/, ''), Buffer.from(f.content)]));
+    expect(files.has('pagefind-entry.json'), 'the index has its entry file').toBe(true);
     await pagefind.close();
   });
-  test.afterAll(() => dir && rmSync(dir, { recursive: true, force: true }));
 
   for (const kind of KINDS) {
     test(`finds the ${kind} fixture by a word only its sections hold`, async ({ page }) => {
       await page.route('**/pagefind/**', (route) => {
-        const file = normalize(join(dir, decodeURIComponent(new URL(route.request().url()).pathname.replace(/^\/pagefind\//, ''))));
-        if (!file.startsWith(dir) || !existsSync(file)) return route.fulfill({ status: 404, body: '' });
+        const file = decodeURIComponent(new URL(route.request().url()).pathname.replace(/^\/pagefind\//, ''));
+        const body = files.get(file);
+        if (!body) return route.fulfill({ status: 404, body: '' });
         const type = file.endsWith('.js') ? 'text/javascript' : file.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream';
-        return route.fulfill({ body: readFileSync(file), contentType: type });
+        return route.fulfill({ body, contentType: type });
       });
       // The search script must be listening before the word is typed (the full suite runs many pages at once).
       await page.goto('/search/', { waitUntil: 'networkidle' });

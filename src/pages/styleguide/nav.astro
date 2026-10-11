@@ -1,14 +1,15 @@
 ---
-// Fixture for tests/site-settings.spec.js: the site's own nav with every label renamed, the way an author could rename them in
-// /admin (Site settings). The page says it is in the Blog section by address (current="/blog/"), so the header must still mark the
-// renamed Blog link as current, every link must still go where it did, and the search page's archive chips (searchKinds) must still
-// find the archives. Sample content, not part of the site. Not linked from anywhere and kept out of search engines, like the rest of
-// the styleguide.
+// Fixture for tests/site-settings.spec.js: a fixed nav (tests/fixtures/site-nav.json: every archive, and Apps in the footer too)
+// with every label renamed, the way an author could rename them in /admin (Site settings). The page says it is in the Blog section
+// by address (current="/blog/"), so the header must still mark the renamed Blog link as current, every link must still go where
+// it did, and the search page's archive chips (searchKinds) must still find the archives. Sample content, not part of the site.
+// Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { navItems } from '../../data/nav';
-import { searchKinds } from '../../lib/site-settings';
+import { searchKinds, type NavItem } from '../../lib/site-settings';
+import fixture from '../../../tests/fixtures/site-nav.json';
 
-const nav = navItems.map((item) => ({ ...item, label: `Renamed ${item.label.toLowerCase()}` }));
+// Not the site's own nav: the author edits that in /admin, and could take out the Blog or Apps link the tests rename.
+const nav = (fixture as NavItem[]).map((item) => ({ ...item, label: `Renamed ${item.label.toLowerCase()}` }));
 ---
 
 <BaseLayout

@@ -1,16 +1,15 @@
-import { readFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+import { contentTextProblems, inputsDigest, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 import { pageTextLines } from './page-text.js';
 
 // Privacy, 404 and search are built from src/content/pages/*.md (edited in /admin) inside their own frame. Their
-// wording must not change by accident: tests/fixtures/pages/<page>.txt is the text of each page as it was before it became
-// editable (captured from main), line for line, links included. If you change a page on purpose, change its fixture in the same
-// commit.
-// Split on CRLF too: a Windows checkout (core.autocrlf) gives the fixtures CRLF line ends.
-const fixture = (name) =>
-  readFileSync(new URL(`./fixtures/pages/${name}.txt`, import.meta.url), 'utf8')
-    .trimEnd()
-    .split(/\r?\n/);
+// wording must not change by accident: tests/fixtures/pages/<page>.txt is the text of each page, line for line, links included,
+// with the digest of the files it came from on its first line (tests/fixture-inputs.js). If the author has edited them since,
+// the page is checked against them instead and the test says the fixture is out of date. Changed a page on purpose? Rebuild,
+// refresh the fixtures and read the diff:
+//   npm run build && UPDATE_PAGE_TEXT=1 npx playwright test pages.spec
+const fixtureUrl = (name) => new URL(`./fixtures/pages/${name}.txt`, import.meta.url);
 
 const PAGES = [
   { name: 'privacy', path: '/privacy/' },
@@ -23,7 +22,18 @@ for (const { name, path } of PAGES) {
     page,
   }) => {
     await page.goto(path);
-    expect(await pageTextLines(page)).toEqual(fixture(name));
+    const lines = await pageTextLines(page);
+    const inputs = inputsDigest(['src/data/site.json', `src/content/pages/${name}.md`]);
+    if (process.env.UPDATE_PAGE_TEXT) return writeFileSync(fixtureUrl(name), textFixture(inputs, lines));
+    const fixture = readTextFixture(fixtureUrl(name));
+    if (fixture.inputs === inputs) expect(lines).toEqual(fixture.lines);
+    else {
+      test.info().annotations.push({
+        type: 'note',
+        description: staleNote(`tests/fixtures/pages/${name}.txt`, 'UPDATE_PAGE_TEXT=1 npx playwright test pages.spec'),
+      });
+      expect(contentTextProblems(lines, name), 'the words its file holds').toEqual([]);
+    }
   });
 
   for (const width of [375, 1280]) {

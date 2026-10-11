@@ -10,7 +10,7 @@ import type { CmsCollection, CmsField } from 'decap-cms-core';
 import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS } from '../lib/site-settings';
-import { SITE_KEY_PATTERN } from '../lib/waitlist';
+import { SITE_KEY_PATTERN, WAITLIST_KEY_MISSING, waitlistKeyMissing } from '../lib/waitlist';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
 
@@ -190,7 +190,8 @@ const settingsFields: CmsField[] = [
       field({
         name: 'turnstileSiteKey',
         label: 'Turnstile site key',
-        widget: 'string',
+        // Decap's string box, plus the check that it is filled in while "Enabled" is ticked (waitlistKeyError).
+        widget: 'waitlist-key',
         required: false,
         pattern: [WAITLIST_KEY.source, 'Empty, or the site key from Cloudflare (it starts with 0x)'],
         hint: 'The public "Site Key" of the Turnstile widget in Cloudflare (it starts with 0x). Never paste the Secret Key here: that one goes in the Pages project\'s settings as TURNSTILE_SECRET_KEY.',
@@ -260,3 +261,15 @@ export const settingsCollection = {
 } as unknown as CmsCollection;
 
 export const settingsCollections: CmsCollection[] = [settingsCollection];
+
+/**
+ * The check of the Turnstile site key box (the `waitlist-key` widget, src/admin/waitlist-key.ts): with "Enabled" ticked, an empty
+ * key is an error, so the form refuses to save it. The build would accept the file and draw no form anywhere, which reads as a
+ * switch that does not work. A field's own check, not a `preSave` handler: Decap runs it before it starts to save, so after
+ * pasting the key the next Save works (a refusal from `preSave` leaves Decap thinking the entry is already in review, and its
+ * next save fails).
+ */
+export function waitlistKeyError(enabled: unknown, key: unknown): { type: 'CUSTOM'; message: string } | undefined {
+  const missing = waitlistKeyMissing({ enabled: enabled === true, turnstileSiteKey: typeof key === 'string' ? key : '' });
+  return missing ? { type: 'CUSTOM', message: WAITLIST_KEY_MISSING } : undefined;
+}

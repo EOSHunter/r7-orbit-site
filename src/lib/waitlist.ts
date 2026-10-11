@@ -97,6 +97,17 @@ export function waitlistState(settings: WaitlistSwitch, build: WaitlistBuild): W
   return live ? { show: true, siteKey: key } : { show: false };
 }
 
+/**
+ * The settings ask for the waitlist but give it no site key: "Enabled" is ticked and the key is empty. Turnstile cannot run
+ * without the key, so `waitlistState` draws nothing anywhere, which looks like the switch does not work. The editor refuses to
+ * save it (src/admin/settings.ts, `waitlistKeyError`) and the build warns about a file that has it (src/lib/waitlist-queries.ts).
+ */
+export const waitlistKeyMissing = (settings: WaitlistSwitch): boolean =>
+  settings.enabled && settings.turnstileSiteKey.trim() === '';
+
+export const WAITLIST_KEY_MISSING =
+  'Waitlist: "Enabled" is ticked but the Turnstile site key is empty, so no waitlist form shows anywhere. Paste the Site Key of your Turnstile widget (it starts with 0x; Cloudflare > Turnstile > your widget), or untick Enabled. See docs/WAITLIST.md, step 6.';
+
 /** The address of the page where a reader takes their address off the list. Built only while the forms are shown. */
 export const REMOVE_PATH = '/waitlist/remove/';
 export const API_JOIN = '/api/waitlist';

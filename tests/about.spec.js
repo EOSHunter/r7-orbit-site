@@ -1,18 +1,33 @@
-import { readFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
+import { contentTextProblems, inputsDigest, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
-// tests/fixtures/about-text.txt is the text of the page as it was before it became editable, line for line. If you change the
-// page on purpose, change the fixture in the same commit.
-const fixture = readFileSync(new URL('./fixtures/about-text.txt', import.meta.url), 'utf8').trimEnd().split(/\r?\n/);
+// tests/fixtures/about-text.txt is the text of the page, line for line, with the digest of the files it came from on its first
+// line (tests/fixture-inputs.js). If the author has edited them since, the page is checked against them instead and the test says
+// the fixture is out of date. Changed the page on purpose? Rebuild, refresh the fixture and read its diff:
+//   npm run build && UPDATE_PAGE_TEXT=1 npx playwright test about
+const fixtureUrl = new URL('./fixtures/about-text.txt', import.meta.url);
+const INPUTS = ['src/data/site.json', 'src/content/pages/about.md', 'src/content/authors/'];
 
 test('the rendered /about/ text is exactly the fixture: title, description, headings, paragraphs, bold lead-ins, alt text', async ({
   page,
 }) => {
   await page.goto('/about/');
-  expect(await aboutTextLines(page)).toEqual(fixture);
+  const lines = await aboutTextLines(page);
+  const inputs = inputsDigest(INPUTS);
+  if (process.env.UPDATE_PAGE_TEXT) return writeFileSync(fixtureUrl, textFixture(inputs, lines));
+  const fixture = readTextFixture(fixtureUrl);
+  if (fixture.inputs === inputs) expect(lines).toEqual(fixture.lines);
+  else {
+    test.info().annotations.push({
+      type: 'note',
+      description: staleNote('tests/fixtures/about-text.txt', 'UPDATE_PAGE_TEXT=1 npx playwright test about'),
+    });
+    expect(contentTextProblems(lines, 'about'), 'the words its file holds').toEqual([]);
+  }
 });
 
 test('the Person structured data still comes from site.json, and the page head is unchanged', async ({ page }) => {

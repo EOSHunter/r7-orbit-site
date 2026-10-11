@@ -1,8 +1,11 @@
 {
   "path": "/repos/",
+  "inputs": "sha256:c945ea11de518634",
   "posts": [
+    "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/vesper-drift"
   ],
   "head": [

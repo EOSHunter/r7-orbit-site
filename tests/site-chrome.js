@@ -6,11 +6,19 @@
 // (/_astro/x.Ab12Cd.js), the year in the footer, and how the CSS is delivered (Vite inlines a small stylesheet or links it, and
 // re-splits them when a page is added), so <style> blocks and stylesheet links are left out.
 //
-// When the author changes a setting (or a page's own title or description) on purpose, the fixture is out of date. Rewrite it from
-// a fresh build with:  npm run build && UPDATE_SITE_CHROME=1 npx playwright test site-settings
+// The first line of the fixture is the digest of the content it was captured from (the settings and src/content/, where the pages'
+// titles and descriptions are: tests/fixture-inputs.js). When the author has changed a setting or a page in /admin since, the
+// fixture is out of date: the test then checks each page against the settings instead (`chromeProblems`: the nav, the footer, the
+// site name) and says so. Rewrite it from a fresh build, and read its diff, with:
+//   npm run build && UPDATE_SITE_CHROME=1 npx playwright test site-settings
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { footerLinks } from '../src/lib/site-settings.ts';
+import { inputsDigest, siteSettings, textFixture } from './fixture-inputs.js';
+
+/** The files the head, header and footer of the pages are drawn from. */
+export const CHROME_INPUTS = ['src/data/site.json', 'src/content/'];
 
 /** The pages compared: one of each kind of page that exists whatever is published, plus the posts published when this was made. */
 export const CHROME_PAGES = [
@@ -52,9 +60,14 @@ const lines = (fragment) =>
     .map((line) => line.trim())
     .filter(Boolean);
 
+const fileOf = (dist, path) => (path.endsWith('.html') ? join(dist, path) : join(dist, path, 'index.html'));
+
+/** Whether the build has the page (a post in CHROME_PAGES may since have been unpublished). */
+export const builtPage = (dist, path) => existsSync(fileOf(dist, path));
+
 /** The head, header and footer of one built page (`path` as in CHROME_PAGES), as lines. */
 export function chromeOf(dist, path) {
-  const file = path.endsWith('.html') ? join(dist, path) : join(dist, path, 'index.html');
+  const file = fileOf(dist, path);
   const html = readFileSync(file, 'utf8');
   return [
     `== ${path} head`,
@@ -66,7 +79,45 @@ export function chromeOf(dist, path) {
   ];
 }
 
-/** Every page in CHROME_PAGES, as the text the fixture holds. */
+/** Every page in CHROME_PAGES, as the text the fixture holds: the digest of its inputs first. */
 export function chromeText(dist) {
-  return `${CHROME_PAGES.flatMap((path) => chromeOf(dist, path)).join('\n')}\n`;
+  return textFixture(
+    inputsDigest(CHROME_INPUTS),
+    CHROME_PAGES.filter((path) => builtPage(dist, path)).flatMap((path) => chromeOf(dist, path)),
+  );
+}
+
+const decode = (s) =>
+  s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+/**
+ * What the settings say the head, header and footer of a page hold, checked in its chrome (`chromeOf`): the nav links in order,
+ * at most one of them current; the footer links in order and the footer note; the site name in the title and og:site_name.
+ * For when the fixture is out of date. Returns the problems found.
+ */
+export function chromeProblems(dist, path) {
+  const site = siteSettings();
+  const html = chromeOf(dist, path).join('\n');
+  const part = (open, close) => {
+    const start = html.indexOf(open);
+    return start < 0 ? '' : html.slice(start, html.indexOf(close, start));
+  };
+  const problems = [];
+  const same = (what, found, expected) => {
+    if (JSON.stringify(found) !== JSON.stringify(expected))
+      problems.push(`${what}: ${JSON.stringify(found)}, the settings say ${JSON.stringify(expected)}`);
+  };
+
+  const nav = [...part('<nav class="site-nav"', '</nav>').matchAll(/<a href="([^"]*)"( aria-current="page")?>([^<]*)<\/a>/g)];
+  same('the nav', nav.map((m) => [decode(m[3]), decode(m[1])]), site.nav.map((i) => [i.label, i.href]));
+  if (nav.filter((m) => m[2]).length > 1) problems.push('more than one nav link is marked as the current page');
+
+  const footer = [...part('<nav aria-label="Footer">', '</nav>').matchAll(/<a href="([^"]*)"[^>]*>(?:[^<]|<(?!\/a>))*?([^>]*)<\/a>/g)];
+  same('the footer links', footer.map((m) => [decode(m[2]), decode(m[1])]), footerLinks(site).map((l) => [l.label, l.href]));
+  if (!html.includes(`<span>${site.footer.note}</span>`)) problems.push(`the footer note "${site.footer.note}" is missing`);
+
+  const title = decode(html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '');
+  if (!title.includes(site.name)) problems.push(`the title "${title}" does not hold the site name "${site.name}"`);
+  same('og:site_name', decode(html.match(/<meta property="og:site_name" content="([^"]*)">/)?.[1] ?? ''), site.name);
+  return problems;
 }

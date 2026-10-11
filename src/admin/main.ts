@@ -23,6 +23,7 @@ import { bodyOrSectionsCheck } from './post-body';
 import { POST_PREVIEW_KINDS, postPreview, type PreviewKind } from './post-preview';
 import { blogPreview } from './preview';
 import { globalStyleOf, spriteOf } from './preview-assets';
+import { withWaitlistKeyCheck } from './waitlist-key';
 import previewCss from './preview.css?inline';
 import { SITE_PAGES } from '../lib/site-pages';
 
@@ -41,6 +42,9 @@ if (imageWidget) {
   // The string form of registerWidget takes the schema as a fourth argument that its typings omit; it keeps the widget's own.
   (CMS.registerWidget as (...args: unknown[]) => void)('image', withAssetBridge(imageWidget.control), imageWidget.preview, imageWidget.schema);
 }
+// Site settings > Waitlist > Turnstile site key: the string box, refusing to save an empty key while "Enabled" is ticked.
+const stringWidget = CMS.getWidget('string') as { control: never; preview?: never } | undefined;
+if (stringWidget) CMS.registerWidget('waitlist-key', withWaitlistKeyCheck(stringWidget.control), stringWidget.preview);
 // Leave an emptied image field (and the alt text of a picture that is not there) out of the file, rather than writing `cover: ''`.
 // First, so the checks below read the tidied data.
 CMS.registerEventListener({ name: 'preSave', handler: dropEmptyImages });

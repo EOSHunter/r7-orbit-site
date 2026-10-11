@@ -2,6 +2,8 @@ import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect } from '@playwright/test';
 import { sectionsSchema } from '../src/lib/sections/schema.ts';
 import { pageProblems, SITE_PAGES, sitePage } from '../src/lib/site-pages.ts';
+import { fillTokens, pageSettingsOf } from '../src/lib/page-copy.ts';
+import { plainTitle, titleParts } from '../src/lib/text.ts';
 import { openAdmin, PAGE_FILES, SITE_JSON } from './admin-mock.js';
 
 // The home page and the listing pages in the real editor, under its Content-Security-Policy, with GitHub stood in for
@@ -45,15 +47,17 @@ test('home page: opens with today\'s words, previews the hero and stand-ins for 
   // Today's words, read from the file the editor opens (the author edits them in /admin).
   const home = parseFrontmatter(PAGE_FILES['home.md']).frontmatter;
   await expect(page.getByLabel('Headline')).toHaveValue(home.title, { timeout: 15_000 });
-  // The tagline is the Site settings' (a token); the preview prints it.
-  await expect(page.getByLabel(/^Eyebrow/).first()).toHaveValue('{site.tagline}');
+  // The eyebrow as the file has it (a settings token such as {site.tagline}, or typed); the preview prints it filled in.
+  await expect(page.getByLabel(/^Eyebrow/).first()).toHaveValue(home.eyebrow);
 
+  const settings = pageSettingsOf(JSON.parse(SITE_JSON));
+  const fill = (text) => fillTokens(text, settings, 'home.md');
   const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.locator('section.hero h1')).toHaveText(home.title.replaceAll('*', ''), { timeout: 15_000 });
-  await expect(preview.locator('section.hero h1 em')).toHaveText('AI agents');
-  await expect(preview.locator('.hero .cluster a.btn')).toHaveText(['Start with the latest']);
-  await expect(preview.locator('.hero .eyebrow')).toHaveText(JSON.parse(SITE_JSON).tagline);
-  await expect(preview.locator('.hero .t-lead')).toHaveText(home.lead.replace('{site.description}', JSON.parse(SITE_JSON).description));
+  await expect(preview.locator('section.hero h1')).toHaveText(plainTitle(home.title), { timeout: 15_000 });
+  await expect(preview.locator('section.hero h1 em')).toHaveText(titleParts(home.title).filter((p) => p.em).map((p) => p.text));
+  await expect(preview.locator('.hero .cluster a.btn')).toHaveText(home.buttons.map((b) => b.label));
+  await expect(preview.locator('.hero .eyebrow')).toHaveText(fill(home.eyebrow));
+  await expect(preview.locator('.hero .t-lead')).toHaveText(fill(home.lead).replace(/\s+/g, ' '));
   // Every row made from the posts says so: a stand-in in its frame, and the note under it.
   await expect(preview.getByText('Pinned post: the post marked Featured, as a large card.')).toBeVisible();
   await expect(preview.getByText(/^Latest feed: the 8 newest posts of every kind/)).toBeVisible();

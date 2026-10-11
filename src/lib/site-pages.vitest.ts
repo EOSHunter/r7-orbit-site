@@ -71,13 +71,16 @@ describe('the site pages', () => {
     expect(read('latest').description).toBe('{site.description}');
   });
 
-  it('holds the copy the pages had in code, moved over unchanged (a few anchors; tests/page-text.spec.js compares every word)', () => {
-    expect(read('home')).toMatchObject({ title: 'Building with *AI agents*.', eyebrow: '{site.tagline}' });
-    expect(read('blog')).toMatchObject({ title: 'Writing about *building with agents*', seoTitle: 'Blog', emptyHeading: 'No posts yet.' });
-    expect(read('apps')).toMatchObject({ title: 'Apps', soonTitle: 'More apps coming', emptyLinkLabel: 'See the projects', soonEyebrow: 'Next up' });
-    expect(read('tags')).toMatchObject({ title: 'Browse by *topic*', emptyHeading: 'No tags yet.' });
-    // The home page's rows, in today's order.
-    expect((read('home').sections as { type: string }[]).map((s) => s.type)).toEqual(['pinned', 'feed', 'latest', 'apps', 'latest']);
+  it('holds the words the pages had in code, as text (a few anchors; tests/page-text.spec.js compares the rendered words with the files)', () => {
+    // The words are the author's (edited in /admin), so this checks that each field the copy moved into is still there and
+    // filled in, not what it says.
+    const text = expect.stringMatching(/\S/);
+    expect(read('home')).toMatchObject({ title: text, eyebrow: text, lead: text });
+    expect(read('blog')).toMatchObject({ title: text, seoTitle: text, emptyHeading: text });
+    expect(read('apps')).toMatchObject({ title: text, soonTitle: text, emptyLinkLabel: text, soonEyebrow: text });
+    expect(read('tags')).toMatchObject({ title: text, emptyHeading: text });
+    // The home page has its posts: the latest feed is one of its rows.
+    expect((read('home').sections as { type: string }[]).map((s) => s.type)).toContain('feed');
   });
 });
 

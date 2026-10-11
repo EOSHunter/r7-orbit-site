@@ -1,8 +1,11 @@
 {
   "path": "/latest/",
+  "inputs": "sha256:01651e8f23d16ba7",
   "posts": [
+    "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/vesper-drift"
   ],
   "head": [

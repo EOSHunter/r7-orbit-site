@@ -1,8 +1,9 @@
+inputs: sha256:309a0876f67b765b
 == / head
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>R7 Orbit · Field notes on building with AI</title>
+<title>R7 Orbit · Mission Control for AI Agents</title>
 <meta name="description" content="News, builds and the things in between: writing, videos, projects and code about building with AI.">
 <link rel="canonical" href="https://r7orbit.io/">
 <meta name="theme-color" content="#09090a">
@@ -12,7 +13,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
-<meta property="og:title" content="R7 Orbit · Field notes on building with AI">
+<meta property="og:title" content="R7 Orbit · Mission Control for AI Agents">
 <meta property="og:description" content="News, builds and the things in between: writing, videos, projects and code about building with AI.">
 <meta property="og:url" content="https://r7orbit.io/">
 <meta property="og:image" content="https://r7orbit.io/og-default.png">
@@ -32,13 +33,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest" aria-current="page">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -73,20 +70,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -137,13 +120,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -178,20 +157,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -243,13 +208,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/" aria-current="page">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -284,20 +245,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -348,13 +295,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/" aria-current="page">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -389,20 +332,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -453,13 +382,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/" aria-current="page">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -494,20 +419,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -558,13 +469,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/" aria-current="page">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -599,20 +506,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -664,13 +557,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/" aria-current="page">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -705,20 +594,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -769,13 +644,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/" aria-current="page">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -810,20 +681,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -874,13 +731,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -915,20 +768,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -979,13 +818,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/" aria-current="page">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1020,20 +855,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1084,13 +905,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1125,20 +942,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1189,13 +992,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1230,20 +1029,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1294,13 +1079,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1335,20 +1116,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1399,13 +1166,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1440,20 +1203,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1505,13 +1254,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/" aria-current="page">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1546,20 +1291,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1616,13 +1347,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/" aria-current="page">Vlogs</a>
 <a href="/projects/">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1657,20 +1384,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
@@ -1726,13 +1439,9 @@ document.documentElement.classList.add('js');
 <a class="wordmark" href="/" aria-label="R7 Orbit, home">
 <img src="/assets/r7-mark.svg" alt="" width="21" height="18">R7 Orbit</a>
 <nav class="site-nav" id="site-nav" aria-label="Primary">
-<a href="/#latest">Latest</a>
-<a href="/news/">News</a>
 <a href="/blog/">Blog</a>
 <a href="/vlogs/">Vlogs</a>
 <a href="/projects/" aria-current="page">Projects</a>
-<a href="/apps/">Apps</a>
-<a href="/repos/">Repos</a>
 <a href="/about/">About R7 Orbit</a>
 </nav>
 <div class="header-tools">
@@ -1767,20 +1476,6 @@ document.documentElement.classList.add('js');
 </div>
 <nav aria-label="Footer">
 <ul class="footer-links">
-<li>
-<a href="/apps/">
-<svg class="ico" aria-hidden="true">
-<use href="#i-play">
-</use>
-</svg>Apps</a>
-</li>
-<li>
-<a href="https://github.com/EOSHunter" rel="noopener">
-<svg class="ico" aria-hidden="true">
-<use href="#i-github">
-</use>
-</svg>GitHub</a>
-</li>
 <li>
 <a href="https://www.youtube.com/@R7Creatives" rel="noopener">
 <svg class="ico" aria-hidden="true">
