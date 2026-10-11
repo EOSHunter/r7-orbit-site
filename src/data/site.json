@@ -34,7 +34,7 @@
     "successMessage": "You are on the list.",
     "removeSuccessMessage": "If that address was on the waitlist, it has been removed.",
     "text": "Get access to R7 Orbit.",
-    "turnstileSiteKey": "",
+    "turnstileSiteKey": "0x4AAAAAAFTfpwy4TfLbagT9",
     "removeLinkLabel": "Remove my email",
     "emailLabel": "Email address",
     "noscriptMessage": "JavaScript is needed to join the waitlist.",
