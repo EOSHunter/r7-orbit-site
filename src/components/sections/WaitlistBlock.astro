@@ -1,0 +1,16 @@
+---
+// The waitlist block: the band variant of WaitlistForm (heading, sentence and form from Site settings > Waitlist), with the source
+// the author chose. WaitlistForm draws nothing while the waitlist is off, so a page holding this block is unchanged until then.
+import WaitlistForm from '../WaitlistForm.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'waitlist'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+---
+
+<WaitlistForm variant="band" source={block.source} id={`waitlist-sec-${ctx.index + 1}`} />

@@ -44,6 +44,7 @@ const SHOWS = {
   pinned: '.sec-row-band section.section:not(.ruled) .section-head',
   apps: '.sec-row-band section.section.ruled .section-head',
   author: '.author-box',
+  waitlist: '.sec-row-band section[data-waitlist-placeholder] .empty',
 };
 
 async function openAbout(page) {

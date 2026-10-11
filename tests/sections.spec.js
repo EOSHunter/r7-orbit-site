@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { definitions } from '../src/lib/sections/definitions.ts';
@@ -9,6 +10,8 @@ import { watchPage } from './helpers.js';
 // any width. The About page itself is tests/about.spec.js.
 
 const PAGE = '/styleguide/sections/';
+/** A WAITLIST_PREVIEW=1 build: the waitlist block draws its form. In a normal build (the waitlist off) it draws nothing. */
+const waitlistOn = existsSync(new URL('../dist/waitlist/remove/index.html', import.meta.url));
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 /** A selector for each block as the page draws it. */
@@ -39,6 +42,8 @@ const PRESENT = {
   pinned: 'section[data-pinned] .card',
   apps: 'section[data-apps-teaser] .app-card',
   author: 'aside.author-box',
+  // Only while the waitlist is on (tests/waitlist.spec.js covers the form itself).
+  waitlist: 'section.waitlist-band [data-waitlist]',
 };
 
 const YT_PAGE = '<!doctype html><title>Video</title><p>video</p>';
@@ -48,6 +53,10 @@ test('every block of the library is drawn on the gallery page, and the gallery l
   await page.goto(PAGE);
   expect(Object.keys(PRESENT).sort(), 'this test knows every block').toEqual(definitions.map((d) => d.id).sort());
   for (const d of definitions) {
+    if (d.id === 'waitlist' && !waitlistOn) {
+      await expect(page.locator('main [data-waitlist]'), 'the waitlist is off: its block draws nothing').toHaveCount(0);
+      continue;
+    }
     await expect(page.locator(`main ${PRESENT[d.id]}`).first(), d.id).toBeAttached();
   }
 });

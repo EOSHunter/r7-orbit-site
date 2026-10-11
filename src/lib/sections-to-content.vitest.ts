@@ -42,6 +42,7 @@ const EXPECTED: Record<SectionType, { text: string[] }> = {
   pinned: { text: [] },
   apps: { text: [] },
   author: { text: [] },
+  waitlist: { text: [] },
 };
 
 describe('sections-to-content: every block', () => {

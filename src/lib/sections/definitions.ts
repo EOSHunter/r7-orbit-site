@@ -34,6 +34,7 @@ import {
   TIMESTAMP_PATTERN,
   YOUTUBE_ID_PATTERN,
 } from './fields';
+import { WAITLIST_SOURCES } from '../waitlist';
 
 
 /** Where a block sits on the page. `prose` is the reading column; `wide` and `full` leave it (one block, one row); `band` is a
@@ -755,6 +756,28 @@ const author = defineBlock(
   },
 );
 
+// The waitlist form for R7 Orbit (src/components/WaitlistForm.astro, docs/PAGES.md "Waitlist"): the band with the heading, sentence and
+// form from Site settings > Waitlist. Draws nothing while the waitlist is off; its only field is where the signups are counted from.
+const waitlist = defineBlock(
+  'waitlist',
+  {
+    label: 'Waitlist form',
+    group: 'From the site',
+    description: 'The waitlist for R7 Orbit: the heading, sentence and email form from Site settings > Waitlist, in a ruled band. Shown only while the waitlist is on there; otherwise the block draws nothing.',
+    summary: 'Waitlist form ({{fields.source}})',
+    placement: 'band',
+    example: { source: 'other' },
+    previewNote: 'The form and its words come from Site settings, and it shows on the site only while the waitlist is on, so the preview shows a labelled placeholder.',
+  },
+  {
+    source: choice(WAITLIST_SOURCES, { hero: 'Hero', blog: 'Blog', vlog: 'Vlog', other: 'Other' }, {
+      label: 'Counted as',
+      fallback: 'other',
+      hint: 'Stored with each address to say where it was left: Hero, Blog, Vlog or Other (any other page).',
+    }),
+  },
+);
+
 // ---- The list -----------------------------------------------------------------------------------------------------------
 
 /** Every block, in the order of the editor's "Add section" menu (grouped, in the order of GROUPS). */
@@ -784,6 +807,7 @@ export const definitions = [
   pinned,
   appsRow,
   author,
+  waitlist,
 ] as const;
 
 export type Definition = (typeof definitions)[number];

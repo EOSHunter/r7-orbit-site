@@ -82,6 +82,8 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   pinned: nothing,
   apps: nothing,
   author: nothing,
+  // The waitlist's words are Site settings', not this post's.
+  waitlist: nothing,
 };
 
 const projectionOf = <K extends SectionType>(block: SectionOf<K>) => BLOCKS[block.type as K] as Projection<K>;

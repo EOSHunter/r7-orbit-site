@@ -66,17 +66,12 @@ describe('normaliseEmail', () => {
 });
 
 describe('sources', () => {
-  it('are hero, blog, vlog and other, and a post band sends its kind', () => {
+  it('are hero, blog, vlog and other; a post band sends blog (blog and news), vlog, or other (projects and repos)', () => {
     expect(['hero', 'blog', 'vlog', 'other'].every(isWaitlistSource)).toBe(true);
     expect(isWaitlistSource('news')).toBe(false);
     expect(isWaitlistSource(undefined)).toBe(false);
-    expect(['blog', 'vlogs', 'news', 'projects', 'repos'].map(sourceForKind)).toEqual([
-      'blog',
-      'vlog',
-      'other',
-      'other',
-      'other',
-    ]);
+    // A news item counts as `blog`: both are drawn by ArticlePage, and the brief keeps the sources to four.
+    expect(['blog', 'news', 'vlogs', 'projects', 'repos'].map(sourceForKind)).toEqual(['blog', 'blog', 'vlog', 'other', 'other']);
   });
 });
 

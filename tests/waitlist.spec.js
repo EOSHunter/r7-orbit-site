@@ -237,7 +237,7 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
 
   const kinds = [
     ['blog', 'blog'],
-    ['news', 'other'],
+    ['news', 'blog'],
     ['vlogs', 'vlog'],
     ['projects', 'other'],
     ['repos', 'other'],
@@ -274,6 +274,86 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
     });
   }
 
+  // The author's two posts that ask for the band (src/content/: `waitlist: true` and nothing else changed), and two that do not.
+  const BLOG = '/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/';
+  const VLOG = '/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/';
+  for (const [path, source] of [
+    [BLOG, 'blog'],
+    [VLOG, 'vlog'],
+  ]) {
+    test(`${path} ends with the band (source "${source}") before related posts, and asks Cloudflare for nothing until the reader scrolls`, async ({
+      page,
+    }) => {
+      const hits = await fakeTurnstile(page);
+      const posts = await answer(page, '/api/waitlist');
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      expect(hits).toEqual([]);
+      const band = page.locator('section.waitlist-band');
+      await expect(band).toHaveCount(1);
+      const order = await page.evaluate(() => {
+        const all = [...document.querySelectorAll('main *')];
+        const at = (el) => (el ? all.indexOf(el) : -1);
+        return {
+          band: at(document.querySelector('.waitlist-band')),
+          body: at(document.querySelector('#article, .split')),
+          after: [document.querySelector('[aria-labelledby="related-h"]'), document.querySelector('.post-nav')].filter(Boolean).map(at),
+        };
+      });
+      expect(order.band).toBeGreaterThan(order.body);
+      for (const index of order.after) expect(order.band).toBeLessThan(index);
+      await band.scrollIntoViewIfNeeded();
+      await expect.poll(() => hits.length).toBe(1);
+      await band.locator('input[type="email"]').fill('reader@example.com');
+      await band.locator('button[type="submit"]').click();
+      await expect(band.locator('[data-waitlist-status]')).toHaveText(words.successMessage);
+      expect(new URLSearchParams(posts[0].postData() ?? '').get('source')).toBe(source);
+    });
+  }
+
+  for (const path of ['/blog/test/', '/vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit/']) {
+    test(`${path} does not ask for the band, and has none`, async ({ page }) => {
+      const response = await page.goto(path);
+      expect(response?.status()).toBe(200);
+      await expect(page.locator('[data-waitlist]')).toHaveCount(0);
+    });
+  }
+
+  test('the waitlist block draws the band with the source the author chose (the block gallery: source "other")', async ({ page }) => {
+    await fakeTurnstile(page);
+    const posts = await answer(page, '/api/waitlist');
+    await page.goto('/styleguide/sections/');
+    const block = page.locator('.sec-row-band section.waitlist-band');
+    await expect(block).toHaveCount(1);
+    await expect(block.locator('input[type="email"]')).toHaveAttribute('id', /^waitlist-sec-\d+-email$/);
+    await block.locator('input[type="email"]').fill('reader@example.com');
+    await block.locator('button[type="submit"]').click();
+    await expect(block.locator('[data-waitlist-status]')).toHaveText(words.successMessage);
+    expect(new URLSearchParams(posts[0].postData() ?? '').get('source')).toBe('other');
+  });
+
+  test(`${BLOG}: no layout shift while the page loads, nor when the band answers`, async ({ page }) => {
+    await fakeTurnstile(page);
+    await answer(page, '/api/waitlist', { delay: 800 });
+    await page.addInitScript(() => {
+      window.__shifts = [];
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) if (!e.hadRecentInput) window.__shifts.push(e.value);
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(BLOG);
+    await page.waitForLoadState('networkidle');
+    const band = page.locator('section.waitlist-band');
+    await band.scrollIntoViewIfNeeded();
+    const next = page.locator('section.waitlist-band ~ *').first();
+    const before = await next.boundingBox();
+    await band.locator('input[type="email"]').fill('reader@example.com');
+    await band.locator('button[type="submit"]').click();
+    await expect(band.locator('[data-waitlist-status]')).toHaveText(words.successMessage);
+    expect(await next.boundingBox()).toEqual(before);
+    expect(await page.evaluate(() => window.__shifts.reduce((a, b) => a + b, 0))).toBeLessThan(0.005);
+  });
+
   test('the remove page posts to /api/waitlist-remove, sends no source, and says the neutral sentence', async ({
     page,
   }) => {
@@ -297,7 +377,7 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
     expect(readFileSync('pagefind.yml', 'utf8')).not.toMatch(/waitlist/);
   });
 
-  for (const path of ['/', '/waitlist/remove/', '/styleguide/posts/vlogs/']) {
+  for (const path of ['/', '/waitlist/remove/', '/styleguide/posts/vlogs/', BLOG, VLOG, '/styleguide/sections/']) {
     test(`${path}: no axe violations, and no sideways scroll from 320 to 1480px`, async ({ page }) => {
       await page.goto(path);
       const results = await new AxeBuilder({ page }).withTags(tags).include('[data-waitlist]').analyze();

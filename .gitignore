@@ -15,3 +15,6 @@ test-results/
 playwright-report/
 .lighthouseci/
 .cache/
+
+# the waitlist export (npm run waitlist:export): people's addresses, never in git
+waitlist.csv

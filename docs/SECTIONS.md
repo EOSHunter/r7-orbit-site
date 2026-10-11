@@ -662,6 +662,22 @@ sections:
     author: hunter-newton
 ```
 
+#### Waitlist form (`waitlist`)
+
+The waitlist for R7 Orbit: the heading, sentence and email form from Site settings > Waitlist, in a ruled band. Shown only while the waitlist is on there; otherwise the block draws nothing.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The form and its words come from Site settings, and it shows on the site only while the waitlist is on, so the preview shows a labelled placeholder.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `source` | Menu | no | Stored with each address to say where it was left: Hero, Blog, Vlog or Other (any other page). Choices: `hero`, `blog`, `vlog`, `other`. Default `other`. |
+
+```yaml
+sections:
+  - type: waitlist
+    source: other
+```
+
 <!-- catalogue:end -->
 
 ## Adding a block

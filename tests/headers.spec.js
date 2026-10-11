@@ -41,6 +41,21 @@ test('project pages may frame the play origins (Vesper Drift, House Painter) and
   expect(headersFor('/admin/')['content-security-policy']).not.toContain('housepainter.r7orbit.io');
 });
 
+test('the waitlist added Turnstile's host in one place only: the frame-src of project pages (the one policy that would block it)', () => {
+  const turnstile = 'https://challenges.cloudflare.com';
+  // The public pages have no script-src, connect-src or form-action on purpose (comment at the top of public/_headers), so the
+  // widget's script, its frame on every other page and the form's fetch need no entry; adding those directives would be a new
+  // restriction, not a Turnstile addition.
+  const policies = rules.flatMap((r) => r.headers.filter(([n]) => n.toLowerCase() === 'content-security-policy').map(([, v]) => [r.pattern, v]));
+  const naming = policies.filter(([, v]) => v.includes(turnstile));
+  expect(naming).toEqual([['/projects/*', `frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io ${turnstile}`]]);
+  for (const [pattern, value] of policies.filter(([p]) => p !== '/admin/*')) {
+    expect(value, pattern).not.toMatch(/script-src|connect-src|form-action|default-src/);
+  }
+  // The admin's policy does not name Turnstile (the editor never draws the form).
+  expect(headersFor('/admin/')['content-security-policy']).not.toContain(turnstile);
+});
+
 test('the sign-in popup keeps its link to the admin: no Cross-Origin-Opener-Policy', () => {
   for (const path of ['/', '/admin/']) expect(headersFor(path)['cross-origin-opener-policy'], path).toBeUndefined();
 });

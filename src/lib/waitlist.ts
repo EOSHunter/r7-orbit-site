@@ -1,7 +1,7 @@
 // The waitlist for R7 Orbit (the desktop app): the rules the form, the pages and the Pages Functions share. Pure and dependency
 // free (no Astro, no Zod), because functions/api/*.ts bundles it for Cloudflare as well as the site and Vitest reading it.
 // What the site shows and when: docs/CONTENT_MODEL.md "Site settings" (`waitlist`); the server: src/lib/waitlist-api.ts;
-// setting it up: docs/DEPLOY_CLOUDFLARE.md section 10.
+// setting it up: docs/WAITLIST.md.
 
 /** Where a signup came from, stored with the address: the home hero, a blog or vlog post's band, or anywhere else. */
 export const WAITLIST_SOURCES = ['hero', 'blog', 'vlog', 'other'] as const;
@@ -10,9 +10,9 @@ export type WaitlistSource = (typeof WAITLIST_SOURCES)[number];
 export const isWaitlistSource = (value: unknown): value is WaitlistSource =>
   typeof value === 'string' && (WAITLIST_SOURCES as readonly string[]).includes(value);
 
-/** The source a post's band sends: blog and vlog by name, every other kind as `other`. */
+/** The source a post's band sends: `blog` for blog posts and news, `vlog` for vlogs, `other` for projects and repos. */
 export function sourceForKind(kind: string): WaitlistSource {
-  if (kind === 'blog') return 'blog';
+  if (kind === 'blog' || kind === 'news') return 'blog';
   if (kind === 'vlog' || kind === 'vlogs') return 'vlog';
   return 'other';
 }

@@ -23,7 +23,7 @@ export interface D1Database {
   prepare(query: string): D1PreparedStatement;
 }
 
-/** The Pages project's bindings: set in the Cloudflare dashboard (docs/DEPLOY_CLOUDFLARE.md section 10), never in the repository. */
+/** The Pages project's bindings: set in the Cloudflare dashboard (docs/WAITLIST.md), never in the repository. */
 export interface WaitlistEnv {
   WAITLIST_DB?: D1Database;
   TURNSTILE_SECRET_KEY?: string;
