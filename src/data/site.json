@@ -27,6 +27,21 @@
   "name": "R7 Orbit",
   "tagline": "Mission Control for AI Agents",
   "url": "https://r7orbit.io",
+  "waitlist": {
+    "enabled": true,
+    "heading": "Join the waitlist",
+    "buttonLabel": "Join the waitlist",
+    "successMessage": "You are on the list.",
+    "removeSuccessMessage": "If that address was on the waitlist, it has been removed.",
+    "text": "Get access to R7 Orbit.",
+    "turnstileSiteKey": "",
+    "removeLinkLabel": "Remove my email",
+    "emailLabel": "Email address",
+    "noscriptMessage": "JavaScript is needed to join the waitlist.",
+    "removeHeading": "Leave the waitlist",
+    "removeButtonLabel": "Remove my email",
+    "errorMessage": "Something went wrong. Please try again."
+  },
   "links": {
     "github": "https://github.com/EOSHunter",
     "youtube": "https://www.youtube.com/@R7Creatives"
@@ -41,20 +56,5 @@
     ],
     "note": "Made with R7 Orbit"
   },
-  "description": "News, builds and the things in between: writing, videos, projects and code about building with AI.",
-  "waitlist": {
-    "enabled": false,
-    "turnstileSiteKey": "",
-    "heading": "Join the waitlist",
-    "text": "Get access to R7 Orbit.",
-    "buttonLabel": "Join the waitlist",
-    "emailLabel": "Email address",
-    "successMessage": "You are on the list.",
-    "errorMessage": "Something went wrong. Please try again.",
-    "removeLinkLabel": "Remove my email",
-    "removeHeading": "Leave the waitlist",
-    "removeButtonLabel": "Remove my email",
-    "removeSuccessMessage": "If that address was on the waitlist, it has been removed.",
-    "noscriptMessage": "JavaScript is needed to join the waitlist."
-  }
+  "description": "News, builds and the things in between: writing, videos, projects and code about building with AI."
 }
