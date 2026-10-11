@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { navItems } from '../data/nav';
+import { footerItems, navItems } from '../data/nav';
 import site from '../data/site.json';
 import type { CollectionName, Post, PostData } from './content';
 import { toAppCard } from './app-cards';
@@ -238,11 +238,11 @@ describe('the sitemap', () => {
 });
 
 describe('navigation', () => {
-  it('has Apps after Projects in the header nav, linking to /apps/, and no Games item', () => {
-    const labels = navItems.map((i) => i.label);
-    expect(labels.indexOf('Apps')).toBe(labels.indexOf('Projects') + 1);
-    expect(navItems.find((i) => i.label === 'Apps')?.href).toBe('/apps/');
+  // The nav is the author's (Site settings in /admin): whether it has an Apps link, and where, is theirs to choose.
+  it('has no Games item in the header nav or the footer: the hub is at /apps/ (and /games/ redirects there)', () => {
     expect(navItems.some((i) => i.href === '/games/')).toBe(false);
+    expect(footerItems.some((i) => i.href === '/games/')).toBe(false);
+    expect(navItems.filter((i) => i.href === APPS_PATH).length).toBeLessThanOrEqual(1);
   });
 });
 

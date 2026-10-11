@@ -17,7 +17,11 @@ test.describe('hero text contrast', () => {
         await page.goto(path, { waitUntil: 'networkidle' });
         const hero = page.locator('.article-hero');
         await expect(hero).toHaveCount(1);
-        await page.evaluate(() => Promise.all([...document.images].map((i) => i.decode().catch(() => {}))));
+        // The hero's own pictures only: decode() waits for a lazy picture further down (a related post's poster) to load, which
+        // it never does off screen, so waiting for every picture on the page timed out.
+        await page.evaluate(() =>
+          Promise.all([...document.querySelectorAll('.article-hero img')].map((i) => i.decode().catch(() => {}))),
+        );
 
         // Where each run of text is, and its colour, before the text is hidden.
         const runs = await page.evaluate(() => {

@@ -1,3 +1,4 @@
+inputs: sha256:9b97de70e4436ff7
 title: About · R7 Orbit
 description: I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them.
 h1: About

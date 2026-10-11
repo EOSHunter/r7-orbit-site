@@ -6,6 +6,7 @@ import {
   SITE_KEY_PATTERN,
   sourceForKind,
   TURNSTILE_TEST_SITE_KEY,
+  waitlistKeyMissing,
   waitlistState,
 } from './waitlist';
 
@@ -127,5 +128,24 @@ describe('waitlistState', () => {
         siteKey: TURNSTILE_TEST_SITE_KEY,
       });
     }
+  });
+});
+
+describe('waitlistKeyMissing', () => {
+  const live = { dev: false, preview: false };
+  it('is "Enabled" with an empty site key: the state that draws no form anywhere', () => {
+    for (const key of ['', '   ']) {
+      expect(waitlistKeyMissing({ enabled: true, turnstileSiteKey: key })).toBe(true);
+      expect(waitlistState({ enabled: true, turnstileSiteKey: key }, live)).toEqual({ show: false });
+    }
+  });
+
+  it('is not the switch off, nor the switch on with a key (which draws the forms)', () => {
+    expect(waitlistKeyMissing({ enabled: false, turnstileSiteKey: '' })).toBe(false);
+    expect(waitlistKeyMissing({ enabled: true, turnstileSiteKey: '0x4AAAAAAABkMYinukE8nzY' })).toBe(false);
+    expect(waitlistState({ enabled: true, turnstileSiteKey: ' 0x4AAAAAAABkMYinukE8nzY ' }, live)).toEqual({
+      show: true,
+      siteKey: '0x4AAAAAAABkMYinukE8nzY',
+    });
   });
 });

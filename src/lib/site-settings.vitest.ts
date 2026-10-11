@@ -1,21 +1,42 @@
 import { describe, expect, it } from 'vitest';
+import navFixture from '../../tests/fixtures/site-nav.json';
 import data from '../data/site.json';
+import { footerItems, navItems } from '../data/nav';
 import { siteFiles } from './site-routes';
 import {
   footerLinks,
   isCurrent,
   parseSite,
   routePatterns,
+  SEARCH_KIND_HREFS,
   searchKinds,
   siteLinkProblems,
   siteSchema,
   type SiteSettings,
 } from './site-settings';
 
+// Two kinds of test. "The settings file as it is" reads src/data/site.json, which the author edits in /admin: the expected nav,
+// footer and chips come from that file, never from a copy of it, so renaming or removing a link cannot fail a test. The rules
+// (what the schema refuses, the footer, renamed labels) run on `fixture`: the real file with a fixed nav, footer and profile
+// links, so a test that changes "the third nav link" or "the first footer link" knows what it is changing.
+
 const site = parseSite(data);
-/** A copy of the real settings with some fields changed. */
+/** The real settings with a fixed nav (tests/fixtures/site-nav.json, also drawn by /styleguide/nav/), profile links and footer. */
+const fixture = parseSite({
+  ...data,
+  nav: navFixture,
+  links: { github: 'https://github.com/example', youtube: 'https://www.youtube.com/@example' },
+  footer: {
+    ...data.footer,
+    links: [
+      { label: 'GitHub', social: 'github', icon: 'github' },
+      { label: 'YouTube', social: 'youtube', icon: 'vlog' },
+    ],
+  },
+});
+/** A copy of the fixture with some fields changed. */
 const edit = (change: (s: SiteSettings) => void): SiteSettings => {
-  const copy = structuredClone(site);
+  const copy = structuredClone(fixture);
   change(copy);
   return copy;
 };
@@ -23,7 +44,7 @@ const problems = (value: unknown) => {
   const result = siteSchema.safeParse(value);
   return result.success ? [] : result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
 };
-const renamed = site.nav.map((item) => ({ ...item, label: `Renamed ${item.label}` }));
+const renamed = fixture.nav.map((item) => ({ ...item, label: `Renamed ${item.label}` }));
 
 describe('the settings file as it is', () => {
   it('reads without a problem, and every link and picture in it exists', () => {
@@ -31,27 +52,17 @@ describe('the settings file as it is', () => {
     expect(siteLinkProblems(site, siteFiles())).toEqual([]);
   });
 
-  it('keeps the nav it had: the same labels, addresses and order', () => {
-    expect(site.nav.map((i) => [i.label, i.href])).toEqual([
-      ['Latest', '/#latest'],
-      ['News', '/news/'],
-      ['Blog', '/blog/'],
-      ['Vlogs', '/vlogs/'],
-      ['Projects', '/projects/'],
-      ['Apps', '/apps/'],
-      ['Repos', '/repos/'],
-      ['About R7 Orbit', '/about/'],
-    ]);
+  it('draws the nav the file holds: its labels and addresses, in its order', () => {
+    expect(navItems.map((i) => [i.label, i.href])).toEqual(data.nav.map((i) => [i.label.trim(), i.href]));
   });
 
-  it('keeps the footer: Apps, GitHub, YouTube (an empty profile link leaves its icon out)', () => {
-    expect(footerLinks(site)).toEqual([
-      { label: 'Apps', href: '/apps/', icon: 'play', external: false },
-      { label: 'GitHub', href: 'https://github.com/EOSHunter', icon: 'github', external: true },
-      { label: 'YouTube', href: 'https://www.youtube.com/@R7Creatives', icon: 'vlog', external: true },
-    ]);
-    const withoutGithub = edit((s) => (s.links.github = ''));
-    expect(footerLinks(withoutGithub).map((l) => l.label)).toEqual(['Apps', 'YouTube']);
+  it('draws the footer the file holds: the nav links marked for it, then its own links (an empty profile link left out)', () => {
+    const expected = [
+      ...site.nav.filter((i) => i.footer).map((i) => [i.label, i.href]),
+      ...site.footer.links.map((l) => [l.label, l.social ? site.links[l.social] : l.href]),
+    ].filter(([, href]) => href);
+    expect(footerItems.map((l) => [l.label, l.href])).toEqual(expected);
+    for (const link of footerItems) expect(link.external, link.href).toBe(link.href.startsWith('https://'));
   });
 
   it('has only GitHub and YouTube as profile links, and no email', () => {
@@ -59,6 +70,22 @@ describe('the settings file as it is', () => {
     expect(Object.keys(site.author)).toEqual(['name', 'bio', 'photo']);
     expect(problems({ ...data, links: { ...data.links, x: '' } }).join()).toMatch(/links/);
     expect(problems({ ...data, author: { ...data.author, email: 'me@example.org' } }).join()).toMatch(/author/);
+  });
+
+  it('offers on the search page the archives the nav links to, labelled as the nav labels them, in nav order', () => {
+    expect(searchKinds(navItems)).toEqual(navItems.filter((i) => SEARCH_KIND_HREFS.includes(i.href)));
+  });
+});
+
+describe('the footer', () => {
+  it('lists the nav links marked for it, then the profile links; an empty profile link leaves its icon out', () => {
+    expect(footerLinks(fixture)).toEqual([
+      { label: 'Apps', href: '/apps/', icon: 'play', external: false },
+      { label: 'GitHub', href: 'https://github.com/example', icon: 'github', external: true },
+      { label: 'YouTube', href: 'https://www.youtube.com/@example', icon: 'vlog', external: true },
+    ]);
+    const withoutGithub = edit((s) => (s.links.github = ''));
+    expect(footerLinks(withoutGithub).map((l) => l.label)).toEqual(['Apps', 'YouTube']);
   });
 });
 
@@ -69,12 +96,12 @@ describe('a renamed nav label', () => {
     expect(isCurrent(blog, '/blog/')).toBe(true);
     expect(renamed.filter((i) => isCurrent(i, '/blog/'))).toHaveLength(1);
     // The old way (a label) no longer matches anything, renamed or not.
-    expect(site.nav.some((i) => isCurrent(i, 'Blog'))).toBe(false);
-    expect(site.nav.some((i) => isCurrent(i, undefined))).toBe(false);
+    expect(fixture.nav.some((i) => isCurrent(i, 'Blog'))).toBe(false);
+    expect(fixture.nav.some((i) => isCurrent(i, undefined))).toBe(false);
   });
 
   it('keeps the search page chips (found by address, labelled as the nav labels them)', () => {
-    expect(searchKinds(site.nav).map((i) => i.label)).toEqual(['News', 'Blog', 'Vlogs', 'Projects', 'Repos']);
+    expect(searchKinds(fixture.nav).map((i) => i.label)).toEqual(['News', 'Blog', 'Vlogs', 'Projects', 'Repos']);
     expect(searchKinds(renamed).map((i) => [i.label, i.href])).toEqual([
       ['Renamed News', '/news/'],
       ['Renamed Blog', '/blog/'],
@@ -85,7 +112,7 @@ describe('a renamed nav label', () => {
   });
 
   it('keeps the footer links, with the new label', () => {
-    expect(footerLinks({ ...site, nav: renamed })[0]).toEqual({
+    expect(footerLinks({ ...fixture, nav: renamed })[0]).toEqual({
       label: 'Renamed Apps',
       href: '/apps/',
       icon: 'play',

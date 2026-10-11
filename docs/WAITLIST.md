@@ -73,7 +73,7 @@ curl -s -X POST https://r7orbit.io/api/waitlist -H "Origin: https://r7orbit.io" 
 
 1. Open **https://r7orbit.io/admin/** > **Site settings** > **Waitlist**.
 2. **Turnstile site key**: paste the Site Key (`0x…`). The build refuses Cloudflare's test keys and anything that is not shaped like a site key.
-3. Tick **Enabled**.
+3. Tick **Enabled**. Both are needed: with **Enabled** ticked and the key box empty, no form shows anywhere, so the admin refuses to save that (the message is under the key box).
 4. Review the wording. Every word is interim, written so you can replace it:
 
    | Box | Today |
@@ -141,6 +141,8 @@ The form shows the two 400 messages as they are; for anything else it shows your
 **"Binding missing" in a Pages build or the dashboard**: the variable name must be exactly `WAITLIST_DB`, on the environment you are testing (Production for r7orbit.io).
 
 **The build stops with "WAITLIST_PREVIEW=1 is set in the Cloudflare Pages build".** `WAITLIST_PREVIEW` is for tests on a computer only: it puts the form on every page with a test key that lets anyone through. Remove the variable from **Workers & Pages > r7-orbit-site > Settings > Variables and Secrets** and redeploy. The waitlist is turned on with **Enabled** in the admin, never with that variable.
+
+**"Enabled" is ticked but no form shows anywhere.** The Turnstile site key is empty: the form cannot work without it, so the site draws nothing (the build log says `[waitlist] Waitlist: "Enabled" is ticked but the Turnstile site key is empty`). Paste the Site Key in **/admin > Site settings > Waitlist** (step 6), save and publish. Since 2026-10-10 the admin refuses to save "Enabled" with an empty key; a file saved before then can still hold it.
 
 **The build stops on the site key.** It refuses an empty-looking or test key (`1x…`, `2x…`, `3x…`): paste the Site Key of your own widget, which starts with `0x`. It is never the Secret Key.
 

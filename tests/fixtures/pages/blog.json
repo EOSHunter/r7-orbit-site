@@ -1,8 +1,11 @@
 {
   "path": "/blog/",
+  "inputs": "sha256:bd87bac270b24179",
   "posts": [
+    "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/vesper-drift"
   ],
   "head": [
@@ -25,6 +28,7 @@
     "div aria-label: Sort",
     "button: Newest",
     "button: Oldest",
+    "span.eyebrow: Tags",
     "[content]",
     "h2.visually-hidden: Posts",
     "[content]",

@@ -1,25 +1,41 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { siteSchema } from '../src/lib/site-settings.ts';
 import { openAdmin, SITE_JSON } from './admin-mock.js';
-import { CHROME_PAGES, chromeOf, chromeText } from './site-chrome.js';
+import { inputsDigest, readTextFixture, staleNote } from './fixture-inputs.js';
+import { builtPage, CHROME_INPUTS, CHROME_PAGES, chromeOf, chromeProblems, chromeText } from './site-chrome.js';
+import NAV_FIXTURE from './fixtures/site-nav.json' with { type: 'json' };
 
-// The site settings (src/data/site.json, "Site settings" in /admin): what they draw has not changed since they became editable, the nav
-// marks the current section by address so a label can be renamed, and the editor saves a file the build reads.
+// The site settings (src/data/site.json, "Site settings" in /admin): what they draw has not changed by accident, the nav marks the
+// current section by address so a label can be renamed, and the editor saves a file the build reads. The author edits the
+// settings, so what a test expects of the real site comes from that file (SETTINGS), never from a copy of its values; the tests of
+// a renamed label run on a fixed nav (tests/fixtures/site-nav.json, drawn by /styleguide/nav/).
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const fixtureUrl = new URL('./fixtures/site-chrome.txt', import.meta.url);
-const NAV = JSON.parse(SITE_JSON).nav;
+const SETTINGS = JSON.parse(SITE_JSON);
+const NAV = siteSchema.parse(SETTINGS).nav;
 
 test.describe('the head, header and footer', () => {
   // See tests/site-chrome.js for what is compared and how to rewrite the fixture after an intended change.
   if (process.env.UPDATE_SITE_CHROME) writeFileSync(fixtureUrl, chromeText(dist));
-  const fixture = readFileSync(fixtureUrl, 'utf8').replaceAll('\r\n', '\n');
+  const fixture = readTextFixture(fixtureUrl);
+  const current = fixture.inputs === inputsDigest(CHROME_INPUTS);
+  const text = fixture.lines.join('\n');
 
   for (const path of CHROME_PAGES) {
-    test(`${path}: as before the settings moved to /admin`, () => {
-      const before = fixture.split(/^(?=== )/m).filter((part) => part.startsWith(`== ${path} `));
+    test(`${path}: as the fixture has it, or as the settings say if they were edited since`, () => {
+      test.skip(!builtPage(dist, path), `${path} is not published any more`);
+      if (!current) {
+        test.info().annotations.push({
+          type: 'note',
+          description: staleNote('tests/fixtures/site-chrome.txt', 'UPDATE_SITE_CHROME=1 npx playwright test site-settings'),
+        });
+        expect(chromeProblems(dist, path)).toEqual([]);
+        return;
+      }
+      const before = text.split(/^(?=== )/m).filter((part) => part.startsWith(`== ${path} `));
       expect(before, `${path} is in tests/fixtures/site-chrome.txt`).toHaveLength(3);
       expect(chromeOf(dist, path).join('\n')).toBe(before.join('').trimEnd());
     });
@@ -27,6 +43,8 @@ test.describe('the head, header and footer', () => {
 });
 
 test.describe('the current section is found by address', () => {
+  // Each page and the address of the nav section it says it is in. That section's link is marked when the settings' nav has it;
+  // a page outside the nav's sections, or whose section the author has taken out of the nav, marks none.
   const cases = [
     ['/', '/#latest'],
     ['/blog/', '/blog/'],
@@ -39,9 +57,11 @@ test.describe('the current section is found by address', () => {
     ['/privacy/', null],
     ['/search/', null],
   ];
-  for (const [path, current] of cases) {
+  for (const [path, section] of cases) {
+    const current = NAV.some((i) => i.href === section) ? section : null;
     test(`${path}: ${current ?? 'no nav item'} is current`, async ({ page }) => {
-      await page.goto(path);
+      const response = await page.goto(path);
+      test.skip(response.status() === 404, `${path} is not published any more`);
       const marked = page.locator('#site-nav a[aria-current="page"]');
       if (current === null) await expect(marked).toHaveCount(0);
       else {
@@ -53,7 +73,8 @@ test.describe('the current section is found by address', () => {
 });
 
 test.describe('a nav label renamed in /admin', () => {
-  // /styleguide/nav/ draws the real nav with every label renamed ("Blog" -> "Renamed blog"), on a page in the Blog section.
+  // /styleguide/nav/ draws a fixed nav (tests/fixtures/site-nav.json) with every label renamed ("Blog" -> "Renamed blog"), on a
+  // page in the Blog section: the real components, but not the author's nav, which can lose its Blog or Apps link in /admin.
   for (const width of [375, 1280]) {
     test(`keeps the current section, the links and the search chips (${width}px)`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -66,7 +87,7 @@ test.describe('a nav label renamed in /admin', () => {
       const links = await nav
         .getByRole('link')
         .evaluateAll((as) => as.map((a) => [a.textContent.trim(), a.getAttribute('href')]));
-      expect(links).toEqual(NAV.map((i) => [`Renamed ${i.label.toLowerCase()}`, i.href]));
+      expect(links).toEqual(NAV_FIXTURE.map((i) => [`Renamed ${i.label.toLowerCase()}`, i.href]));
       // The footer link that comes from the nav, and the search page's archive chips, follow the new labels.
       await expect(page.locator('.site-footer').getByRole('link', { name: 'Renamed apps' })).toHaveAttribute(
         'href',
@@ -94,13 +115,9 @@ test.describe('a nav label renamed in /admin', () => {
     const chips = await page
       .locator('.search-kinds a')
       .evaluateAll((as) => as.map((a) => [a.textContent.trim(), a.getAttribute('href')]));
-    expect(chips).toEqual([
-      ['News', '/news/'],
-      ['Blog', '/blog/'],
-      ['Vlogs', '/vlogs/'],
-      ['Projects', '/projects/'],
-      ['Repos', '/repos/'],
-    ]);
+    // The archives the settings' nav links to, labelled as it labels them, in its order (searchKinds).
+    const archives = ['/news/', '/blog/', '/vlogs/', '/projects/', '/repos/'];
+    expect(chips).toEqual(NAV.filter((i) => archives.includes(i.href)).map((i) => [i.label, i.href]));
   });
 });
 
@@ -112,8 +129,38 @@ test('the Site settings editor saves a file the build reads, and keeps the field
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/settings/entries/site'));
   const tagline = page.getByLabel('Tagline');
-  await expect(tagline).toHaveValue('Field notes on building with AI', { timeout: 15_000 });
+  await expect(tagline).toHaveValue(SETTINGS.tagline, { timeout: 15_000 });
   await tagline.fill('A tagline changed in the test');
+
+  // The waitlist "Enabled" with no site key is not saved: the build would draw no form anywhere (waitlistKeyError). Whatever the
+  // author's file holds, tick Enabled and empty the key: the save is refused with the reason, and nothing is committed.
+  // The Waitlist group opens collapsed: its Expand button is the last one in the innermost block that holds its title.
+  await page
+    .locator('div')
+    .filter({ has: page.getByText('Waitlist', { exact: true }) })
+    .filter({ has: page.getByRole('button', { name: 'Expand' }) })
+    .last()
+    .getByRole('button', { name: 'Expand' })
+    .last()
+    .click();
+  const key = page.getByLabel('Turnstile site key');
+  await expect(key).toBeVisible({ timeout: 15_000 });
+  const enabled = page.getByRole('switch', { name: /^Enabled/ });
+  if (!(await enabled.isChecked())) await enabled.click();
+  await expect(enabled).toBeChecked();
+  await key.fill('');
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect(page.getByText(/Waitlist: "Enabled" is ticked but the Turnstile site key is empty/)).toBeVisible({
+    timeout: 15_000,
+  });
+  expect(seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')), 'nothing committed').toBe(false);
+  // Decap answers a form with an invalid field by rejecting its save with nothing, which the page reports as an uncaught
+  // "undefined": that one is expected, and nothing else.
+  await expect.poll(() => seen.errors).toEqual(['undefined']);
+  seen.errors.length = 0;
+  // With the site key pasted, it saves.
+  const KEY = '0x4AAAAAAABkMYinukE8nzY';
+  await key.fill(KEY);
 
   await page.getByRole('button', { name: /^save$/i }).click();
   await expect
@@ -128,8 +175,12 @@ test('the Site settings editor saves a file the build reads, and keeps the field
   const data = JSON.parse(saved);
   const parsed = siteSchema.safeParse(data);
   expect(parsed.success ? '' : JSON.stringify(parsed.error.issues), 'the saved settings are valid').toBe('');
-  // Only the tagline changed: url (no field in the form) and everything else are as they were.
-  expect(data).toEqual({ ...JSON.parse(SITE_JSON), tagline: 'A tagline changed in the test' });
+  // Only the tagline and the waitlist switch and key changed: url (no field in the form) and everything else are as they were.
+  expect(data).toEqual({
+    ...SETTINGS,
+    tagline: 'A tagline changed in the test',
+    waitlist: { ...SETTINGS.waitlist, enabled: true, turnstileSiteKey: KEY },
+  });
   expect(seen.errors).toEqual([]);
   expect(seen.refused, 'requests to other addresses').toEqual([]);
   expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);

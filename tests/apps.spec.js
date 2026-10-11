@@ -2,8 +2,14 @@ import { readFileSync } from 'node:fs';
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { footerLinks, siteSchema } from '../src/lib/site-settings.ts';
 
-const { url: SITE_URL } = JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8'));
+// The settings, read the way the build reads them: the nav and footer are the author's (Site settings in /admin), so whether they
+// link to /apps/, and with which label, comes from there.
+const SETTINGS = siteSchema.parse(JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8')));
+const SITE_URL = SETTINGS.url;
+const NAV_APPS = SETTINGS.nav.find((i) => i.href === '/apps/');
+const FOOTER_APPS = footerLinks(SETTINGS).find((l) => l.href === '/apps/');
 // The hub's words are its page entry's (edited in /admin, Pages > Apps page), so the tests read them from there, not a copy.
 const front = (file) => parseFrontmatter(readFileSync(new URL(`../src/content/pages/${file}`, import.meta.url), 'utf8')).frontmatter;
 const HUB = front('apps.md');
@@ -354,7 +360,12 @@ test('/apps/: heading, lead, canonical and Open Graph tags from its page entry, 
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', `${SITE_URL}/apps/`);
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', HUB.seoTitle);
   await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', HUB.description);
-  await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Apps' })).toHaveAttribute('aria-current', 'page');
+  // The nav marks the hub as the current page when the settings' nav links to it, and marks nothing when it does not.
+  const current = page.getByRole('navigation', { name: 'Primary' }).locator('a[aria-current="page"]');
+  if (NAV_APPS) {
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveAttribute('href', '/apps/');
+  } else await expect(current).toHaveCount(0);
   const graph = await jsonLd(page);
   expect(graph.find((n) => n['@type'] === 'BreadcrumbList').itemListElement.map((c) => c.name)).toEqual(['Home', 'Apps']);
 });
@@ -387,28 +398,30 @@ test('the home Apps row shows only when there are apps, at most three, with its 
   const apps = await cardsIn(page.locator('main')).count();
   await page.goto('/');
   const teaser = page.locator('[data-apps-teaser]');
-  if (apps === 0) {
+  if (apps === 0 || !HOME_ROW) {
     await expect(teaser).toHaveCount(0);
   } else {
     await expect(cardsIn(teaser)).toHaveCount(Math.min(apps, 3));
-    await expect(teaser.getByRole('link', { name: new RegExp(HOME_ROW.moreLabel) })).toHaveAttribute('href', '/apps/');
+    await expect(teaser.getByRole('link', { name: new RegExp(HOME_ROW.moreLabel) })).toHaveAttribute('href', HOME_ROW.moreUrl);
     await expect(teaser.getByRole('heading', { level: 2, name: HOME_ROW.heading })).toBeVisible();
     await expect(teaser.locator('[data-apps-soon]')).toHaveCount(0);
     // No filter outside the hub.
     await expect(teaser.locator('[data-filter]')).toHaveCount(0);
   }
-  expect(HOME_ROW).toMatchObject({ heading: 'Apps', moreUrl: '/apps/' });
+  // The row's heading and link are the author's (Pages > Home page in /admin); the link must go to the hub.
+  expect(HOME_ROW?.moreUrl ?? '/apps/').toBe('/apps/');
 });
 
-test('Apps is in the header and the footer, and the menu still opens with it inside', async ({ page }) => {
+test('Apps is in the header and the footer where the settings put it, never /games/, and the menu opens with every link inside', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/about/');
   const nav = page.getByRole('navigation', { name: 'Primary' });
-  await expect(nav.getByRole('link', { name: 'Apps' })).toHaveAttribute('href', '/apps/');
-  await expect(page.getByRole('navigation', { name: 'Footer' }).getByRole('link', { name: 'Apps' })).toHaveAttribute('href', '/apps/');
+  const footer = page.getByRole('navigation', { name: 'Footer' });
+  if (NAV_APPS) await expect(nav.locator('a[href="/apps/"]')).toHaveText(NAV_APPS.label);
+  else await expect(nav.locator('a[href="/apps/"]')).toHaveCount(0);
+  if (FOOTER_APPS) await expect(footer.locator('a[href="/apps/"]')).toHaveText(FOOTER_APPS.label);
+  else await expect(footer.locator('a[href="/apps/"]')).toHaveCount(0);
   await expect(page.locator('a[href="/games/"]')).toHaveCount(0);
-  const labels = await nav.getByRole('link').allTextContents();
-  expect(labels.indexOf('Apps')).toBe(labels.indexOf('Projects') + 1);
 
   for (const width of [320, 375, 900, 1280]) {
     await page.setViewportSize({ width, height: 800 });
@@ -418,7 +431,7 @@ test('Apps is in the header and the footer, and the menu still opens with it ins
       await toggle.click();
       await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     }
-    await expect(nav.getByRole('link', { name: 'Apps' })).toBeVisible();
+    for (const link of await nav.getByRole('link').all()) await expect(link).toBeVisible();
     expect(await overflowOf(page), `no horizontal scroll at ${width}px`).toBeLessThanOrEqual(0);
   }
 });

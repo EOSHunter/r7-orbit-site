@@ -1,3 +1,4 @@
+inputs: sha256:1d5407a35f63c8e0
 title: Privacy · R7 Orbit
 description: What R7 Orbit collects about you (nothing by itself), where the newsletter form goes, and how to unsubscribe.
 robots: 

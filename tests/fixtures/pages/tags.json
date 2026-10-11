@@ -1,8 +1,11 @@
 {
   "path": "/tags/",
+  "inputs": "sha256:2cd79a4aaf08d928",
   "posts": [
+    "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
+    "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/vesper-drift"
   ],
   "head": [

@@ -3,16 +3,22 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { TURNSTILE_TEST_SITE_KEY } from '../src/lib/waitlist.ts';
 
-// The waitlist (docs/PAGES.md "Waitlist"). Two builds, two halves:
-// - the normal build (the waitlist is off in Site settings): no page has any of it, and /waitlist/remove/ does not exist;
-// - a WAITLIST_PREVIEW=1 build (the forms forced on with Cloudflare's test key): the forms themselves. CI runs this file again
-//   after such a build: WAITLIST_PREVIEW=1 npm run build && npx playwright test tests/waitlist.spec.js
+// The waitlist (docs/PAGES.md "Waitlist"). Two halves, for what the build draws (src/lib/waitlist.ts, waitlistState):
+// - the waitlist off in Site settings: no page has any of it, and /waitlist/remove/ does not exist;
+// - the forms drawn: in a WAITLIST_PREVIEW=1 build (forced on with Cloudflare's test key; CI runs this file again after one:
+//   WAITLIST_PREVIEW=1 npm run build && npx playwright test tests/waitlist.spec.js), or in a normal build once the author has
+//   turned the waitlist on with the widget's own site key. The forms are tested with whichever key the build put in them.
 // Nothing leaves the machine: Turnstile's script is answered by a fake that hands out tokens, and /api/* by the test (astro
 // preview serves no Pages Functions; the endpoints are tested in src/lib/waitlist-api.vitest.ts).
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
-const preview = existsSync(join(dist, 'waitlist', 'remove', 'index.html'));
+const removePage = join(dist, 'waitlist', 'remove', 'index.html');
+/** The build draws the forms (the remove page exists only then). */
+const preview = existsSync(removePage);
+/** The Turnstile site key the forms carry: Cloudflare's test key in a WAITLIST_PREVIEW=1 build, the settings' own otherwise. */
+const SITE_KEY = preview ? readFileSync(removePage, 'utf8').match(/data-sitekey="([^"]+)"/)?.[1] : undefined;
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const site = JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8'));
 const words = site.waitlist;
@@ -27,7 +33,7 @@ function htmlFiles(dir = dist, prefix = '') {
 }
 
 test.describe('with the waitlist off (the normal build)', () => {
-  test.skip(preview, 'this is a WAITLIST_PREVIEW build');
+  test.skip(preview, 'this build draws the waitlist forms');
 
   test('no page carries the form, its styles, its script or Turnstile', () => {
     const files = htmlFiles();
@@ -46,8 +52,15 @@ test.describe('with the waitlist off (the normal build)', () => {
   });
 });
 
-test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
-  test.skip(!preview, 'needs a WAITLIST_PREVIEW=1 build');
+test.describe('with the waitlist on (WAITLIST_PREVIEW=1, or on in Site settings)', () => {
+  test.skip(!preview, 'needs a build that draws the forms: WAITLIST_PREVIEW=1 npm run build');
+
+  test('every form carries the key the build was made with: the test key in a preview build, else the settings key', () => {
+    expect([TURNSTILE_TEST_SITE_KEY, site.waitlist.turnstileSiteKey.trim()]).toContain(SITE_KEY);
+    for (const file of htmlFiles()) {
+      for (const [, key] of readFileSync(join(dist, file), 'utf8').matchAll(/data-sitekey="([^"]*)"/g)) expect(key, file).toBe(SITE_KEY);
+    }
+  });
 
   /** Answers Turnstile's script with a fake widget (tokens "token-1", "token-2", …), and records every request to Cloudflare. */
   async function fakeTurnstile(page) {
@@ -97,7 +110,7 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
       return { sitekey: o.sitekey, appearance: o.appearance, action: o.action, responseField: o['response-field'] };
     });
     expect(options).toEqual({
-      sitekey: '1x00000000000000000000AA',
+      sitekey: SITE_KEY,
       appearance: 'interaction-only',
       action: 'waitlist',
       responseField: false,
