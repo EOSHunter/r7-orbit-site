@@ -41,7 +41,7 @@ test('project pages may frame the play origins (Vesper Drift, House Painter) and
   expect(headersFor('/admin/')['content-security-policy']).not.toContain('housepainter.r7orbit.io');
 });
 
-test('the waitlist added Turnstile's host in one place only: the frame-src of project pages (the one policy that would block it)', () => {
+test("the waitlist added Turnstile's host in one place only: the frame-src of project pages (the one policy that would block it)", () => {
   const turnstile = 'https://challenges.cloudflare.com';
   // The public pages have no script-src, connect-src or form-action on purpose (comment at the top of public/_headers), so the
   // widget's script, its frame on every other page and the form's fetch need no entry; adding those directives would be a new

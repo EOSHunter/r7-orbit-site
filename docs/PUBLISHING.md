@@ -291,13 +291,13 @@ The **Apps** page (`/apps/`, in the menu as **Apps**; it was the Games page, and
 
 The words of the Apps page itself (heading, lead, the empty state and the card beside a single app) are in **Pages > Apps page** (section 11). Its lead is still the interim line written for the rename; change it there.
 
-## 14. The waitlist
+## 14. Waitlist
 
-The waitlist collects email addresses from readers who want access to R7 Orbit. It is **off** today, and nothing about it shows on the site until you turn it on.
+The waitlist collects email addresses from readers who want access to R7 Orbit. It is **off** until you tick **Enabled** in **Site settings > Waitlist**; until then nothing about it shows on the site. The full guide, click by click, is [`docs/WAITLIST.md`](WAITLIST.md) (setting it up in Cloudflare, testing, the list, switching it off, troubleshooting).
 
-1. **Once, in Cloudflare:** create the database, the Turnstile widget, and connect them to the site: `docs/DEPLOY_CLOUDFLARE.md` section 10, steps a to c (about fifteen minutes).
-2. **Privacy:** in **Pages > Privacy page**, add a Text block whose first line is `{if waitlist on}` and say, in your words, what happens to the addresses (it shows only once the waitlist is on).
-3. **Turn it on:** **Site settings > Waitlist**: paste the Turnstile **site key**, turn **Show the waitlist** on, and read the words. They are interim (written for you to replace): the heading "Join the waitlist", the sentence "Get access to R7 Orbit.", the button, the box label, the messages after joining, after a failure and after removing, the remove link and page, and the sentence shown without JavaScript. Publish.
-4. **Where it shows:** under the home page headline (**Pages > Home page > Waitlist form**, on), and at the end of any post where you tick **Waitlist form at the end** (every kind of post has the box; it is off by default).
-5. **Reading the list:** the D1 database's Console in Cloudflare (`SELECT email, created_at, source FROM waitlist ORDER BY created_at;`), or the export command in that section. No email is sent to anyone: the site has no email service.
-6. **Turning it off:** switch **Show the waitlist** off and publish. The addresses stay in the database until you delete them.
+- **Turning it on:** **Site settings > Waitlist**: paste the Turnstile **site key**, tick **Enabled**, read the words (all interim, yours to change), save and publish. Before that, add your paragraph about it to the Privacy page (a Text block starting with `{if waitlist on}`; `docs/WAITLIST.md`, "Privacy").
+- **On a post:** tick **Waitlist form at the end** (every kind of post has it, off by default). Use it on posts about R7 Orbit: the band with the heading, sentence and form follows the post, before the related posts. It is on for the blog post and the vlog "So you've got an AI that writes code. Cool. What if you had ten?".
+- **On the home page:** **Pages > Home page > Waitlist form** (on): the form under the headline.
+- **On any page built from blocks** (About, above or below a listing): add the **Waitlist form** block and choose what it is **Counted as** (Hero, Blog, Vlog or Other).
+- **The list:** the D1 database's Console in Cloudflare, or `npm run waitlist:export` for a CSV file. No email is sent to anyone: the site has no email service.
+- **Turning it off:** untick **Enabled** and publish. The addresses stay in the database until you delete them.

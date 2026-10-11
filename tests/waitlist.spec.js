@@ -297,7 +297,9 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
         return {
           band: at(document.querySelector('.waitlist-band')),
           body: at(document.querySelector('#article, .split')),
-          after: [document.querySelector('[aria-labelledby="related-h"]'), document.querySelector('.post-nav')].filter(Boolean).map(at),
+          after: [document.querySelector('[aria-labelledby="related-h"]'), document.querySelector('.post-nav')]
+            .filter(Boolean)
+            .map(at),
         };
       });
       expect(order.band).toBeGreaterThan(order.body);
@@ -319,7 +321,9 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1)', () => {
     });
   }
 
-  test('the waitlist block draws the band with the source the author chose (the block gallery: source "other")', async ({ page }) => {
+  test('the waitlist block draws the band with the source the author chose (the block gallery: source "other")', async ({
+    page,
+  }) => {
     await fakeTurnstile(page);
     const posts = await answer(page, '/api/waitlist');
     await page.goto('/styleguide/sections/');

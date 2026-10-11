@@ -71,7 +71,13 @@ describe('sources', () => {
     expect(isWaitlistSource('news')).toBe(false);
     expect(isWaitlistSource(undefined)).toBe(false);
     // A news item counts as `blog`: both are drawn by ArticlePage, and the brief keeps the sources to four.
-    expect(['blog', 'news', 'vlogs', 'projects', 'repos'].map(sourceForKind)).toEqual(['blog', 'blog', 'vlog', 'other', 'other']);
+    expect(['blog', 'news', 'vlogs', 'projects', 'repos'].map(sourceForKind)).toEqual([
+      'blog',
+      'blog',
+      'vlog',
+      'other',
+      'other',
+    ]);
   });
 });
 

@@ -57,7 +57,11 @@ export function csvCell(value) {
 
 /** The CSV file: a header row, then one row per address, CRLF line ends (what spreadsheets expect). */
 export function toCsv(rows) {
-  return [COLUMNS, ...rows.map((row) => COLUMNS.map((c) => row[c]))].map((cells) => cells.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  return (
+    [COLUMNS, ...rows.map((row) => COLUMNS.map((c) => row[c]))]
+      .map((cells) => cells.map(csvCell).join(','))
+      .join('\r\n') + '\r\n'
+  );
 }
 
 function parseArgs(argv) {
@@ -70,14 +74,13 @@ function parseArgs(argv) {
 function run(argv) {
   const { local, out } = parseArgs(argv);
   const args = wranglerArgs({ local });
-  // npx is a .cmd file on Windows, which Node only starts through a shell; the query is the one argument with spaces.
-  const windows = process.platform === 'win32';
-  const result = spawnSync('npx', windows ? args.map((a) => (/\s/.test(a) ? `"${a}"` : a)) : args, {
-    cwd: root,
-    encoding: 'utf8',
-    shell: windows,
-    maxBuffer: 64 * 1024 * 1024,
-  });
+  // npx is a .cmd file on Windows, which Node only starts through a shell, given as one command line (every argument is fixed in
+  // this file; the query is the one with spaces, so it is quoted).
+  const options = { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 };
+  const result =
+    process.platform === 'win32'
+      ? spawnSync(['npx', ...args.map((a) => (/\s/.test(a) ? `"${a}"` : a))].join(' '), { ...options, shell: true })
+      : spawnSync('npx', args, options);
   if (result.error) throw result.error;
   if (result.status !== 0) {
     throw new Error(
@@ -86,7 +89,9 @@ function run(argv) {
   }
   const rows = rowsFromWrangler(result.stdout);
   writeFileSync(out, toCsv(rows), 'utf8');
-  console.log(`${rows.length} ${rows.length === 1 ? 'address' : 'addresses'} written to ${out} (${local ? 'local' : 'Cloudflare'} database).`);
+  console.log(
+    `${rows.length} ${rows.length === 1 ? 'address' : 'addresses'} written to ${out} (${local ? 'local' : 'Cloudflare'} database).`,
+  );
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
