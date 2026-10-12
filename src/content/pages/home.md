@@ -3,9 +3,7 @@ eyebrow: mission control for ai agents
 title: Building with *AI agents*.
 lead: "News, builds and the things in between: videos, projects, code and
   building with AI."
-buttons:
-  - label: Start with the latest
-    url: "#latest"
+buttons: []
 waitlist: true
 description: "{site.description}"
 sections:
