@@ -16,6 +16,12 @@
     {
       "label": "About R7 Orbit",
       "href": "/about/"
+    },
+    {
+      "footer": true,
+      "label": "Meridian",
+      "href": "https://r7meridian.app/",
+      "icon": "star"
     }
   ],
   "defaultOgImageAlt": "R7 Orbit: the R7 mark inside a ring with one orbiting dot, beside the words \"News, builds and the things in between.\"",
