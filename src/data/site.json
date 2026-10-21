@@ -16,6 +16,12 @@
     {
       "label": "About R7 Orbit",
       "href": "/about/"
+    },
+    {
+      "footer": true,
+      "label": "Meridian",
+      "href": "https://r7meridian.app/",
+      "icon": "star"
     }
   ],
   "defaultOgImageAlt": "R7 Orbit: the R7 mark inside a ring with one orbiting dot, beside the words \"News, builds and the things in between.\"",
@@ -34,7 +40,7 @@
     "successMessage": "You are on the list.",
     "removeSuccessMessage": "If that address was on the waitlist, it has been removed.",
     "text": "Get access to R7 Orbit.",
-    "turnstileSiteKey": "",
+    "turnstileSiteKey": "0x4AAAAAAFTfpwy4TfLbagT9",
     "removeLinkLabel": "Remove my email",
     "emailLabel": "Email address",
     "noscriptMessage": "JavaScript is needed to join the waitlist.",
