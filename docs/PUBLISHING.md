@@ -242,6 +242,7 @@ Any post (a blog post, news item, vlog, project or repo) can be written as **sec
 
 Instead of the editor you can ask a coding agent (Claude Code, in this repository) to draft a post: "add a blog post about …", "draft a news item for this link", "add my new game". The agent follows the project skill `.claude/skills/add-content/SKILL.md`. It starts from a template for the kind (`templates/`), and:
 
+- **Writes the text** with the `orbit-voice` skill (`.claude/skills/orbit-voice/`), the shared house voice, credited to the agent that wrote it, never to you.
 - **Lays the piece out** with `docs/WRITING_GUIDE.md` (a recipe per kind: pictures, callouts, pull quotes, lists, not a wall of text) and checks it with `npm run check:layout`. A picture it does not have is marked **IMAGE NEEDED** in the post (a red Warning box in the preview) and listed in its report for you to supply.
 - **Asks first** for what it needs: the kind, title, date, whether it is a draft, the author, summary, tags, pictures and their alt text, sources, and for a vlog the YouTube id, for a game or an app the play address, its type (game or app) and controls. It does not invent facts, quotes, numbers, links or sources.
 - **Credits AI-written pieces to R7** (`author: r7`), never to you. The "AI-written" label and R7's note then appear on their own; the agent never writes that note.

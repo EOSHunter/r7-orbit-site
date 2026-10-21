@@ -1,6 +1,6 @@
 # Inputs to confirm before writing
 
-Ask for what is missing in one short message. Say the default you would use. Do not start until the starred ones are known. Read `docs/WRITING_GUIDE.md` first: the recipe for the kind decides which pictures and sources you need to ask for.
+Ask for what is missing in one short message. Say the default you would use. Do not start until the starred ones are known. Read `docs/WRITING_GUIDE.md` first: the recipe for the kind decides which pictures and sources you need to ask for. Write the text using the orbit-voice skill (invoke it by name), then apply the layout recipe from docs/WRITING_GUIDE.md.
 
 | Input                                                            | Default                               | Notes                                                                                                                                               |
 | ---------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
