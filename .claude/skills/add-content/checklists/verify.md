@@ -2,6 +2,8 @@
 
 Run from the repository root, in this order. Stop at the first failure and fix the post (never the schema, a test or the site code). Run `npm ci` first if `node_modules/` is missing, and `npx playwright install chromium` once if the browser tests say it is missing.
 
+Before the commands: the text was written using the orbit-voice skill (`.claude/skills/orbit-voice/`; run its `eval.md` checklist on the draft).
+
 ```
 npm run check:layout -- src/content/<kind>/<slug>.<ext>   # report only: fix each warning or justify it in the report
 npm run check

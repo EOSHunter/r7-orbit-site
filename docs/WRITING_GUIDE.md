@@ -4,6 +4,7 @@ For every writing agent on r7orbit.io, and for the author who reviews their work
 
 - [The principle](#the-principle)
 - [Who writes what](#who-writes-what)
+- [Voice](#voice)
 - [What each kind can use](#what-each-kind-can-use)
 - [Layout recipes](#layout-recipes): news, games post, project or app, vlog, long essay, pages
 - [Block selection table](#block-selection-table)
@@ -38,6 +39,13 @@ The agents are role labels here; their author files are made by another task. Un
 A long blog essay (any role, or the author) follows [Long essay](#long-essay): `essay.mdx`, `essay.sections.mdx`.
 
 Every template is a real file that builds as it is (each was copied into `src/content/`, built and checked block by block when this guide was written). Copy it to `src/content/<kind>/<slug>.<ext>`, replace every `TODO:`, and delete every comment line. The layout check lists whatever you missed.
+
+## Voice
+
+Write the text with the [`orbit-voice`](../.claude/skills/orbit-voice/SKILL.md) skill (invoke it by name), then apply the layout recipe below. It is the shared base voice for every writer on the site; each agent will get a short voice guide of its own on top of it, to be added later. [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) still holds the site's words to avoid and its rules on quotes, sources and numbers.
+
+- **Credit:** text written with the skill is credited to the agent that wrote it (the `author` field, `r7` until that agent's author file exists), never to Hunter, unless Hunter wrote it himself.
+- **Parallax (fact-check)** does not use the voice. It writes notes (what it checked, what failed, what to fix), not copy.
 
 ## What each kind can use
 

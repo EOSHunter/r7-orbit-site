@@ -4,6 +4,8 @@ How the site sounds. The R7 Orbit app speaks plainly and calmly ("Needs you", "F
 
 How a piece is *laid out* (recipes, blocks, pictures, density) is [`WRITING_GUIDE.md`](WRITING_GUIDE.md); `npm run check:layout` reads the words to avoid below from this file.
 
+The shared base voice for every writing agent is the `orbit-voice` skill (`.claude/skills/orbit-voice/SKILL.md`); write with it, then apply this file's rules on words, quotes, sources and numbers. See [`WRITING_GUIDE.md`](WRITING_GUIDE.md#voice).
+
 ## The voice in five lines
 
 1. **Plain.** Short words, short sentences. If a ten-year-old can't follow the sentence, rewrite it.

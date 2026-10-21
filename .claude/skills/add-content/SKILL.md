@@ -7,7 +7,7 @@ description: Use when asked to add or draft a new blog post, news item, vlog, pr
 
 Content here is one Markdown/MDX file per post in `src/content/<kind>/`, checked by a strict schema (`src/content.config.ts`: a misspelt or unknown field fails the build). This skill is the short path through `docs/CONTENT_MODEL.md`, `docs/SECTIONS.md`, `docs/IMAGES.md`, `docs/VOICE_AND_COPY.md` and `CLAUDE.md`. When this file and the schema disagree, the schema wins: say so in the report.
 
-**Read `docs/WRITING_GUIDE.md` first, every time.** It says how a piece is laid out so it is not a wall of text: the recipe per kind, which block to use when (with the exact markup), the density rules, the pictures and the IMAGE NEEDED marker, truth and credit, and the pre-publish checklist with the fact-check handoff. This skill is the steps; the guide is the design.
+**Read `docs/WRITING_GUIDE.md` first, every time.** It says how a piece is laid out so it is not a wall of text: the recipe per kind, which block to use when (with the exact markup), the density rules, the pictures and the IMAGE NEEDED marker, truth and credit, and the pre-publish checklist with the fact-check handoff. This skill is the steps; the guide is the design. **The words come from the `orbit-voice` skill** (`.claude/skills/orbit-voice/`): invoke it by name before you write a sentence.
 
 Files next to this one: `templates/layouts/` (**start here**: one skeleton per recipe, in both forms, each builds as it is: `news.md` / `news.sections.md`, `games-post.mdx` / `games-post.sections.mdx`, `essay.mdx` / `essay.sections.mdx`, `project.md` / `project.sections.md`, `vlog.md` / `vlog.sections.md`), `templates/<kind>.md` (every optional field of a kind, for reference; `app.md` for a game's or app's play fields), `examples.md` (a filled-in blog post and vlog, placeholders marked), `checklists/inputs.md`, `checklists/verify.md`, `checklists/report.md`.
 
@@ -39,7 +39,7 @@ Pick the recipe for the piece in `docs/WRITING_GUIDE.md` ("Layout recipes": news
 
 Rules for either:
 
-- **Voice** (`docs/VOICE_AND_COPY.md`): plain, specific, first person, calm; no exclamation marks and none of the listed hype words; say what did not work. Length by kind: news 150-500 words, blog 800-3000, vlog notes short, project and repo modest. Link text says where it goes.
+- **Voice** (the `orbit-voice` skill, then `docs/VOICE_AND_COPY.md`; where they disagree on safety or truth the site's rules win, on tone the skill wins): plain, specific, first person, calm; no exclamation marks and none of the listed hype words; say what did not work. Length by kind: news 150-500 words, blog 800-3000, vlog notes short, project and repo modest. Link text says where it goes.
 - **Title:** sentence case, at most 90 characters (aim for 70), at most one `*brass phrase*` in asterisks. The asterisks are stripped for the tab.
 - **`seoTitle`:** the tab title is `<title or seoTitle> · R7 Orbit`, at most 60 characters. `seoTitle` is **at most 49 characters** (`seoTitleMax`, the build fails above that). Add one whenever the plain title (without asterisks) is longer than 49.
 - **`summary`:** required, one or two sentences, 155 characters or fewer (hard limit 180), not a repeat of the title.
@@ -51,6 +51,8 @@ Rules for either:
 Schedule: a future `date` is hidden until the first build on or after it; the daily deploy workflow does that. Drafts and future posts show in `npm run dev`, never in `dist/`.
 
 ## 3. Write the files
+
+Write the text using the orbit-voice skill (invoke it by name), then apply the layout recipe from docs/WRITING_GUIDE.md.
 
 1. Copy the layout template into `src/content/<kind>/<slug>.md` (`.mdx` for blog, with sections too). Replace every `TODO:`, delete every comment line and every block you do not use, and add optional fields from `templates/<kind>.md` as needed. A missing picture gets the IMAGE NEEDED marker the guide defines (never a stand-in); a post without a hero gets `# heroless: <why>` in its front matter. Keep `draft: true` until the author approves, unless they said to publish now.
 2. Run `npm run check:layout -- src/content/<kind>/<slug>.<ext>` and fix every warning, or keep it and justify it in your report. It is report-only (exit 0); a clean file scores 100.
