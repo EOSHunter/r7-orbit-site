@@ -199,3 +199,20 @@ test('every embedded playUrl in src/content/projects/ is on the frame-src allow-
     if (url && mode !== 'link') expect(allowed, `${file}: ${url}`).toContain(new URL(url).origin);
   }
 });
+
+// A project that is not embedded (link mode, or not playable) shows its cover as a plain picture in the page head. Like every other
+// big picture it must go through the build's WebP copies (srcset): a 600 KB original as the page's largest paint is a 4.9 s LCP on a phone.
+test('a project page draws its cover through the srcset of the build-made copies', () => {
+  const dir = new URL('../dist/projects/', import.meta.url);
+  if (!existsSync(dir)) return;
+  for (const slug of readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)) {
+    const html = readFileSync(new URL(`${slug}/index.html`, dir), 'utf8');
+    const img = /<div class="media framed"><img ([^>]*)>/.exec(html)?.[1];
+    const src = /\bsrc="(\/media\/[^"]+)"/.exec(img ?? '')?.[1];
+    if (!src) continue; // an embedded game draws its poster in the play panel; no cover is a placeholder plate
+    const copy = src.replace(/\.[a-z]+$/i, '.480w.webp');
+    if (!existsSync(new URL(`..${copy}`, dir))) continue; // too small for copies, or not a raster file
+    expect(img, `${slug}: the cover has a srcset`).toMatch(/\bsrcset="[^"]*\.480w\.webp 480w/);
+    expect(img, `${slug}: and says how wide it is drawn`).toMatch(/\bsizes="/);
+  }
+});

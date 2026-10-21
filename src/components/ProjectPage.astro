@@ -28,6 +28,7 @@ import { toAppCards } from '../lib/app-cards';
 import { APP_TYPES } from '../lib/app-types';
 import { APPS_PATH, typeOf } from '../lib/apps';
 import { isPlayable } from '../lib/play';
+import { SIZES, publicSrcset } from '../lib/media-srcset';
 import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
 import { waitlist } from '../lib/waitlist-queries';
@@ -71,6 +72,7 @@ const gh = data.repo ? await loadGitHubRepo(data.repo) : undefined;
 const license = gh?.status === 'ok' ? gh.stats.license : null;
 
 const cover = localImage(data.cover);
+const coverSrcset = await publicSrcset(cover);
 const shots = data.gallery.map((shot) => ({ src: localImage(shot.src), alt: shot.alt, caption: shot.caption }));
 const timeline = [...data.timeline].sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -175,7 +177,7 @@ const path = `/projects/${post.id}/`;
     {
       !embedded && (
         <div class="media framed">
-          {cover ? <img src={cover} alt={data.coverAlt ?? ''} width="1280" height="720" decoding="async" /> : <MediaPlaceholder />}
+          {cover ? <img src={cover} srcset={coverSrcset} sizes={coverSrcset && SIZES.page} alt={data.coverAlt ?? ''} width="1280" height="720" decoding="async" /> : <MediaPlaceholder />}
         </div>
       )
     }
