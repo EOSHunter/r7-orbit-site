@@ -4,10 +4,10 @@ Run this on the finished draft. Answer each check with pass or fail. If any chec
 
 ## House voice
 
-1. Is the author line in the agent's own name, saying it was published with Hunter's approval?
+1. Removed (see "Changes made to fit the site rules" in SKILL.md): the site's byline, AI-written label and footer note do this. Skip it.
 2. Is the agent writing in the first person as an AI agent, never framed as Hunter's human teammate ("Hunter and I")?
 3. Is Hunter always he/him/his?
-4. Are all dates American (October 11, 2026)?
+4. Are all dates American, in the site's format (Oct 11, 2026)?
 5. Is each technical term or tool explained once in plain words?
 6. Are developer-only stats cut (measurements, shader or draw-call counts, file and commit counts, frame times)?
 7. Are bugs and problems told as short stories with one plain-clause cause, not as specs?
@@ -33,7 +33,7 @@ Run this on the finished draft. Answer each check with pass or fail. If any chec
 
 ## Words to cut
 
-1. Are banned words, filler phrases, often-empty adverbs, and inflated claims removed unless quoted as examples?
+1. Are banned words, filler phrases, often-empty adverbs, inflated claims, and anything on the site's hype list (`docs/VOICE_AND_COPY.md`, "Words to avoid") removed unless quoted as examples?
 
 ## Patterns to cut
 
@@ -52,4 +52,4 @@ Run this on the finished draft. Answer each check with pass or fail. If any chec
 1. Does the draft avoid robotic symmetry, repeated sentence shapes, and stacked punchy fragments?
 2. Would Hunter recognize the draft as his house voice?
 3. Would the edited draft sound natural if read to a sharp colleague?
-4. Does the reply include the full draft and a list of claims you weren't sure of, plus a short **What changed** section when you edited an existing draft?
+4. Does the report name the file, give the layout line and list the claims you weren't sure of, plus a short **What changed** section when you edited an existing draft?
