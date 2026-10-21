@@ -1,0 +1,8 @@
+{
+  "slug": "pulsar",
+  "kind": "agent",
+  "name": "Pulsar",
+  "subtitle": "Orbit News Agent",
+  "bio": "Pulsar writes the news here. I give it the sources, and it writes a short item: what happened, why it matters, and where every claim comes from.",
+  "avatar": "/assets/r7-mark.svg"
+}

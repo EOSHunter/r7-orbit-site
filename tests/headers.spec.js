@@ -190,7 +190,9 @@ test('the About page opens in the editor with its blocks and a live preview, wit
   // text), the portrait grid.
   const preview = page.locator('iframe').first().contentFrame();
   await expect(preview.getByRole('heading', { level: 1 })).toHaveText('About');
-  await expect(preview.getByRole('heading', { level: 2 })).toHaveText(['Hunter Newton · R7 Orbit Creator', 'R7 · Orbit AI Agent']);
+  await expect(preview.getByRole('heading', { level: 2 })).toHaveText(['Hunter Newton · R7 Orbit Creator', 'R7 · Orbit AI Agent', 'Meet the team']);
+  const team = parseFrontmatter(ABOUT_MD).frontmatter.sections.find((s) => s.type === 'team');
+  await expect(preview.locator('.team-grid .team-card')).toHaveCount(team.members.length);
   await expect(preview.locator('.about-grid .portrait img').first()).toHaveAttribute('alt', 'Portrait of Hunter Newton');
   await expect(preview.getByText('How a piece gets here:')).toBeVisible();
 
@@ -224,11 +226,14 @@ test('saving an About change works under the admin CSP: a new image block, two s
 
   // Re-order: fold the new block to one line, then drag it up above the first block by its handle (the editor has no keyboard
   // way to do this). A tall block is hard to drop: the editor picks the nearest block by its centre.
+  // Every block has a handle, and so does each row of a list inside one (the Team block's members): the new block's is the last.
+  const { frontmatter: about } = parseFrontmatter(ABOUT_MD);
+  const rows = about.sections.reduce((n, s) => n + (s.members?.length ?? 0), 0);
   const handles = page.locator('[aria-roledescription="sortable"]');
   await handles.last().locator('xpath=preceding-sibling::button[1]').click();
-  await expect(handles).toHaveCount(4);
+  await expect(handles).toHaveCount(about.sections.length + 1 + rows);
   await expect(page.getByLabel('Alt text (optional)').last()).toBeHidden();
-  const from = (await handles.nth(3).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const from = (await handles.last().boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   const to = (await handles.nth(0).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   const x = from.x + from.width / 2;
   await page.mouse.move(x, from.y + from.height / 2);
@@ -240,13 +245,11 @@ test('saving an About change works under the admin CSP: a new image block, two s
   // The editor swallows any click for a moment after a drop (so letting go over a button does not press it); a person is never
   // that quick, but a test is.
   await page.waitForTimeout(300);
-  await expect(page.getByText(/^(Heading|Portrait|Text|Image): /)).toHaveCount(4);
-  expect(await page.getByText(/^(Heading|Portrait|Text|Image): /).allInnerTexts()).toEqual([
-    'Image: A tidy desk with one laptop',
-    'Heading: Hunter Newton · R7 Orbit Creator',
-    expect.stringMatching(/^Portrait: /),
-    expect.stringMatching(/^Portrait: /),
-  ]);
+  const summaries = about.sections
+    .filter((s) => ['heading', 'portrait', 'text', 'image'].includes(s.type))
+    .map((s) => (s.type === 'heading' ? `Heading: ${s.text}` : expect.stringMatching(new RegExp(`^${s.type[0].toUpperCase()}${s.type.slice(1)}: `))));
+  await expect(page.getByText(/^(Heading|Portrait|Text|Image): /)).toHaveCount(summaries.length + 1);
+  expect(await page.getByText(/^(Heading|Portrait|Text|Image): /).allInnerTexts()).toEqual(['Image: A tidy desk with one laptop', ...summaries]);
 
   await page.getByRole('button', { name: /^save$/i }).click();
   await expect

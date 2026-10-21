@@ -19,7 +19,7 @@ describe('the block library', () => {
     expect([...SECTION_TYPES].sort()).toEqual(
       [
         'heading', 'lead', 'text', 'image', 'image-row', 'gallery', 'portrait', 'columns', 'callout', 'quote', 'pullquote', 'code', 'video',
-        'game', 'toc', 'divider', 'button', 'links', 'stats', 'latest', 'author', 'spacer', 'feed', 'pinned', 'apps', 'waitlist',
+        'game', 'toc', 'divider', 'button', 'links', 'stats', 'latest', 'author', 'spacer', 'feed', 'pinned', 'apps', 'waitlist', 'team',
       ].sort(),
     );
   });

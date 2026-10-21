@@ -25,16 +25,16 @@ For every writing agent on r7orbit.io, and for the author who reviews their work
 
 ## Who writes what
 
-The agents are role labels here; their author files are made by another task. Until `src/content/authors/<your-slug>.json` exists, credit `author: r7` (see [Truth and credit](#truth-and-credit)).
+Each agent has an author file (`src/content/authors/<slug>.json`, 2026-10-21) and a short voice guide on top of the house voice, in [`team/`](team/) ([`TEAM.md`](TEAM.md) lists them). Credit your own slug: `author: pulsar` and so on (see [Truth and credit](#truth-and-credit)).
 
-| Role | Agent | Writes | Recipe | Template (in `.claude/skills/add-content/templates/layouts/`) |
-| --- | --- | --- | --- | --- |
-| lead | R7 | Anything; assigns the brief | any | any |
-| news | Pulsar | `/news/` items | [News](#news) | `news.md`, `news.sections.md` |
-| games | Orion | Blog posts about games | [Games post](#games-post) | `games-post.mdx`, `games-post.sections.mdx` |
-| projects | Kepler | Project and app pages, build logs | [Project or app](#project-or-app) | `project.md`, `project.sections.md` (+ `templates/app.md` for play fields) |
-| vlogs | Hubble | Video pages | [Vlog](#vlog) | `vlog.md`, `vlog.sections.md` |
-| fact-check | Parallax | Nothing published: checks claims, links and alt text before anything goes up | [Pre-publish checklist](#pre-publish-checklist) | none |
+| Role | Agent (`author`) | Writes | Recipe | Template (in `.claude/skills/add-content/templates/layouts/`) | Voice guide |
+| --- | --- | --- | --- | --- | --- |
+| lead | R7 (`r7`) | Anything; assigns the brief | any | any | the `orbit-voice` skill |
+| news | Pulsar (`pulsar`) | `/news/` items | [News](#news) | `news.md`, `news.sections.md` | [`team/pulsar.md`](team/pulsar.md) |
+| games | Orion (`orion`) | Blog posts about games | [Games post](#games-post) | `games-post.mdx`, `games-post.sections.mdx` | [`team/orion.md`](team/orion.md) |
+| projects | Kepler (`kepler`) | Project and app pages, build logs | [Project or app](#project-or-app) | `project.md`, `project.sections.md` (+ `templates/app.md` for play fields) | [`team/kepler.md`](team/kepler.md) |
+| vlogs | Hubble (`hubble`) | Video pages | [Vlog](#vlog) | `vlog.md`, `vlog.sections.md` | [`team/hubble.md`](team/hubble.md) |
+| fact-check | Parallax (`parallax`) | Nothing published: checks claims, links and alt text before anything goes up | [Pre-publish checklist](#pre-publish-checklist) | none | [`team/parallax.md`](team/parallax.md) |
 
 A long blog essay (any role, or the author) follows [Long essay](#long-essay): `essay.mdx`, `essay.sections.mdx`.
 
@@ -42,9 +42,9 @@ Every template is a real file that builds as it is (each was copied into `src/co
 
 ## Voice
 
-Write the text with the [`orbit-voice`](../.claude/skills/orbit-voice/SKILL.md) skill (invoke it by name), then apply the layout recipe below. It is the shared base voice for every writer on the site; each agent will get a short voice guide of its own on top of it, to be added later. [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) still holds the site's words to avoid and its rules on quotes, sources and numbers.
+Write the text with the [`orbit-voice`](../.claude/skills/orbit-voice/SKILL.md) skill (invoke it by name), then apply the layout recipe below. It is the shared base voice for every writer on the site; each agent then reads its own short voice guide on top of it ([`team/`](team/)). [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) still holds the site's words to avoid and its rules on quotes, sources and numbers.
 
-- **Credit:** text written with the skill is credited to the agent that wrote it (the `author` field, `r7` until that agent's author file exists), never to Hunter, unless Hunter wrote it himself.
+- **Credit:** text written with the skill is credited to the agent that wrote it (the `author` field: its own slug), never to Hunter, unless Hunter wrote it himself.
 - **Parallax (fact-check)** does not use the voice. It writes notes (what it checked, what failed, what to fix), not copy.
 
 ## What each kind can use
@@ -135,7 +135,7 @@ A blog post that argues something. **1200-3000 words, 4-7 `##` sections.** Templ
 
 ### Pages
 
-About, the home page, the listings, privacy, 404 and search are the author's pages, edited in `/admin` ([`PUBLISHING.md`](PUBLISHING.md) sections 7, 8 and 11). An agent changes one only when asked, with the same blocks and the same density rules, and with settings tokens (`{site.name}`) instead of typed values ([`CONTENT_MODEL.md`](CONTENT_MODEL.md#pages-with-a-fixed-frame-privacy-404-search)). Never write the author's bio or an agent's note.
+About, the home page, the listings, privacy, 404 and search are the author's pages, edited in `/admin` ([`PUBLISHING.md`](PUBLISHING.md) sections 7, 8 and 11). An agent changes one only when asked, with the same blocks and the same density rules, and with settings tokens (`{site.name}`) instead of typed values ([`CONTENT_MODEL.md`](CONTENT_MODEL.md#pages-with-a-fixed-frame-privacy-404-search)). Never write the author's bio or an agent's bio.
 
 ## Block selection table
 
@@ -402,8 +402,8 @@ The warn callout is visible in the editor's preview, so the author sees what is 
 - **Quotes are verbatim** and attributed; a quote you cannot find in its source is cut.
 - **Numbers are recomputed** where they can be (totals, percentages, durations). State the unit and the date.
 - **Uncertain claims** are either cut or kept with the doubt said in the text ("the notes do not give a number"); every one you keep goes in the report's "Claims to check".
-- **Credit:** an AI-written piece is credited to the writing agent that wrote it, through `author`: your own slug once `src/content/authors/<slug>.json` exists, **`r7` until then**. Never `hunter-newton` (and never an absent `author`, which means Hunter). The "AI-written" label and the agent's footer note appear by themselves; never write them, a bio or the note's wording. Never create an author file.
-- **The author's own writing** keeps his name (no `author` line). `aiAssist: edited` or `drafted` only on his posts and only when he asks for the line; never on an agent's post (the label and note are the disclosure).
+- **Credit:** an AI-written piece is credited to the writing agent that wrote it, through `author`: your own slug (`pulsar`, `orion`, `kepler`, `hubble`; `r7` for R7 or a writer with no author file). Never `hunter-newton` (and never an absent `author`, which means Hunter). The byline and the AI-written label appear automatically; never write them or a bio. There is no footer note. Never create an author file.
+- **The author's own writing** keeps his name (no `author` line). `aiAssist: edited` or `drafted` only on his posts and only when he asks for the line; never on an agent's post (the byline and its label are the disclosure).
 - **Nothing goes up unreviewed.** `draft: true` until the author says it goes live.
 - **The site forbids:** any email address, `mailto:` link, newsletter, RSS or feed mention, and social profiles other than GitHub and YouTube.
 

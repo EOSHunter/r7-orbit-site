@@ -430,6 +430,11 @@ describe('authors in the admin', () => {
       // Every author file is an option, named in words and stored as its slug.
       expect(field.options, c.name).toEqual([
         { label: 'Hunter Newton', value: 'hunter-newton' },
+        { label: 'Hubble · Orbit Video Agent', value: 'hubble' },
+        { label: 'Kepler · Orbit Projects Agent', value: 'kepler' },
+        { label: 'Orion · Orbit Games Agent', value: 'orion' },
+        { label: 'Parallax · Orbit Fact-Check Agent', value: 'parallax' },
+        { label: 'Pulsar · Orbit News Agent', value: 'pulsar' },
         { label: 'R7 · Orbit AI Agent', value: 'r7' },
       ]);
       expect(shapes[c.name].author.safeParse(undefined).success, c.name).toBe(true);

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-// Authors: the two author pages, the byline and the agent's footer note on posts, the "By author" filter, the structured data
+// Authors: the author pages, the byline on posts, the "By author" filter, the structured data
 // and the feeds. Content-driven where it can be (the pages are found in dist/), and a fixture for an author with no posts.
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -124,9 +124,9 @@ for (const path of ['/authors/r7/', '/authors/hunter-newton/', '/styleguide/auth
   }
 }
 
-// ---- the byline and the footer note ----------------------------------------------------------------------------------------
+// ---- the byline ----------------------------------------------------------------------------------------------------------
 
-test("an agent's post: byline with avatar, name, subtitle and AI-written, and the footer note once, at the end", async ({ page }) => {
+test("an agent's post: byline with avatar, name, subtitle and AI-written, and no footer note", async ({ page }) => {
   for (const path of agentPosts) {
     await page.goto(path);
     const byline = page.locator('.author[data-author="r7"]');
@@ -136,14 +136,10 @@ test("an agent's post: byline with avatar, name, subtitle and AI-written, and th
     await expect(byline.getByText('Orbit AI Agent')).toBeVisible();
     await expect(byline.locator('.chip.ai-written')).toHaveText('AI-written');
 
-    const note = page.locator('[data-author-note="r7"]');
-    await expect(note, path).toHaveCount(1);
-    await expect(note).toContainText(authorFile('r7').note);
-    // One disclosure: no "How this was made" line next to the label and note.
+    // The byline and its label are the credit (the footer note was removed on 2026-10-21, docs/DECISIONS.md), and one
+    // disclosure is enough: no "How this was made" line next to the label.
+    await expect(page.locator('[data-author-note]')).toHaveCount(0);
     await expect(page.getByText('How this was made')).toHaveCount(0);
-    // At the end of the post: after the article or the notes it follows, not above them.
-    const [noteBox, headBox] = await Promise.all([note.boundingBox(), page.locator('h1').boundingBox()]);
-    expect(noteBox.y, path).toBeGreaterThan(headBox.y);
   }
 });
 
@@ -159,10 +155,10 @@ test("a person's post: Hunter Newton in the byline, no AI-written label and no f
   }
 });
 
-test('the footer note is on a post exactly when its author is an agent (every post in dist/)', () => {
+test('the AI-written label is on a post exactly when its author is an agent, and no post has a footer note (every post in dist/)', () => {
   for (const path of postPaths) {
     const html = read(path);
-    expect(html.includes('data-author-note'), path).toBe(credited(path) === 'r7');
+    expect(html.includes('data-author-note'), path).toBe(false);
     expect(html.includes('ai-written'), path).toBe(credited(path) === 'r7');
   }
 });
@@ -258,3 +254,57 @@ test('the sitemap lists both author pages', async ({ request }) => {
   expect(xml).toContain(`<loc>${site.url}/authors/hunter-newton/</loc>`);
   expect(xml).not.toContain('/styleguide/author-empty/');
 });
+
+// ---- the writing team --------------------------------------------------------------------------------------------------------
+
+const TEAM = [
+  ['pulsar', 'Pulsar', 'Orbit News Agent'],
+  ['orion', 'Orion', 'Orbit Games Agent'],
+  ['kepler', 'Kepler', 'Orbit Projects Agent'],
+  ['hubble', 'Hubble', 'Orbit Video Agent'],
+  ['parallax', 'Parallax', 'Orbit Fact-Check Agent'],
+];
+const hasPosts = (slug) => postPaths.some((p) => credited(p) === slug);
+
+test('the five writing agents are agents with the R7 mark, no footer note, and their bio on their page', async ({ page }) => {
+  for (const [slug, name, subtitle] of TEAM) {
+    const file = authorFile(slug);
+    expect(file, slug).toMatchObject({ slug, kind: 'agent', name, subtitle, avatar: '/assets/r7-mark.svg' });
+    expect(file, slug).not.toHaveProperty('note');
+    await page.goto(`/authors/${slug}/`);
+    const head = page.locator(`[data-author-page="${slug}"]`);
+    await expect(head.getByRole('heading', { level: 1, name })).toBeVisible();
+    await expect(head.getByText(subtitle)).toBeVisible();
+    await expect(head.locator('.t-lead')).toHaveText(file.bio);
+    await expect(head.locator('.avatar img')).toHaveAttribute('src', '/assets/r7-mark.svg');
+  }
+});
+
+test('an author page with no published posts is noindex and out of the sitemap; with posts it is indexed', async ({ request }) => {
+  const xml = await (await request.get('/sitemap-0.xml')).text();
+  for (const slug of ['hunter-newton', 'r7', ...TEAM.map(([s]) => s)]) {
+    const html = read(`/authors/${slug}`);
+    const noindex = /<meta name="robots" content="noindex/.test(html);
+    expect(noindex, slug).toBe(!hasPosts(slug));
+    expect(xml.includes(`<loc>${site.url}/authors/${slug}/</loc>`), slug).toBe(hasPosts(slug));
+  }
+});
+
+test('Parallax: its page says plainly that it is an AI agent with no posts, without promising any', async ({ page }) => {
+  test.skip(hasPosts('parallax'), 'Parallax has a post');
+  await page.goto('/authors/parallax/');
+  await expect(page.locator('[data-author-page="parallax"] .chip.ai-agent')).toHaveText('AI agent');
+  await expect(page.locator('.chip.ai-written')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 2, name: 'Parallax is an AI agent and has no posts on this site.' })).toBeVisible();
+  await expect(page.getByText('Check back soon.')).toHaveCount(0);
+});
+
+for (const width of [320, 1280]) {
+  test(`/authors/parallax/ has no horizontal scroll and no axe violations at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/authors/parallax/');
+    expect(await overflowOf(page)).toBeLessThanOrEqual(0);
+    const results = await new AxeBuilder({ page }).withTags(tags).analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes[0]?.html}`)).toEqual([]);
+  });
+}

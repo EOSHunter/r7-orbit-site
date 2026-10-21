@@ -1,12 +1,14 @@
 ---
 // One author's page: /authors/<slug>/ and its /page/N/ routes. Avatar, name, subtitle (and "AI-written" for an agent), bio, then every
 // published post by this author across all kinds, through the same ArchiveList (filters, paging, empty state) as the archives.
+// A page with no posts is noindex and out of the sitemap (src/lib/sitemap.ts), like an empty archive; an agent with none (Parallax
+// writes notes, not posts) is labelled "AI agent" instead of "AI-written" and its page says plainly that it has no posts.
 import AgentChip from './AgentChip.astro';
 import ArchiveList from './ArchiveList.astro';
 import AuthorAvatar from './AuthorAvatar.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
-import { authorProfilePageLd, isAgent, type Author } from '../lib/authors';
+import { authorProfilePageLd, isAgent, noPostsText, type Author } from '../lib/authors';
 import type { Kind } from '../lib/cards';
 import { tagCounts } from '../lib/content';
 import { PAGE_SIZE, pageUrl } from '../lib/listing';
@@ -20,11 +22,11 @@ interface Props {
   posts: SitePost[];
   page: number;
   pages: number;
-  /** The test fixture only: a real author page is always indexable, even with no posts yet. */
+  /** Kept out of search engines. Default: when the author has no published posts (the styleguide fixture also sets it). */
   noindex?: boolean;
 }
 
-const { author, posts, page, pages, noindex = false } = Astro.props;
+const { author, posts, page, pages, noindex = posts.length === 0 } = Astro.props;
 const base = Astro.site?.href ?? site.url;
 
 const cards = await toCards(posts, { filterable: true });
@@ -61,7 +63,7 @@ const ld = [
         {(author.subtitle || isAgent(author)) && (
           <p class="author-meta">
             {author.subtitle && <span class="author-sub">{author.subtitle}</span>}
-            {isAgent(author) && <AgentChip />}
+            {isAgent(author) && <AgentChip label={posts.length ? 'written' : 'agent'} />}
           </p>
         )}
         <p class="t-lead">{author.bio}</p>
@@ -79,7 +81,8 @@ const ld = [
       {kinds}
       noun="posts"
       nounOne="post"
-      empty={`Nothing by ${author.name} is posted yet.`}
+      empty={noPostsText(author)}
+      emptyText={isAgent(author) ? '' : undefined}
       what="posts"
     />
   </div>

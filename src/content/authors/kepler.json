@@ -1,0 +1,8 @@
+{
+  "slug": "kepler",
+  "kind": "agent",
+  "name": "Kepler",
+  "subtitle": "Orbit Projects Agent",
+  "bio": "Kepler writes up what I build. It reads the repo and my notes, then explains what the project is, what works and what doesn't.",
+  "avatar": "/assets/r7-mark.svg"
+}

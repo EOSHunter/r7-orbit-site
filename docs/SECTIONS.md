@@ -57,6 +57,7 @@ A bad block fails `npm run build` (and the pull request's check) with a message 
 | A Latest posts block with a kind that does not exist | `sections.4.kinds.0: Block 5 (Latest posts): Invalid option: expected one of "news"\|"blog"\|…` |
 | A Latest posts block with a tag no post has | `about.md, block 5 (Latest posts): no post has the tag "x". Tags in use: …` |
 | A Latest posts or Author block with an author that does not exist | `about.md, block 5 (Latest posts): there is no author "x". Authors are: …` |
+| A Team block with an author that does not exist, or the same author twice | `about.md, block 5 (Team): member 3: there is no author "x". Authors are: …` / `member 4: "r7" is already on the team; each author has one card.` |
 | An embedded game on a host `public/_headers` does not let the site frame | `about.md, block 6 (Playable game): the game's address https://x.test is not in frame-src in public/_headers …` |
 
 The editor's preview shows the schema's own messages above the page ("Fix before saving") while the author types.
@@ -69,7 +70,7 @@ Each definition has a `placement`, and `layoutSections` (`src/lib/sections/layou
 - **wide**: a row of its own, the width of the page (image row, gallery, game, two columns, latest posts, a Wide image).
 - **full**: a row that reaches both edges of the window (a Full image).
 - **band**: a full-width section with its own spacing (the home page's rows).
-- **portrait**: a picture in a side column with the text beside it. The Heading directly above a portrait, the portrait's text and every block after it stay in that column until a divider, a block that leaves the column (wide, full, band) or the next portrait ends it. That is how About keeps its picture beside both of its sections.
+- **portrait**: a picture in a side column with the text beside it. The Heading directly above a portrait, the portrait's text and every block after it stay in that column until a divider, a block that leaves the column (wide, full, band) or the next portrait ends it. That is how About keeps its picture beside both of its sections. A Heading that would end that column just before a block that leaves it (wide, full, band) goes with that block instead, in a row of its own above it: About's "Meet the team" heading sits over the Team block, not alone beside the R7 picture (2026-10-21; `layout.vitest.ts`).
 
 ## Decisions
 
@@ -78,7 +79,8 @@ Each definition has a `placement`, and `layoutSections` (`src/lib/sections/layou
 - **The game block uses the existing `PlayPanel`** (click-to-load facade, sandboxed frame, no request until Play is pressed). The frame rule is the one projects follow: an embedded game's origin must be in the `frame-src` of `public/_headers`. The build checks it; `public/_headers` and the admin's Content-Security-Policy are not changed by this library. Add a host there, explicitly, before using a new game.
 - **Latest posts reads `getAllPosts`**, so drafts and future-dated posts are left out exactly as on the archives (in `astro dev` they show, labelled). Tags and authors are checked against every post and author, drafts included, so a block naming the tag of a post that goes live next week does not fail today.
 - **GitHub stats** use the build-time loader (`src/lib/github.ts`): cached, never fetched in the reader's browser, and the build passes with the network off (the row then falls back to a plain link).
-- **Author box** shows the author's bio from `src/content/authors`; it never writes an agent's note or label wording itself (CLAUDE.md, "Content rules").
+- **Author box** shows the author's bio from `src/content/authors`; it never writes an agent's bio or label wording itself (CLAUDE.md, "Content rules").
+- **Team** (2026-10-21, About's "Meet the team"): an ordered list of `members`, each an author slug, a `title` typed in the block and an optional `blurb` that replaces the bio on that card. The name, avatar, subtitle and bio are the author file's (a person's from `site.json`), so they exist once. Cards on `.grid-cards` and `.card` (one column on a phone, two or three on a wide screen; the avatar is the large one, 88 px, through the srcset helper). An agent is labelled **AI agent** with the AgentChip pattern (icon and words), not **AI-written**: the block is not a post. Placement `wide`. `teamProblems` (`checks.ts`) stops the build on an unknown author or one listed twice, naming the file, the block and the member. Only the titles and blurbs count as the block's words (`sections-to-content.ts`). The preview draws initials for the avatars (`previewNote`).
 - **The home page's rows are blocks** that hold configuration (which posts, how many, the words around them) and query the posts when the site is built (so, like Latest posts, they add nothing to a post's reading time: `sections-to-content.ts`): **Latest feed** (`feed`), **Pinned post** (`pinned`), **Apps row** (`apps`), and **Latest posts** with its section frame, order and "leave out when empty" (`latest`, the Projects and Repos rows). A Latest feed carries the page's `#latest` anchor and its kind filter, so a page holds one (`once` in the definition; `onceProblems` in `checks.ts` stops the build on a second one, and the preview warns). A link at the end of a heading row shows only when both its text and its address are filled in: any optional box may be left empty on its own (the library's rule), so a half-filled link is left out rather than refused, and the preview says so.
 - **The home hero is not a block.** Its headline is the page's `h1`, and a block could put a second `h1` on another page; the hero is the home entry's own fields (`title`, `eyebrow`, `lead`, `buttons`), like a listing page's head. There is no "browse by kind" block either: the links to each kind's archive are part of the Latest feed, as on the page.
 - **The waitlist form** (2026-10-10) is in three places: the home page's hero (its `waitlist` field), the end of any post (its `waitlist` field), and the **Waitlist form** block (`waitlist`), which puts the same band on any page built from blocks. The block's one field is `source` (hero, blog, vlog, other: what the signup is counted as). It draws nothing while the waitlist is off in Site settings, so a page that holds it is unchanged until then; its words are Site settings', so it adds nothing to a post's reading time, and the editor preview shows a labelled placeholder. Each block's form has its own ids (`waitlist-sec-<n>`), so it can sit on a post that also has the band. `docs/PAGES.md` "Waitlist", `docs/WAITLIST.md`.
@@ -90,7 +92,7 @@ The preview draws the page with the site's own stylesheets, the same classes and
 
 - the header and footer are not drawn, and the pane is narrower than a screen, so a portrait beside the text may sit above it;
 - text is read by a simplified Markdown reader (headings, paragraphs, lists, bold, italic, code, links): the page reads all of Markdown;
-- blocks that need the built site show a stand-in, and say so under themselves (`previewNote` in the definition): Latest posts, Latest feed, Pinned post, Apps row, GitHub stats row, Playable game, Video embed, Code block (no syntax colours), Lightbox gallery (no full-size window), Table of contents, Waitlist form (a labelled placeholder).
+- blocks that need the built site show a stand-in, and say so under themselves (`previewNote` in the definition): Latest posts, Latest feed, Pinned post, Apps row, GitHub stats row, Playable game, Video embed, Code block (no syntax colours), Lightbox gallery (no full-size window), Table of contents, Waitlist form (a labelled placeholder), Team (initials for the avatars).
 
 ## The catalogue
 
@@ -660,6 +662,30 @@ Sits: In the reading column, with the other text blocks.
 sections:
   - type: author
     author: hunter-newton
+```
+
+#### Team (`team`)
+
+People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent's subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). One column on a phone, two or three on a wide screen.
+
+Sits: In a row of its own, the width of the page. It ends a picture-beside-text row. In the editor preview: Each avatar is drawn as initials; the page shows the author's picture.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `members` | List of rows (1 to 24) | yes | One card per person or agent, in order. |
+| `members[].author` | Menu of the authors | yes | Who this card is. The name, picture, subtitle and bio come from the Authors list. |
+| `members[].title` | One line | yes | Their role on this page, e.g. Director, Lead agent, News writer. At most 40 characters. |
+| `members[].blurb` | Several lines | no | Optional. Shown instead of the bio from the Authors list. Leave empty to show that bio. At most 300 characters. |
+
+```yaml
+sections:
+  - type: team
+    members:
+      - author: hunter-newton
+        title: Director
+      - author: r7
+        title: Lead agent
+        blurb: A shorter line typed in the block, shown instead of the bio.
 ```
 
 #### Waitlist form (`waitlist`)

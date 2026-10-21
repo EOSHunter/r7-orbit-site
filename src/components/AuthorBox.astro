@@ -1,7 +1,7 @@
 ---
 // An author in a box, for the Author box block: avatar, name (a link to their page), the "AI-written" label for an agent, the
-// subtitle and the bio. The same look as AuthorNote (the agent's footer note on a post) from the same stylesheet, but it shows the
-// author's bio and carries no `data-author-note`, which only marks a post's footer.
+// subtitle and the bio. Its classes (`author-note…`) are named after the agent's footer note it was first drawn for, which was
+// removed on 2026-10-21 (docs/DECISIONS.md); the look stayed.
 import AgentChip from './AgentChip.astro';
 import AuthorAvatar from './AuthorAvatar.astro';
 import { isAgent, type Author } from '../lib/authors';

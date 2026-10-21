@@ -61,8 +61,8 @@ const newest = (posts: Post[]) =>
 /**
  * Every indexable URL: the static pages found in src/pages (minus noindex ones), `/latest/`, `/apps/` once an app is
  * published, and the archive for each kind that has posts, `/tags/` once a post has a tag and each tag with two or more posts, every published post,
- * and the page of every author (it exists, with an empty state, even before the author has a post). `posts` must already exclude drafts and
- * future-dated posts.
+ * and the page of every author with a published post (an author page with none is noindex, like an empty archive). `posts` must
+ * already exclude drafts and future-dated posts.
  */
 export function collectSitemapEntries(staticPaths: string[], posts: Post[], authorSlugs: string[] = []): SitemapEntry[] {
   const entries = new Map<string, SitemapEntry>();
@@ -84,7 +84,10 @@ export function collectSitemapEntries(staticPaths: string[], posts: Post[], auth
   if (tagCounts(posts).length) add('/tags/', newest(posts));
   for (const tag of tags) add(`/tags/${tag}/`, newest(posts.filter((p) => p.data.tags.includes(tag))));
   for (const post of posts) add(postUrl(post), post.data.updated ?? post.data.date);
-  for (const slug of authorSlugs) add(authorPath(slug), newest(postsByAuthor(posts, slug)));
+  for (const slug of authorSlugs) {
+    const theirs = postsByAuthor(posts, slug);
+    if (theirs.length) add(authorPath(slug), newest(theirs));
+  }
 
   return [...entries.values()].sort((a, b) => a.path.localeCompare(b.path));
 }

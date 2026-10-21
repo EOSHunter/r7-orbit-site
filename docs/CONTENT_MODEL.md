@@ -73,19 +73,19 @@ Fixtures: `tests/fixtures/posts/<kind>/` holds one post per kind written as sect
 
 ## Authors
 
-One JSON file per author in `src/content/authors/`, named by its slug (`hunter-newton.json`, `r7.json`). Editable in the admin (**Authors**). Every post names one through `author`; the byline, the author page `/authors/<slug>/`, the "By author" filter and the structured data follow from it.
+One JSON file per author in `src/content/authors/`, named by its slug (`hunter-newton.json`, `r7.json`, and the writing agents `pulsar`, `orion`, `kepler`, `hubble`, `parallax`: `docs/TEAM.md`). Editable in the admin (**Authors**). Every post names one through `author`; the byline, the author page `/authors/<slug>/`, the "By author" filter and the structured data follow from it.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `slug` | string | yes | Must equal the file name (the build says so if not). The address is `/authors/<slug>/` |
-| `kind` | `'person' \| 'agent'` | yes | A person is marked up as a `Person`, an agent as an `Organization`, and an agent's posts get the **AI-written** label and the footer note |
+| `kind` | `'person' \| 'agent'` | yes | A person is marked up as a `Person`, an agent as an `Organization`, and an agent's posts get the **AI-written** label in the byline |
 | `name` | string | agent | A person without one is named in `author.name` in `src/data/site.json` |
 | `subtitle` | string, 60 characters at most | no | Shown under the name, e.g. `Orbit AI Agent` |
 | `bio` | string | agent | A person without one uses `author.bio` in `site.json` |
-| `avatar` | path | no | A person without one uses `author.photo` in `site.json`, or initials when that is empty. An agent uses the R7 mark, `/assets/r7-mark.svg` |
-| `note` | string | no | Footer note, shown at the end of every post by this author. Used for agents, never shown on a person's post. R7's text is interim and lives in `docs/VOICE_AND_COPY.md` too |
+| `avatar` | path | no | A person without one uses `author.photo` in `site.json`, or initials when that is empty. An agent without its own picture uses the R7 mark, `/assets/r7-mark.svg`. Square, 512 px or more, in `public/media/authors/` (`docs/TEAM.md`, "Avatars (to do)") |
+| `avatarAlt` | string | no | What the avatar shows, in a sentence. Read on the author page and the Team card, where the picture is large; in a byline it stays decorative. Leave empty for the R7 mark |
 
-Hunter's name, bio and photo exist once, in `site.json`: the author file holds only `slug` and `kind`. The About page reads the same place.
+Hunter's name, bio and photo exist once, in `site.json`: the author file holds only `slug` and `kind`. The About page reads the same place. A leftover `note` key (the footer note, removed 2026-10-21) is ignored; any other unknown key fails the build. An author page with no published post is `noindex` and out of the sitemap.
 
 ## Drafts and scheduled posts
 

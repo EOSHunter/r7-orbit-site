@@ -27,6 +27,7 @@ import FeedBlock from './FeedBlock.astro';
 import PinnedBlock from './PinnedBlock.astro';
 import AppsBlock from './AppsBlock.astro';
 import AuthorBlock from './AuthorBlock.astro';
+import TeamBlock from './TeamBlock.astro';
 import WaitlistBlock from './WaitlistBlock.astro';
 
 export const renderers: Record<SectionType, AstroComponentFactory> = {
@@ -55,5 +56,6 @@ export const renderers: Record<SectionType, AstroComponentFactory> = {
   pinned: PinnedBlock,
   apps: AppsBlock,
   author: AuthorBlock,
+  team: TeamBlock,
   waitlist: WaitlistBlock,
 };

@@ -312,7 +312,7 @@ describe('the preview\'s markup against the site\'s stylesheets', () => {
     );
     const classes = new Set([...everything.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(' ')));
     // Hooks the markup carries without a rule of their own (or that the design system styles through an element selector).
-    const hooks = new Set(['art-p', 'gallery-wrap', 'sec-button', 'ico', 'latest-posts', 'sec-row-band', 'lang', 'mono', 'cluster', 'where']);
+    const hooks = new Set(['art-p', 'gallery-wrap', 'sec-button', 'ico', 'latest-posts', 'sec-row-band', 'lang', 'mono', 'cluster', 'where', 'team-card', 'team-label']);
     for (const name of classes) {
       if (hooks.has(name)) continue;
       expect(css, `.${name} is defined`).toMatch(new RegExp(`\\.${name}(?![\\w-])`));
@@ -329,6 +329,7 @@ describe('the preview\'s markup against the site\'s stylesheets', () => {
       'art-pullquote': readFileSync('src/components/article/Pullquote.astro', 'utf8'),
       'sec-spacer': readFileSync('src/components/sections/SpacerBlock.astro', 'utf8'),
       'latest-posts': readFileSync('src/components/sections/LatestBlock.astro', 'utf8'),
+      'team-grid': readFileSync('src/components/sections/TeamBlock.astro', 'utf8'),
     };
     for (const [name, source] of Object.entries(sources)) expect(source, name).toContain(name);
   });

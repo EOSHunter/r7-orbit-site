@@ -38,6 +38,7 @@ There are two homes, because the site reads pictures in two ways.
 | Project gallery | projects | `public/media/projects/x.jpg` | `gallery: [{ src: /media/projects/x.jpg, alt, caption }]` | no, but shrunk at build |
 | Image in a body | news, vlogs, projects, repos | `public/media/<kind>/x.jpg` | `![alt](/media/<kind>/x.jpg)`, and `*caption*` on the next line for a caption | no, but shrunk at build |
 | Image / Portrait block on the About page | Pages > About page | `public/media/about/x.jpg` | `image: /media/about/x.jpg` in `src/content/pages/about.md` (alt text or `decorative: true` is required by that page's schema) | no, but shrunk at build |
+| An author's avatar (an agent's own picture, when the author supplies one; `docs/TEAM.md`, "Avatars (to do)") | Authors | `public/media/authors/<slug>.png` | `avatar: /media/authors/<slug>.png` (+ optional `avatarAlt`) in `src/content/authors/<slug>.json`; square, 512 px or more | no, but shrunk at build |
 | Author photo for search engines | (site) | `public/media/about/hunter-newton.jpg` | `author.photo` in `src/data/site.json`; not editable in the admin | no |
 
 Older files keep working wherever they are: `public/media/vlogs/building-vesper-drift/poster.jpg`, `public/media/projects/vesper-drift/poster.jpg` and `public/media/screenshot-2026-10-03-195701.png` were put there by hand, in per-post folders, before the admin had per-collection folders. A path in a post is just a path; nothing moves or renames them.

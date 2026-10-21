@@ -74,6 +74,19 @@ export function onceProblems(types: readonly unknown[]): { index: number; messag
   return problems;
 }
 
+/** Each card of a Team block must name an author who exists, once. Members are counted from 1, as the editor shows them. */
+export function teamProblems(block: { members: readonly { author: string }[] }, known: Known): string[] {
+  const problems: string[] = [];
+  const seen = new Set<string>();
+  block.members.forEach(({ author }, index) => {
+    const where = `member ${index + 1}`;
+    if (!known.authors.includes(author)) problems.push(`${where}: there is no author "${author}". Authors are: ${list(known.authors)}.`);
+    else if (seen.has(author)) problems.push(`${where}: "${author}" is already on the team; each author has one card.`);
+    seen.add(author);
+  });
+  return problems;
+}
+
 /** An Author box must name an author who exists. */
 export function authorProblem(slug: string, known: Known): string | undefined {
   return known.authors.includes(slug) ? undefined : `there is no author "${slug}". Authors are: ${list(known.authors)}.`;

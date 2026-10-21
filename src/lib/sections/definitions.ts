@@ -756,6 +756,49 @@ const author = defineBlock(
   },
 );
 
+// The people and agents who make the site (the About page's "Meet the team"), as cards read from the authors list: the bio is the
+// author file's (a person's from site.json), so it is written once; `title` and the optional `blurb` are this page's own words.
+const team = defineBlock(
+  'team',
+  {
+    label: 'Team',
+    group: 'From the site',
+    description:
+      'People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent\'s subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). One column on a phone, two or three on a wide screen.',
+    summary: 'Team',
+    placement: 'wide',
+    example: {
+      members: [
+        { author: 'hunter-newton', title: 'Director' },
+        { author: 'r7', title: 'Lead agent', blurb: 'A shorter line typed in the block, shown instead of the bio.' },
+      ],
+    },
+    previewNote: 'Each avatar is drawn as initials; the page shows the author\'s picture.',
+  },
+  {
+    members: list(
+      {
+        author: pattern({
+          label: 'Author',
+          pattern: SLUG_PATTERN,
+          message: SLUG_MESSAGE,
+          source: 'authors',
+          hint: 'Who this card is. The name, picture, subtitle and bio come from the Authors list.',
+        }),
+        title: text({ label: 'Title', max: 40, hint: 'Their role on this page, e.g. Director, Lead agent, News writer.' }),
+        blurb: text({
+          label: 'Short bio',
+          widget: 'text',
+          optional: true,
+          max: 300,
+          hint: 'Optional. Shown instead of the bio from the Authors list. Leave empty to show that bio.',
+        }),
+      },
+      { label: 'Members', hint: 'One card per person or agent, in order.', max: 24, summary: '{{fields.author}} · {{fields.title}}', itemLabel: 'member' },
+    ),
+  },
+);
+
 // The waitlist form for R7 Orbit (src/components/WaitlistForm.astro, docs/PAGES.md "Waitlist"): the band with the heading, sentence and
 // form from Site settings > Waitlist. Draws nothing while the waitlist is off; its only field is where the signups are counted from.
 const waitlist = defineBlock(
@@ -807,6 +850,7 @@ export const definitions = [
   pinned,
   appsRow,
   author,
+  team,
   waitlist,
 ] as const;
 

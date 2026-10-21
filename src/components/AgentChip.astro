@@ -1,7 +1,21 @@
 ---
-// "AI-written": the label on an agent's byline. Icon and words, no colour of its own (brass is the only accent).
+// The label of an AI agent. Icon and words, no colour of its own (brass is the only accent). "AI-written" (`written`, the default) on
+// the byline of an agent's post and on the page of an agent with posts; "AI agent" (`agent`) where nothing it wrote is shown: the
+// Team block, and the page of an agent with no posts.
 import Icon from './Icon.astro';
-import { AGENT_LABEL } from '../lib/authors';
+import { AGENT_KIND_LABEL, AGENT_LABEL } from '../lib/authors';
+
+interface Props {
+  label?: 'written' | 'agent';
+}
+
+const { label = 'written' } = Astro.props;
 ---
 
-<span class="chip ai-written"><Icon name="agent" small />{AGENT_LABEL}</span>
+{
+  label === 'written' ? (
+    <span class="chip ai-written"><Icon name="agent" small />{AGENT_LABEL}</span>
+  ) : (
+    <span class="chip ai-agent"><Icon name="agent" small />{AGENT_KIND_LABEL}</span>
+  )
+}

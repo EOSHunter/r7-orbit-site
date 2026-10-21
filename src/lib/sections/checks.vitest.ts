@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { authorProblem, frameSrcOrigins, gameProblem, latestProblems, onceProblems, whereOf, type Known } from './checks';
+import { authorProblem, teamProblems, frameSrcOrigins, gameProblem, latestProblems, onceProblems, whereOf, type Known } from './checks';
 import { headingsInHtml, headingsOfMarkdown, SlugBook, withHeadingIds } from './headings';
 import { prepareSections } from './prepare';
 import type { Section } from './schema';
@@ -45,6 +45,19 @@ describe('authorProblem', () => {
   it('passes a real author and names the real ones when it is not', () => {
     expect(authorProblem('r7', known)).toBeUndefined();
     expect(authorProblem('ghost', known)).toBe('there is no author "ghost". Authors are: hunter-newton, r7.');
+  });
+});
+
+describe('teamProblems', () => {
+  it('passes real authors, each once', () => {
+    expect(teamProblems({ members: [{ author: 'hunter-newton' }, { author: 'r7' }] }, known)).toEqual([]);
+  });
+
+  it('names the member (counted from 1) and the real authors when a slug does not exist, and a second card for one author', () => {
+    expect(teamProblems({ members: [{ author: 'r7' }, { author: 'ghost' }, { author: 'r7' }] }, known)).toEqual([
+      'member 2: there is no author "ghost". Authors are: hunter-newton, r7.',
+      'member 3: "r7" is already on the team; each author has one card.',
+    ]);
   });
 });
 

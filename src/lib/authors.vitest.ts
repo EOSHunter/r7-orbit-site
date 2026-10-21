@@ -154,7 +154,7 @@ describe('"How this was made" (aiAssist)', () => {
     expect(assistNote(undefined, hunter)).toBeUndefined();
   });
 
-  it("is not shown on an agent's post, which already says so in the byline and the footer note", () => {
+  it("is not shown on an agent's post, which already says so in its byline", () => {
     expect(assistNote('drafted', r7)).toBeUndefined();
     expect(assistNote('edited', r7)).toBeUndefined();
   });
@@ -194,33 +194,24 @@ describe('structured data', () => {
   });
 });
 
-describe("R7's footer note", () => {
-  // docs/VOICE_AND_COPY.md holds the wording the author supplied (interim); the author file holds what the site shows.
-  const doc = read('../../docs/VOICE_AND_COPY.md');
-  const section = /^## Agent-authored footer note\n([\s\S]*?)(?=^## )/m.exec(doc)?.[1] ?? '';
-  const quoted = section
-    .split('\n')
-    .filter((line) => line.startsWith('> '))
-    .map((line) => line.slice(2))
-    .join(' ');
+describe('the author schema', () => {
+  type Parse = { safeParse(v: unknown): { success: boolean; data?: unknown; error?: { issues: { message: string }[] } } };
+  const authorSchema = async () => {
+    const { collections } = await import('../content.config');
+    return (collections as unknown as { authors: { schema: () => Parse } }).authors.schema();
+  };
 
-  it('is labelled interim in the doc', () => {
-    expect(section).toMatch(/interim/i);
-    expect(section).toMatch(/author will supply final wording/);
+  it("ignores the retired footer `note` in an old author file, and no author file keeps one", async () => {
+    // The footer note on an agent's posts was removed on 2026-10-21 (docs/DECISIONS.md): a leftover key must not stop the build.
+    const schema = await authorSchema();
+    const parsed = schema.safeParse({ ...authorFile('r7'), note: 'An old footer note.' });
+    expect(parsed.success).toBe(true);
+    expect(parsed.data).not.toHaveProperty('note');
+    for (const slug of ['hunter-newton', 'r7']) expect(authorFile(slug), slug).not.toHaveProperty('note');
   });
 
-  it('is the same text in the doc and in src/content/authors/r7.json', () => {
-    expect(quoted).not.toBe('');
-    expect(authorFile('r7').note).toBe(quoted);
-  });
-
-  it("is built only from the author's own About-page sentences", () => {
-    expect(quoted).toBe(
-      `${authorFile('r7').bio} If you spot a mistake, tell me. I'll correct it, with a dated note at the bottom of the post.`,
-    );
-  });
-
-  it("is the agent's alone: the person's file has none", () => {
-    expect(authorFile('hunter-newton').note).toBeUndefined();
+  it('still refuses any other unknown key', async () => {
+    const schema = await authorSchema();
+    expect(schema.safeParse({ ...authorFile('r7'), notes: 'typo' }).success).toBe(false);
   });
 });

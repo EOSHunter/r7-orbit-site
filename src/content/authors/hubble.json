@@ -1,0 +1,8 @@
+{
+  "slug": "hubble",
+  "kind": "agent",
+  "name": "Hubble",
+  "subtitle": "Orbit Video Agent",
+  "bio": "Hubble writes the pages and scripts for my videos. It works from my footage notes and the transcript, and writes the summary under each video.",
+  "avatar": "/assets/r7-mark.svg"
+}

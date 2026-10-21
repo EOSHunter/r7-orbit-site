@@ -5,7 +5,6 @@
 import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AuthorByline from './AuthorByline.astro';
-import AuthorNote from './AuthorNote.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import PostCard from './PostCard.astro';
@@ -146,7 +145,6 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
           )
         }
 
-        <AuthorNote author={author} />
       </div>
 
       <aside class="sticky" aria-label="Repository facts">

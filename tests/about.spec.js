@@ -1,8 +1,8 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
-import { contentTextProblems, inputsDigest, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
+import { contentTextProblems, inputsDigest, pageCopy, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
 // tests/fixtures/about-text.txt is the text of the page, line for line, with the digest of the files it came from on its first
@@ -66,6 +66,57 @@ test('each portrait sits beside its text on a wide screen and above it on a phon
     const smallProse = (await row.locator('.prose').boundingBox()) ?? { y: 0 };
     expect(small.y + small.height, 'portrait is above the text').toBeLessThanOrEqual(smallProse.y);
   }
+});
+
+// The Team block ("Meet the team"): the members, titles and order come from about.md, the names and bios from the author files
+// (a person's from site.json), so the test follows the author's edits in /admin.
+const authorFile = (slug) => JSON.parse(readFileSync(new URL(`../src/content/authors/${slug}.json`, import.meta.url), 'utf8'));
+const teamBlock = () => (pageCopy('about').sections ?? []).find((b) => b.type === 'team');
+
+test('the team cards follow about.md: name, title, subtitle, bio, avatar and a link to each author page', async ({ page }) => {
+  const block = teamBlock();
+  test.skip(!block, 'about.md has no Team block');
+  await page.goto('/about/');
+  const cards = page.locator('[data-team] > li');
+  await expect(cards).toHaveCount(block.members.length);
+  for (const [i, member] of block.members.entries()) {
+    const file = authorFile(member.author);
+    const person = file.kind === 'person';
+    const card = cards.nth(i);
+    await expect(card).toHaveAttribute('data-team-member', member.author);
+    const name = file.name ?? site.author.name;
+    await expect(card.getByRole('heading', { level: 3 })).toHaveText(name);
+    await expect(card.getByRole('link', { name })).toHaveAttribute('href', `/authors/${member.author}/`);
+    await expect(card.locator('.team-role')).toContainText(member.title);
+    if (file.subtitle) await expect(card.locator('.team-role .author-sub')).toHaveText(file.subtitle);
+    await expect(card.locator('.team-bio')).toHaveText(member.blurb || file.bio || site.author.bio);
+    await expect(card.locator('.avatar img')).toHaveAttribute('src', file.avatar ?? site.author.photo);
+    // An agent is labelled "AI agent", never "AI-written" (this is not a post); a person has no label.
+    await expect(card.locator('.chip.ai-agent')).toHaveCount(person ? 0 : 1);
+  }
+  await expect(page.locator('main .chip.ai-written')).toHaveCount(0);
+});
+
+test('the team is one column on a phone and two or three on a wide screen, under its heading, and every name is a link in tab order', async ({ page }) => {
+  test.skip(!teamBlock(), 'about.md has no Team block');
+  const columns = () =>
+    page.locator('[data-team] > li').evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().left))).size);
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto('/about/');
+  expect(await columns()).toBe(1);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  expect(await columns()).toBeGreaterThanOrEqual(2);
+  expect(await columns()).toBeLessThanOrEqual(3);
+  // The heading above the block is a row of its own above the cards, not beside the R7 picture.
+  const grid = await page.locator('[data-team]').boundingBox();
+  const heading = await page.locator('.sections h2').last().boundingBox();
+  expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);
+  expect(Math.abs(heading.x - grid.x)).toBeLessThanOrEqual(1);
+  const links = page.locator('[data-team] .team-name a');
+  await links.first().focus();
+  await expect(links.first()).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(links.nth(1)).toBeFocused();
 });
 
 // Same as post titles: one *phrase* in a heading is italic brass (CSS: h1 em, h2 em, h3 em); **bold** is plain bold.

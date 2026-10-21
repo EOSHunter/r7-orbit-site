@@ -792,13 +792,17 @@ const authorFields: CmsField[] = [
     required: false,
     hint: 'Required for an agent. Leave empty for a person: the bio comes from site.json.',
   }),
-  imageField('avatar', 'Avatar', 'Leave empty for a person to use the photo in site.json. An agent uses its mark, e.g. /assets/r7-mark.svg.'),
+  imageField(
+    'avatar',
+    'Avatar',
+    'Square, 512 px or more (docs/TEAM.md, "Avatars"). Leave empty for a person to use the photo in site.json. An agent without its own picture uses the R7 mark, /assets/r7-mark.svg.',
+  ),
   field({
-    name: 'note',
-    label: 'Footer note',
-    widget: 'text',
+    name: 'avatarAlt',
+    label: 'Avatar description',
+    widget: 'string',
     required: false,
-    hint: 'Shown at the end of every post by this author. Used for an AI agent; leave empty for a person.',
+    hint: 'What the picture shows, in a sentence, read on the author page and the Team block. Leave empty for the R7 mark or a plain portrait: the name is beside it.',
   }),
 ];
 
@@ -809,6 +813,8 @@ export const authorsCollection = {
   folder: 'src/content/authors',
   extension: 'json',
   format: 'json',
+  // Avatars upload to public/media/authors/ (docs/TEAM.md, "Avatars (to do)").
+  ...mediaFolders('authors'),
   create: true,
   slug: '{{slug}}',
   identifier_field: 'slug',
