@@ -135,7 +135,7 @@ A blog post that argues something. **1200-3000 words, 4-7 `##` sections.** Templ
 
 ### Pages
 
-About, the home page, the listings, privacy, 404 and search are the author's pages, edited in `/admin` ([`PUBLISHING.md`](PUBLISHING.md) sections 7, 8 and 11). An agent changes one only when asked, with the same blocks and the same density rules, and with settings tokens (`{site.name}`) instead of typed values ([`CONTENT_MODEL.md`](CONTENT_MODEL.md#pages-with-a-fixed-frame-privacy-404-search)). Never write the author's bio or an agent's note.
+About, the home page, the listings, privacy, 404 and search are the author's pages, edited in `/admin` ([`PUBLISHING.md`](PUBLISHING.md) sections 7, 8 and 11). An agent changes one only when asked, with the same blocks and the same density rules, and with settings tokens (`{site.name}`) instead of typed values ([`CONTENT_MODEL.md`](CONTENT_MODEL.md#pages-with-a-fixed-frame-privacy-404-search)). Never write the author's bio or an agent's bio.
 
 ## Block selection table
 
@@ -402,8 +402,8 @@ The warn callout is visible in the editor's preview, so the author sees what is 
 - **Quotes are verbatim** and attributed; a quote you cannot find in its source is cut.
 - **Numbers are recomputed** where they can be (totals, percentages, durations). State the unit and the date.
 - **Uncertain claims** are either cut or kept with the doubt said in the text ("the notes do not give a number"); every one you keep goes in the report's "Claims to check".
-- **Credit:** an AI-written piece is credited to the writing agent that wrote it, through `author`: your own slug once `src/content/authors/<slug>.json` exists, **`r7` until then**. Never `hunter-newton` (and never an absent `author`, which means Hunter). The "AI-written" label and the agent's footer note appear by themselves; never write them, a bio or the note's wording. Never create an author file.
-- **The author's own writing** keeps his name (no `author` line). `aiAssist: edited` or `drafted` only on his posts and only when he asks for the line; never on an agent's post (the label and note are the disclosure).
+- **Credit:** an AI-written piece is credited to the writing agent that wrote it, through `author`: your own slug once `src/content/authors/<slug>.json` exists, **`r7` until then**. Never `hunter-newton` (and never an absent `author`, which means Hunter). The byline and the AI-written label appear automatically; never write them or a bio. There is no footer note. Never create an author file.
+- **The author's own writing** keeps his name (no `author` line). `aiAssist: edited` or `drafted` only on his posts and only when he asks for the line; never on an agent's post (the byline and its label are the disclosure).
 - **Nothing goes up unreviewed.** `draft: true` until the author says it goes live.
 - **The site forbids:** any email address, `mailto:` link, newsletter, RSS or feed mention, and social profiles other than GitHub and YouTube.
 

@@ -22,8 +22,6 @@ export interface AuthorData {
   /** Required for an agent. A person without one is described in site.json. */
   bio?: string;
   avatar?: string;
-  /** Footer note shown at the end of this author's posts. Used for agents. */
-  note?: string;
 }
 
 /** `author.*` in src/data/site.json: the source for the person's name, bio and photo. */
@@ -41,7 +39,6 @@ export interface Author {
   bio: string;
   /** A picture to show: the person's photo, or the agent's mark. Without one the avatar shows initials. */
   avatar?: string;
-  note?: string;
   /** `/authors/<slug>/` */
   path: string;
 }
@@ -63,7 +60,6 @@ export function resolveAuthor(data: AuthorData, site: SiteAuthor): Author {
     subtitle: data.subtitle,
     bio,
     avatar: data.avatar ?? (person ? (site.photo ?? undefined) : undefined),
-    note: data.note,
     path: authorPath(data.slug),
   };
 }
@@ -75,8 +71,8 @@ export const ASSIST_NOTES = {
 } as const;
 
 /**
- * The "How this was made" note, or undefined. An agent's post is already labelled "AI-written" in its byline and carries the agent's
- * footer note, so `aiAssist` adds nothing there: one disclosure per page, not two.
+ * The "How this was made" note, or undefined. An agent's post is already labelled "AI-written" in its byline, so `aiAssist` adds
+ * nothing there: one disclosure per page, not two.
  */
 export function assistNote(aiAssist: 'none' | 'edited' | 'drafted' | undefined, author: Pick<Author, 'kind'>): string | undefined {
   if (!aiAssist || aiAssist === 'none' || isAgent(author)) return undefined;

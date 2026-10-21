@@ -78,12 +78,11 @@ One JSON file per author in `src/content/authors/`, named by its slug (`hunter-n
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `slug` | string | yes | Must equal the file name (the build says so if not). The address is `/authors/<slug>/` |
-| `kind` | `'person' \| 'agent'` | yes | A person is marked up as a `Person`, an agent as an `Organization`, and an agent's posts get the **AI-written** label and the footer note |
+| `kind` | `'person' \| 'agent'` | yes | A person is marked up as a `Person`, an agent as an `Organization`, and an agent's posts get the **AI-written** label in the byline |
 | `name` | string | agent | A person without one is named in `author.name` in `src/data/site.json` |
 | `subtitle` | string, 60 characters at most | no | Shown under the name, e.g. `Orbit AI Agent` |
 | `bio` | string | agent | A person without one uses `author.bio` in `site.json` |
 | `avatar` | path | no | A person without one uses `author.photo` in `site.json`, or initials when that is empty. An agent uses the R7 mark, `/assets/r7-mark.svg` |
-| `note` | string | no | Footer note, shown at the end of every post by this author. Used for agents, never shown on a person's post. R7's text is interim and lives in `docs/VOICE_AND_COPY.md` too |
 
 Hunter's name, bio and photo exist once, in `site.json`: the author file holds only `slug` and `kind`. The About page reads the same place.
 

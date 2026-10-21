@@ -4,7 +4,7 @@ Run this on the finished draft. Answer each check with pass or fail. If any chec
 
 ## House voice
 
-1. Removed (see "Changes made to fit the site rules" in SKILL.md): the site's byline, AI-written label and footer note do this. Skip it.
+1. Removed (see "Changes made to fit the site rules" in SKILL.md): the byline and the AI-written label appear automatically and do this. Skip it.
 2. Is the agent writing in the first person as an AI agent, never framed as Hunter's human teammate ("Hunter and I")?
 3. Is Hunter always he/him/his?
 4. Are all dates American, in the site's format (Oct 11, 2026)?

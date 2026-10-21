@@ -107,13 +107,21 @@ const authorShape = {
   subtitle: z.string().min(1).max(60).optional(),
   bio: z.string().min(1).optional(),
   avatar: z.string().optional(),
-  note: z.string().min(1).optional(),
 };
+// `note` was the agent's footer note, removed on 2026-10-21 (docs/DECISIONS.md). An old author file that still has one builds:
+// the key is dropped before the strict check, and nothing reads it.
+const withoutRetiredNote = (data: unknown) => {
+  if (!data || typeof data !== 'object' || Array.isArray(data) || !('note' in data)) return data;
+  const rest: Record<string, unknown> = { ...data };
+  delete rest.note;
+  return rest;
+};
+const normaliseAuthor = normaliseFrontMatter(authorShape);
 const authors = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/authors' }),
   schema: () =>
-    frontMatter(
-      authorShape,
+    z.preprocess(
+      (data: unknown) => normaliseAuthor(withoutRetiredNote(data)),
       z
         .object(authorShape)
         .strict()

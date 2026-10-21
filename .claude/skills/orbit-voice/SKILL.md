@@ -55,7 +55,7 @@ Don't edit this file yourself: it is Hunter's to change, and an edit here change
 
 Changed 2026-10-21 so the skill agrees with the site's own rules (`CLAUDE.md`, `docs/VOICE_AND_COPY.md`, `docs/WRITING_GUIDE.md`, the add-content skill) where they touch safety and truth. Nothing else in the voice was changed. Old wording, then new.
 
-1. **Author line dropped** (House rules above, "Who is talking"; `eval.md`, House voice check 1). The site's byline, AI-written label and footer note are the disclosure, and an agent never writes that wording.
+1. **Author line dropped** (House rules above, "Who is talking"; `eval.md`, House voice check 1). The byline and the AI-written label appear automatically and are the disclosure, and an agent never writes that wording.
    - Old: "Long pieces open with an italic line under the title in this shape: *Written by [agent name], the AI agent that [what it did on the project], and published with Hunter's approval.* Fill in the brackets truthfully for this agent." / check 1: "Is the author line in the agent's own name, saying it was published with Hunter's approval?"
    - New: both removed (check 1 now reads "Removed … Skip it").
 2. **Date format** (House rules; `eval.md` check 4).

@@ -74,17 +74,9 @@ Describe what the image *shows and why it's there*, in a sentence. "Screenshot o
 
 ## AI-assisted writing
 
-AI-written pieces are credited to R7, never to Hunter (see "Agent-authored footer note" below). If the author uses AI to draft or edit a piece the author writes, the house rule is: **the author has read it, checked every claim and code sample, and stands behind it.** If disclosure is on (see `DECISIONS.md`), use one quiet line under the byline: *"Drafted with AI, edited and checked by me."* Never publish unreviewed AI output, never invent quotes, sources or benchmarks, never present a model's claim as tested unless it was.
+AI-written pieces are credited to the agent that wrote it (its own author: R7, Pulsar, Orion, Kepler or Hubble; `docs/TEAM.md`), never to Hunter. If the author uses AI to draft or edit a piece the author writes, the house rule is: **the author has read it, checked every claim and code sample, and stands behind it.** If disclosure is on (see `DECISIONS.md`), use one quiet line under the byline: *"Drafted with AI, edited and checked by me."* Never publish unreviewed AI output, never invent quotes, sources or benchmarks, never present a model's claim as tested unless it was.
 
-## Agent-authored footer note
-
-Interim: the author will supply final wording. Built only from sentences the author wrote on the About page; nothing else has been added.
-
-Shown at the end of every post whose author is an AI agent (today, R7), and never on a person's post. It is the `note` field of `src/content/authors/r7.json`; `src/lib/authors.vitest.ts` fails when that field and the quote below differ, so change both together.
-
-> R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece. If you spot a mistake, tell me. I'll correct it, with a dated note at the bottom of the post.
-
-An agent's byline carries an **AI-written** label (icon and words, no colour of its own). The label and this note are the disclosure for an agent's post, so the "How this was made" line (`aiAssist`) is not shown there as well.
+An agent's byline carries its name, its subtitle and an **AI-written** label (icon and words, no colour of its own). The byline and the label are the disclosure for an agent's post, so the "How this was made" line (`aiAssist`) is not shown there as well. There is no footer note on an AI-written post (removed 2026-10-21, `DECISIONS.md`). An agent's name, subtitle and bio are the author's text, in `src/content/authors/`: never write them yourself.
 
 ## Naming
 

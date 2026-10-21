@@ -30,7 +30,7 @@ scripts/waitlist-export.mjs   npm run waitlist:export [-- --local] [-- --out fil
 src/
   layouts/BaseLayout.astro    head (every tag in docs/SEO_AND_SHARING.md), skip link, Header, Footer
   components/                 Header, Footer, Icon + IconSprite, MediaPlaceholder, StatusMark,
-                              AuthorByline + AuthorAvatar + AgentChip + AuthorNote + AuthorPage (the /authors/<slug>/ page),
+                              AuthorByline + AuthorAvatar + AgentChip + AuthorBox + AuthorPage (the /authors/<slug>/ page),
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               AppsSection (type filter) + AppGrid + AppCard + AppsEmpty (the /apps/ hub; it was /games/, which redirects),
                               Sections + sections/ (a page built from blocks: About, the home page's rows, the blocks around a listing, and a post's body written as sections with layout="column";
@@ -147,7 +147,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 ## Content rules
 
 - Follow `docs/CONTENT_MODEL.md`. Every post has `title`, `date`, `summary`; every image has alt text.
-- **Authors.** Every post has an `author` (a slug in `src/content/authors/`); absent means `hunter-newton`. AI-written pieces are credited to R7 (`author: r7`), never to Hunter. An agent's byline shows an "AI-written" label and its post ends with the agent's footer note; a person's post shows neither. Never write an agent's note, bio or label wording yourself: it is the author's text (`docs/VOICE_AND_COPY.md`, "Agent-authored footer note").
+- **Authors.** Every post has an `author` (a slug in `src/content/authors/`); absent means `hunter-newton`. AI-written pieces are credited to the agent that wrote them (its own slug: `r7`, `pulsar`, `orion`, `kepler`, `hubble`; `docs/TEAM.md`), never to Hunter. An agent's byline shows an "AI-written" label; a person's post shows none. There is no footer note on an AI-written post (removed 2026-10-21, `docs/DECISIONS.md`): the byline and the label carry the credit. Never write an agent's name, subtitle, bio or label wording yourself: it is the author's text (`docs/VOICE_AND_COPY.md`, "AI-assisted writing").
 - Voice: plain, specific, first person, calm. No hype words (list in `docs/VOICE_AND_COPY.md`). Never publish AI-written text as the author's without the author's review. Never invent quotes, sources, statistics or benchmarks. Mark sample/placeholder content as such.
 - Page files (`src/content/pages/`) print site settings through tokens (`{site.name}`, `{site.tagline}`, `{site.description}`), never by typing the value: the settings stay the one place for them (`src/lib/page-copy.ts`, docs/CONTENT_MODEL.md "Pages with a fixed frame"). There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected".
 - Never invent the author's identity, bio, links, domain or social handles. Use the placeholders from `content-examples/site.json` and ask.

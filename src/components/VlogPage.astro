@@ -5,7 +5,6 @@
 // as sections, its `transcriptText`; either way it is shown folded.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AuthorByline from './AuthorByline.astro';
-import AuthorNote from './AuthorNote.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import MediaPlaceholder from './MediaPlaceholder.astro';
@@ -202,7 +201,6 @@ const breadcrumbs = JSON.stringify({
             </section>
           )
         }
-        <AuthorNote author={author} />
       </div>
 
       {

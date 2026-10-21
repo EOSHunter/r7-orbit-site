@@ -793,13 +793,6 @@ const authorFields: CmsField[] = [
     hint: 'Required for an agent. Leave empty for a person: the bio comes from site.json.',
   }),
   imageField('avatar', 'Avatar', 'Leave empty for a person to use the photo in site.json. An agent uses its mark, e.g. /assets/r7-mark.svg.'),
-  field({
-    name: 'note',
-    label: 'Footer note',
-    widget: 'text',
-    required: false,
-    hint: 'Shown at the end of every post by this author. Used for an AI agent; leave empty for a person.',
-  }),
 ];
 
 export const authorsCollection = {

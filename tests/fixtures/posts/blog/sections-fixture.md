@@ -70,5 +70,5 @@ sections:
   - type: divider
     style: dots
   - type: text
-    text: The last paragraph of the fixture post. It ends the body, and the author's footer note, the share row and the previous and next links follow, as on any blog post.
+    text: The last paragraph of the fixture post. It ends the body, and the share row and the previous and next links follow, as on any blog post.
 ---

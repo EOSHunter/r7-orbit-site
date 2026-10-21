@@ -85,8 +85,7 @@ Done when: works with JS off (shows the first page, pagination is links); with J
 **Purpose:** Read comfortably.
 
 - Breadcrumb (Home / Blog). Eyebrow (kind icon · read time). `h1` with italic-brass phrase. Lead (the `summary`).
-- Byline: the author (avatar, name linking to `/authors/<slug>/`, subtitle, and an **AI-written** chip for an agent), date (and "Updated …"), tags as chip links. Optional "How this was made" note (not shown on an agent's post: the byline and footer note already say it).
-- **Agent footer note:** on a post whose author is an agent, the agent's `note` in a block at the end of the article. Never on a person's post.
+- Byline: the author (avatar, name linking to `/authors/<slug>/`, subtitle, and an **AI-written** chip for an agent), date (and "Updated …"), tags as chip links. Optional "How this was made" note (not shown on an agent's post: the byline and its AI-written label already say it). No footer note on any post (removed 2026-10-21, `DECISIONS.md`).
 - Cover (if any), then body in `.prose` (68ch measure).
 - Sidebar (≥ 1200px): sticky table of contents with current-section highlight. Hidden on smaller screens (the TOC becomes a `<details>` above the body).
 - Share row: Copy link (copies, says "Copied"), and links to the author's profiles. No third-party share widgets.

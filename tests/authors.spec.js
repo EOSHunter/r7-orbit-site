@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-// Authors: the two author pages, the byline and the agent's footer note on posts, the "By author" filter, the structured data
+// Authors: the author pages, the byline on posts, the "By author" filter, the structured data
 // and the feeds. Content-driven where it can be (the pages are found in dist/), and a fixture for an author with no posts.
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -124,9 +124,9 @@ for (const path of ['/authors/r7/', '/authors/hunter-newton/', '/styleguide/auth
   }
 }
 
-// ---- the byline and the footer note ----------------------------------------------------------------------------------------
+// ---- the byline ----------------------------------------------------------------------------------------------------------
 
-test("an agent's post: byline with avatar, name, subtitle and AI-written, and the footer note once, at the end", async ({ page }) => {
+test("an agent's post: byline with avatar, name, subtitle and AI-written, and no footer note", async ({ page }) => {
   for (const path of agentPosts) {
     await page.goto(path);
     const byline = page.locator('.author[data-author="r7"]');
@@ -136,14 +136,10 @@ test("an agent's post: byline with avatar, name, subtitle and AI-written, and th
     await expect(byline.getByText('Orbit AI Agent')).toBeVisible();
     await expect(byline.locator('.chip.ai-written')).toHaveText('AI-written');
 
-    const note = page.locator('[data-author-note="r7"]');
-    await expect(note, path).toHaveCount(1);
-    await expect(note).toContainText(authorFile('r7').note);
-    // One disclosure: no "How this was made" line next to the label and note.
+    // The byline and its label are the credit (the footer note was removed on 2026-10-21, docs/DECISIONS.md), and one
+    // disclosure is enough: no "How this was made" line next to the label.
+    await expect(page.locator('[data-author-note]')).toHaveCount(0);
     await expect(page.getByText('How this was made')).toHaveCount(0);
-    // At the end of the post: after the article or the notes it follows, not above them.
-    const [noteBox, headBox] = await Promise.all([note.boundingBox(), page.locator('h1').boundingBox()]);
-    expect(noteBox.y, path).toBeGreaterThan(headBox.y);
   }
 });
 
@@ -159,10 +155,10 @@ test("a person's post: Hunter Newton in the byline, no AI-written label and no f
   }
 });
 
-test('the footer note is on a post exactly when its author is an agent (every post in dist/)', () => {
+test('the AI-written label is on a post exactly when its author is an agent, and no post has a footer note (every post in dist/)', () => {
   for (const path of postPaths) {
     const html = read(path);
-    expect(html.includes('data-author-note'), path).toBe(credited(path) === 'r7');
+    expect(html.includes('data-author-note'), path).toBe(false);
     expect(html.includes('ai-written'), path).toBe(credited(path) === 'r7');
   }
 });
