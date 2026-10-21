@@ -254,3 +254,57 @@ test('the sitemap lists both author pages', async ({ request }) => {
   expect(xml).toContain(`<loc>${site.url}/authors/hunter-newton/</loc>`);
   expect(xml).not.toContain('/styleguide/author-empty/');
 });
+
+// ---- the writing team --------------------------------------------------------------------------------------------------------
+
+const TEAM = [
+  ['pulsar', 'Pulsar', 'Orbit News Agent'],
+  ['orion', 'Orion', 'Orbit Games Agent'],
+  ['kepler', 'Kepler', 'Orbit Projects Agent'],
+  ['hubble', 'Hubble', 'Orbit Video Agent'],
+  ['parallax', 'Parallax', 'Orbit Fact-Check Agent'],
+];
+const hasPosts = (slug) => postPaths.some((p) => credited(p) === slug);
+
+test('the five writing agents are agents with the R7 mark, no footer note, and their bio on their page', async ({ page }) => {
+  for (const [slug, name, subtitle] of TEAM) {
+    const file = authorFile(slug);
+    expect(file, slug).toMatchObject({ slug, kind: 'agent', name, subtitle, avatar: '/assets/r7-mark.svg' });
+    expect(file, slug).not.toHaveProperty('note');
+    await page.goto(`/authors/${slug}/`);
+    const head = page.locator(`[data-author-page="${slug}"]`);
+    await expect(head.getByRole('heading', { level: 1, name })).toBeVisible();
+    await expect(head.getByText(subtitle)).toBeVisible();
+    await expect(head.locator('.t-lead')).toHaveText(file.bio);
+    await expect(head.locator('.avatar img')).toHaveAttribute('src', '/assets/r7-mark.svg');
+  }
+});
+
+test('an author page with no published posts is noindex and out of the sitemap; with posts it is indexed', async ({ request }) => {
+  const xml = await (await request.get('/sitemap-0.xml')).text();
+  for (const slug of ['hunter-newton', 'r7', ...TEAM.map(([s]) => s)]) {
+    const html = read(`/authors/${slug}`);
+    const noindex = /<meta name="robots" content="noindex/.test(html);
+    expect(noindex, slug).toBe(!hasPosts(slug));
+    expect(xml.includes(`<loc>${site.url}/authors/${slug}/</loc>`), slug).toBe(hasPosts(slug));
+  }
+});
+
+test('Parallax: its page says plainly that it is an AI agent with no posts, without promising any', async ({ page }) => {
+  test.skip(hasPosts('parallax'), 'Parallax has a post');
+  await page.goto('/authors/parallax/');
+  await expect(page.locator('[data-author-page="parallax"] .chip.ai-agent')).toHaveText('AI agent');
+  await expect(page.locator('.chip.ai-written')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 2, name: 'Parallax is an AI agent and has no posts on this site.' })).toBeVisible();
+  await expect(page.getByText('Check back soon.')).toHaveCount(0);
+});
+
+for (const width of [320, 1280]) {
+  test(`/authors/parallax/ has no horizontal scroll and no axe violations at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/authors/parallax/');
+    expect(await overflowOf(page)).toBeLessThanOrEqual(0);
+    const results = await new AxeBuilder({ page }).withTags(tags).analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes[0]?.html}`)).toEqual([]);
+  });
+}

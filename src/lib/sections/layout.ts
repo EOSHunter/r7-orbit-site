@@ -31,6 +31,7 @@ export function placementOf(block: Placeable): Placement {
  * Turns the ordered list into rows. A portrait puts its picture in a side column and the text beside it: the heading directly
  * above the portrait, the portrait's text, and every block after it stay in that column until a divider, a block that leaves the
  * column (wide, full, band) or the next portrait ends it. This is what lets About keep its picture beside both of its sections.
+ * A heading that would be the last thing in that column, just before a block that leaves it, goes with that block instead.
  */
 export function layoutSections<B extends Placeable>(sections: readonly B[]): Row<B>[] {
   const rows: Row<B>[] = [];
@@ -49,6 +50,10 @@ export function layoutSections<B extends Placeable>(sections: readonly B[]): Row
       open = { kind: 'split', portrait: section, lead, blocks: [] };
       rows.push(open);
     } else if (placement === 'wide' || placement === 'full' || placement === 'band') {
+      // A heading that ends a portrait's column introduces the block that leaves it, so it leaves with that block rather than
+      // sitting alone beside the picture (About's "Meet the team" above the Team block).
+      const last = open?.kind === 'split' ? open.blocks.at(-1) : undefined;
+      if (open?.kind === 'split' && last?.type === 'heading') rows.push({ kind: 'prose', blocks: [open.blocks.pop()!] });
       rows.push({ kind: placement, block: section });
       open = undefined;
     } else if (section.type === 'divider' && open?.kind === 'split') {

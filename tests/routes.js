@@ -67,6 +67,7 @@ const routes = [
   ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
   { path: '/authors/hunter-newton/' },
   { path: '/authors/r7/' },
+  listing('/authors/parallax/'), // an agent with no posts (it writes notes, not posts): noindex and out of the sitemap while it has none
   { path: '/about/' },
   { path: '/privacy/' },
   { path: '/search/', noindex: true },

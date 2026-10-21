@@ -13,7 +13,7 @@ Every page the site needs, what is on it, what states it has, and how you know i
 /apps/                         Apps hub (playable projects, games and apps; no pages of its own: each is /projects/<slug>/; /games/ redirects here)
 /repos/                        Repo archive           /repos/<slug>/       Repo page
 /tags/                         All tags               /tags/<tag>/         One tag
-/authors/<slug>/               One author (/authors/hunter-newton/, /authors/r7/; no /authors/ index)
+/authors/<slug>/               One author (hunter-newton, r7, pulsar, orion, kepler, hubble, parallax; no /authors/ index; docs/TEAM.md)
 /search/                       Search (or a dialog opened with "/")
 /about/                        About
 /sitemap-index.xml  /robots.txt  /404.html
@@ -150,11 +150,11 @@ Structured data: `SoftwareSourceCode`. Done when: the build succeeds with GitHub
 
 **Purpose:** Who this is, and everything they wrote.
 
-- Breadcrumb (Home / name). Avatar, `h1` name, subtitle, the **AI-written** chip for an agent, and the bio. R7's page says in its bio that it is an AI agent, not a person.
-- Below it, the same toolbar, cards, pagination (`/authors/<slug>/page/N/`) and empty state as an archive, over that author's published posts of every kind (the draft and future-date rule applies as everywhere). Filters: kind, tag and search.
-- Structured data: `ProfilePage` whose `mainEntity` is a `Person`, or an `Organization` for an agent, and a `BreadcrumbList`. In the sitemap, canonical and Open Graph like other pages; not in search (like archives and tag pages). No `/authors/` index page.
+- Breadcrumb (Home / name). Avatar, `h1` name, subtitle, the **AI-written** chip for an agent with posts (**AI agent** for an agent with none), and the bio. R7's page says in its bio that it is an AI agent, not a person.
+- Below it, the same toolbar, cards, pagination (`/authors/<slug>/page/N/`) and empty state as an archive, over that author's published posts of every kind (the draft and future-date rule applies as everywhere). Filters: kind, tag and search. With no posts, the empty state is "Nothing by <name> is posted yet." for a person and "<Name> is an AI agent and has no posts on this site." (no "Check back soon") for an agent: Parallax writes no posts, so its page always says that.
+- Structured data: `ProfilePage` whose `mainEntity` is a `Person`, or an `Organization` for an agent, and a `BreadcrumbList`. In the sitemap, canonical and Open Graph like other pages, **while the author has a published post**; with none the page is `noindex` and out of the sitemap, like an empty archive (`AuthorPage`, `src/lib/sitemap.ts`). Not in search (like archives and tag pages). No `/authors/` index page.
 
-Done when: both authors' pages pass axe at 320 to 1480px, and an author with no posts shows the empty state (`tests/authors.spec.js`).
+Done when: the authors' pages pass axe at 320 to 1480px, and an author with no posts shows the empty state (`tests/authors.spec.js`).
 
 ## Tags `/tags/` and `/tags/<tag>/`
 
@@ -170,7 +170,7 @@ Words: `src/content/pages/search.md` (**Pages > Search page**): the heading, bro
 
 ## About `/about/`
 
-The author's own text only, written in /admin (**Pages > About page**) and stored in `src/content/pages/about.md`: the page heading, then an ordered list of blocks (heading, text, image, portrait and text, quote, callout, links list, button, divider; see `CONTENT_MODEL.md`, "Pages"). Today: "Hunter Newton" with the portrait beside the bio, then "R7 · Orbit AI Agent" in the same column. The portrait is a block with its own picture and alt text (file in `public/media/about/`), not `author.photo`. `Person` structured data and the meta description keep their values: the name and bio come from `site.json`, the description from `about.md`.
+The author's own text only, written in /admin (**Pages > About page**) and stored in `src/content/pages/about.md`: the page heading, then an ordered list of blocks (heading, text, image, portrait and text, quote, callout, links list, button, divider; see `CONTENT_MODEL.md`, "Pages"). Today: "Hunter Newton" with the portrait beside the bio, then "R7 · Orbit AI Agent" in the same column, then "Meet the team" (a Heading block) over the **Team** block: a card per person and agent (Hunter Newton as Director, R7, Pulsar, Orion, Kepler, Hubble, Parallax), each with avatar, name linking to `/authors/<slug>/`, the page's title for them, an agent's subtitle and an **AI agent** label, and the bio from the author file (Hunter's from `site.json`). One column on a phone, two or three on a wide screen. `docs/TEAM.md`. The portrait is a block with its own picture and alt text (file in `public/media/about/`), not `author.photo`. `Person` structured data and the meta description keep their values: the name and bio come from `site.json`, the description from `about.md`.
 
 Layout: the page head, then one row per run of blocks (`Sections.astro`): a reading column (`.prose`, 68ch) for text-like blocks, a side column for a portrait, and a wider or edge-to-edge row for a wide or full image. At 375px and 1280px it looks exactly as it did before the page became editable (checked by comparing element positions and full-page screenshots). Done when: the text matches `tests/fixtures/about-text.txt`, axe passes, there is no horizontal scroll from 320 to 1480px and no layout shift.
 

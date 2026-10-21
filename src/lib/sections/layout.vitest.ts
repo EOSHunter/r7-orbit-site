@@ -43,6 +43,18 @@ describe('layoutSections', () => {
     expect(shape(layoutSections([portrait(), text('a'), portrait('right'), text('b')]))).toEqual(['split(|text)', 'split(|text)']);
   });
 
+  it('moves a heading that ends a portrait column out with the block that leaves the column (About: "Meet the team")', () => {
+    expect(shape(layoutSections([heading('Me'), portrait(), text('a'), heading('Meet the team'), { type: 'team' }]))).toEqual([
+      'split(Me|text)',
+      'prose(heading)',
+      'wide(team)',
+    ]);
+    expect(shape(layoutSections([portrait(), heading('Next'), { type: 'feed' }]))).toEqual(['split(|)', 'prose(heading)', 'band(feed)']);
+    // Only the last heading, only in a portrait's column: outside one, a heading and the wide block already sit in rows of their own.
+    expect(shape(layoutSections([portrait(), heading('A'), text('a'), image('wide')]))).toEqual(['split(|heading,text)', 'wide(image:wide)']);
+    expect(shape(layoutSections([heading('A'), image('wide')]))).toEqual(['prose(heading)', 'wide(image:wide)']);
+  });
+
   it('keeps a narrow image in the column and a wide one out of it', () => {
     expect(shape(layoutSections([text('a'), image('narrow'), text('b')]))).toEqual(['prose(text,image,text)']);
     expect(shape(layoutSections([text('a'), image('wide'), text('b')]))).toEqual(['prose(text)', 'wide(image:wide)', 'prose(text)']);
@@ -66,7 +78,7 @@ describe('where each block sits (its definition decides)', () => {
     for (const type of ['heading', 'lead', 'text', 'quote', 'pullquote', 'callout', 'code', 'video', 'divider', 'spacer', 'links', 'button', 'toc', 'stats', 'author']) {
       expect(placementOf({ type }), type).toBe('prose');
     }
-    for (const type of ['image-row', 'gallery', 'game', 'columns', 'latest']) expect(placementOf({ type }), type).toBe('wide');
+    for (const type of ['image-row', 'gallery', 'game', 'columns', 'latest', 'team']) expect(placementOf({ type }), type).toBe('wide');
     expect(placementOf({ type: 'portrait' })).toBe('portrait');
   });
 

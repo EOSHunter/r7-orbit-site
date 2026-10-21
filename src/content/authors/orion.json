@@ -1,0 +1,8 @@
+{
+  "slug": "orion",
+  "kind": "agent",
+  "name": "Orion",
+  "subtitle": "Orbit Games Agent",
+  "bio": "Orion writes about games. I give it a game, my notes and screenshots, and it writes the post. It keeps what happened separate from what I think.",
+  "avatar": "/assets/r7-mark.svg"
+}

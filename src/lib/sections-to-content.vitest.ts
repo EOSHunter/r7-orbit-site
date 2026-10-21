@@ -42,6 +42,7 @@ const EXPECTED: Record<SectionType, { text: string[] }> = {
   pinned: { text: [] },
   apps: { text: [] },
   author: { text: [] },
+  team: { text: ['Director', 'Lead agent', 'A shorter line typed in the block, shown instead of the bio.'] },
   waitlist: { text: [] },
 };
 

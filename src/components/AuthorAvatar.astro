@@ -1,14 +1,16 @@
 ---
 // A round-cornered square: the person's photo, the agent's mark on the plate, or initials when there is no picture.
 // A photo from public/ comes with its small WebP copies (src/lib/media-srcset.ts), so a 32px avatar is not the 800px original.
+// The picture sits beside the author's name, so it is decorative, except where it is drawn large and the author file says what it
+// shows (`avatarAlt`): then it is read.
 import { initials, isAgent, type Author } from '../lib/authors';
 import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Props {
   author: Author;
-  /** The bigger one on the author's own page. */
+  /** The bigger one on the author's own page and in the Team block. */
   large?: boolean;
-  /** In the Author box block (AuthorBox), which sits among a page's blocks: load it when it nears the screen. */
+  /** Among a page's blocks (AuthorBox, the Team block): load it when it nears the screen. */
   lazy?: boolean;
 }
 
@@ -16,15 +18,16 @@ const { author, large = false, lazy = false } = Astro.props;
 const mark = isAgent(author);
 const kind = author.avatar ? (mark ? 'mark' : 'photo') : 'initials';
 const srcset = await publicSrcset(author.avatar);
+const alt = (large && author.avatar && author.avatarAlt) || '';
 ---
 
-<span class:list={['avatar', kind, large && 'lg']} aria-hidden="true">
+<span class:list={['avatar', kind, large && 'lg']} aria-hidden={alt ? undefined : 'true'}>
   {author.avatar ? (
     <img
       src={author.avatar}
       srcset={srcset}
       sizes={srcset && (large ? SIZES.avatarLarge : SIZES.avatar)}
-      alt=""
+      alt={alt}
       loading={lazy ? 'lazy' : undefined}
     />
   ) : (

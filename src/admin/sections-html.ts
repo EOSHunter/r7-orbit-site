@@ -303,6 +303,31 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
     const chip = who.agent ? `<span class="chip ai-written">${icon('agent')}AI-written</span>` : '';
     return `<aside class="author-note author-box"><span class="avatar initials" aria-hidden="true"><span>${escapeHtml(initials)}</span></span><div class="author-note-body"><p class="author-note-head"><a class="author-name" href="#">${escapeHtml(who.name)}</a>${who.subtitle ? `<span class="author-sub">${escapeHtml(who.subtitle)}</span>` : ''}${chip}</p><p>${escapeHtml(who.bio)}</p></div></aside>`;
   },
+  // TeamBlock.astro's cards, with initials for the avatars (the pictures are files of the built site).
+  team: (d, env) => {
+    const cards = (Array.isArray(d.members) ? d.members : []).map((m) => {
+      const who = env.authors.find((a) => a.slug === m.author);
+      if (!who) {
+        const missing = m.author ? `No author "${escapeHtml(m.author)}".` : 'Choose an author.';
+        return `<li class="card team-card"><div class="card-body"><p class="team-bio">${missing}</p></div></li>`;
+      }
+      const initials = who.name
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? '')
+        .join('');
+      const sub = who.subtitle ? `<span class="author-sub">${escapeHtml(who.subtitle)}</span>` : '';
+      const label = who.agent ? `<p class="team-label"><span class="chip ai-agent">${icon('agent')}AI agent</span></p>` : '';
+      return (
+        `<li class="card team-card"><div class="card-body"><div class="team-card-head">` +
+        `<span class="avatar initials lg" aria-hidden="true"><span>${escapeHtml(initials)}</span></span>` +
+        `<div class="team-card-id"><h3 class="card-title team-name"><a class="author-name" href="#">${escapeHtml(who.name)}</a></h3>` +
+        `<p class="team-role"><span>${escapeHtml(m.title ?? '')}</span>${sub ? ` ${sub}` : ''}</p>${label}</div></div>` +
+        `<p class="team-bio">${escapeHtml(m.blurb?.trim() || who.bio)}</p></div></li>`
+      );
+    });
+    return `<ul class="grid-cards team-grid" role="list">${cards.join('')}</ul>`;
+  },
 };
 
 /** A block's HTML, followed by what its preview approximates when that is something the author should know. */

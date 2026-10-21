@@ -82,6 +82,8 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   pinned: nothing,
   apps: nothing,
   author: nothing,
+  // The names and bios are the authors list's, not this post's words; only a title or a short bio typed in the block are.
+  team: { text: (d) => d.members.flatMap((m) => [m.title, m.blurb ?? '']) },
   // The waitlist's words are Site settings', not this post's.
   waitlist: nothing,
 };

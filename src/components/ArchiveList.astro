@@ -28,7 +28,7 @@ interface Props {
   noun: string;
   nounOne: string;
   /** Said when there is nothing at all in this listing: the heading, and the sentence under it. The archives pass their page
-   *  entry's words (src/content/pages/); the author pages keep the sentence below. */
+   *  entry's words (src/content/pages/); the author pages keep the sentence below, except an agent's, which passes '' (no sentence). */
   empty: string;
   emptyText?: string;
   /** Label for the search field and the results heading, e.g. "posts". */
@@ -60,7 +60,7 @@ const total = cards.length;
 {total === 0 ? (
   <div class="empty">
     <h2>{empty}</h2>
-    <p>{emptyText}</p>
+    {emptyText && <p>{emptyText}</p>}
   </div>
 ) : (
   <div

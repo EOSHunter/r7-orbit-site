@@ -107,6 +107,9 @@ const authorShape = {
   subtitle: z.string().min(1).max(60).optional(),
   bio: z.string().min(1).optional(),
   avatar: z.string().optional(),
+  // What the avatar shows, for a picture that is more than a mark (docs/TEAM.md, "Avatars (to do)"). Read where the avatar is shown
+  // large (the author's page, the Team block); in a byline the picture sits beside the name and stays decorative.
+  avatarAlt: z.string().min(1).optional(),
 };
 // `note` was the agent's footer note, removed on 2026-10-21 (docs/DECISIONS.md). An old author file that still has one builds:
 // the key is dropped before the strict check, and nothing reads it.

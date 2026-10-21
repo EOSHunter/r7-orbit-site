@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { definitions } from '../src/lib/sections/definitions.ts';
 import { describeShape } from '../src/lib/sections/describe.ts';
 import { sectionsSchema } from '../src/lib/sections/schema.ts';
-import { PIXEL, openAdmin } from './admin-mock.js';
+import { ABOUT_MD, PIXEL, openAdmin } from './admin-mock.js';
 
 // Every block of the library, added in the real editor under its Content-Security-Policy with GitHub stood in for (tests/admin-mock.js):
 // the form offers it, it can be filled in with what its definition says, the live preview draws it and finds nothing to warn about
@@ -44,6 +44,7 @@ const SHOWS = {
   pinned: '.sec-row-band section.section:not(.ruled) .section-head',
   apps: '.sec-row-band section.section.ruled .section-head',
   author: '.author-box',
+  team: '.team-grid .team-card',
   waitlist: '.sec-row-band section[data-waitlist-placeholder] .empty',
 };
 
@@ -173,7 +174,8 @@ for (const d of definitions) {
     const preview = page.locator('iframe').first().contentFrame();
     await expect(preview.locator(SHOWS[d.id]).last()).toBeVisible({ timeout: 15_000 });
     await expect(preview.getByText('Fix before saving.')).toHaveCount(0);
-    if (d.previewNote) await expect(preview.getByText(`Preview: ${d.previewNote}`)).toBeVisible();
+    // `.last()`: the page may already hold a block of the same type (About has a Team block).
+    if (d.previewNote) await expect(preview.getByText(`Preview: ${d.previewNote}`).last()).toBeVisible();
 
     await page.getByRole('button', { name: /^save$/i }).click();
     await expect.poll(() => seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')), { timeout: 20_000 }).toBe(true);
@@ -212,8 +214,9 @@ test('every block together: one page with all of them draws, saves, and is read 
   const { sections } = parseFrontmatter(committedAbout(seen)).frontmatter;
   expect(sectionsSchema.safeParse(sections).success).toBe(true);
   // The old blocks first, untouched, then the new ones in the order they were added.
-  expect(sections.slice(0, 3).map((s) => s.type)).toEqual(['heading', 'portrait', 'portrait']);
-  expect(sections.slice(3).map((s) => s.type)).toEqual(definitions.map((d) => d.id));
+  const old = parseFrontmatter(ABOUT_MD).frontmatter.sections.map((s) => s.type);
+  expect(sections.slice(0, old.length).map((s) => s.type)).toEqual(old);
+  expect(sections.slice(old.length).map((s) => s.type)).toEqual(definitions.map((d) => d.id));
   await expectClean(page, seen);
 });
 

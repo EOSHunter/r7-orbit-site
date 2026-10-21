@@ -18,27 +18,27 @@ const FIXTURES = {
   blog: {
     word: 'quasarbloom',
     jsonLd: 'BlogPosting',
-    chrome: ['nav.breadcrumb', 'header.post-head .byline', '.share', 'aside.author-note', '.post-nav-wrap'],
+    chrome: ['nav.breadcrumb', 'header.post-head .byline', '.share', '.post-nav-wrap'],
   },
   news: {
     word: 'nebulawren',
     jsonLd: 'NewsArticle',
-    chrome: ['nav.breadcrumb', 'header.post-head .byline', 'aside.source-box', '.source-take', '.share', 'aside.author-note'],
+    chrome: ['nav.breadcrumb', 'header.post-head .byline', 'aside.source-box', '.source-take', '.share'],
   },
   vlogs: {
     word: 'cometlark',
     jsonLd: 'VideoObject',
-    chrome: ['nav.breadcrumb', 'header.post-head', '.yt .player', 'section[aria-labelledby="notes-h"]', 'details.disclosure', 'aside.sticky .facts', 'aside.author-note'],
+    chrome: ['nav.breadcrumb', 'header.post-head', '.yt .player', 'section[aria-labelledby="notes-h"]', 'details.disclosure', 'aside.sticky .facts'],
   },
   projects: {
     word: 'pulsarfinch',
     jsonLd: 'SoftwareApplication',
-    chrome: ['nav.breadcrumb', 'header.project-head', '#play .play-section', 'section[aria-labelledby="changelog-h"]', 'aside.sticky .facts', '[data-more-apps]', 'aside.author-note'],
+    chrome: ['nav.breadcrumb', 'header.project-head', '#play .play-section', 'section[aria-labelledby="changelog-h"]', 'aside.sticky .facts', '[data-more-apps]'],
   },
   repos: {
     word: 'magnetarvole',
     jsonLd: 'SoftwareSourceCode',
-    chrome: ['nav.breadcrumb', 'header.repo-head', 'aside.sticky .facts', 'aside.author-note'],
+    chrome: ['nav.breadcrumb', 'header.repo-head', 'aside.sticky .facts'],
   },
 };
 const KINDS = Object.keys(FIXTURES);

@@ -42,6 +42,7 @@ const PRESENT = {
   pinned: 'section[data-pinned] .card',
   apps: 'section[data-apps-teaser] .app-card',
   author: 'aside.author-box',
+  team: 'ul.team-grid li.team-card .team-name a',
   // Only while the waitlist is on (tests/waitlist.spec.js covers the form itself).
   waitlist: 'section.waitlist-band [data-waitlist]',
 };
