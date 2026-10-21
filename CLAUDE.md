@@ -8,18 +8,19 @@ A personal website for posting **AI news, blogs, vlogs, projects and repos**, st
 
 Full context: `docs/PROJECT_BRIEF.md`. Open decisions and what the author must supply: `docs/DECISIONS.md`.
 
-**Asked to add or draft a post, news item, vlog, project, repo page, game or app? Follow the project skill `.claude/skills/add-content/SKILL.md` first** (inputs to confirm, front-matter templates per kind, verification, report).
+**Asked to add or draft a post, news item, vlog, project, repo page, game or app? Follow the project skill `.claude/skills/add-content/SKILL.md` first** (inputs to confirm, front-matter templates per kind, verification, report), **and lay it out with `docs/WRITING_GUIDE.md`** (a recipe per kind, the block table, density rules, pictures and the IMAGE NEEDED marker, truth and credit, the pre-publish checklist; layout templates in `.claude/skills/add-content/templates/layouts/`; `npm run check:layout` reports walls of text).
 
 ## Where things are
 
 ```
 CLAUDE.md                     this file
-.claude/skills/add-content/   the skill for adding a post of any kind (SKILL.md, templates/ per kind, checklists/, examples.md)
-docs/                         DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), WAITLIST (the author's guide to the waitlist: Cloudflare setup, testing, export, off switch, troubleshooting, privacy), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: the About page, and optionally the body of any post, is an ordered list of blocks; the catalogue, the rules, posts written as sections, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), IMAGE_STYLE (partly decided: the picture treatment on cards and the home page only, not built yet; the brand pieces in a post's words are live;  prototyped at /styleguide/imagery/ and /styleguide/imagery/v2/ (pages share src/pages/styleguide/imagery/_prototype.ts; CSS in src/styles/imagery-prototype.css and imagery-v2-prototype.css); the rules and the rollout plan), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
+.claude/skills/add-content/   the skill for adding a post of any kind (SKILL.md, templates/ per kind + templates/layouts/ (a skeleton per WRITING_GUIDE recipe, MDX/Markdown and sections), checklists/, examples.md)
+docs/                         WRITING_GUIDE (how every post is laid out so it is not a wall of text: recipes per kind, block table with markup, density rules, images and the IMAGE NEEDED marker, truth and credit, before/after, pre-publish checklist and fact-check handoff), DEPLOY_CLOUDFLARE (Pages, domain, GitHub login Worker, scheduled rebuild), WAITLIST (the author's guide to the waitlist: Cloudflare setup, testing, export, off switch, troubleshooting, privacy), ARTICLE_COMPONENTS (MDX article component library), SECTIONS (the shared block library: the About page, and optionally the body of any post, is an ordered list of blocks; the catalogue, the rules, posts written as sections, how to add a block), IMAGES (where pictures live, what the build does to them, what the admin enforces), IMAGE_STYLE (partly decided: the picture treatment on cards and the home page only, not built yet; the brand pieces in a post's words are live;  prototyped at /styleguide/imagery/ and /styleguide/imagery/v2/ (pages share src/pages/styleguide/imagery/_prototype.ts; CSS in src/styles/imagery-prototype.css and imagery-v2-prototype.css); the rules and the rollout plan), PROJECT_BRIEF, DECISIONS, PAGES, CONTENT_MODEL, VOICE_AND_COPY, SEO_AND_SHARING, BUILD_PLAN
 astro.config.mjs              static output, trailing slashes; "site" comes from src/data/site.json
 .github/workflows/ci.yml      pull requests: npm ci, check, lint, build, test
 .github/workflows/scheduled-deploy.yml   daily Cloudflare Pages Deploy Hook (publishes future-dated posts); needs secret CF_DEPLOY_HOOK_URL
 scripts/media.mjs             picture guard (before Astro) and dist/media shrinker + 2 MB limit (after); rules in src/lib/media-rules.mjs; see docs/IMAGES.md
+scripts/check-layout.mjs      npm run check:layout [-- <file or folder>] [--strict] [--json]: REPORT-ONLY layout warnings for posts (walls of text, no picture, no hero, alt text, headings, hype words, contact...); rules and LIMITS in src/lib/layout-check.mjs; not in build, CI or Cloudflare
 scripts/no-contact.mjs        after the build: fails if a public page (not /admin/, not /styleguide/) has a mailto: link or an email address; rule in src/lib/no-contact.mjs
 workers/cms-auth/             Cloudflare Worker: GitHub OAuth for /admin (deployed with wrangler; outside the Astro build, lint, check and tests)
 functions/api/                the waitlist's two Cloudflare Pages Functions (waitlist.ts, waitlist-remove.ts): thin wrappers over src/lib/waitlist-api.ts, the site's only server code; public/_routes.json limits Functions to /api/*
@@ -73,7 +74,8 @@ src/
                               gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro),
                               waitlist.js (the waitlist forms: loads Turnstile on first interaction, sends with fetch)
   styles/waitlist.css         the waitlist form; printed inline by WaitlistForm only on a page that draws one
-tests/                        fixtures/posts/<kind>/ (one post per kind written as sections: read by the fixture* collections in content.config.ts, never part of the site),
+tests/                        fixtures/layout-check/ (a wall-of-text and a well laid out post, MDX and sections: the before/after of docs/WRITING_GUIDE.md, read by src/lib/layout-check.vitest.ts),
+                              fixtures/posts/<kind>/ (one post per kind written as sections: read by the fixture* collections in content.config.ts, never part of the site),
                               post-sections.spec.js (those fixtures through the real post pages: blocks, chrome, contents list, reading time, JSON-LD, axe and widths, Pagefind search),
                               sections.spec.js (every block drawn on /styleguide/sections/: axe, widths, behaviour), admin-sections.spec.js (adds each block type in the real editor, GitHub mocked),
                               page-text.spec.js + page-text.js (the words of home, archives, Latest, Apps, Tags against tests/fixtures/pages/<id>.json; refresh with UPDATE_PAGE_TEXT=1),
@@ -102,6 +104,7 @@ npm run build     # production build to dist/ (must pass before any merge); runs
 npm run media:check # the picture guard alone: formats (no HEIC), names, 10 MB; warns about identical files
 npm run preview   # serve dist/ to look at the built site (search only works here: Pagefind indexes dist/ during `npm run build`)
 npm run cms       # Decap local proxy for /admin (run next to `npm run dev`; see README "Admin")
+npm run check:layout # report-only layout warnings for every post in src/content/ (or -- <file|folder>); --strict exits 1; never part of the build
 npm run check     # astro check: types in .astro and .ts files (content and link checks arrive with phases 3 and 7)
 npm run lint      # eslint
 npm run format    # prettier --write (kit files such as docs/, templates/, brand/ and src/styles/design-system/ are ignored)

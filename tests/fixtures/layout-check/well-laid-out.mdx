@@ -1,0 +1,71 @@
+---
+title: Lantern Tiles is a puzzle game about *running out of light*
+date: 2026-01-01
+summary: EXAMPLE ONLY, not published content. The same made-up game as the wall of text, laid out with the games recipe.
+tags: [games]
+author: r7
+featuredImage: ../../assets/blog/lantern-tiles-hero.png
+featuredImageAlt: A dark board of hexagonal tiles with three lit lanterns in the lower left and a trail of warm light between them
+draft: true
+---
+<Paragraph lead>
+Lantern Tiles is a browser puzzle game where you light a dark board one hexagon at a time, before your oil runs out. I played the first two chapters over a weekend. It is quiet, short and clever, with one mistake that spoils the end.
+</Paragraph>
+
+## How a level works
+
+Each lantern you place lights the six tiles around it and costs one unit of oil. You start each level with a fixed amount, and the goal is to light every tile.
+
+The board is almost black, and the only colour is the warm light of the lanterns. It looks like a city at night seen from a plane.
+
+<Figure
+  src="/src/assets/blog/lantern-tiles-board.png"
+  alt="A level halfway through: seven lit lanterns, two mirror tiles and a band of grey fog tiles across the middle"
+  caption="Chapter two, level four: mirrors push the light two tiles further."
+/>
+
+## Four kinds of tile
+
+The rules stay simple, but each chapter adds a tile that changes how you plan.
+
+- **Plain tiles** light when a lantern touches them.
+- **Mirrors** bounce the light two tiles further.
+- **Fog** lights only when two lanterns touch it.
+- **Wind** blows out a lantern on the edge after three turns.
+
+By the end of chapter two I was planning five moves ahead.
+
+## The harbour level
+
+The best level is The Harbour. The board is shaped like a bay, with water tiles that never light, and you have exactly enough oil if you use every mirror.
+
+I tried it eleven times. When it finally worked, the whole harbour lit up in one sweep and the music came in for the first time.
+
+<Pullquote>The whole harbour lit up in one sweep and the music came in for the first time.</Pullquote>
+
+<ImageRow
+  images={[
+    { src: '/src/assets/blog/lantern-tiles-harbour-before.png', alt: 'The Harbour level before the last move: the bay dark except for a ring of lanterns on the shore', caption: 'One move left.' },
+    { src: '/src/assets/blog/lantern-tiles-harbour-after.png', alt: 'The Harbour level solved: every tile of the bay lit in warm gold', caption: 'Solved.' },
+  ]}
+/>
+
+## Where it falls short
+
+Three things got in the way, and the first one is serious.
+
+| Problem | Where it bites |
+| --- | --- |
+| Undo goes back one move only | Long levels in chapter three |
+| Fog is hard to see on a phone | Any level with fog |
+| No keyboard way to move between tiles | Everywhere, if you cannot use a mouse |
+
+The last chapter leans on wind, and one early mistake means starting the level again. I would wait for a longer undo before playing it.
+
+## Verdict
+
+Lantern Tiles is shorter and calmer than other light puzzles I have played. It has about forty levels, a level editor marked as early, and no account or sign-in.
+
+<Callout type="tip" title="My verdict">
+Worth an evening if you like slow puzzles where the answer arrives all at once. [Play Lantern Tiles in your browser](/projects/lantern-tiles/).
+</Callout>

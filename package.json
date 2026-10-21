@@ -12,6 +12,7 @@
     "media:check": "node scripts/media.mjs check",
     "preview": "astro preview",
     "check": "astro check",
+    "check:layout": "node scripts/check-layout.mjs",
     "lint": "eslint .",
     "cms": "node scripts/cms.mjs",
     "waitlist:export": "node scripts/waitlist-export.mjs",
@@ -48,6 +49,7 @@
     "sharp": "^0.35.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "yaml": "^2.9.1"
   }
 }

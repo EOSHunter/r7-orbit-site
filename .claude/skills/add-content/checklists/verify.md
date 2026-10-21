@@ -3,6 +3,7 @@
 Run from the repository root, in this order. Stop at the first failure and fix the post (never the schema, a test or the site code). Run `npm ci` first if `node_modules/` is missing, and `npx playwright install chromium` once if the browser tests say it is missing.
 
 ```
+npm run check:layout -- src/content/<kind>/<slug>.<ext>   # report only: fix each warning or justify it in the report
 npm run check
 npm run lint
 npm run build            # media guard, schema, Astro, shrink pictures, Pagefind index
@@ -46,6 +47,10 @@ It serves `dist/` on 4398; if that is busy (`Get-NetTCPConnection -LocalPort 439
 ## Picture-only checks
 
 `npm run media:check` is the fast guard (format, name, 10 MB). The build also fails for a file over 2 MB after shrinking.
+
+## Fact-check handoff
+
+Last, before the author: send the fact-check role the file and its claims table (each claim, its line, its source link; each quote with its source; each picture with its origin). What it verifies is in `docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7. Report its verdict, or that it was skipped and why.
 
 ## What to report
 

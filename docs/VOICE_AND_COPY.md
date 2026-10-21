@@ -2,6 +2,8 @@
 
 How the site sounds. The R7 Orbit app speaks plainly and calmly ("Needs you", "Finished", "Not pushed."); the site keeps that voice, with room to be warmer in essays.
 
+How a piece is *laid out* (recipes, blocks, pictures, density) is [`WRITING_GUIDE.md`](WRITING_GUIDE.md); `npm run check:layout` reads the words to avoid below from this file.
+
 ## The voice in five lines
 
 1. **Plain.** Short words, short sentences. If a ten-year-old can't follow the sentence, rewrite it.
