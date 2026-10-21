@@ -7,7 +7,9 @@ description: Use when asked to add or draft a new blog post, news item, vlog, pr
 
 Content here is one Markdown/MDX file per post in `src/content/<kind>/`, checked by a strict schema (`src/content.config.ts`: a misspelt or unknown field fails the build). This skill is the short path through `docs/CONTENT_MODEL.md`, `docs/SECTIONS.md`, `docs/IMAGES.md`, `docs/VOICE_AND_COPY.md` and `CLAUDE.md`. When this file and the schema disagree, the schema wins: say so in the report.
 
-Files next to this one: `templates/<kind>.md` (one front-matter template per kind, every field is in the schema), `examples.md` (a filled-in blog post and vlog, placeholders marked), `checklists/inputs.md`, `checklists/verify.md`, `checklists/report.md`.
+**Read `docs/WRITING_GUIDE.md` first, every time.** It says how a piece is laid out so it is not a wall of text: the recipe per kind, which block to use when (with the exact markup), the density rules, the pictures and the IMAGE NEEDED marker, truth and credit, and the pre-publish checklist with the fact-check handoff. This skill is the steps; the guide is the design.
+
+Files next to this one: `templates/layouts/` (**start here**: one skeleton per recipe, in both forms, each builds as it is: `news.md` / `news.sections.md`, `games-post.mdx` / `games-post.sections.mdx`, `essay.mdx` / `essay.sections.mdx`, `project.md` / `project.sections.md`, `vlog.md` / `vlog.sections.md`), `templates/<kind>.md` (every optional field of a kind, for reference; `app.md` for a game's or app's play fields), `examples.md` (a filled-in blog post and vlog, placeholders marked), `checklists/inputs.md`, `checklists/verify.md`, `checklists/report.md`.
 
 You never push or merge: Orbit does that. You never publish for the author: a post is `draft: true` until the author says it goes live.
 
@@ -17,7 +19,7 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 
 - **Kind:** `blog`, `news`, `vlog`, `project`, `repo`, or a `game` or `app` (both are a _project_ with `playUrl` and an `appType`; template `templates/app.md`; there is no apps collection, `/apps/` lists them).
 - **Title, summary, tags** (reuse existing tags: `rg -o "^tags:.*" src/content` and `/tags/`), **date** (default today, UTC; a future date = scheduled, see below), **draft** true/false.
-- **Author.** Default `hunter-newton` (omit the field). **If an AI wrote the piece (you, or any agent), it MUST be `author: r7`, never Hunter.** The "AI-written" label and the agent's footer note then appear by themselves. Never write that note, the label wording or a bio yourself, never edit `src/content/authors/`, and do not add `aiAssist` to an R7 post (the label and note are the disclosure). For Hunter's own post that he used AI on, `aiAssist: edited|drafted` only if he asks for the line. Never credit AI-written text to Hunter without his review.
+- **Author.** Default `hunter-newton` (omit the field). **If an AI wrote the piece (you, or any agent), it is credited to the agent that wrote it, never Hunter:** your own slug if `src/content/authors/<slug>.json` exists (the writing roles are in `docs/WRITING_GUIDE.md`, "Who writes what"), otherwise `author: r7`. Never create an author file. The "AI-written" label and the agent's footer note then appear by themselves. Never write that note, the label wording or a bio yourself, never edit `src/content/authors/`, and do not add `aiAssist` to an agent's post (the label and note are the disclosure). For Hunter's own post that he used AI on, `aiAssist: edited|drafted` only if he asks for the line. Never credit AI-written text to Hunter without his review.
 - **Picture:** cover (blog/news/vlog/project/repo), `featuredImage` (blog hero), vlog `poster`, project `gallery`, each with alt text, or the author says to leave it out (a placeholder plate is shown). A picture is a file the author supplies; no stock, no generated images unless approved one by one. You cannot upload through `/admin`: if you are given a file path, copy it in (section 3); if not, leave the field out and list it in the report.
 - **Sources:** for news the `sourceUrl` + `sourceName`; for any claim from outside, the link it comes from.
 - **Vlog:** the 11-character YouTube id (not the whole link) and the duration (`m:ss` / `h:mm:ss`), optional chapters.
@@ -26,9 +28,9 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 
 **Never invent** facts, quotes, numbers, benchmarks, links, sources, handles or the author's opinions. Use only what the author gave you, or what you can verify in the repo or from a source you opened. When R7 writes from sources, link where each claim comes from, and list every claim you could not verify in the final message. Mark any sample or placeholder text as such. If an input is missing and you cannot proceed without it (a source, a video id, a play URL), ask; do not fill it in.
 
-## 2. Choose the format
+## 2. Choose the recipe and the format
 
-Start from `templates/<kind>.md`. Body is **either** Markdown/MDX **or** a `sections` list **never both** (the build stops, naming the file; an empty `sections: []` counts as none).
+Pick the recipe for the piece in `docs/WRITING_GUIDE.md` ("Layout recipes": news, games post, project or app, vlog, long essay) and start from its file in `templates/layouts/`, in the form the guide's "What each kind can use" allows: MDX components are drawn on **blog posts only**; news, vlogs and projects are Markdown or `sections`. Body is **either** Markdown/MDX **or** a `sections` list **never both** (the build stops, naming the file; an empty `sections: []` counts as none).
 
 | Use           | When                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -50,24 +52,27 @@ Schedule: a future `date` is hidden until the first build on or after it; the da
 
 ## 3. Write the files
 
-1. Copy the template into `src/content/<kind>/<slug>.md` (`.mdx` for blog). Delete the comment lines above its first `---`, every field you do not use, and every `<placeholder>`: a leftover placeholder fails the schema or ships wrong. Keep `draft: true` until the author approves, unless they said to publish now.
-2. For an embedded game or app whose host is not listed yet: add it to the `/projects/*` line of `public/_headers` and to the same line expected in `tests/headers.spec.js`, before the build.
-3. Copy supplied pictures to the folder above under a clean name.
-4. If you create throwaway posts to test (a scratch trial), delete them, and any picture you copied for them, before you finish, and confirm with `git status` that only the author's files remain.
+1. Copy the layout template into `src/content/<kind>/<slug>.md` (`.mdx` for blog, with sections too). Replace every `TODO:`, delete every comment line and every block you do not use, and add optional fields from `templates/<kind>.md` as needed. A missing picture gets the IMAGE NEEDED marker the guide defines (never a stand-in); a post without a hero gets `# heroless: <why>` in its front matter. Keep `draft: true` until the author approves, unless they said to publish now.
+2. Run `npm run check:layout -- src/content/<kind>/<slug>.<ext>` and fix every warning, or keep it and justify it in your report. It is report-only (exit 0); a clean file scores 100.
+3. For an embedded game or app whose host is not listed yet: add it to the `/projects/*` line of `public/_headers` and to the same line expected in `tests/headers.spec.js`, before the build.
+4. Copy supplied pictures to the folder above under a clean name.
+5. If you create throwaway posts to test (a scratch trial), delete them, and any picture you copied for them, before you finish, and confirm with `git status` that only the author's files remain.
 
 ## 4. Verify (`checklists/verify.md` has the commands)
 
 In order, stop and fix at the first failure; never delete or loosen a test, field or schema rule to get green.
 
+0. `npm run check:layout -- <your file>` (again, after any change): warnings fixed or justified.
 1. `npm run check`, `npm run lint`, `npm run build` (the build runs the media guard, Pagefind and the schema).
 2. `npm run test:unit`, then `npm run test:e2e` (`E2E_PORT=4401` if 4399 is busy; do not kill processes you did not start). Run it with the post `draft: false` for the check below, then restore the author's choice.
 3. `node .claude/skills/add-content/checklists/check-page.mjs <kind>/<slug> "<phrase from the post>"` does steps 3 and 5 (add `--absent` for the no-leak run). In `dist/`: the page exists (`dist/<kind>/<slug>/index.html`), it appears in its archive, `/latest/` (if published), the sitemap and a Pagefind search; with `draft: true` or a future date none of those has it (no leak: grep `dist/` for the slug and title).
 4. axe passes on the page (the e2e run covers every page in `dist/`; add `EXTRA_ROUTES="/blog/<slug>/"` if needed).
 5. Screenshots at 375px and 1280px of the new page (console open, no errors, no horizontal scroll). Save them outside `src/content/` and do not commit them unless asked.
 6. Lighthouse alone on the new route if it has a hero (`featuredImage`), a big cover, a poster or a game or app: `npm run build && LIGHTHOUSE_ROUTES="/blog/<slug>/" npm run test:lighthouse` (`LIGHTHOUSE_PORT=4397` if 4398 is busy). Thresholds are in `CLAUDE.md`.
+7. Hand the file to the fact-check role with its claims table (`docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7), unless you are the fact-check role or the author said to skip it; say which in the report.
 
 A test that fails may not be yours: remove your post, rebuild and rerun just that spec. If it still fails, it was already failing; report it by name and do not touch it. If you could not run something, say exactly that. Never claim a check passed that you did not run.
 
 ## 5. Report (`checklists/report.md`)
 
-End with a short message: file paths created or edited, the front matter used, what you verified (commands, routes, widths), what you did not, claims you could not verify, and what the author must do (upload a missing picture through `/admin`, confirm a link or the video id, supply alt text, set `draft: false`, add the game or app host). Do not push or open a pull request unless the author asks; Orbit publishes.
+End with a short message: file paths created or edited, the front matter used, the **layout report** line (recipe and form, blocks used, hero decision, pictures needed, layout check score and what you justified), what you verified (commands, routes, widths), what you did not, claims you could not verify, and what the author must do (upload a missing picture through `/admin`, confirm a link or the video id, supply alt text, set `draft: false`, add the game or app host). Do not push or open a pull request unless the author asks; Orbit publishes.

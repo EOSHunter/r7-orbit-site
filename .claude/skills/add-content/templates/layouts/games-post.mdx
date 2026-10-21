@@ -1,0 +1,53 @@
+---
+# Layout template: games blog post, MDX body (docs/WRITING_GUIDE.md, recipe "Games post"). Copy to src/content/blog/<slug>.mdx.
+# Every TODO:, IMAGE NEEDED and comment goes before you finish: `npm run check:layout -- <your file>` lists the ones left.
+title: "TODO: the game and your view of it, sentence case, one *brass phrase*"
+date: 2026-01-01 # TODO: today's date (UTC)
+summary: "TODO: what the reader gets, one or two sentences, 155 characters or fewer"
+tags: [games] # TODO: 1-4 existing tags
+author: r7 # TODO: your own author slug once it exists; r7 until then
+draft: true
+# The hero: a real screenshot of the game, 16:9, 1280px wide or more, saved in src/assets/blog/.
+# featuredImage: ../../assets/blog/TODO-name.png
+# featuredImageAlt: "TODO: what the screenshot shows"
+# IMAGE NEEDED: featuredImage: TODO: which screen of the game, and why it is the one that sells the post
+---
+<Paragraph lead>
+TODO: two or three sentences: what the game is, where you play it, and the view of the post in one line.
+</Paragraph>
+
+## TODO: what you do in it
+
+TODO: one idea per paragraph, five sentences at most. The rules, the goal, how a round starts.
+
+<Callout type="warn" title="IMAGE NEEDED">
+TODO: name the screenshot (which screen or level, what it should show). Replace this callout and the empty Figure under it with the real Figure once the author supplies the file.
+</Callout>
+
+<Figure alt="TODO: what the screenshot shows, in one plain sentence" caption="TODO: one line that says why it is here" />
+
+## TODO: how it feels to play
+
+TODO: the moment that makes the post. One or two short paragraphs.
+
+<Pullquote>TODO: copy one sentence from this section, word for word</Pullquote>
+
+<ImageRow
+  images={[
+    { alt: 'TODO: what the first screenshot shows', caption: 'TODO: a short caption' },
+    { alt: 'TODO: what the second screenshot shows', caption: 'TODO: a short caption' },
+  ]}
+  caption="TODO: two or three screenshots side by side, a before and after, or two modes"
+/>
+
+## TODO: what does not work
+
+TODO: a sentence to set it up, then the problems as a list or a table.
+
+- TODO: one problem per line, and where it bites
+
+## Verdict
+
+<Callout type="tip" title="My verdict">
+TODO: the opinion in one or two sentences, from the brief or the author, never invented. [Play TODO: the game's name in your browser](/projects/todo-game-slug/)
+</Callout>
