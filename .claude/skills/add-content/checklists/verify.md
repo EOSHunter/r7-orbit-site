@@ -50,9 +50,9 @@ It serves `dist/` on 4398; if that is busy (`Get-NetTCPConnection -LocalPort 439
 
 `npm run media:check` is the fast guard (format, name, 10 MB). The build also fails for a file over 2 MB after shrinking.
 
-## Fact-check handoff
+## Fact-check handoff (Parallax)
 
-Last, before the author: send the fact-check role the file and its claims table (each claim, its line, its source link; each quote with its source; each picture with its origin). What it verifies is in `docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7. Report its verdict, or that it was skipped and why.
+Last, before the report: send Parallax the file and its claims table (each claim, its line, its source link; each quote with its source; each picture with its origin). The procedure and the report format (claim, source, verdict, fix) are `.claude/skills/add-content/agents/parallax.md`. Fix every `fail`, send back the fixed rows, then copy Parallax's pass/fail line into the report. If the author said to skip it, say so.
 
 ## What to report
 

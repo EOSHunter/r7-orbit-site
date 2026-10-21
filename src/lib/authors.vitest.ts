@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import site from '../data/site.json';
 import {
@@ -191,6 +191,51 @@ describe('structured data', () => {
       '@type': 'ProfilePage',
       mainEntity: { '@type': 'Organization', name: 'R7', description: 'Orbit AI Agent' },
     });
+  });
+});
+
+// The bios the author approved for the writing team (2026-10-21), word for word: an agent's bio is his text, never rewritten.
+const APPROVED = {
+  pulsar: ['Pulsar', 'Orbit News Agent', 'Pulsar writes the news here. I give it the sources, and it writes a short item: what happened, why it matters, and where every claim comes from.'],
+  orion: ['Orion', 'Orbit Games Agent', 'Orion writes about games. I give it a game, my notes and screenshots, and it writes the post. It keeps what happened separate from what I think.'],
+  kepler: ['Kepler', 'Orbit Projects Agent', "Kepler writes up what I build. It reads the repo and my notes, then explains what the project is, what works and what doesn't."],
+  hubble: ['Hubble', 'Orbit Video Agent', 'Hubble writes the pages and scripts for my videos. It works from my footage notes and the transcript, and writes the summary under each video.'],
+  parallax: [
+    'Parallax',
+    'Orbit Fact-Check Agent',
+    "Parallax checks the others' work before anything goes up. Every claim needs a source, quotes have to be exact, numbers have to add up, links have to work and images need alt text. It writes notes, not posts.",
+  ],
+} as const;
+
+describe('the writing team', () => {
+  it('has the five agents, each parsed by the real schema, with the approved name, subtitle and bio exactly, and the R7 mark', async () => {
+    const { collections } = await import('../content.config');
+    const schema = (collections as unknown as { authors: { schema: () => { safeParse(v: unknown): { success: boolean; data?: unknown } } } }).authors.schema();
+    for (const [slug, [name, subtitle, bio]] of Object.entries(APPROVED)) {
+      const file = authorFile(slug);
+      const parsed = schema.safeParse(file);
+      expect(parsed.success, slug).toBe(true);
+      expect(parsed.data, slug).toEqual({ slug, kind: 'agent', name, subtitle, bio, avatar: '/assets/r7-mark.svg' });
+      expect(resolveAuthor(file, site.author)).toMatchObject({ name, subtitle, bio, path: `/authors/${slug}/` });
+    }
+  });
+
+  it('keeps no footer note in any author file', () => {
+    const files = readdirSync(new URL('../content/authors/', import.meta.url)).filter((f) => f.endsWith('.json'));
+    expect(files.length).toBeGreaterThanOrEqual(7);
+    for (const f of files) expect(authorFile(f.replace(/\.json$/, '')), f).not.toHaveProperty('note');
+  });
+
+  it("the About page's Team block names only real authors, and an unknown slug is refused", async () => {
+    const { teamProblems } = await import('./sections/checks');
+    const authors = readdirSync(new URL('../content/authors/', import.meta.url)).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, ''));
+    const about = read('../content/pages/about.md');
+    const slugs = [...about.matchAll(/^\s+- author: ([a-z0-9-]+)\s*$/gm)].map((m) => m[1]);
+    expect(slugs.length).toBeGreaterThan(0);
+    expect(teamProblems({ members: slugs.map((author) => ({ author })) }, { tags: [], authors })).toEqual([]);
+    expect(teamProblems({ members: [{ author: 'hunter-newton' }, { author: 'nobody' }] }, { tags: [], authors })).toEqual([
+      `member 2: there is no author "nobody". Authors are: ${authors.join(', ')}.`,
+    ]);
   });
 });
 

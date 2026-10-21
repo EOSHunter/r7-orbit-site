@@ -6,11 +6,25 @@ import { test, expect } from '@playwright/test';
 // what the entries drive: the hero's buttons reach their targets, the home rows come in the entry's order, and an archive draws
 // the blocks above and below its list where they belong (on the fixture /styleguide/listing/, as no real page has any yet).
 
-test('home: the hero buttons go to parts of the page that exist (#latest is the Latest feed)', async ({ page }) => {
+const homeEntry = () => parseFrontmatter(readFileSync(new URL('../src/content/pages/home.md', import.meta.url), 'utf8')).frontmatter;
+
+// The buttons are the entry's (the author edits them in /admin, and may have none): read them from home.md, then check that each
+// one is drawn, in order, and reaches something that exists: an anchor on the page (#latest is the Latest feed) or a page of the site.
+test("home: the hero buttons are the entry's, and go to parts of the page or pages that exist (#latest is the Latest feed)", async ({
+  page,
+  request,
+}) => {
+  const buttons = homeEntry().buttons ?? [];
   await page.goto('/');
-  const hrefs = await page.locator('.hero .cluster a.btn').evaluateAll((links) => links.map((a) => a.getAttribute('href')));
-  expect(hrefs).toEqual(['#latest']);
-  await expect(page.locator('section#latest[data-list]')).toHaveCount(1);
+  const drawn = page.locator('.hero .cluster a.btn');
+  expect(await drawn.evaluateAll((links) => links.map((a) => a.getAttribute('href')))).toEqual(buttons.map((b) => b.url));
+  for (const [i, button] of buttons.entries()) {
+    await expect(drawn.nth(i)).toHaveText(button.label);
+    if (button.url.startsWith('#')) await expect(page.locator(`[id="${button.url.slice(1)}"]`), button.url).toHaveCount(1);
+    else if (button.url.startsWith('/')) expect((await request.get(button.url)).status(), button.url).toBe(200);
+  }
+  // The anchor a button may point at: the Latest feed carries #latest, once, whether or not a button uses it today.
+  if (homeEntry().sections.some((s) => s.type === 'feed')) await expect(page.locator('section#latest[data-list]')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
 });
 

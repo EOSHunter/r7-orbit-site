@@ -143,6 +143,30 @@ test("an agent's post: byline with avatar, name, subtitle and AI-written, and no
   }
 });
 
+test("an agent's post leaves no empty gap where the footer note was: every block of the post's column holds something, close to the next", async ({
+  page,
+}) => {
+  for (const path of postPaths.filter((p) => credited(p) !== 'hunter-newton')) {
+    await page.goto(path);
+    const blocks = await page.evaluate(() => {
+      const column = document.querySelector('.post-main') ?? document.querySelector('main .split > div:first-child');
+      return [...(column?.children ?? [])]
+        .map((el) => ({ el, box: el.getBoundingClientRect() }))
+        .filter(({ box }) => box.height > 0)
+        .map(({ el, box }) => ({
+          tag: `${el.tagName.toLowerCase()}.${el.className}`,
+          top: box.top + scrollY,
+          bottom: box.bottom + scrollY,
+          filled: !!el.textContent?.trim() || !!el.querySelector('img, svg, iframe, video, button'),
+        }));
+    });
+    expect(blocks.length, path).toBeGreaterThan(0);
+    for (const b of blocks) expect(b.filled, `${path}: ${b.tag} is empty`).toBe(true);
+    // Between two blocks, the column's own spacing (a few spacing steps), never a hole where a block used to be.
+    for (let i = 1; i < blocks.length; i++) expect(blocks[i].top - blocks[i - 1].bottom, `${path}: gap before ${blocks[i].tag}`).toBeLessThanOrEqual(80);
+  }
+});
+
 test("a person's post: Hunter Newton in the byline, no AI-written label and no footer note", async ({ page }) => {
   for (const path of personPosts) {
     await page.goto(path);
@@ -298,6 +322,16 @@ test('Parallax: its page says plainly that it is an AI agent with no posts, with
   await expect(page.getByRole('heading', { level: 2, name: 'Parallax is an AI agent and has no posts on this site.' })).toBeVisible();
   await expect(page.getByText('Check back soon.')).toHaveCount(0);
 });
+
+for (const [slug] of TEAM.filter(([s]) => s !== 'parallax')) {
+  test(`/authors/${slug}/ has no horizontal scroll and no axe violations at 375px`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto(`/authors/${slug}/`);
+    expect(await overflowOf(page)).toBeLessThanOrEqual(0);
+    const results = await new AxeBuilder({ page }).withTags(tags).analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes[0]?.html}`)).toEqual([]);
+  });
+}
 
 for (const width of [320, 1280]) {
   test(`/authors/parallax/ has no horizontal scroll and no axe violations at ${width}px`, async ({ page }) => {

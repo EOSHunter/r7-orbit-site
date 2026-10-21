@@ -10,7 +10,7 @@ Keep it short. Use this order.
 4. **Front matter used:** the block, verbatim, with `draft` and `date` stated in words ("draft, not published", "scheduled for 2026-11-02").
 5. **Verified:** each command run and its result (`check`, `lint`, `build`, `test:unit`, `test:e2e`, Lighthouse if run), the routes seen in `dist/`, the listings, sitemap and search checks, the no-leak check, the screenshot widths (375, 1280) and the console state.
 6. **Not verified:** anything you could not run or see, and why. Say it plainly.
-7. **Claims to check:** each statement you could not tie to a source the author gave or a link you opened. For an agent's piece written from sources, the claims table: the link behind each claim, and the fact-check role's verdict (or "not fact-checked", and why).
+7. **Claims to check:** each statement you could not tie to a source the author gave or a link you opened. For an agent's piece, the claims table (claim, source, verdict, fix) and **Parallax's line**: `Parallax: pass` or `Parallax: fail, N fixes open` (or "not fact-checked", and why). Name the agent you wrote as and its `author` slug.
 8. **The author must:** upload a missing picture through `/admin` (and give its alt text), confirm a link, a video id or a play URL, review the text before it is credited to a person, set `draft: false` (or confirm the date), and add the game or app host to `public/_headers` if you did not.
 
 Never push or merge: Orbit handles that.

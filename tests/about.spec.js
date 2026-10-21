@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
 import { contentTextProblems, inputsDigest, pageCopy, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
@@ -96,6 +97,30 @@ test('the team cards follow about.md: name, title, subtitle, bio, avatar and a l
   }
   await expect(page.locator('main .chip.ai-written')).toHaveCount(0);
 });
+
+// The agreed order and Hunter's title, checked word for word only while the About files are the ones the fixture was made from
+// (the same rule as the text fixture above): after the author edits them in /admin, the test above follows the file instead.
+test('Meet the team: Hunter Newton first as Director, then R7, then Pulsar, Orion, Kepler, Hubble and Parallax', async ({ page }) => {
+  await page.goto('/about/');
+  if (inputsDigest(INPUTS) !== readTextFixture(fixtureUrl).inputs) {
+    test.info().annotations.push({ type: 'note', description: staleNote('tests/fixtures/about-text.txt', 'UPDATE_PAGE_TEXT=1 npx playwright test about') });
+    return;
+  }
+  await expect(page.getByRole('heading', { level: 2, name: 'Meet the team' })).toBeVisible();
+  const slugs = await page.locator('[data-team] > li').evaluateAll((els) => els.map((e) => e.dataset.teamMember));
+  expect(slugs).toEqual(['hunter-newton', 'r7', 'pulsar', 'orion', 'kepler', 'hubble', 'parallax']);
+  await expect(page.locator('[data-team] > li').first().locator('.team-role')).toHaveText('Director');
+});
+
+for (const width of [320, 375, 1280]) {
+  test(`/about/ has no axe violations at ${width}px, the team included`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/about/');
+    await page.locator('[data-team]').scrollIntoViewIfNeeded();
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+    expect(results.violations.map((v) => `${v.id}: ${v.nodes[0]?.html}`)).toEqual([]);
+  });
+}
 
 test('the team is one column on a phone and two or three on a wide screen, under its heading, and every name is a link in tab order', async ({ page }) => {
   test.skip(!teamBlock(), 'about.md has no Team block');
