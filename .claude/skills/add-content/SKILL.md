@@ -19,7 +19,7 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 
 - **Kind:** `blog`, `news`, `vlog`, `project`, `repo`, or a `game` or `app` (both are a _project_ with `playUrl` and an `appType`; template `templates/app.md`; there is no apps collection, `/apps/` lists them).
 - **Title, summary, tags** (reuse existing tags: `rg -o "^tags:.*" src/content` and `/tags/`), **date** (default today, UTC; a future date = scheduled, see below), **draft** true/false.
-- **Author.** Default `hunter-newton` (omit the field). **If an AI wrote the piece (you, or any agent), it is credited to the agent that wrote it, never Hunter:** your own slug if `src/content/authors/<slug>.json` exists (the writing roles are in `docs/WRITING_GUIDE.md`, "Who writes what": `pulsar`, `orion`, `kepler`, `hubble` and `r7` exist; read your voice guide in `docs/team/<slug>.md` too), otherwise `author: r7`. Never create an author file. The byline and the AI-written label then appear automatically (there is no footer note). Never write the label wording or a bio yourself, never edit `src/content/authors/`, and do not add `aiAssist` to an agent's post (the byline and its label are the disclosure). For Hunter's own post that he used AI on, `aiAssist: edited|drafted` only if he asks for the line. Never credit AI-written text to Hunter without his review.
+- **Author.** Default `hunter-newton` (omit the field). **If an AI wrote the piece (you, or any agent), it is credited to the agent that wrote it, never Hunter.** Choose the writing agent by the kind of piece (table below), write as that agent, set its slug as `author`, and read its guide in `agents/<slug>.md` (next to this file) before writing. A kind with no agent of its own, or a piece Hunter gives to R7, is `author: r7`. Never create an author file. The byline and the AI-written label then appear automatically (there is no footer note). Never write the label wording or a bio yourself, never edit `src/content/authors/`, and do not add `aiAssist` to an agent's post (the byline and its label are the disclosure). For Hunter's own post that he used AI on, `aiAssist: edited|drafted` only if he asks for the line. Never credit AI-written text to Hunter without his review.
 - **Picture:** cover (blog/news/vlog/project/repo), `featuredImage` (blog hero), vlog `poster`, project `gallery`, each with alt text, or the author says to leave it out (a placeholder plate is shown). A picture is a file the author supplies; no stock, no generated images unless approved one by one. You cannot upload through `/admin`: if you are given a file path, copy it in (section 3); if not, leave the field out and list it in the report.
 - **Sources:** for news the `sourceUrl` + `sourceName`; for any claim from outside, the link it comes from.
 - **Vlog:** the 11-character YouTube id (not the whole link) and the duration (`m:ss` / `h:mm:ss`), optional chapters.
@@ -27,6 +27,19 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 - **Repo:** `owner/name`; stars, language, license and the README come from GitHub at build time: never type them.
 
 **Never invent** facts, quotes, numbers, benchmarks, links, sources, handles or the author's opinions. Use only what the author gave you, or what you can verify in the repo or from a source you opened. When R7 writes from sources, link where each claim comes from, and list every claim you could not verify in the final message. Mark any sample or placeholder text as such. If an input is missing and you cannot proceed without it (a source, a video id, a play URL), ask; do not fill it in.
+
+### Who writes it
+
+| The piece | Agent | `author` | Guide | Recipe (`docs/WRITING_GUIDE.md`) |
+| --- | --- | --- | --- | --- |
+| News item | Pulsar | `pulsar` | `agents/pulsar.md` | News |
+| Blog post about a game | Orion | `orion` | `agents/orion.md` | Games post |
+| Project, app or game page, repo page, build log | Kepler | `kepler` | `agents/kepler.md` | Project or app |
+| Vlog page (and video scripts, which are not pages) | Hubble | `hubble` | `agents/hubble.md` | Vlog |
+| Anything else: an essay, a how-to, notes; editing another agent's draft | R7 | `r7` | `agents/r7.md` | Long essay, or the kind's own |
+| Fact-check of any of the above (no post) | Parallax | none | `agents/parallax.md` | Pre-publish checklist, step 7 |
+
+Leave `aiAssist` out of an agent's post. The full team is `docs/TEAM.md`.
 
 ## 2. Choose the recipe and the format
 
@@ -71,10 +84,10 @@ In order, stop and fix at the first failure; never delete or loosen a test, fiel
 4. axe passes on the page (the e2e run covers every page in `dist/`; add `EXTRA_ROUTES="/blog/<slug>/"` if needed).
 5. Screenshots at 375px and 1280px of the new page (console open, no errors, no horizontal scroll). Save them outside `src/content/` and do not commit them unless asked.
 6. Lighthouse alone on the new route if it has a hero (`featuredImage`), a big cover, a poster or a game or app: `npm run build && LIGHTHOUSE_ROUTES="/blog/<slug>/" npm run test:lighthouse` (`LIGHTHOUSE_PORT=4397` if 4398 is busy). Thresholds are in `CLAUDE.md`.
-7. Hand the file to the fact-check role with its claims table (`docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7), unless you are the fact-check role or the author said to skip it; say which in the report.
+7. **Parallax fact-check, before you report.** Hand Parallax the file and its claims table (`agents/parallax.md`; `docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7), fix each `fail` it returns, and put its pass/fail line in the report. Skip it only if the author said so; say so in the report.
 
 A test that fails may not be yours: remove your post, rebuild and rerun just that spec. If it still fails, it was already failing; report it by name and do not touch it. If you could not run something, say exactly that. Never claim a check passed that you did not run.
 
 ## 5. Report (`checklists/report.md`)
 
-End with a short message: file paths created or edited, the front matter used, the **layout report** line (recipe and form, blocks used, hero decision, pictures needed, layout check score and what you justified), what you verified (commands, routes, widths), what you did not, claims you could not verify, and what the author must do (upload a missing picture through `/admin`, confirm a link or the video id, supply alt text, set `draft: false`, add the game or app host). Do not push or open a pull request unless the author asks; Orbit publishes.
+End with a short message: file paths created or edited, the front matter used, the **layout report** line (recipe and form, blocks used, hero decision, pictures needed, layout check score and what you justified), what you verified (commands, routes, widths), Parallax's pass/fail line, what you did not, claims you could not verify, and what the author must do (upload a missing picture through `/admin`, confirm a link or the video id, supply alt text, set `draft: false`, add the game or app host). Do not push or open a pull request unless the author asks; Orbit publishes.

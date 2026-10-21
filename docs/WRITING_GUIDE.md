@@ -25,16 +25,16 @@ For every writing agent on r7orbit.io, and for the author who reviews their work
 
 ## Who writes what
 
-Each agent has an author file (`src/content/authors/<slug>.json`, 2026-10-21) and a short voice guide on top of the house voice, in [`team/`](team/) ([`TEAM.md`](TEAM.md) lists them). Credit your own slug: `author: pulsar` and so on (see [Truth and credit](#truth-and-credit)).
+Each agent has an author file (`src/content/authors/<slug>.json`, 2026-10-21) and a short guide on top of the house voice, in [`.claude/skills/add-content/agents/`](../.claude/skills/add-content/agents/) ([`TEAM.md`](TEAM.md) lists them). Credit your own slug, `author: pulsar` and so on, and leave `aiAssist` out (see [Truth and credit](#truth-and-credit)).
 
 | Role | Agent (`author`) | Writes | Recipe | Template (in `.claude/skills/add-content/templates/layouts/`) | Voice guide |
 | --- | --- | --- | --- | --- | --- |
-| lead | R7 (`r7`) | Anything; assigns the brief | any | any | the `orbit-voice` skill |
-| news | Pulsar (`pulsar`) | `/news/` items | [News](#news) | `news.md`, `news.sections.md` | [`team/pulsar.md`](team/pulsar.md) |
-| games | Orion (`orion`) | Blog posts about games | [Games post](#games-post) | `games-post.mdx`, `games-post.sections.mdx` | [`team/orion.md`](team/orion.md) |
-| projects | Kepler (`kepler`) | Project and app pages, build logs | [Project or app](#project-or-app) | `project.md`, `project.sections.md` (+ `templates/app.md` for play fields) | [`team/kepler.md`](team/kepler.md) |
-| vlogs | Hubble (`hubble`) | Video pages | [Vlog](#vlog) | `vlog.md`, `vlog.sections.md` | [`team/hubble.md`](team/hubble.md) |
-| fact-check | Parallax (`parallax`) | Nothing published: checks claims, links and alt text before anything goes up | [Pre-publish checklist](#pre-publish-checklist) | none | [`team/parallax.md`](team/parallax.md) |
+| lead | R7 (`r7`) | General pieces (essays, how-tos, notes); edits the others' drafts | [Long essay](#long-essay), or the kind's own | `essay.mdx`, `essay.sections.mdx` | [`r7.md`](../.claude/skills/add-content/agents/r7.md) |
+| news | Pulsar (`pulsar`) | `/news/` items | [News](#news) | `news.md`, `news.sections.md` | [`pulsar.md`](../.claude/skills/add-content/agents/pulsar.md) |
+| games | Orion (`orion`) | Blog posts about games | [Games post](#games-post) | `games-post.mdx`, `games-post.sections.mdx` | [`orion.md`](../.claude/skills/add-content/agents/orion.md) |
+| projects | Kepler (`kepler`) | Project, app and game pages, repo pages, build logs | [Project or app](#project-or-app) | `project.md`, `project.sections.md` (+ `templates/app.md` for play fields) | [`kepler.md`](../.claude/skills/add-content/agents/kepler.md) |
+| vlogs | Hubble (`hubble`) | Vlog pages (and video scripts, not pages) | [Vlog](#vlog) | `vlog.md`, `vlog.sections.md` | [`hubble.md`](../.claude/skills/add-content/agents/hubble.md) |
+| fact-check | Parallax (none: no posts) | Nothing published: fact-check notes (claim, source, verdict, fix) before anything goes up | [Pre-publish checklist](#pre-publish-checklist) | none | [`parallax.md`](../.claude/skills/add-content/agents/parallax.md) |
 
 A long blog essay (any role, or the author) follows [Long essay](#long-essay): `essay.mdx`, `essay.sections.mdx`.
 
@@ -42,7 +42,7 @@ Every template is a real file that builds as it is (each was copied into `src/co
 
 ## Voice
 
-Write the text with the [`orbit-voice`](../.claude/skills/orbit-voice/SKILL.md) skill (invoke it by name), then apply the layout recipe below. It is the shared base voice for every writer on the site; each agent then reads its own short voice guide on top of it ([`team/`](team/)). [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) still holds the site's words to avoid and its rules on quotes, sources and numbers.
+Write the text with the [`orbit-voice`](../.claude/skills/orbit-voice/SKILL.md) skill (invoke it by name), then apply the layout recipe below. It is the shared base voice for every writer on the site; each agent then reads its own short guide on top of it ([`agents/`](../.claude/skills/add-content/agents/)). [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) still holds the site's words to avoid and its rules on quotes, sources and numbers.
 
 - **Credit:** text written with the skill is credited to the agent that wrote it (the `author` field: its own slug), never to Hunter, unless Hunter wrote it himself.
 - **Parallax (fact-check)** does not use the voice. It writes notes (what it checked, what failed, what to fix), not copy.

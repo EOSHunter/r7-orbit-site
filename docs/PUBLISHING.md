@@ -252,6 +252,20 @@ Instead of the editor you can ask a coding agent (Claude Code, in this repositor
 
 It never pushes or merges: the work arrives as a branch for you to review, then you publish as in sections 1 and 2.
 
+### Choosing the writing agent
+
+The skill picks the agent by the kind of piece and credits it in the byline (the full team: `docs/TEAM.md`):
+
+| You ask for | Written by | `author` |
+| --- | --- | --- |
+| A news item | Pulsar | `pulsar` |
+| A blog post about a game | Orion | `orion` |
+| A project, app, game or repo page, or a build log | Kepler | `kepler` |
+| A vlog page (or a script for a video) | Hubble | `hubble` |
+| Anything else (an essay, a how-to), or an edit of another agent's draft | R7 | `r7` |
+
+Parallax then fact-checks the piece (every claim against its source, quotes, numbers, links, alt text) and its report ends with `Parallax: pass` or the fixes still open. To have a different agent write a piece, say so in the request ("have R7 write this news item"). In `/admin` you can change the **Author** menu yourself, but never to your own name for a piece an agent wrote.
+
 ## 11. Editing the home page and listing pages
 
 The words of the home page, of **Latest**, of the five archives (News, Blog, Vlogs, Projects, Repos), of the **Apps** page and of the **Tags** page are under **Pages** too, below the About page. They are saved, previewed and published like the About page (section 7). The posts on these pages are not written here: they come from the posts themselves, when the site is built.
