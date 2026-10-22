@@ -1,5 +1,6 @@
 ---
-// A round-cornered square: the person's photo, the agent's mark on the plate, or initials when there is no picture.
+// A round-cornered square: the person's photo, the agent's mark on the plate, an agent's own picture (a square that already
+// carries its plate and rounded corners, so it fills the box), or initials when there is no picture.
 // A photo from public/ comes with its small WebP copies (src/lib/media-srcset.ts), so a 32px avatar is not the 800px original.
 // The picture sits beside the author's name, so it is decorative, except where it is drawn large and the author file says what it
 // shows (`avatarAlt`): then it is read.
@@ -16,7 +17,8 @@ interface Props {
 
 const { author, large = false, lazy = false } = Astro.props;
 const mark = isAgent(author);
-const kind = author.avatar ? (mark ? 'mark' : 'photo') : 'initials';
+const own = mark && !!author.avatar?.startsWith('/media/');
+const kind = author.avatar ? (own ? 'art' : mark ? 'mark' : 'photo') : 'initials';
 const srcset = await publicSrcset(author.avatar);
 const alt = (large && author.avatar && author.avatarAlt) || '';
 ---
