@@ -30,6 +30,7 @@ import { waitlist } from '../lib/waitlist-queries';
 import { SIZES, publicSrcset } from '../lib/media-srcset';
 import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
+import ImageZoom from './ImageZoom.astro';
 import '../styles/markdown.css';
 
 interface Props {
@@ -201,4 +202,6 @@ const showWaitlist = data.waitlist && waitlist.show;
   <div class="container post-nav-wrap">
     <PrevNext newer={newer} older={older} />
   </div>
+
+  <ImageZoom />
 </BaseLayout>

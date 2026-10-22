@@ -91,7 +91,7 @@ export function calloutHtml(d: Record<string, unknown>): string {
   const type = (text(d.type) in CALLOUT ? text(d.type) : 'info') as keyof typeof CALLOUT;
   const { classes, label } = CALLOUT[type];
   const title = text(d.title) || label;
-  return `<div class="${classes} art-callout" role="note" data-type="${type}"><p class="art-callout-title"><strong>${escapeHtml(title)}.</strong></p><div class="art-callout-body">${blocksHtml(text(d.body))}</div></div>`;
+  return `<div class="${classes} art-callout" role="note" data-type="${type}"><p class="art-callout-title"><strong>${escapeHtml(title)}</strong><span class="visually-hidden">.</span></p><div class="art-callout-body">${blocksHtml(text(d.body))}</div></div>`;
 }
 
 export function quoteHtml(d: Record<string, unknown>): string {

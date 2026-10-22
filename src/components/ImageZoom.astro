@@ -1,0 +1,29 @@
+---
+// Click a picture in a post to see it larger: one <dialog> per post page, opened by src/scripts/image-zoom.js, which turns each
+// picture of the post (the cover and the pictures in the body) into a button. The same lightbox as the project gallery
+// (Gallery.astro, .lightbox in site.css). Without JavaScript nothing changes: the pictures are drawn as they always were.
+import Icon from './Icon.astro';
+---
+
+<dialog class="lightbox" aria-label="Picture" data-zoom-dialog>
+  <div class="lightbox-bar">
+    <span class="t-meta" data-zoom-count aria-live="polite"></span>
+    <button class="btn sm quiet" type="button" data-zoom-close>
+      <Icon name="close" small />Close
+    </button>
+  </div>
+  <div class="lightbox-stage zoom-stage" data-zoom-stage></div>
+  <p class="lightbox-caption" data-zoom-caption></p>
+  <div class="lightbox-nav" data-zoom-nav>
+    <button class="btn sm lightbox-prev" type="button" data-zoom-prev>
+      <Icon name="arrow" small />Previous
+    </button>
+    <button class="btn sm" type="button" data-zoom-next>
+      Next<Icon name="arrow" small />
+    </button>
+  </div>
+</dialog>
+
+<script>
+  import '../scripts/image-zoom.js';
+</script>

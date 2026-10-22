@@ -52,10 +52,10 @@ describe('block previews use the components\' own markup', () => {
       '<figure class="art-fig" data-align="left" data-size="md"><img class="art-img" src="/media/a.jpg" alt="A" /><figcaption>Cap</figcaption></figure>',
     );
     expect(calloutHtml({ type: 'tip', body: 'Hi' })).toBe(
-      '<div class="callout brass art-callout" role="note" data-type="tip"><p class="art-callout-title"><strong>Tip.</strong></p><div class="art-callout-body"><p>Hi</p></div></div>',
+      '<div class="callout brass art-callout" role="note" data-type="tip"><p class="art-callout-title"><strong>Tip</strong><span class="visually-hidden">.</span></p><div class="art-callout-body"><p>Hi</p></div></div>',
     );
     expect(calloutHtml({ type: 'warn', title: 'Careful', body: 'x' })).toContain('callout bad art-callout');
-    expect(calloutHtml({ type: 'warn', title: 'Careful', body: 'x' })).toContain('<strong>Careful.</strong>');
+    expect(calloutHtml({ type: 'warn', title: 'Careful', body: 'x' })).toContain('<strong>Careful</strong>');
     expect(quoteHtml({ body: 'Q', cite: 'Me', href: 'https://example.com' })).toBe(
       '<figure class="art-quote"><blockquote><p>Q</p></blockquote><figcaption><a href="https://example.com">Me</a></figcaption></figure>',
     );
