@@ -4,11 +4,16 @@ import { onRequest as listFunction } from '../../functions/api/movie-wheel/list'
 import { onRequest as chatFunction } from '../../functions/api/movie-wheel/chat';
 import {
   accessAllows,
+  cleanAddMovies,
+  cleanChatMessage,
   cleanMovie,
   forgetAccessKeys,
   handleChat,
+  handleChats,
   handleList,
+  handleMe,
   MESSAGES,
+  splitFollowups,
   type D1Database,
   type MovieWheelContext,
   type MovieWheelEnv,
@@ -20,7 +25,9 @@ import {
 
 // node:sqlite is built into Node 22.13 and later (engines allows 22.12, where it needs a flag): without it these tests are skipped.
 const sqlite = await import('node:sqlite').catch(() => undefined);
-const MIGRATION = readFileSync('migrations/0002_movie_wheel.sql', 'utf8');
+const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by']
+  .map((name) => readFileSync(`migrations/${name}.sql`, 'utf8'))
+  .join('\n');
 
 function database() {
   const db = new sqlite!.DatabaseSync(':memory:');
@@ -99,7 +106,8 @@ async function setup(env: Partial<MovieWheelEnv> = {}) {
     if (o.origin) headers.Origin = o.origin;
     const request = new Request(o.url ?? URL_LIST, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     const ctx: MovieWheelContext = { request, env: o.env ?? base, fetch: o.fetch ?? a.keyFetch, now: o.now ?? NOW };
-    return { ctx, response: await (ctx.request.url.endsWith('/chat') ? handleChat(ctx) : handleList(ctx)) };
+    const url = ctx.request.url;
+    return { ctx, response: await (url.includes('/chats') ? handleChats(ctx) : url.endsWith('/chat') ? handleChat(ctx) : url.endsWith('/me') ? handleMe(ctx) : handleList(ctx)) };
   };
   return { a, db, env: base, call };
 }
@@ -322,5 +330,334 @@ describe.skipIf(!sqlite)('the chat', () => {
       throw new Error('network');
     }) as unknown as typeof fetch;
     expect(await status(ask('hi'), down)).toBe(502);
+  });
+});
+
+describe.skipIf(!sqlite)('R7 adding movies', () => {
+  const CHAT = 'https://r7orbit.io/api/movie-wheel/chat';
+  const ask = (text: string) => ({ messages: [{ role: 'user', content: text }], context: 'WATCHED\nSaw | 2003\nTO WATCH\nPrey | 2022' });
+  const toolCall = (args: unknown, name = 'add_movies', id = 'call_1') => ({
+    role: 'assistant',
+    content: null,
+    tool_calls: [{ id, type: 'function', function: { name, arguments: typeof args === 'string' ? args : JSON.stringify(args) } }],
+  });
+  /** OpenAI that answers the first request with `first` and the second with `second`, recording both. */
+  function openai(first: Record<string, unknown>, second: Record<string, unknown> | 'fail' = { role: 'assistant', content: 'Added them.' }, keyFetch?: typeof fetch) {
+    const sent: Record<string, unknown>[] = [];
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      if (String(url).includes('cloudflareaccess')) return keyFetch!(url, init);
+      sent.push(JSON.parse(String(init?.body)));
+      const turn = sent.length === 1 ? first : second;
+      if (turn === 'fail') return new Response(JSON.stringify({ error: { message: 'boom' } }), { status: 500 });
+      return new Response(JSON.stringify({ choices: [{ message: turn }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    return { f, sent };
+  }
+  const run = async (first: Record<string, unknown>, second?: Record<string, unknown> | 'fail') => {
+    const { a, call } = await setup();
+    const o = openai(first, second, a.keyFetch);
+    const { response } = await call('POST', ask('add Get Out and Hereditary'), { url: CHAT, fetch: o.f });
+    return { status: response.status, body: await response.json(), sent: o.sent };
+  };
+
+  it('offers the add_movies tool, and a plain answer comes back with no actions', async () => {
+    const r = await run({ role: 'assistant', content: 'Horror leads.' });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ reply: 'Horror leads.' });
+    expect(r.sent).toHaveLength(1);
+    const tools = r.sent[0].tools as { function: { name: string } }[];
+    expect(tools.map((t) => t.function.name)).toEqual(['add_movies']);
+  });
+
+  it('passes an add request on as an action, tells the model it was done, and returns its short confirmation', async () => {
+    const r = await run(toolCall({ movies: [{ title: 'Get Out', year: 2017 }, { title: '  Us  ' }] }), { role: 'assistant', content: 'I added **Get Out** and **Us**.' });
+    expect(r.body.reply).toBe('I added **Get Out** and **Us**.');
+    expect(r.body.actions).toEqual([{ type: 'add_movies', movies: [{ title: 'Get Out', year: 2017 }, { title: 'Us' }] }]);
+    expect(r.sent).toHaveLength(2);
+    const messages = r.sent[1].messages as { role: string; tool_call_id?: string; tool_calls?: unknown }[];
+    expect(messages.some((m) => m.role === 'assistant' && m.tool_calls)).toBe(true);
+    expect(messages.find((m) => m.role === 'tool')?.tool_call_id).toBe('call_1');
+    expect(r.sent[1].tools).toBeUndefined();
+  });
+
+  it('cleans what the model asks for: at most 10 movies, titles trimmed to 120 characters, only a plausible year', async () => {
+    const many = Array.from({ length: 14 }, (_, i) => ({ title: `Movie ${i}`, year: i === 0 ? 1066 : i === 1 ? 2019.4 : 'x' }));
+    many.push({ title: 'T'.repeat(300), year: 2000 });
+    const r = await run(toolCall({ movies: [{ title: '' }, { nope: 1 }, ...many] }));
+    const movies = r.body.actions[0].movies as { title: string; year?: number }[];
+    expect(movies).toHaveLength(10);
+    expect(movies[0]).toEqual({ title: 'Movie 0' });
+    expect(movies[1]).toEqual({ title: 'Movie 1', year: 2019 });
+    expect(cleanAddMovies({ movies: [{ title: 'T'.repeat(300) }] })[0].title).toHaveLength(120);
+  });
+
+  it('does nothing for broken arguments or a tool it does not have, and still answers', async () => {
+    for (const first of [toolCall('{not json'), toolCall({ movies: 'nope' }), toolCall({ movies: [] }), toolCall({ movies: [{ title: 'X' }] }, 'delete_everything')]) {
+      const r = await run(first, { role: 'assistant', content: 'Sorry, I could not add that.' });
+      expect(r.status).toBe(200);
+      expect(r.body.actions).toBeUndefined();
+      expect(r.body.reply).toBe('Sorry, I could not add that.');
+    }
+  });
+
+  it('still reports the add when the model fails to write its confirmation', async () => {
+    const r = await run(toolCall({ movies: [{ title: 'Get Out' }, { title: 'Us' }] }), 'fail');
+    expect(r.status).toBe(200);
+    expect(r.body.reply).toBe("I'll add Get Out, Us to your list.");
+    expect(r.body.actions[0].movies).toHaveLength(2);
+  });
+
+  it('is told its name, and to check the lists before adding or recommending', async () => {
+    const r = await run({ role: 'assistant', content: 'Hi.' });
+    const system = (r.sent[0].messages as { role: string; content: string }[])[0].content;
+    expect(system).toContain('You are R7');
+    expect(system).toContain('add_movies');
+    expect(system).toContain('never suggest a movie that appears in either one');
+  });
+});
+
+describe.skipIf(!sqlite)('saved chats', () => {
+  const CHATS = 'https://r7orbit.io/api/movie-wheel/chats';
+  const chat = (id: string, messages: unknown[], title = 'Hello') => ({ id, title, messages });
+  const msgs = [{ role: 'user', content: 'Hi R7' }, { role: 'assistant', content: 'Hello! **R7** here.' }];
+
+  it('starts empty, saves a chat, lists it and loads it back', async () => {
+    const { call } = await setup();
+    expect(await (await call('GET', undefined, { url: CHATS })).response.json()).toEqual({ chats: [] });
+    const saved = await (await call('PUT', chat('c1', msgs, 'Hi R7'), { url: CHATS })).response.json();
+    expect(saved.chat).toMatchObject({ id: 'c1', title: 'Hi R7', createdAt: NOW, updatedAt: NOW });
+    const list = await (await call('GET', undefined, { url: CHATS })).response.json();
+    expect(list.chats).toEqual([{ id: 'c1', title: 'Hi R7', createdAt: NOW, updatedAt: NOW }]);
+    const one = await (await call('GET', undefined, { url: `${CHATS}?id=c1` })).response.json();
+    expect(one.chat.messages).toEqual(msgs);
+  });
+
+  it('lists the most recently updated chat first, and updating a chat moves it up', async () => {
+    const { call } = await setup();
+    await call('PUT', chat('a', msgs, 'First'), { url: CHATS, now: NOW });
+    await call('PUT', chat('b', msgs, 'Second'), { url: CHATS, now: NOW + 1000 });
+    let ids = (await (await call('GET', undefined, { url: CHATS })).response.json()).chats.map((c: { id: string }) => c.id);
+    expect(ids).toEqual(['b', 'a']);
+    await call('PUT', chat('a', [...msgs, { role: 'user', content: 'More' }], 'First'), { url: CHATS, now: NOW + 2000 });
+    ids = (await (await call('GET', undefined, { url: CHATS })).response.json()).chats.map((c: { id: string }) => c.id);
+    expect(ids).toEqual(['a', 'b']);
+    const first = await (await call('GET', undefined, { url: `${CHATS}?id=a` })).response.json();
+    expect(first.chat.messages).toHaveLength(3);
+    expect(first.chat.createdAt).toBe(NOW);
+  });
+
+  it("keeps a note about what R7 did to the list, so its Undo works after a reload", async () => {
+    const { call } = await setup();
+    const note = { role: 'note', content: '', ids: ['m1', 'm2'], titles: ['Get Out', 'Us'], skipped: ['Saw'], undone: true, junk: 1 };
+    await call('PUT', chat('n', [...msgs, note]), { url: CHATS });
+    const back = await (await call('GET', undefined, { url: `${CHATS}?id=n` })).response.json();
+    expect(back.chat.messages[2]).toEqual({ role: 'note', content: '', ids: ['m1', 'm2'], titles: ['Get Out', 'Us'], skipped: ['Saw'], undone: true });
+  });
+
+  it('drops messages it cannot keep and trims the rest to size', async () => {
+    const { call } = await setup();
+    const bad = [{ role: 'system', content: 'x' }, { role: 'user', content: '   ' }, 'nope', null, { role: 'user', content: 'x'.repeat(9000) }, { role: 'assistant', content: 'ok' }];
+    await call('PUT', chat('t', bad, '  A   very   spaced   title  '.padEnd(200, 'z')), { url: CHATS });
+    const back = await (await call('GET', undefined, { url: `${CHATS}?id=t` })).response.json();
+    expect(back.chat.messages.map((m: { role: string }) => m.role)).toEqual(['user', 'assistant']);
+    expect(back.chat.messages[0].content).toHaveLength(8000);
+    expect(back.chat.title.length).toBeLessThanOrEqual(80);
+    expect(back.chat.title.startsWith('A very spaced title')).toBe(true);
+    expect(cleanChatMessage({ role: 'user', content: '' })).toBeNull();
+  });
+
+  it('deletes a chat for good: it leaves the list, cannot be loaded, and an open copy cannot bring it back', async () => {
+    const { call, db } = await setup();
+    await call('PUT', chat('d', msgs), { url: CHATS });
+    expect((await call('DELETE', undefined, { url: `${CHATS}?id=d` })).response.status).toBe(200);
+    expect((await (await call('GET', undefined, { url: CHATS })).response.json()).chats).toEqual([]);
+    expect((await call('GET', undefined, { url: `${CHATS}?id=d` })).response.status).toBe(404);
+    expect((await call('PUT', chat('d', msgs), { url: CHATS })).response.status).toBe(410);
+    expect(db.rows).toBeDefined();
+  });
+
+  it('forgets a deleted chat after 30 days', async () => {
+    const { a, call } = await setup();
+    const day = 24 * 3600 * 1000;
+    await call('PUT', chat('old', msgs), { url: CHATS });
+    await call('DELETE', undefined, { url: `${CHATS}?id=old` });
+    const later = await a.sign({ ...a.good, exp: (NOW + 100 * day) / 1000 });
+    await call('DELETE', undefined, { url: `${CHATS}?id=other`, now: NOW + 40 * day, token: later });
+    expect((await call('PUT', chat('old', msgs), { url: CHATS, now: NOW + 40 * day, token: later })).response.status).toBe(200);
+  });
+
+  it('refuses bad ids, wrong shapes, too many messages, oversized chats and a 501st chat', async () => {
+    const { call } = await setup();
+    const status = async (method: string, body?: unknown, url = CHATS) => (await call(method, body, { url })).response.status;
+    expect(await status('PUT', chat('bad id!', msgs))).toBe(400);
+    expect(await status('PUT', { id: 'x', messages: 'nope' })).toBe(400);
+    expect(await status('PUT', chat('m', Array.from({ length: 201 }, () => ({ role: 'user', content: 'x' }))))).toBe(400);
+    expect(await status('PUT', chat('big', Array.from({ length: 60 }, () => ({ role: 'user', content: 'y'.repeat(8000) }))))).toBe(413);
+    expect(await status('GET', undefined, `${CHATS}?id=bad%20id`)).toBe(400);
+    expect(await status('DELETE', undefined, CHATS)).toBe(400);
+    for (let i = 0; i < 500; i++) {
+      await call('PUT', chat(`c${i}`, [{ role: 'user', content: 'x' }], `Chat ${i}`), { url: CHATS });
+    }
+    expect(await status('PUT', chat('one-too-many', msgs))).toBe(400);
+    expect(await status('PUT', chat('c3', [...msgs, { role: 'user', content: 'still fine' }]))).toBe(200);
+  });
+
+  it('needs a signed-in visitor, a database, and refuses other methods', async () => {
+    const { call, env } = await setup();
+    expect((await call('GET', undefined, { url: CHATS, token: null })).response.status).toBe(401);
+    expect((await call('GET', undefined, { url: CHATS, env: { ...env, WAITLIST_DB: undefined } })).response.status).toBe(503);
+    expect((await call('POST', {}, { url: CHATS })).response.status).toBe(405);
+    expect((await call('PUT', chat('x', msgs), { url: CHATS, origin: 'https://evil.example' })).response.status).toBe(403);
+  });
+});
+
+describe.skipIf(!sqlite)('who added a movie', () => {
+  const PEOPLE = 'me@example.com=Hunter, mollie@example.com=Mollie';
+  const ME_URL = 'https://r7orbit.io/api/movie-wheel/me';
+
+  /** A setup where the two people are configured, and a way to call as either of them. */
+  async function twoPeople(people: string | null = PEOPLE) {
+    const s = await setup({ MOVIE_WHEEL_PEOPLE: people ?? undefined });
+    const as = async (who: 'hunter' | 'mollie' | string, method: string, body?: unknown, url = URL_LIST) => {
+      const email = who === 'hunter' ? 'me@example.com' : who === 'mollie' ? 'mollie@example.com' : who;
+      const token = await s.a.sign({ ...s.a.good, email });
+      return (await s.call(method, body, { token, url: url })).response;
+    };
+    const list = async () => (await (await as('hunter', 'GET')).json()).list as { id: string; title: string; addedBy: string; rating: number }[];
+    const byTitle = async () => Object.fromEntries((await list()).map((m) => [m.title, m.addedBy]));
+    return { ...s, as, list, byTitle };
+  }
+
+  it('says who is signed in, and the names the page can show', async () => {
+    const { as } = await twoPeople();
+    expect(await (await as('mollie', 'GET', undefined, ME_URL)).json()).toEqual({
+      key: 'mollie',
+      name: 'Mollie',
+      people: [{ key: 'hunter', name: 'Hunter' }, { key: 'mollie', name: 'Mollie' }, { key: 'r7', name: 'R7' }],
+    });
+  });
+
+  it('makes a name from the start of the email address when the people are not set up, and adds the caller to the names', async () => {
+    const { as } = await twoPeople(null);
+    expect(await (await as('Pat.Smith+x@example.com', 'GET', undefined, ME_URL)).json()).toEqual({
+      key: 'patsmithx',
+      name: 'Patsmithx',
+      people: [{ key: 'patsmithx', name: 'Patsmithx' }, { key: 'r7', name: 'R7' }],
+    });
+  });
+
+  it("stamps a new movie with whoever is signed in, and keeps R7's own marker", async () => {
+    const { as, byTitle } = await twoPeople();
+    await as('hunter', 'PUT', { list: [movie('1', 'Saw', 100)] });
+    await as('mollie', 'PUT', { list: [movie('2', 'Us', 100), movie('3', 'Get Out', 100, { addedBy: 'r7' })] });
+    expect(await byTitle()).toEqual({ Saw: 'hunter', Us: 'mollie', 'Get Out': 'r7' });
+  });
+
+  it('does not accept a made-up name: it counts as the signed-in person', async () => {
+    const { as, byTitle } = await twoPeople();
+    await as('mollie', 'PUT', { list: [movie('1', 'Saw', 100, { addedBy: 'nobody' })] });
+    expect(await byTitle()).toEqual({ Saw: 'mollie' });
+  });
+
+  it("does not change who added a movie when someone else edits it", async () => {
+    const { as, byTitle } = await twoPeople();
+    await as('hunter', 'PUT', { list: [movie('1', 'Saw', 100)] });
+    await as('mollie', 'PUT', { list: [movie('1', 'Saw', 200, { rating: 4 })] });
+    const list = await (await as('hunter', 'GET')).json();
+    expect(list.list[0]).toMatchObject({ rating: 4, addedBy: 'hunter' });
+    expect(await byTitle()).toEqual({ Saw: 'hunter' });
+  });
+
+  it('leaves a movie from before this feature unattributed when it is edited, until a name is chosen for it', async () => {
+    const { as, db, byTitle } = await twoPeople();
+    await db.d1.prepare("INSERT INTO movie_wheel_movies (id, title, updated_at) VALUES ('old', 'Old Movie', 1)").run();
+    await as('mollie', 'PUT', { list: [movie('old', 'Old Movie', 50, { rating: 3 })] });
+    expect(await byTitle()).toEqual({ 'Old Movie': '' });
+    await as('mollie', 'PUT', { list: [movie('old', 'Old Movie', 60, { rating: 3, addedBy: 'hunter' })] });
+    expect(await byTitle()).toEqual({ 'Old Movie': 'hunter' });
+  });
+
+  it('keeps R7 as the adder through later edits, including ones that send no name', async () => {
+    const { as, byTitle } = await twoPeople();
+    await as('hunter', 'PUT', { list: [movie('1', 'Get Out', 100, { addedBy: 'r7' })] });
+    await as('mollie', 'PUT', { list: [movie('1', 'Get Out', 200, { rating: 5 })] });
+    expect(await byTitle()).toEqual({ 'Get Out': 'r7' });
+  });
+
+  it('refuses /me without a signed-in visitor or with another method', async () => {
+    const { call } = await setup();
+    expect((await call('GET', undefined, { url: ME_URL, token: null })).response.status).toBe(401);
+    expect((await call('POST', {}, { url: ME_URL })).response.status).toBe(405);
+  });
+});
+
+describe.skipIf(!sqlite)('follow-up suggestions', () => {
+  const CHAT = 'https://r7orbit.io/api/movie-wheel/chat';
+  const ask = { messages: [{ role: 'user', content: 'hi' }], context: 'WATCHED\nSaw | 2003' };
+  const reply = async (content: string | null, extra: Record<string, unknown> = {}) => {
+    const { a, call } = await setup();
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      if (String(url).includes('cloudflareaccess')) return a.keyFetch(url, init);
+      return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content, ...extra } }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    return (await call('POST', ask, { url: CHAT, fetch: f })).response;
+  };
+
+  it('splits the follow-up line off the reply', () => {
+    expect(splitFollowups('Horror leads.\n\n[[followups: Why is that? | Recommend 3 more | Add them to my list]]')).toEqual({
+      reply: 'Horror leads.',
+      followups: ['Why is that?', 'Recommend 3 more', 'Add them to my list'],
+    });
+  });
+
+  it('copes with quotes, spacing, case, a trailing space, more than three, long items and empty ones', () => {
+    expect(splitFollowups('Ok.\n[[ Followups :  "One" |  \'Two\' | | Three | Four ]]  ')).toEqual({ reply: 'Ok.', followups: ['One', 'Two', 'Three'] });
+    expect(splitFollowups('Ok. [[followups: ' + 'x'.repeat(200) + ']]').followups[0]).toHaveLength(80);
+    expect(splitFollowups('Ok.\n[[followups:]]')).toEqual({ reply: 'Ok.', followups: [] });
+  });
+
+  it('leaves a reply with no follow-up line alone, and drops a cut-off or stray marker instead of showing it', () => {
+    expect(splitFollowups('Just an answer.')).toEqual({ reply: 'Just an answer.', followups: [] });
+    expect(splitFollowups('Answer.\n[[followups: One | Tw')).toEqual({ reply: 'Answer.', followups: [] });
+    expect(splitFollowups('See [[followups: mid]] sentence and more.').reply).not.toContain('[[followups');
+  });
+
+  it('returns the follow-ups next to the cleaned reply', async () => {
+    const r = await reply('Horror leads.\n[[followups: Recommend 3 more | Add them to my list]]');
+    expect(await r.json()).toEqual({ reply: 'Horror leads.', followups: ['Recommend 3 more', 'Add them to my list'] });
+  });
+
+  it('answers with no followups field when the model sent none', async () => {
+    expect(await (await reply('Plain answer.')).json()).toEqual({ reply: 'Plain answer.' });
+  });
+
+  it('keeps the follow-ups of an assistant message in a saved chat, but only for assistant messages', async () => {
+    const { call } = await setup();
+    const url = 'https://r7orbit.io/api/movie-wheel/chats';
+    await call('PUT', {
+      id: 'f',
+      title: 'x',
+      messages: [
+        { role: 'user', content: 'hi', followups: ['nope'] },
+        { role: 'assistant', content: 'Hello', followups: ['One', '', 'Two', 'Three', 'Four'] },
+        { role: 'assistant', content: 'No chips' },
+      ],
+    }, { url });
+    const back = await (await call('GET', undefined, { url: `${url}?id=f` })).response.json();
+    expect(back.chat.messages[0]).toEqual({ role: 'user', content: 'hi' });
+    expect(back.chat.messages[1].followups).toEqual(['One', 'Two', 'Three']);
+    expect(back.chat.messages[2].followups).toBeUndefined();
+  });
+
+  it('tells the model to end every reply with that line', async () => {
+    const { a, call } = await setup();
+    let system = '';
+    const f = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      if (String(url).includes('cloudflareaccess')) return a.keyFetch(url, init);
+      system = (JSON.parse(String(init?.body)).messages as { content: string }[])[0].content;
+      return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Hi.' } }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    await call('POST', ask, { url: CHAT, fetch: f });
+    expect(system).toContain('[[followups: first | second | third]]');
   });
 });
