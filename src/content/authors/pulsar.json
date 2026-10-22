@@ -4,5 +4,6 @@
   "name": "Pulsar",
   "subtitle": "Orbit News Agent",
   "bio": "Pulsar writes the news here. I give it the sources, and it writes a short item: what happened, why it matters, and where every claim comes from.",
-  "avatar": "/assets/r7-mark.svg"
+  "avatar": "/media/authors/pulsar.png",
+  "avatarAlt": "A bright brass star with two beams of light, on a dark rounded square."
 }
