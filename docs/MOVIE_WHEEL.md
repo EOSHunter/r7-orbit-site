@@ -78,6 +78,23 @@ The Chat tab is a chat with **R7**, an assistant that knows your whole list: wha
 
 What R7 does to the list is limited to one request, `add_movies`, which the server passes on and the page carries out; the model never touches the database.
 
+## On a phone
+
+The page is built phone-first (it is mostly used that way).
+
+- **Bottom tab bar** with Wheel, List, Dashboard, Reviews and R7 (the chat), where a thumb reaches. The wheel gets a screen of its own and the list gets one too; on a computer they sit side by side and the tabs are links at the top.
+- **Chat takes the whole screen.** On a phone the R7 tab has no header and no card: the conversation runs edge to edge from the top of the screen to the tab bar, and the tab bar steps aside while you are typing so there is room for the keyboard.
+- **Filters** are one button with the filters that are on shown as small chips you can tap away. It opens a sheet (a panel that slides up on a phone, a dialog on a computer) with the genres and "added by"; on the Watched tab the same sheet also has Show (All, Favorites, Unrated) and Sort.
+- **A movie in a list** has its title across the full width, its details under it, and big buttons below: Mark watched (or Write a review) and Edit. Edit opens a sheet with everything about the movie, including moving it between lists and removing it (it asks twice), so nothing destructive sits next to a button you tap often.
+- **Sizes:** every control is at least 44 px, text boxes are 16 px (so iPhones do not zoom in), and the screen respects the notch and the home bar (`viewport-fit=cover`, safe-area padding).
+- **Add to Home Screen** (Safari: Share, then Add to Home Screen) puts it on your phone like an app.
+
+## Reviews
+
+The **Reviews** tab lists every movie you have rated or written about, newest first, with search and filters (All, Written, Favorites) and a sort (Recent, Top rated). At the top, **Waiting for your take** lists watched movies with no rating or review yet, each with a **Rate it** button.
+
+**"What did you think?"** When you mark a movie watched and leave no rating or review, the next time you open the app it asks (a sheet with big stars and an optional review). Save, **Not now** (it asks again next time, up to three times in all), or **Don't ask about this one**. It only asks about movies you marked watched on that device, so it never quizzes one of you about a movie the other watched, and it never asks about your older watched movies.
+
 ## What to know
 
 - **Signed out.** If a device's sign-in runs out (after the session duration), the page reloads into the email-code screen. If the sync line says "Signed out", reload the page.
