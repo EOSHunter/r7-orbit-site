@@ -38,6 +38,10 @@ export interface MovieWheelEnv {
   ACCESS_AUD?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
+  /** Who is who, as "email=Name" pairs separated by commas, such as "me@example.com=Hunter, mollie@example.com=Mollie". Names the people on "added by". */
+  MOVIE_WHEEL_PEOPLE?: string;
+  /** Only with DEV_BYPASS_ACCESS: the email to act as when trying the endpoints on your own computer. */
+  DEV_EMAIL?: string;
   /** "1" only in .dev.vars, to try the endpoints on your own computer without Access. Never set it on the live site. */
   DEV_BYPASS_ACCESS?: string;
 }
@@ -113,22 +117,23 @@ async function accessKeys(host: string, doFetch: typeof fetch, now: number): Pro
   return keys;
 }
 
-/** True when the request carries a valid Cloudflare Access token for this application. */
-export async function accessAllows(ctx: MovieWheelContext): Promise<boolean> {
+/** The signed-in visitor's email (lower case, empty when the token has none) if the request carries a valid Cloudflare Access token for this
+ *  application, or null when it does not. */
+export async function accessIdentity(ctx: MovieWheelContext): Promise<string | null> {
   const { env, request } = ctx;
   const doFetch = ctx.fetch ?? fetch;
   const now = ctx.now ?? Date.now();
   const token = request.headers.get('Cf-Access-Jwt-Assertion') ?? '';
   const parts = token.split('.');
-  if (parts.length !== 3 || !env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return false;
+  if (parts.length !== 3 || !env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return null;
   try {
     const host = teamHost(env.ACCESS_TEAM_DOMAIN);
     const header = b64urlToJson(parts[0]);
     const payload = b64urlToJson(parts[1]);
-    if (header.alg !== 'RS256') return false;
+    if (header.alg !== 'RS256') return null;
     const keys = await accessKeys(host, doFetch, now);
     const jwk = keys.find((k) => k.kid === header.kid && k.kty === 'RSA');
-    if (!jwk) return false;
+    if (!jwk) return null;
     const key = await crypto.subtle.importKey('jwk', jwk as JsonWebKey, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
     const ok = await crypto.subtle.verify(
       'RSASSA-PKCS1-v1_5',
@@ -136,31 +141,79 @@ export async function accessAllows(ctx: MovieWheelContext): Promise<boolean> {
       b64urlToBytes(parts[2]) as BufferSource,
       new TextEncoder().encode(`${parts[0]}.${parts[1]}`) as BufferSource,
     );
-    if (!ok) return false;
+    if (!ok) return null;
     const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
     const seconds = Math.floor(now / 1000);
-    return (
+    const valid =
       aud.includes(env.ACCESS_AUD) &&
       payload.iss === `https://${host}` &&
       typeof payload.exp === 'number' &&
       payload.exp > seconds &&
-      (payload.nbf === undefined || (typeof payload.nbf === 'number' && payload.nbf <= seconds + 60))
-    );
+      (payload.nbf === undefined || (typeof payload.nbf === 'number' && payload.nbf <= seconds + 60));
+    return valid ? String(payload.email ?? '').trim().toLowerCase() : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-/** The checks both endpoints share. Returns the Response to send when one fails, or nothing when the caller may go on. */
-async function guard(ctx: MovieWheelContext, methods: string[]): Promise<Response | undefined> {
+/** True when the request carries a valid Cloudflare Access token for this application. */
+export async function accessAllows(ctx: MovieWheelContext): Promise<boolean> {
+  return (await accessIdentity(ctx)) !== null;
+}
+
+// ---- Who is who -------------------------------------------------------------------------------------------------------------
+
+export interface Person {
+  key: string;
+  name: string;
+  email: string;
+}
+
+/** The people named in MOVIE_WHEEL_PEOPLE, a list like "me@example.com=Hunter, mollie@example.com=Mollie" (a name per email address). */
+export function peopleOf(env: MovieWheelEnv): Person[] {
+  const out: Person[] = [];
+  for (const part of String(env.MOVIE_WHEEL_PEOPLE ?? '').split(',')) {
+    const i = part.indexOf('=');
+    if (i < 1) continue;
+    const email = part.slice(0, i).trim().toLowerCase();
+    const name = part.slice(i + 1).trim().slice(0, 24);
+    const key = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
+    if (email && name && key && key !== 'r7') out.push({ key, name, email });
+  }
+  return out;
+}
+
+/** Who is calling: the configured person for this email, or else a name made from the start of the address. */
+export function whoIs(env: MovieWheelEnv, email: string): { key: string; name: string } {
+  const person = peopleOf(env).find((p) => p.email === email);
+  if (person) return { key: person.key, name: person.name };
+  const local = email.split('@')[0].replace(/[^a-z0-9]/gi, '').slice(0, 24).toLowerCase();
+  const key = local && local !== 'r7' ? local : 'me';
+  return { key, name: key.charAt(0).toUpperCase() + key.slice(1) };
+}
+
+/** The checks every endpoint shares. Returns the Response to send when one fails, or the caller's email when they may go on. */
+async function guard(ctx: MovieWheelContext, methods: string[]): Promise<Response | { email: string }> {
   const { request, env } = ctx;
   if (!methods.includes(request.method)) return fail(405, `Use ${methods.join(' or ')}.`);
   const origin = request.headers.get('Origin');
   if (request.method !== 'GET' && origin && origin !== new URL(request.url).origin) return fail(403, MESSAGES.origin);
-  if (env.DEV_BYPASS_ACCESS === '1') return undefined;
+  if (env.DEV_BYPASS_ACCESS === '1') return { email: (env.DEV_EMAIL ?? 'dev@localhost').toLowerCase() };
   if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return fail(503, MESSAGES.closed);
-  if (!(await accessAllows(ctx))) return fail(401, MESSAGES.signIn);
-  return undefined;
+  const email = await accessIdentity(ctx);
+  if (email === null) return fail(401, MESSAGES.signIn);
+  return { email };
+}
+
+/** GET /api/movie-wheel/me -> { key, name, people }: who is signed in, and the names the page can show for "added by". */
+export async function handleMe(ctx: MovieWheelContext): Promise<Response> {
+  const who = await guard(ctx, ['GET']);
+  if (who instanceof Response) return who;
+  const me = whoIs(ctx.env, who.email);
+  const people = peopleOf(ctx.env).map((p) => ({ key: p.key, name: p.name }));
+  if (!people.some((p) => p.key === me.key)) people.push(me);
+  people.push({ key: 'r7', name: 'R7' });
+  return json({ key: me.key, name: me.name, people });
 }
 
 // ---- The list ---------------------------------------------------------------------------------------------------------------
@@ -177,6 +230,8 @@ export interface Movie {
   addedAt: number;
   watchedAt: number;
   updatedAt: number;
+  /** Who added the movie: a person's key (such as 'hunter' or 'mollie'), 'r7' for the chat assistant, or empty when it is not known. */
+  addedBy: string;
 }
 
 interface Row {
@@ -191,6 +246,7 @@ interface Row {
   added_at: number;
   watched_at: number;
   updated_at: number;
+  added_by: string;
   deleted_at: number;
 }
 
@@ -214,6 +270,7 @@ export function cleanMovie(x: unknown): Movie | null {
     addedAt: Math.max(0, Number(m.addedAt) || 0),
     watchedAt: Math.max(0, Number(m.watchedAt) || 0),
     updatedAt: Math.max(0, Number(m.updatedAt) || 0),
+    addedBy: /^[a-z0-9_-]{1,24}$/.test(String(m.addedBy ?? '')) ? String(m.addedBy) : '',
   };
 }
 
@@ -241,7 +298,7 @@ async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed:
     }
     list.push({
       id: r.id, title: r.title, watched: !!r.watched, genres, runtime: r.runtime, year: r.year, rating: r.rating,
-      review: r.review, addedAt: r.added_at, watchedAt: r.watched_at, updatedAt: r.updated_at,
+      review: r.review, addedAt: r.added_at, watchedAt: r.watched_at, updatedAt: r.updated_at, addedBy: r.added_by ?? '',
     });
   }
   if (savedAt === 0 && !list.length && !Object.keys(removed).length) return { list: null, removed, savedAt };
@@ -251,20 +308,20 @@ async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed:
 // A movie is kept from whichever copy changed it last (updated_at); a removal wins over an edit made before it, and an edit made after a
 // removal brings the movie back. Equal times keep what is stored, so a device with an old copy never undoes newer work.
 const UPSERT = `INSERT INTO movie_wheel_movies
-  (id, title, watched, genres, runtime, year, rating, review, added_at, watched_at, updated_at, deleted_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+  (id, title, watched, genres, runtime, year, rating, review, added_at, watched_at, updated_at, added_by, deleted_at)
+  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, COALESCE(NULLIF(?12, ''), ?13), 0)
   ON CONFLICT(id) DO UPDATE SET
     title = excluded.title, watched = excluded.watched, genres = excluded.genres, runtime = excluded.runtime, year = excluded.year,
     rating = excluded.rating, review = excluded.review, added_at = excluded.added_at, watched_at = excluded.watched_at,
-    updated_at = excluded.updated_at, deleted_at = 0
+    updated_at = excluded.updated_at, added_by = CASE WHEN ?12 != '' THEN ?12 ELSE movie_wheel_movies.added_by END, deleted_at = 0
   WHERE excluded.updated_at > movie_wheel_movies.updated_at AND excluded.updated_at > movie_wheel_movies.deleted_at`;
 const REMOVE = `INSERT INTO movie_wheel_movies (id, title, deleted_at) VALUES (?, '', ?)
   ON CONFLICT(id) DO UPDATE SET deleted_at = excluded.deleted_at
   WHERE excluded.deleted_at >= movie_wheel_movies.updated_at AND excluded.deleted_at > movie_wheel_movies.deleted_at`;
 
 export async function handleList(ctx: MovieWheelContext): Promise<Response> {
-  const denied = await guard(ctx, ['GET', 'PUT']);
-  if (denied) return denied;
+  const who = await guard(ctx, ['GET', 'PUT']);
+  if (who instanceof Response) return who;
   const db = database(ctx.env);
   if (!db) return fail(503, MESSAGES.noDatabase);
   const now = ctx.now ?? Date.now();
@@ -281,12 +338,15 @@ export async function handleList(ctx: MovieWheelContext): Promise<Response> {
   }
   if (!body || !Array.isArray(body.list) || body.list.length > MAX_MOVIES) return fail(400, MESSAGES.badBody);
 
+  const me = whoIs(ctx.env, who.email);
+  const known = new Set([...peopleOf(ctx.env).map((p) => p.key), me.key, 'r7']);
   const statements: D1PreparedStatement[] = [];
   for (const raw of body.list) {
     const m = cleanMovie(raw);
     if (!m) continue;
+    if (!known.has(m.addedBy)) m.addedBy = '';
     statements.push(
-      db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt),
+      db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt, m.addedBy, me.key),
     );
   }
   if (body.removed && typeof body.removed === 'object') {
@@ -307,15 +367,98 @@ export async function handleList(ctx: MovieWheelContext): Promise<Response> {
 
 // ---- The chat ---------------------------------------------------------------------------------------------------------------
 
-const SYSTEM = `You are the movie assistant inside the owner's personal Movie Wheel app.
+const SYSTEM = `You are R7, the movie assistant inside the owner's personal Movie Wheel app. If asked your name, say you are R7.
 You can see their full movie history below: what they have watched (with their own star ratings and short reviews), what is still on their to-watch list, genres, lengths and release years.
 Answer using that data. Be specific: name titles, give counts and hours, and say when something is not in the data instead of guessing.
 You may recommend films from outside the list when asked, but say they are not on the list. When you recommend from the to-watch list, use exactly the titles shown.
-Keep answers short and plain. Do not use emoji. Rating scale is 1 to 5 stars; 4 and 5 stars count as favorites.`;
+Keep answers short and plain. Do not use emoji. Rating scale is 1 to 5 stars; 4 and 5 stars count as favorites.
+Format with simple Markdown: **bold** for movie titles and key numbers, and a numbered or bulleted list when naming several movies. No tables and no headings.
+When asked to recommend movies to add or watch, first check every title against the WATCHED and TO WATCH lists, and never suggest a movie that appears in either one.
+You can add movies to the to-watch list with the add_movies tool. Use it only when the user asks you to add movies (or to add what you just recommended). Never add movies on your own, and never add a title that is already on either list. After adding, say in one short sentence which movies you added.
+After your answer, add one last line in exactly this form, with nothing after it: [[followups: first | second | third]]
+Give 2 or 3 short things the user could say next, written as the user would say them and under 60 characters each: a next step, a recommendation, or a related question. When you have just recommended movies, make one of them ask you to add them to the list. Never mention or explain this line.`;
+
+/** What R7 may do to the list. The server only passes these requests on; the page carries them out (and shows an Undo). */
+const TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'add_movies',
+      description: "Add movies to the user's to-watch list. Only when the user asks you to add movies. Never add a title that is already on the WATCHED or TO WATCH lists.",
+      parameters: {
+        type: 'object',
+        properties: {
+          movies: {
+            type: 'array',
+            maxItems: 10,
+            items: {
+              type: 'object',
+              properties: {
+                title: { type: 'string', description: 'The movie title, as it is usually written.' },
+                year: { type: 'integer', description: 'The release year, if you are sure of it.' },
+              },
+              required: ['title'],
+            },
+          },
+        },
+        required: ['movies'],
+      },
+    },
+  },
+];
+
+export interface ChatAction {
+  type: 'add_movies';
+  movies: { title: string; year?: number }[];
+}
+
+/** The movies in an add_movies call, cleaned: up to 10, a title of up to 120 characters, a plausible year. */
+export function cleanAddMovies(args: unknown): { title: string; year?: number }[] {
+  let parsed: unknown = args;
+  if (typeof args === 'string') {
+    try {
+      parsed = JSON.parse(args);
+    } catch {
+      return [];
+    }
+  }
+  const list = (parsed as { movies?: unknown } | null)?.movies;
+  if (!Array.isArray(list)) return [];
+  const out: { title: string; year?: number }[] = [];
+  for (const m of list.slice(0, 50)) {
+    const title = String((m as { title?: unknown } | null)?.title ?? '').trim().slice(0, 120);
+    if (!title) continue;
+    const year = Math.round(Number((m as { year?: unknown }).year));
+    out.push(year >= 1880 && year <= 2100 ? { title, year } : { title });
+  }
+  return out.slice(0, 10);
+}
+
+interface OpenAiMessage {
+  role: string;
+  content?: string | null;
+  tool_calls?: { id: string; type: string; function: { name: string; arguments: string } }[];
+}
+interface OpenAiReply {
+  error?: { message?: string };
+  choices?: { message?: OpenAiMessage }[];
+}
+
+/** Takes the "[[followups: a | b | c]]" line off the end of a reply: the reply without it, and up to 3 short follow-up messages. */
+export function splitFollowups(text: string): { reply: string; followups: string[] } {
+  const m = /\[\[\s*followups\s*:([\s\S]*?)\]\]\s*$/i.exec(text);
+  if (!m) return { reply: text.replace(/\[\[\s*followups[\s\S]*$/i, '').trimEnd(), followups: [] };   // a cut-off or stray marker is dropped, not shown
+  const followups = m[1]
+    .split('|')
+    .map((x) => x.replace(/^["'\s]+|["'\s]+$/g, '').slice(0, 80))
+    .filter(Boolean)
+    .slice(0, 3);
+  return { reply: text.slice(0, m.index).trimEnd(), followups };
+}
 
 export async function handleChat(ctx: MovieWheelContext): Promise<Response> {
-  const denied = await guard(ctx, ['POST']);
-  if (denied) return denied;
+  const who = await guard(ctx, ['POST']);
+  if (who instanceof Response) return who;
   const { env } = ctx;
   if (!env.OPENAI_API_KEY) return fail(503, MESSAGES.noKey);
   let body: { messages?: unknown; context?: unknown };
@@ -326,7 +469,7 @@ export async function handleChat(ctx: MovieWheelContext): Promise<Response> {
   }
   const { messages, context } = body ?? {};
   if (!Array.isArray(messages) || !messages.length || messages.length > MAX_MESSAGES) return fail(400, `Send between 1 and ${MAX_MESSAGES} messages.`);
-  const clean: { role: 'user' | 'assistant'; content: string }[] = [];
+  const clean: { role: string; content: string }[] = [];
   for (const m of messages as Record<string, unknown>[]) {
     const role = m?.role;
     const content = m?.content;
@@ -337,24 +480,172 @@ export async function handleChat(ctx: MovieWheelContext): Promise<Response> {
   }
   if (clean[clean.length - 1].role !== 'user') return fail(400, 'The last message must be from the user.');
   const ctxText = typeof context === 'string' ? context.slice(0, MAX_CONTEXT_CHARS) : '';
+  const system = { role: 'system', content: `${SYSTEM}\n\n--- MOVIE DATA ---\n${ctxText}` };
 
-  let res: Response;
-  try {
-    res = await (ctx.fetch ?? fetch)('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.OPENAI_API_KEY}` },
-      body: JSON.stringify({
-        model: env.OPENAI_MODEL || 'gpt-4o-mini',
-        max_completion_tokens: MAX_REPLY_TOKENS,
-        messages: [{ role: 'system', content: `${SYSTEM}\n\n--- MOVIE DATA ---\n${ctxText}` }, ...clean],
-      }),
-    });
-  } catch {
-    return fail(502, 'Could not reach OpenAI.');
+  const ask = async (payload: Record<string, unknown>): Promise<{ data: OpenAiReply | null } | Response> => {
+    let res: Response;
+    try {
+      res = await (ctx.fetch ?? fetch)('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.OPENAI_API_KEY}` },
+        body: JSON.stringify({ model: env.OPENAI_MODEL || 'gpt-4o-mini', max_completion_tokens: MAX_REPLY_TOKENS, ...payload }),
+      });
+    } catch {
+      return fail(502, 'Could not reach OpenAI.');
+    }
+    const data = (await res.json().catch(() => null)) as OpenAiReply | null;
+    if (!res.ok) return fail(502, `OpenAI said: ${String(data?.error?.message ?? `status ${res.status}.`).slice(0, 300)}`);
+    return { data };
+  };
+
+  const first = await ask({ messages: [system, ...clean], tools: TOOLS });
+  if (first instanceof Response) return first;
+  const message = first.data?.choices?.[0]?.message;
+  const calls = (message?.tool_calls ?? []).filter((c) => c?.type === 'function');
+  if (!calls.length) {
+    const raw = message?.content;
+    if (!raw) return fail(502, 'OpenAI sent an empty answer.');
+    const { reply, followups } = splitFollowups(raw);
+    return json(followups.length ? { reply, followups } : { reply });
   }
-  const data = (await res.json().catch(() => null)) as { error?: { message?: string }; choices?: { message?: { content?: string } }[] } | null;
-  if (!res.ok) return fail(502, `OpenAI said: ${String(data?.error?.message ?? `status ${res.status}.`).slice(0, 300)}`);
-  const reply = data?.choices?.[0]?.message?.content;
-  if (!reply) return fail(502, 'OpenAI sent an empty answer.');
-  return json({ reply });
+
+  // R7 asked to add movies. The page does the adding; the model is told it was done and writes the short confirmation.
+  const actions: ChatAction[] = [];
+  const results = calls.map((c) => {
+    if (c.function?.name !== 'add_movies') return { role: 'tool', tool_call_id: c.id, content: 'That tool does not exist.' };
+    const movies = cleanAddMovies(c.function.arguments);
+    if (!movies.length) return { role: 'tool', tool_call_id: c.id, content: 'No valid movies were given, so nothing was added.' };
+    actions.push({ type: 'add_movies', movies });
+    return { role: 'tool', tool_call_id: c.id, content: 'Done. The app adds them to the to-watch list and skips any title that is already on it.' };
+  });
+  const names = actions.flatMap((a) => a.movies.map((m) => m.title));
+  const second = await ask({
+    messages: [system, ...clean, { role: 'assistant', content: message?.content ?? null, tool_calls: calls }, ...results],
+  });
+  const text = second instanceof Response ? '' : second.data?.choices?.[0]?.message?.content;
+  const split = splitFollowups(text || '');
+  const reply = split.reply || (names.length ? 'I\'ll add ' + names.join(', ') + ' to your list.' : "I couldn't add anything from that.");
+  return json({ reply, ...(split.followups.length ? { followups: split.followups } : {}), ...(actions.length ? { actions } : {}) });
+}
+
+// ---- Saved chats ------------------------------------------------------------------------------------------------------------
+//   GET    /api/movie-wheel/chats            -> { chats: [{ id, title, createdAt, updatedAt }] }   newest first
+//   GET    /api/movie-wheel/chats?id=ID      -> { chat: { id, title, messages, createdAt, updatedAt } }
+//   PUT    /api/movie-wheel/chats            { id, title, messages } -> { chat: summary }          create or replace
+//   DELETE /api/movie-wheel/chats?id=ID      -> { ok: true }
+// A chat is one row holding its messages as JSON. A message is { role: 'user' | 'assistant' | 'note', content, ... }; a note records what R7
+// did to the list ({ ids, titles, skipped, undone }) so its Undo still works after a reload.
+
+const MAX_CHATS = 500;
+const MAX_CHAT_MESSAGES = 200;
+const MAX_CHAT_JSON = 400_000;
+const DELETED_KEEP_MS = 30 * 24 * 3600 * 1000;
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'note';
+  content: string;
+  followups?: string[];
+  ids?: string[];
+  titles?: string[];
+  skipped?: string[];
+  undone?: boolean;
+}
+interface ChatRow {
+  id: string;
+  title: string;
+  messages: string;
+  created_at: number;
+  updated_at: number;
+}
+
+const strings = (v: unknown, max: number, len: number): string[] =>
+  (Array.isArray(v) ? v : []).map((x) => String(x).slice(0, len)).filter(Boolean).slice(0, max);
+
+/** Keeps only what a saved message may hold, trimmed to size. */
+export function cleanChatMessage(x: unknown): ChatMessage | null {
+  if (!x || typeof x !== 'object') return null;
+  const m = x as Record<string, unknown>;
+  if (m.role !== 'user' && m.role !== 'assistant' && m.role !== 'note') return null;
+  const content = String(m.content ?? '').slice(0, 8000);
+  if (m.role !== 'note' && !content.trim()) return null;
+  const out: ChatMessage = { role: m.role, content };
+  if (m.role === 'assistant') {
+    const followups = strings(m.followups, 3, 80);
+    if (followups.length) out.followups = followups;
+  }
+  if (m.role === 'note') {
+    out.ids = strings(m.ids, 10, 64);
+    out.titles = strings(m.titles, 10, 120);
+    out.skipped = strings(m.skipped, 10, 120);
+    out.undone = !!m.undone;
+  }
+  return out;
+}
+
+export async function handleChats(ctx: MovieWheelContext): Promise<Response> {
+  const who = await guard(ctx, ['GET', 'PUT', 'DELETE']);
+  if (who instanceof Response) return who;
+  const db = database(ctx.env);
+  if (!db) return fail(503, MESSAGES.noDatabase);
+  const now = ctx.now ?? Date.now();
+  const url = new URL(ctx.request.url);
+  const id = url.searchParams.get('id') ?? '';
+  const validId = /^[A-Za-z0-9_-]{1,64}$/.test(id);
+
+  if (ctx.request.method === 'GET') {
+    if (!id) {
+      const rows = (await db.prepare('SELECT id, title, created_at, updated_at FROM movie_wheel_chats WHERE deleted_at = 0 ORDER BY updated_at DESC LIMIT 500').all<ChatRow>()).results;
+      return json({ chats: rows.map((r) => ({ id: r.id, title: r.title, createdAt: r.created_at, updatedAt: r.updated_at })) });
+    }
+    if (!validId) return fail(400, MESSAGES.badBody);
+    const rows = (await db.prepare('SELECT * FROM movie_wheel_chats WHERE id = ? AND deleted_at = 0').bind(id).all<ChatRow>()).results;
+    if (!rows.length) return fail(404, 'That chat was not found.');
+    let messages: unknown = [];
+    try {
+      messages = JSON.parse(rows[0].messages);
+    } catch {
+      /* a bad value reads as an empty chat */
+    }
+    return json({ chat: { id: rows[0].id, title: rows[0].title, messages: Array.isArray(messages) ? messages : [], createdAt: rows[0].created_at, updatedAt: rows[0].updated_at } });
+  }
+
+  if (ctx.request.method === 'DELETE') {
+    if (!validId) return fail(400, MESSAGES.badBody);
+    await db.batch([
+      db.prepare('UPDATE movie_wheel_chats SET deleted_at = ?, messages = ? WHERE id = ? AND deleted_at = 0').bind(now, '[]', id),
+      db.prepare('DELETE FROM movie_wheel_chats WHERE deleted_at > 0 AND deleted_at < ?').bind(now - DELETED_KEEP_MS),
+    ]);
+    return json({ ok: true });
+  }
+
+  const text = await ctx.request.text();
+  if (text.length > MAX_CHAT_JSON + 20_000) return fail(413, MESSAGES.tooLarge);
+  let body: { id?: unknown; title?: unknown; messages?: unknown };
+  try {
+    body = JSON.parse(text) as typeof body;
+  } catch {
+    return fail(400, MESSAGES.badBody);
+  }
+  const chatId = String(body?.id ?? '');
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(chatId) || !Array.isArray(body.messages) || body.messages.length > MAX_CHAT_MESSAGES) return fail(400, MESSAGES.badBody);
+  const messages = body.messages.map(cleanChatMessage).filter((m): m is ChatMessage => !!m);
+  const json_ = JSON.stringify(messages);
+  if (json_.length > MAX_CHAT_JSON) return fail(413, MESSAGES.tooLarge);
+  const title = String(body.title ?? '').trim().replace(/\s+/g, ' ').slice(0, 80) || 'New chat';
+
+  const existing = (await db.prepare('SELECT deleted_at FROM movie_wheel_chats WHERE id = ?').bind(chatId).all<{ deleted_at: number }>()).results;
+  if (existing.length && existing[0].deleted_at > 0) return fail(410, 'That chat was deleted.');
+  if (!existing.length) {
+    const count = (await db.prepare('SELECT COUNT(*) AS n FROM movie_wheel_chats WHERE deleted_at = 0').all<{ n: number }>()).results[0]?.n ?? 0;
+    if (count >= MAX_CHATS) return fail(400, 'There are too many saved chats. Delete some first.');
+  }
+  await db
+    .prepare(
+      `INSERT INTO movie_wheel_chats (id, title, messages, created_at, updated_at, deleted_at) VALUES (?, ?, ?, ?, ?, 0)
+       ON CONFLICT(id) DO UPDATE SET title = excluded.title, messages = excluded.messages, updated_at = excluded.updated_at WHERE deleted_at = 0`,
+    )
+    .bind(chatId, title, json_, now, now)
+    .run();
+  const row = (await db.prepare('SELECT id, title, created_at, updated_at FROM movie_wheel_chats WHERE id = ?').bind(chatId).all<ChatRow>()).results[0];
+  return json({ chat: { id: row.id, title: row.title, createdAt: row.created_at, updatedAt: row.updated_at } });
 }

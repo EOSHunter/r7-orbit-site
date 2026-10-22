@@ -26,6 +26,15 @@ npx wrangler d1 execute r7-waitlist --remote --file=migrations/0002_movie_wheel.
 
 It asks to confirm, then reports success. Running it twice does no harm. Check: in the dashboard, **Storage & Databases > D1 > r7-waitlist > Tables** lists `movie_wheel_movies` and `movie_wheel_meta`.
 
+The chat history and the "added by" names came later and each has its own file. Run them once, in this order, after the first:
+
+```
+npx wrangler d1 execute r7-waitlist --remote --file=migrations/0003_movie_wheel_chats.sql
+npx wrangler d1 execute r7-waitlist --remote --file=migrations/0004_movie_wheel_added_by.sql
+```
+
+The second one adds a column, so running it twice stops with "duplicate column name": that means it was already applied.
+
 ### 2. Put the page and the API behind Cloudflare Access
 
 1. Dashboard > **Zero Trust** (if it asks you to choose a team name and a plan, pick the free plan; the team name is part of an address like `your-team.cloudflareaccess.com`). Note the team name: **Settings > Custom pages** or the address in **Settings > General** shows it.
@@ -49,12 +58,25 @@ Dashboard > **Workers & Pages > r7-orbit-site > Settings > Variables and Secrets
 | `ACCESS_AUD` | Text | the AUD tag from step 2 |
 | `OPENAI_API_KEY` | **Secret** | your OpenAI key |
 | `OPENAI_MODEL` | Text (optional) | a model name; the default is `gpt-4o-mini` |
+| `MOVIE_WHEEL_PEOPLE` | Text (recommended) | who is who, as `email=Name` pairs separated by commas, such as `you@example.com=Hunter, partner@example.com=Mollie`. The page stamps each new movie with the signed-in person's name and shows it as "added by". Without it the name is made from the start of the email address |
 
 Then trigger a deploy so the site picks them up: on the project's **Deployments** tab, the three-dot menu on the latest deployment > **Retry deployment**, or merge any change.
 
 ### 4. Use it
 
 Open `https://r7orbit.io/mw-554e0676db47baa4/` on each device. Cloudflare asks for your email, sends a code, and then shows the page. The first device to open it uploads the starting list (`movies-seed.json`); every other device then receives the same list. A line under the list says when it last synced.
+
+## R7, the chat
+
+The Chat tab is a chat with **R7**, an assistant that knows your whole list: what you watched, your ratings and reviews, what is still to watch, and who added what.
+
+- **Chat history.** Every chat is saved (in the database, so every device has them) and listed on the left, grouped by day. On a phone the list is behind the **History** button. **+ New chat** starts a fresh one; the **×** on a chat asks again before deleting it.
+- **Adding movies.** Ask R7 to add movies ("add the three you just recommended") and it adds them to your to-watch list, filling in year, length and genres from the film library, skipping anything already on the list. The chat shows what was added with an **Undo** button, which still works after a reload. R7 only adds when you ask, and only to the to-watch list.
+- **Follow-ups.** Under R7's latest reply are a few suggested next messages (a next step, a recommendation, a related question). Tap one to send it.
+- **Formatting.** Bold titles, lists and short paragraphs; bold shows in the brass colour.
+- **Added by.** A movie remembers who added it: a person (from the sign-in), or R7. The wheel's **Added by** row and the Watched tab filter by it, each row shows a small label, and the dashboard counts them. Movies from before this was tracked show as "Earlier"; set one with **Edit > Added by**.
+
+What R7 does to the list is limited to one request, `add_movies`, which the server passes on and the page carries out; the model never touches the database.
 
 ## What to know
 
