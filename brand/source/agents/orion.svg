@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" role="img" aria-label="Orion: the constellation with a game controller at its centre">
+  <defs>
+    <radialGradient id="plate" cx="0.5" cy="0.45" r="0.7"><stop offset="0" stop-color="#17171a"/><stop offset="1" stop-color="#09090a"/></radialGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0" r="0.75"><stop offset="0" stop-color="#c9a96a" stop-opacity="0.14"/><stop offset="1" stop-color="#c9a96a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a96a" stop-opacity="0.6"/><stop offset="1" stop-color="#c9a96a" stop-opacity="0.16"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd49a"/><stop offset="0.5" stop-color="#c9a96a"/><stop offset="1" stop-color="#9a7c46"/></linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf1d6" stop-opacity="0.5"/><stop offset="0.45" stop-color="#fbf1d6" stop-opacity="0"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#e3c98f" stop-opacity="0.6"/><stop offset="0.4" stop-color="#e3c98f" stop-opacity="0.18"/><stop offset="1" stop-color="#e3c98f" stop-opacity="0"/></radialGradient>
+    <path id="spark" d="M0,-1 C0.07,-0.32 0.32,-0.07 1,0 C0.32,0.07 0.07,0.32 0,1 C-0.07,0.32 -0.32,0.07 -1,0 C-0.32,-0.07 -0.07,-0.32 0,-1Z"/>
+    <path id="pad" d="M196,204 H316 C336,204 352,214 360,236 L376,300 C382,324 368,342 348,342 C332,342 322,334 314,322 L304,306 H208 L198,322 C190,334 180,342 164,342 C144,342 130,324 136,300 L152,236 C160,214 176,204 196,204 Z"/>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="12"/></filter>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#plate)"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#sheen)"/>
+  <g stroke="#8c7647" stroke-width="4" stroke-linecap="round" stroke-opacity="0.85" fill="none">
+    <path d="M150,92 L192,196"/><path d="M372,112 L324,196"/>
+    <path d="M140,424 L172,316"/><path d="M362,432 L342,316"/>
+  </g>
+  <g>
+    <circle cx="150" cy="92" r="46" fill="url(#glow)"/><circle cx="150" cy="92" r="12" fill="#f1dca8"/>
+    <use href="#spark" transform="translate(150 92) scale(30)" fill="#f1dca8" fill-opacity="0.9"/>
+    <circle cx="372" cy="112" r="34" fill="url(#glow)"/><circle cx="372" cy="112" r="8" fill="#e3c98f"/>
+    <circle cx="140" cy="424" r="46" fill="url(#glow)"/><circle cx="140" cy="424" r="12" fill="#f1dca8"/>
+    <use href="#spark" transform="translate(140 424) scale(30)" fill="#f1dca8" fill-opacity="0.9"/>
+    <circle cx="362" cy="432" r="34" fill="url(#glow)"/><circle cx="362" cy="432" r="8" fill="#e3c98f"/>
+  </g>
+  <g transform="translate(0 -17)">
+    <use href="#pad" fill="#000" fill-opacity="0.6" transform="translate(0 16)" filter="url(#blur)"/>
+    <use href="#pad" fill="url(#brass)" stroke="#e8d09a" stroke-width="3" stroke-linejoin="round"/>
+    <use href="#pad" fill="url(#gloss)"/>
+    <path d="M150,262 C146,282 144,296 148,306" fill="none" stroke="#5c4d2c" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round"/>
+    <path d="M195,231 h18 v19 h19 v18 h-19 v19 h-18 v-19 h-19 v-18 h19 z" fill="#0f0f11" stroke="#5c4d2c" stroke-width="2" stroke-linejoin="round"/>
+    <g fill="#0f0f11" stroke="#5c4d2c" stroke-width="2">
+      <circle cx="320" cy="230" r="10"/><circle cx="320" cy="274" r="10"/><circle cx="298" cy="252" r="10"/><circle cx="342" cy="252" r="10"/>
+    </g>
+    <g fill="#3a2f18" fill-opacity="0.85">
+      <circle cx="238" cy="262" r="5.5"/><circle cx="256" cy="253" r="5.5"/><circle cx="274" cy="244" r="5.5"/>
+    </g>
+  </g>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="url(#edge)" stroke-width="3"/>
+</svg>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" role="img" aria-label="Kepler: an ocean planet lit by a distant star">
+  <defs>
+    <radialGradient id="plate" cx="0.5" cy="0.45" r="0.7"><stop offset="0" stop-color="#17171a"/><stop offset="1" stop-color="#09090a"/></radialGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0" r="0.75"><stop offset="0" stop-color="#c9a96a" stop-opacity="0.14"/><stop offset="1" stop-color="#c9a96a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a96a" stop-opacity="0.6"/><stop offset="1" stop-color="#c9a96a" stop-opacity="0.16"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#e3c98f" stop-opacity="0.6"/><stop offset="0.4" stop-color="#e3c98f" stop-opacity="0.18"/><stop offset="1" stop-color="#e3c98f" stop-opacity="0"/></radialGradient>
+    <radialGradient id="globe" cx="0.7" cy="0.28" r="0.95"><stop offset="0" stop-color="#ecd49a"/><stop offset="0.3" stop-color="#c9a96a"/><stop offset="0.62" stop-color="#7a6338"/><stop offset="1" stop-color="#1b160c"/></radialGradient>
+    <linearGradient id="rim" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf1d6" stop-opacity="0.95"/><stop offset="0.4" stop-color="#e3c98f" stop-opacity="0.35"/><stop offset="0.7" stop-color="#c9a96a" stop-opacity="0"/></linearGradient>
+    <clipPath id="ball"><circle cx="226" cy="292" r="132"/></clipPath>
+    <path id="spark" d="M0,-1 C0.07,-0.32 0.32,-0.07 1,0 C0.32,0.07 0.07,0.32 0,1 C-0.07,0.32 -0.32,0.07 -1,0 C-0.32,-0.07 -0.07,-0.32 0,-1Z"/>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#plate)"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#sheen)"/>
+  <g fill="#c9a96a">
+    <circle cx="78" cy="96" r="2.6" fill-opacity="0.55"/><circle cx="296" cy="64" r="2" fill-opacity="0.45"/>
+    <circle cx="456" cy="296" r="2.4" fill-opacity="0.5"/><circle cx="86" cy="452" r="2" fill-opacity="0.45"/>
+  </g>
+  <circle cx="408" cy="112" r="96" fill="url(#glow)"/>
+  <use href="#spark" transform="translate(408 112) scale(52)" fill="#f1dca8" fill-opacity="0.85"/>
+  <circle cx="408" cy="112" r="15" fill="#fbf1d6"/>
+  <circle cx="226" cy="292" r="146" fill="url(#glow)" fill-opacity="0.35"/>
+  <circle cx="226" cy="292" r="132" fill="url(#globe)"/>
+  <g clip-path="url(#ball)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M84,252 C124,236 156,266 198,250 S270,236 318,252" stroke="#f1dca8" stroke-opacity="0.2" stroke-width="5"/>
+    <path d="M70,306 C116,288 150,322 196,304 S268,290 330,308" stroke="#f1dca8" stroke-opacity="0.16" stroke-width="5"/>
+    <path d="M96,358 C140,344 170,372 214,358 S272,348 312,360" stroke="#f1dca8" stroke-opacity="0.12" stroke-width="5"/>
+    <path d="M120,214 C146,196 182,198 204,214 C186,206 150,206 120,214Z" fill="#fbf1d6" fill-opacity="0.34" stroke="#fbf1d6" stroke-opacity="0.34" stroke-width="3"/>
+    <path d="M250,184 C282,168 322,176 344,198 C318,188 284,184 250,184Z" fill="#fbf1d6" fill-opacity="0.4" stroke="#fbf1d6" stroke-opacity="0.4" stroke-width="3"/>
+    <path d="M156,330 C186,316 226,320 250,338 C224,330 190,326 156,330Z" fill="#fbf1d6" fill-opacity="0.22" stroke="#fbf1d6" stroke-opacity="0.22" stroke-width="3"/>
+    <path d="M286,296 C306,286 330,290 344,304 C328,298 306,294 286,296Z" fill="#fbf1d6" fill-opacity="0.26" stroke="#fbf1d6" stroke-opacity="0.26" stroke-width="3"/>
+    <ellipse cx="318" cy="238" rx="26" ry="9" transform="rotate(-38 318 238)" fill="#fbf1d6" fill-opacity="0.55"/>
+    <ellipse cx="318" cy="238" rx="9" ry="3.5" transform="rotate(-38 318 238)" fill="#fffaf0" fill-opacity="0.8"/>
+  </g>
+  <circle cx="226" cy="292" r="132" fill="none" stroke="url(#rim)" stroke-width="4"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="url(#edge)" stroke-width="3"/>
+</svg>
