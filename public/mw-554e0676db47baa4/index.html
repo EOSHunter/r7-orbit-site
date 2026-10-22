@@ -232,7 +232,6 @@ body.lock{overflow:hidden}
 .sheet-wrap{position:fixed;inset:0;z-index:100}
 .sheet-scrim{position:absolute;inset:0;background:var(--scrim);animation:fadein 200ms var(--ease)}
 .sheet{position:absolute;left:0;right:0;bottom:0;max-height:90dvh;display:flex;flex-direction:column;background:var(--surface-1);border:1px solid var(--line-strong);border-bottom:0;border-radius:16px 16px 0 0;box-shadow:0 -18px 50px rgba(0,0,0,.55);animation:sheetup 280ms var(--ease);padding-bottom:env(safe-area-inset-bottom,0px)}
-.sheet .grab{flex:none;width:40px;height:4px;border-radius:4px;background:var(--line-strong);margin:8px auto 0}
 .sheet-head{flex:none;display:flex;align-items:center;gap:8px;padding:6px 8px 4px 20px}
 .sheet-head h2{flex:1;min-width:0;margin:0;font:500 26px/1.2 var(--display);overflow-wrap:anywhere}
 .sheet-head .icon-btn{font-size:22px}
@@ -262,7 +261,6 @@ body.lock{overflow:hidden}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 @media(min-width:821px){
   .sheet{left:50%;right:auto;bottom:auto;top:50%;width:min(560px,92vw);max-height:84vh;transform:translate(-50%,-50%);border:1px solid var(--line-strong);border-radius:var(--r-lg);animation:sheetpop 220ms var(--ease);padding-bottom:0}
-  .sheet .grab{display:none}
 }
 
 /* the add box */
@@ -362,6 +360,9 @@ li.row .acts .btn.main{flex:1}
   body[data-view=chat].typing .tabbar{display:none}
   body[data-view=chat].typing .ch{height:calc(100dvh - env(safe-area-inset-top,0px))}
 }
+.sheet.winner .win-title{font:500 clamp(30px,8vw,40px)/1.1 var(--display);color:var(--brass-bright);margin:0 0 var(--s-2);overflow-wrap:anywhere}
+.sheet.winner .sheet-foot{flex-wrap:wrap}
+.sheet.winner .sheet-foot .btn.solid{flex:1 1 100%}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -622,7 +623,7 @@ li.row .acts .btn.main{flex:1}
     var x=el('button','icon-btn','×'); x.type='button'; x.setAttribute('aria-label','Close');
     head.append(h,x);
     var body=el('div','sheet-body'), foot=el('div','sheet-foot');
-    sh.append(el('span','grab'),head,body,foot); wrap.append(scrim,sh); document.body.append(wrap); document.body.classList.add('lock');
+    sh.append(head,body,foot); wrap.append(scrim,sh); document.body.append(wrap); document.body.classList.add('lock');
     var closed=false, handle={body:body,foot:foot,sheet:sh};
     function onKey(e){
       if(e.key==='Escape'){ e.stopPropagation(); close('later'); return; }
@@ -856,7 +857,7 @@ li.row .acts .btn.main{flex:1}
   function spin(){
     var items=pool(), n=items.length;
     if(spinning||n<2) return;
-    spinning=true; winnerId=null; $('result').innerHTML=''; syncControls(); renderFilter();
+    closeResult(); spinning=true; winnerId=null; $('result').innerHTML=''; syncControls(); renderFilter();
     whoosh();
     var lastIdx=indexAtPointer(n), lastRot=rot, lastT=performance.now();
     var seg=TAU/n, target=Math.floor(Math.random()*n), off=0.12+Math.random()*0.76;
@@ -883,18 +884,20 @@ li.row .acts .btn.main{flex:1}
       }
     })(t0);
   }
+  var resultSheet=null;
+  function closeResult(){ if(resultSheet){ var r=resultSheet; resultSheet=null; r.close('done'); } }
   function showResult(m){
-    var box=$('result'); box.innerHTML='';
-    var r=el('div','result');
-    var e=el('span','eyebrow','Tonight you watch'); e.style.color='var(--brass-dim)';
-    var h=el('h2',null,m.title);
+    closeResult();
+    var sh=openSheet({title:'Tonight you watch', focus:'.btn.solid', restore:'#spin', onClose:function(){ resultSheet=null; }});
+    resultSheet=sh; sh.sheet.classList.add('winner');
+    var h=el('h2','win-title',m.title);
     var meta=[fmtLen(m.runtime), m.year||'', gens(m).map(gname).join(', ')].filter(Boolean).join(' · ');
-    var row=el('div','row');
-    var b1=el('button','btn solid','Mark as watched');
-    b1.onclick=function(){ winnerId=null; box.innerHTML=''; markWatched(m.id); };
-    var b2=el('button','btn','Spin again'); b2.onclick=function(){ spin(); };
-    var b3=el('button','btn quiet','Keep on the list'); b3.onclick=function(){ winnerId=null; box.innerHTML=''; draw(); };
-    row.append(b1,b2,b3); r.append(e,h); if(meta) r.append(el('div','status',meta)); r.append(row); box.append(r);
+    sh.body.append(h); if(meta) sh.body.append(el('div','status',meta));
+    var b1=el('button','btn solid','Mark as watched'); b1.type='button';
+    b1.onclick=function(){ closeResult(); winnerId=null; draw(); markWatched(m.id); };
+    var b2=el('button','btn','Spin again'); b2.type='button'; b2.onclick=function(){ closeResult(); spin(); };
+    var b3=el('button','btn quiet','Keep on the list'); b3.type='button'; b3.onclick=function(){ closeResult(); };
+    sh.foot.append(b1,b2,b3);
   }
 
   /* ---------- list ---------- */
@@ -1138,7 +1141,7 @@ li.row .acts .btn.main{flex:1}
   }
   function refresh(){
     if(spinning){ dirty=true; return; }
-    if(winnerId && !pool().some(function(m){return m.id===winnerId})) { winnerId=null; $('result').innerHTML=''; }
+    if(winnerId && !pool().some(function(m){return m.id===winnerId})) { winnerId=null; closeResult(); $('result').innerHTML=''; }
     renderFilter(); render(); syncControls(); draw();
     if(view==='dash') renderDash(); else if(view==='reviews') renderReviews();
   }
