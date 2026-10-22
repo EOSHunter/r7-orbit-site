@@ -33,7 +33,13 @@ npx wrangler d1 execute r7-waitlist --remote --file=migrations/0003_movie_wheel_
 npx wrangler d1 execute r7-waitlist --remote --file=migrations/0004_movie_wheel_added_by.sql
 ```
 
-The second one adds a column, so running it twice stops with "duplicate column name": that means it was already applied.
+The posters came after that, in a file of their own:
+
+```
+npx wrangler d1 execute r7-waitlist --remote --file=migrations/0005_movie_wheel_poster.sql
+```
+
+0004 and 0005 add a column each, so running one twice stops with "duplicate column name": that means it was already applied.
 
 ### 2. Put the page and the API behind Cloudflare Access
 
@@ -57,6 +63,7 @@ Dashboard > **Workers & Pages > r7-orbit-site > Settings > Variables and Secrets
 | `ACCESS_TEAM_DOMAIN` | Text | your team name, such as `your-team` |
 | `ACCESS_AUD` | Text | the AUD tag from step 2 |
 | `OPENAI_API_KEY` | **Secret** | your OpenAI key |
+| `TMDB_TOKEN` | **Secret** (for the posters) | the **API Read Access Token** from themoviedb.org > Settings > API (the long one that starts `eyJ`) |
 | `OPENAI_MODEL` | Text (optional) | a model name; the default is `gpt-4o-mini` |
 | `MOVIE_WHEEL_PEOPLE` | Text (recommended) | who is who, as `email=Name` pairs separated by commas, such as `you@example.com=Hunter, partner@example.com=Mollie`. The page stamps each new movie with the signed-in person's name and shows it as "added by". Without it the name is made from the start of the email address |
 
@@ -95,12 +102,23 @@ The **Reviews** tab lists every movie you have rated or written about, newest fi
 
 **"What did you think?"** When you mark a movie watched and leave no rating or review, the next time you open the app it asks (a sheet with big stars and an optional review). Save, **Not now** (it asks again next time, up to three times in all), or **Don't ask about this one**. It only asks about movies you marked watched on that device, so it never quizzes one of you about a movie the other watched, and it never asks about your older watched movies.
 
+## Posters
+
+Posters and film details come from [TMDB](https://www.themoviedb.org) (free for personal use; their terms ask for the credit line the page shows at the bottom).
+
+- **Existing movies.** Each device looks up a poster for every movie that has none, a few at a time in the background, matching by exact title and release year (within a year). A movie it cannot match is not asked about again on that device; choose its poster by hand with **Edit > Poster > Find a poster**. The poster is saved with the movie, so every device gets it.
+- **New movies.** Typing a title in the add box suggests library matches first and then matches from TMDB (marked "TMDB"), which cover new releases. Picking one fills in the length, year, genres and poster.
+- **Where it shows.** A thumbnail beside each movie in the lists and in Reviews, and a larger one in the "Tonight you watch" pop-up.
+- **The token stays on the server.** The page asks `/api/movie-wheel/tmdb` (behind the same sign-in), which holds the token, searches TMDB and serves the poster pictures itself, so the page never contacts anyone but its own site. Without `TMDB_TOKEN` the page works as before, with no posters.
+- **If a poster is wrong,** open the movie's **Edit**, choose **Choose a different poster** (or **Remove poster**), and Save.
+
 ## What to know
 
 - **Signed out.** If a device's sign-in runs out (after the session duration), the page reloads into the email-code screen. If the sync line says "Signed out", reload the page.
 - **Offline.** Changes are kept on the device and sent when it is back online.
 - **Backup.** **Export list** saves the whole list to a file; **Import list** replaces the list everywhere from such a file.
 - **The starting list** (`movies-seed.json`) is only used by a device that has no list and finds nothing saved online. It is a public file once deployed; once the database has your list you can delete it from `public/mw-554e0676db47baa4/` (and the `MW_SEED` line in `config.js`).
+- **TMDB.** Searching sends the title you type (and the year) to TMDB, from the site's server, not from your phone.
 - **Chat.** Each question sends a text summary of the list, your ratings and your reviews to OpenAI. Nothing else leaves the site.
 - **Trying it on your computer.** Build, create the tables locally, and run the site with Functions, with `DEV_BYPASS_ACCESS=1` in `.dev.vars` (never set it on the live site):
 

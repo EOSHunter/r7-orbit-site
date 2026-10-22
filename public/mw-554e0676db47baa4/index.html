@@ -363,6 +363,27 @@ li.row .acts .btn.main{flex:1}
 .sheet.winner .win-title{font:500 clamp(30px,8vw,40px)/1.1 var(--display);color:var(--brass-bright);margin:0 0 var(--s-2);overflow-wrap:anywhere}
 .sheet.winner .sheet-foot{flex-wrap:wrap}
 .sheet.winner .sheet-foot .btn.solid{flex:1 1 100%}
+/* posters (from TMDB, through the site): a thumbnail beside a row or a review, a larger one in the winner pop-up */
+.poster{display:block;flex:none;border-radius:8px;background:var(--surface-1);border:1px solid var(--line);object-fit:cover;aspect-ratio:2/3}
+li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:14px;row-gap:10px;align-items:start}
+li.row.hasp>*,.rcard.hasp>*{grid-column:2}
+li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:64px;height:96px}
+.win-top{display:flex;gap:16px;align-items:flex-start}
+.win-top .wp{width:104px;height:156px}
+.win-text{min-width:0;display:flex;flex-direction:column;gap:8px}
+.pk{display:flex;gap:14px;align-items:flex-start}
+.pk .poster{width:64px;height:96px}
+.pk .pkb{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
+.pk-none{width:64px;height:96px;border-radius:8px;border:1px dashed var(--line-strong);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:12px;flex:none}
+.pk-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:12px}
+.pk-results button{display:flex;flex-direction:column;gap:6px;align-items:stretch;background:transparent;border:1px solid transparent;border-radius:10px;padding:6px;color:var(--text-2);font:400 12px/1.25 var(--ui);text-align:left;cursor:pointer;min-height:44px}
+.pk-results button:hover,.pk-results button:focus-visible{border-color:var(--brass);outline:none}
+.pk-results .poster{width:100%;height:auto}
+.pk-results .ph{aspect-ratio:2/3;border-radius:8px;border:1px dashed var(--line-strong);display:flex;align-items:center;justify-content:center;color:var(--text-3)}
+.suggest .opt .tm{display:flex;align-items:center;gap:10px;min-width:0}
+.suggest .opt .tm .poster{width:28px;height:42px;border-radius:4px}
+.suggest .opt .src{font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.credit{margin:var(--s-5) 0 0;font:400 12px/1.5 var(--ui);color:var(--text-3);max-width:62ch}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -427,6 +448,7 @@ li.row .acts .btn.main{flex:1}
   <div class="dash" id="viewDash" hidden></div>
   <div id="viewReviews" hidden></div>
   <div id="viewChat" hidden></div>
+  <p class="credit" id="credit" hidden>Posters and film details come from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
 </div>
 
 <nav class="tabbar" aria-label="Main">
@@ -482,6 +504,66 @@ li.row .acts .btn.main{flex:1}
     };
   }
 
+  /* ---------- posters: TMDB, through the site (/api/movie-wheel/tmdb keeps the token) ---------- */
+  var API=(window.MW_CONFIG && MW_CONFIG.api) || '';
+  function posterUrl(path,w){ return (API && path) ? API+'/tmdb?img='+encodeURIComponent(path)+'&w='+(w||'w154') : ''; }
+  function posterImg(path,w,cls,wd,ht){
+    var u=posterUrl(path,w); if(!u) return null;
+    var i=el('img','poster'+(cls?' '+cls:'')); i.src=u; i.alt=''; i.loading='lazy'; i.decoding='async';
+    if(wd){ i.width=wd; i.height=ht; }
+    i.onerror=function(){ i.style.visibility='hidden'; };
+    return i;
+  }
+  function tmdb(query){
+    return fetch(API+'/tmdb?'+query,{credentials:'same-origin'}).then(function(r){
+      if(!r.ok){ var e=new Error('tmdb '+r.status); e.status=r.status; throw e; }
+      return r.json();
+    });
+  }
+  // the search result that is this movie: the same title (and, when both years are known, within a year), with a poster
+  function bestMatch(results,title,year){
+    var n=norm(title);
+    return (results||[]).filter(function(r){ return r.poster && norm(r.title)===n && (!year || !r.year || Math.abs(r.year-year)<=1); })[0] || null;
+  }
+  function findPoster(m){
+    var q='q='+encodeURIComponent(m.title);
+    return tmdb(q+(m.year?'&year='+m.year:'')).then(function(d){
+      var hit=bestMatch(d.results,m.title,m.year);
+      if(hit || !m.year) return hit;
+      return tmdb(q).then(function(d2){ return bestMatch(d2.results,m.title,m.year); });
+    });
+  }
+  // looks up a poster for every movie that has none, once per movie per device (a miss is remembered, so it is not asked again; Edit can still choose one)
+  var TRIED='movie-wheel-poster-tried', posterRun=false, posterTimer=null;
+  function triedLoad(){ try{ return JSON.parse(localStorage.getItem(TRIED)||'{}')||{}; }catch(e){ return {}; } }
+  function triedSave(t){ try{ localStorage.setItem(TRIED,JSON.stringify(t)); }catch(e){} }
+  function posterSoon(){
+    if(!API || posterRun || posterTimer || !store) return;
+    posterTimer=setTimeout(function(){ posterTimer=null; fillPosters(); },2500);
+  }
+  function fillPosters(){
+    if(!API || posterRun || spinning) return;
+    var tried=triedLoad(), queue=movies.filter(function(m){ return !m.poster && !tried[m.id]; }).slice(0,150);
+    if(!queue.length) return;
+    posterRun=true;
+    (function next(){
+      var m=queue.shift();
+      if(!m){ posterRun=false; return; }
+      findPoster(m).then(function(hit){
+        tried[m.id]=Date.now(); triedSave(tried);
+        var cur=movies.find(function(x){return x.id===m.id});
+        if(hit && cur && !cur.poster){
+          var p={poster:hit.poster}; if(!cur.year && hit.year) p.year=hit.year;
+          store.patch(cur.id,p);
+        }
+        setTimeout(next,160);
+      }).catch(function(e){
+        if(e && (e.status===503 || e.status===502 || e.status===401 || e.status===403)){ posterRun=false; return; }   // not set up, or signed out: try again on a later visit
+        tried[m.id]=Date.now(); triedSave(tried); setTimeout(next,400);
+      });
+    })();
+  }
+
   /* ---------- helpers ---------- */
   function fmtLen(min){ if(!min) return ''; var h=Math.floor(min/60), m=min%60; return h? h+'h '+(m<10?'0':'')+m+'m' : m+'m'; }
   function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim(); }
@@ -520,17 +602,42 @@ li.row .acts .btn.main{flex:1}
     var items=[], active=-1;
     function hide(){ box.hidden=true; active=-1; input.setAttribute('aria-expanded','false'); }
     function paint(){ [].forEach.call(box.children,function(c,i){ c.setAttribute('aria-selected',String(i===active)); }); }
-    function pick(i){ var x=items[i]; if(!x) return; input.value=x.title; hide(); onPick(x); }
+    function pick(i){
+      var x=items[i]; if(!x) return; input.value=x.title; hide();
+      if(!x.tm){ onPick(x); return; }
+      // a TMDB result: its length comes from a second lookup
+      tmdb('id='+x.id).then(function(d){ onPick(tmdbPick(d)); }).catch(function(){ onPick(x); });
+    }
+    function paint1(x,i){
+      var o=el('div','opt'); o.setAttribute('role','option'); o.setAttribute('aria-selected','false');
+      if(x.tm){
+        var t=el('span','tm'), pi=posterImg(x.poster,'w92',null,28,42); if(pi) t.append(pi);
+        t.append(el('span','ot',x.title)); o.append(t);
+        o.append(el('span','om',[x.year||'','TMDB'].filter(Boolean).join(' · ')));
+      } else o.append(el('span','ot',x.title), el('span','om',[x.year||'',fmtLen(x.runtime)].filter(Boolean).join(' · ')));
+      o.onmousedown=function(e){ e.preventDefault(); pick(i); };
+      box.append(o);
+    }
+    var tmTimer=null, tmFor='';
     function show(){
-      items=search(input.value); box.innerHTML='';
-      if(!items.length){ hide(); return; }
-      items.forEach(function(x,i){
-        var o=el('div','opt'); o.setAttribute('role','option'); o.setAttribute('aria-selected','false');
-        o.append(el('span','ot',x.title), el('span','om',[x.year||'',fmtLen(x.runtime)].filter(Boolean).join(' · ')));
-        o.onmousedown=function(e){ e.preventDefault(); pick(i); };
-        box.append(o);
-      });
-      box.hidden=false; active=-1; input.setAttribute('aria-expanded','true');
+      var lite=search(input.value); items=lite.slice(); box.innerHTML='';
+      clearTimeout(tmTimer); tmFor='';
+      lite.forEach(paint1);
+      if(lite.length){ box.hidden=false; active=-1; input.setAttribute('aria-expanded','true'); } else hide();
+      var q=input.value.trim();
+      if(API && q.length>=3){
+        tmFor=q;
+        tmTimer=setTimeout(function(){
+          tmdb('q='+encodeURIComponent(q)).then(function(d){
+            if(tmFor!==q || input.value.trim()!==q) return;       // typed on since
+            var have={}; lite.forEach(function(x){ have[x.n+'|'+x.year]=1; });
+            (d.results||[]).filter(function(r){ return !have[norm(r.title)+'|'+r.year]; }).slice(0,5).forEach(function(r){
+              r.tm=true; r.n=norm(r.title); items.push(r); paint1(r,items.length-1);
+            });
+            if(items.length){ box.hidden=false; input.setAttribute('aria-expanded','true'); }
+          }).catch(function(){});
+        },350);
+      }
     }
     input.addEventListener('input',show);
     input.addEventListener('keydown',function(e){
@@ -540,7 +647,11 @@ li.row .acts .btn.main{flex:1}
       else if(e.key==='Enter' && active>=0){ e.preventDefault(); e.stopPropagation(); pick(active); }
       else if(e.key==='Escape'){ e.stopPropagation(); hide(); }
     });
-    input.addEventListener('blur',function(){ setTimeout(hide,120); });
+    input.addEventListener('blur',function(){ clearTimeout(tmTimer); tmFor=''; setTimeout(hide,120); });
+  }
+  // a TMDB movie as the add box and Edit use it: the library's shape, plus the poster
+  function tmdbPick(d){
+    return {title:d.title,year:d.year||0,runtime:d.runtime||0,genres:(d.genres||[]).map(function(g){return gname(g)}),poster:d.poster||'',n:norm(d.title),tm:true};
   }
 
   /* ---------- wheel drawing ---------- */
@@ -892,7 +1003,10 @@ li.row .acts .btn.main{flex:1}
     resultSheet=sh; sh.sheet.classList.add('winner');
     var h=el('h2','win-title',m.title);
     var meta=[fmtLen(m.runtime), m.year||'', gens(m).map(gname).join(', ')].filter(Boolean).join(' · ');
-    sh.body.append(h); if(meta) sh.body.append(el('div','status',meta));
+    var top=el('div','win-top'), txt=el('div','win-text'), wp=posterImg(m.poster,'w342','wp',104,156);
+    txt.append(h); if(meta) txt.append(el('div','status',meta));
+    if(wp) top.append(wp);
+    top.append(txt); sh.body.append(top);
     var b1=el('button','btn solid','Mark as watched'); b1.type='button';
     b1.onclick=function(){ closeResult(); winnerId=null; draw(); markWatched(m.id); };
     var b2=el('button','btn','Spin again'); b2.type='button'; b2.onclick=function(){ closeResult(); spin(); };
@@ -1006,13 +1120,14 @@ li.row .acts .btn.main{flex:1}
     else { var mb=btn('Mark watched','btn solid main',function(){ markWatched(m.id); }); mb.insertAdjacentHTML('afterbegin',CHECK); acts.append(mb); }
     acts.append(btn('Edit','btn',function(){ editMovie(m.id); }));
     li.append(acts);
+    var pi=posterImg(m.poster,'w154',null,64,96); if(pi){ li.classList.add('hasp'); li.prepend(pi); }
     return li;
   }
 
   // Edit a movie in a sheet: title and length, rating and review (watched), genres, who added it, move it between the lists, or remove it.
   function editMovie(id){
     var m=movies.find(function(x){return x.id===id}); if(!m) return;
-    var d={year:m.year||0,rating:m.rating||0};
+    var d={year:m.year||0,rating:m.rating||0,poster:m.poster||''};
     editGenres=gens(m).map(gname);
     var sh=openSheet({title:'Edit movie',focus:'.sheet-foot .btn.solid'});
     var b=sh.body;
@@ -1022,10 +1137,47 @@ li.row .acts .btn.main{flex:1}
     var s1=el('div','sec'); s1.append(el('h3',null,'Title and length')); var r2=el('div','row2'); r2.append(sw,len); s1.append(r2); b.append(s1);
     var pickerHost=el('div');
     var drawPicker=function(){ pickerHost.innerHTML=''; pickerHost.append(genrePicker(editGenres)); };
+    var posterSec=null, drawPoster=function(){};
     attachSuggest(inp,function(x){
       len.value=x.runtime||''; d.year=x.year||0;
+      if(x.poster){ d.poster=x.poster; drawPoster(); }
       if(!editGenres.length && x.genres.length){ editGenres.push.apply(editGenres,x.genres); drawPicker(); }
     });
+    if(API){
+      posterSec=el('div','sec'); posterSec.append(el('h3',null,'Poster'));
+      var pkHost=el('div'), pkOut=el('div'); posterSec.append(pkHost,pkOut); b.append(posterSec);
+      var search1=function(){
+        var q=inp.value.trim(); if(q.length<2){ pkOut.textContent='Type the title first.'; return; }
+        pkOut.textContent='Searching…';
+        var base='q='+encodeURIComponent(q);
+        tmdb(base+(d.year?'&year='+d.year:'')).then(function(r){ return (r.results&&r.results.length)||!d.year ? r : tmdb(base); }).then(function(r){
+          pkOut.innerHTML='';
+          var res=(r.results||[]).slice(0,8);
+          if(!res.length){ pkOut.textContent='Nothing found for that title.'; return; }
+          var g=el('div','pk-results'); g.setAttribute('role','list');
+          res.forEach(function(x){
+            var c=el('button',null); c.type='button'; c.setAttribute('role','listitem');
+            var pi=posterImg(x.poster,'w154'); if(pi) c.append(pi); else c.append(el('span','ph','No poster'));
+            c.append(el('span',null,x.title+(x.year?' ('+x.year+')':'')));
+            c.onclick=function(){
+              if(x.poster) d.poster=x.poster;
+              if(!d.year && x.year) d.year=x.year;
+              pkOut.textContent=x.poster?'Poster chosen. Save to keep it.':'That one has no poster.'; drawPoster();
+            };
+            g.append(c);
+          });
+          pkOut.append(g);
+        }).catch(function(e){ pkOut.textContent=(e&&e.status===503)?'The TMDB token is not set on the site yet.':'The movie database could not be reached just now.'; });
+      };
+      drawPoster=function(){
+        pkHost.innerHTML=''; var row=el('div','pk');
+        var pi=posterImg(d.poster,'w154',null,64,96); row.append(pi||el('span','pk-none','None'));
+        var col=el('div','pkb'); col.append(btn(d.poster?'Choose a different poster':'Find a poster','btn',search1));
+        if(d.poster) col.append(btn('Remove poster','btn quiet',function(){ d.poster=''; pkOut.textContent=''; drawPoster(); }));
+        row.append(col); pkHost.append(row);
+      };
+      drawPoster();
+    }
     var rv=null;
     if(m.watched){
       var s2=el('div','sec'); s2.append(el('h3',null,'Your rating'));
@@ -1055,6 +1207,7 @@ li.row .acts .btn.main{flex:1}
       var v=inp.value.trim(); if(!v){ sh.close('later'); return; }
       if(v.toLowerCase()!==m.title.toLowerCase() && movies.some(function(o){return o.id!==m.id && o.title.toLowerCase()===v.toLowerCase()})) v=m.title;
       var patch={title:v,genres:editGenres.slice(),runtime:Math.max(0,Math.round(+len.value)||0),year:d.year};
+      if(API && d.poster!==(m.poster||'')){ patch.poster=d.poster; var t0=triedLoad(); t0[m.id]=Date.now(); triedSave(t0); }
       if(m.watched){ patch.rating=d.rating; patch.review=rv.value.trim().slice(0,280); if(patch.rating||patch.review) pendingDrop(m.id); }
       if(by && by.value && by.value!==(m.addedBy||'')) patch.addedBy=by.value;
       store.patch(m.id,patch); sh.close('saved');
@@ -1126,6 +1279,7 @@ li.row .acts .btn.main{flex:1}
       if(m.review) c.append(el('div','review',m.review));
       var gl=el('div','gl'); gens(m).slice().sort(function(a,b){return a.localeCompare(b)}).forEach(function(g){ gl.append(el('span','chip',gname(g))); }); if(gl.children.length) c.append(gl);
       var acts=el('div','acts'); acts.append(btn(m.review?'Edit review':'Add a review','btn',function(){ reviewSheet(m,false); }),btn('Edit movie','btn quiet',function(){ editMovie(m.id); })); c.append(acts);
+      var rp=posterImg(m.poster,'w154',null,64,96); if(rp){ c.classList.add('hasp'); c.prepend(rp); }
       rvUI.list.append(c);
     });
   }
@@ -1144,6 +1298,7 @@ li.row .acts .btn.main{flex:1}
     if(winnerId && !pool().some(function(m){return m.id===winnerId})) { winnerId=null; closeResult(); $('result').innerHTML=''; }
     renderFilter(); render(); syncControls(); draw();
     if(view==='dash') renderDash(); else if(view==='reviews') renderReviews();
+    posterSoon();
   }
 
   /* ---------- dashboard ---------- */
@@ -1304,7 +1459,7 @@ li.row .acts .btn.main{flex:1}
   function setPickInfo(){
     var i=$('pickInfo');
     if(!pick){ i.hidden=true; return; }
-    i.hidden=false; i.textContent='From the library: '+[fmtLen(pick.runtime),pick.year||''].filter(Boolean).join(' · ');
+    i.hidden=false; i.textContent=(pick.tm?'From TMDB: ':'From the library: ')+[fmtLen(pick.runtime),pick.year||''].filter(Boolean).join(' · ');
   }
   attachSuggest($('newTitle'),function(x){
     pick=x; newGenres.length=0; newGenres.push.apply(newGenres,x.genres); syncAddGenres();
@@ -1324,6 +1479,7 @@ li.row .acts .btn.main{flex:1}
     var x=pick||exactMatch(v), g=newGenres.slice();
     if(x && !g.length && x.genres.length) g=x.genres.slice();
     var extra=x?{runtime:x.runtime,year:x.year}:{};
+    if(x && x.poster) extra.poster=x.poster;
     showErr(''); $('newTitle').value=''; tab='todo'; pick=null; setPickInfo(); store.add(v,g,extra);
     newGenres.length=0; $('addGenres').hidden=true; $('toggleGenres').setAttribute('aria-expanded','false'); syncAddGenres();
   };
@@ -1332,6 +1488,7 @@ li.row .acts .btn.main{flex:1}
   if(window.matchMedia){ var mq=matchMedia('(max-width: 820px)'); if(mq.addEventListener) mq.addEventListener('change',route); }
 
   /* ---------- boot ---------- */
+  if(API) $('credit').hidden=false;
   if(window.MW_CHAT) [].forEach.call(document.querySelectorAll('[data-view="chat"]'),function(a){ a.hidden=false; });   // the chat module exists only in the standalone copy
 
   /* ---------- standalone copy: starting list, export and import (the claude.ai page keeps its list in a shared database) ---------- */
@@ -1344,7 +1501,8 @@ li.row .acts .btn.main{flex:1}
       runtime:Math.max(0,Math.round(+x.runtime)||0), year:Math.max(0,Math.round(+x.year)||0),
       rating:Math.min(5,Math.max(0,Math.round(+x.rating)||0)), review:String(x.review||'').slice(0,280),
       addedAt:+x.addedAt||Date.now(), watchedAt:+x.watchedAt||0, updatedAt:+x.updatedAt||0,
-      addedBy:/^[a-z0-9_-]{1,24}$/.test(String(x.addedBy||'')) ? String(x.addedBy) : ''};
+      addedBy:/^[a-z0-9_-]{1,24}$/.test(String(x.addedBy||'')) ? String(x.addedBy) : '',
+      poster:/^\/[A-Za-z0-9_-]{5,60}\.(jpg|png|webp)$/.test(String(x.poster||'')) ? String(x.poster) : ''};
   }
   // R7 (the chat) adds movies here: the same path as the add box, marked as added by R7, skipping titles already on the list.
   function addFromChat(items){

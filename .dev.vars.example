@@ -8,3 +8,4 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 # Never set it on the live site. OPENAI_API_KEY is only needed to try the chat.
 # DEV_BYPASS_ACCESS=1
 # OPENAI_API_KEY=
+# TMDB_TOKEN=   (the posters; the API Read Access Token from themoviedb.org)
