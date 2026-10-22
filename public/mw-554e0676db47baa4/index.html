@@ -375,7 +375,22 @@ li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:120px minmax(0,1fr);g
 .btn.ibtn{width:44px;min-width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text-2)}
 .btn.ibtn:hover:not(:disabled){background:var(--surface-3);color:var(--text)}
 .btn.ibtn:active:not(:disabled){background:var(--surface-3)}
-li.row .sr{font-size:16px;letter-spacing:1px;line-height:1}
+li.row .t{font-size:23px}
+li.row .sr{font-size:20px;letter-spacing:2px;line-height:1}
+li.row .gl .chip{font-size:13px;padding:5px 11px}
+li.row .gl .chip.len{font-size:14px;padding-inline:0}
+@media(max-width:820px){
+  li.row .t{font-size:25px}
+  li.row .sr{font-size:24px;letter-spacing:2px}
+  li.row .gl .chip{font-size:14px;padding:6px 12px}
+  li.row .gl .chip.len{font-size:15px}
+  li.row .gl{gap:8px 8px}
+}
+@media(min-width:821px){
+  .hasp .rbody{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:8px;align-content:center;padding:16px 14px 16px 18px}
+  .hasp .rbody>*{grid-column:1}
+  .hasp .rbody>.acts{grid-column:2;align-self:center;margin:0}
+}
 .btn.ibtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .listbar{display:flex;flex-wrap:wrap;gap:var(--s-2);align-items:flex-start;justify-content:space-between}
 .listbar{flex-wrap:nowrap}
@@ -1232,6 +1247,7 @@ li.row .sr{font-size:16px;letter-spacing:1px;line-height:1}
     var rb=el('div','rbody');
     [].slice.call(card.children).forEach(function(k){ rb.append(k); });
     var gl=rb.querySelector('.gl'); if(gl && genres) capGenres(gl,genres);
+    var acts=rb.querySelector('.acts'); if(acts) acts.style.gridRow='1 / span '+Math.max(1,rb.children.length-1);
     card.append(pi,rb);
   }
   var PENCIL='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>';
