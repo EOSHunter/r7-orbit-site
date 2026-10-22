@@ -520,30 +520,70 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
       return r.json();
     });
   }
-  // the search result that is this movie: the same title (and, when both years are known, within a year), with a poster
+  // Matching a movie to a TMDB result. Titles on the list are the way people type them ("Bladerunner", "Alien 2", "Halloween 2007"), so with a year
+  // the year does most of the work: the closest title among the results released that year (or a year either side). Without a year only an exact title counts.
+  function lev(a,b){
+    var p=[],i,j; for(j=0;j<=b.length;j++) p[j]=j;
+    for(i=1;i<=a.length;i++){ var prev=p[0]; p[0]=i; for(j=1;j<=b.length;j++){ var t=p[j]; p[j]=Math.min(p[j]+1,p[j-1]+1,prev+(a.charAt(i-1)===b.charAt(j-1)?0:1)); prev=t; } }
+    return p[b.length];
+  }
+  function simil(x,y){
+    x=norm(x).replace(/ /g,''); y=norm(y).replace(/ /g,'');
+    if(!x||!y) return 0; if(x===y) return 1;
+    if(x.indexOf(y)>=0||y.indexOf(x)>=0) return 0.85;
+    return 1-lev(x,y)/Math.max(x.length,y.length);
+  }
+  function cleanTitle(t){
+    return String(t).replace(/\([^)]*\)/g,' ').replace(/^alfred hitchcock:\s*/i,'').replace(/\s+/g,' ').trim()
+      .replace(/\s+(19|20)\d\d$/,'').replace(/\s+\d{1,2}$/,'').trim();      // "Halloween 1978", "Alien 2": the number is part of how it was typed
+  }
   function bestMatch(results,title,year){
-    var n=norm(title);
-    return (results||[]).filter(function(r){ return r.poster && norm(r.title)===n && (!year || !r.year || Math.abs(r.year-year)<=1); })[0] || null;
+    var n=norm(title), list=(results||[]).filter(function(r){ return r.poster; });
+    if(!year) return list.filter(function(r){ return norm(r.title)===n; })[0] || null;
+    var near=list.filter(function(r){ return !r.year || Math.abs(r.year-year)<=1; });
+    if(!near.length) return null;
+    var best=null, bestScore=-1;
+    near.forEach(function(r,i){
+      var sc=simil(r.title,title)+(r.year===year?0.2:0)-i*0.01;
+      if(sc>bestScore){ bestScore=sc; best=r; }
+    });
+    // close enough in name, or TMDB's own first choice for that year
+    return (simil(best.title,title)>=0.5 || (near[0]===best && best.year===year)) ? best : null;
   }
   function findPoster(m){
-    var q='q='+encodeURIComponent(m.title);
-    return tmdb(q+(m.year?'&year='+m.year:'')).then(function(d){
-      var hit=bestMatch(d.results,m.title,m.year);
-      if(hit || !m.year) return hit;
-      return tmdb(q).then(function(d2){ return bestMatch(d2.results,m.title,m.year); });
-    });
+    var base=m.year ? [cleanTitle(m.title), m.title] : [m.title];
+    var qs=base.filter(function(q,i){ return q && base.indexOf(q)===i; });
+    var ys=m.year?'&year='+m.year:'';
+    function tryAt(i){
+      if(i>=qs.length) return m.year ? tmdb('q='+encodeURIComponent(m.title)).then(function(d){ return bestMatch(d.results,m.title,m.year); }) : Promise.resolve(null);
+      return tmdb('q='+encodeURIComponent(qs[i])+ys).then(function(d){
+        var hit=bestMatch(d.results,qs[i],m.year);
+        return hit || tryAt(i+1);
+      });
+    }
+    return tryAt(0);
   }
-  // looks up a poster for every movie that has none, once per movie per device (a miss is remembered, so it is not asked again; Edit can still choose one)
-  var TRIED='movie-wheel-poster-tried', posterRun=false, posterTimer=null;
+  // looks up every movie once per device (a miss is remembered, so it is not asked again; Edit can still choose a poster). A match gives the movie its poster
+  // and TMDB's own name for it ("Bladerunner" becomes "Blade Runner"); a movie that already has a poster keeps it, and one that cannot be matched keeps its name.
+  var TRIED='movie-wheel-poster-tried-3', posterRun=false, posterTimer=null;
   function triedLoad(){ try{ return JSON.parse(localStorage.getItem(TRIED)||'{}')||{}; }catch(e){ return {}; } }
   function triedSave(t){ try{ localStorage.setItem(TRIED,JSON.stringify(t)); }catch(e){} }
   function posterSoon(){
     if(!API || posterRun || posterTimer || !store) return;
     posterTimer=setTimeout(function(){ posterTimer=null; fillPosters(); },2500);
   }
+  // the name to use: TMDB's title when it is clearly the same film, with the year added when another movie on the list would then have the same name
+  function exactName(m,hit){
+    var sim=Math.max(simil(hit.title,m.title),simil(hit.title,cleanTitle(m.title)));
+    if(sim<0.5 || hit.title===m.title) return null;
+    var t=hit.title, low=t.toLowerCase();
+    if(movies.some(function(o){ return o.id!==m.id && o.title.toLowerCase()===low; })) t=t+(hit.year?' ('+hit.year+')':'');
+    t=t.slice(0,120);
+    return t===m.title ? null : t;
+  }
   function fillPosters(){
     if(!API || posterRun || spinning) return;
-    var tried=triedLoad(), queue=movies.filter(function(m){ return !m.poster && !tried[m.id]; }).slice(0,150);
+    var tried=triedLoad(), queue=movies.filter(function(m){ return !tried[m.id]; }).slice(0,150);
     if(!queue.length) return;
     posterRun=true;
     (function next(){
@@ -552,9 +592,12 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
       findPoster(m).then(function(hit){
         tried[m.id]=Date.now(); triedSave(tried);
         var cur=movies.find(function(x){return x.id===m.id});
-        if(hit && cur && !cur.poster){
-          var p={poster:hit.poster}; if(!cur.year && hit.year) p.year=hit.year;
-          store.patch(cur.id,p);
+        if(hit && cur){
+          var p={};
+          if(!cur.poster) p.poster=hit.poster;
+          if(!cur.year && hit.year) p.year=hit.year;
+          var name=exactName(cur,hit); if(name) p.title=name;
+          if(Object.keys(p).length) store.patch(cur.id,p);
         }
         setTimeout(next,160);
       }).catch(function(e){
