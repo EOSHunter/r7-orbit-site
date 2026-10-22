@@ -557,7 +557,30 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
 
   /* ---------- posters: TMDB, through the site (/api/movie-wheel/tmdb keeps the token) ---------- */
   var API=(window.MW_CONFIG && MW_CONFIG.api) || '';
-  function posterUrl(path,w){ return (API && path) ? API+'/tmdb?img='+encodeURIComponent(path)+'&w='+(w||'w154') : ''; }
+  function posterUrl(path,w){
+    if(!API || !path) return '';
+    return path.charAt(0)==='/' ? API+'/tmdb?img='+encodeURIComponent(path)+'&w='+(w||'w154') : API+'/poster?id='+encodeURIComponent(path);
+  }
+  // a picture from the phone or computer, shrunk to poster size (342 px wide at most, about 30 KB) before it is sent
+  function shrinkPicture(file){
+    return new Promise(function(resolve,reject){
+      var url=URL.createObjectURL(file), img=new Image();
+      img.onerror=function(){ URL.revokeObjectURL(url); reject(new Error('unreadable')); };
+      img.onload=function(){
+        URL.revokeObjectURL(url);
+        var k=Math.min(1,342/img.naturalWidth,513/img.naturalHeight), w=Math.max(1,Math.round(img.naturalWidth*k)), h=Math.max(1,Math.round(img.naturalHeight*k));
+        var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        var cx=cv.getContext('2d'); cx.fillStyle='#09090a'; cx.fillRect(0,0,w,h); cx.drawImage(img,0,0,w,h);
+        cv.toBlob(function(b){ b ? resolve(b) : reject(new Error('unreadable')); },'image/jpeg',0.86);
+      };
+      img.src=url;
+    });
+  }
+  function uploadPoster(file){
+    return shrinkPicture(file).then(function(blob){
+      return fetch(API+'/poster',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'image/jpeg'},body:blob});
+    }).then(function(r){ if(!r.ok) throw new Error('upload '+r.status); return r.json(); }).then(function(j){ return j.poster; });
+  }
   function posterImg(path,w,cls,wd,ht){
     var u=posterUrl(path,w); if(!u) return null;
     var i=el('img','poster'+(cls?' '+cls:'')); i.src=u; i.alt=''; i.loading='lazy'; i.decoding='async';
@@ -1303,6 +1326,13 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
     if(API){
       posterSec=el('div','sec'); posterSec.append(el('h3',null,'Poster'));
       var pkHost=el('div'), pkOut=el('div'); posterSec.append(pkHost,pkOut); b.append(posterSec);
+      var pickFile=el('input'); pickFile.type='file'; pickFile.accept='image/*'; pickFile.hidden=true; posterSec.append(pickFile);
+      pickFile.onchange=function(){
+        var f=pickFile.files && pickFile.files[0]; pickFile.value=''; if(!f) return;
+        pkOut.textContent='Uploading…';
+        uploadPoster(f).then(function(name){ d.poster=name; pkOut.textContent='Picture uploaded. Save to keep it.'; drawPoster(); })
+          .catch(function(e){ pkOut.textContent=(e&&/ 507$/.test(e.message))?'The site already keeps as many uploaded posters as it allows.':'That picture could not be uploaded. Try a JPEG or PNG.'; });
+      };
       var search1=function(){
         var q=inp.value.trim(); if(q.length<2){ pkOut.textContent='Type the title first.'; return; }
         pkOut.textContent='Searching…';
@@ -1310,7 +1340,7 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
         tmdb(base+(d.year?'&year='+d.year:'')).then(function(r){ return (r.results&&r.results.length)||!d.year ? r : tmdb(base); }).then(function(r){
           pkOut.innerHTML='';
           var res=(r.results||[]).slice(0,8);
-          if(!res.length){ pkOut.textContent='Nothing found for that title.'; return; }
+          if(!res.length){ pkOut.textContent='Nothing found for that title. Check the spelling, or upload your own picture.'; return; }
           var g=el('div','pk-results'); g.setAttribute('role','list');
           res.forEach(function(x){
             var c=el('button',null); c.type='button'; c.setAttribute('role','listitem');
@@ -1330,6 +1360,7 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
         pkHost.innerHTML=''; var row=el('div','pk');
         var pi=posterImg(d.poster,'w154',null,64,96); row.append(pi||el('span','pk-none','None'));
         var col=el('div','pkb'); col.append(btn(d.poster?'Choose a different poster':'Find a poster','btn',search1));
+        col.append(btn('Upload a picture','btn quiet',function(){ pickFile.click(); }));
         if(d.poster) col.append(btn('Remove poster','btn quiet',function(){ d.poster=''; pkOut.textContent=''; drawPoster(); }));
         row.append(col); pkHost.append(row);
       };
@@ -1661,7 +1692,7 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
       rating:Math.min(5,Math.max(0,Math.round(+x.rating)||0)), review:String(x.review||'').slice(0,280),
       addedAt:+x.addedAt||Date.now(), watchedAt:+x.watchedAt||0, updatedAt:+x.updatedAt||0,
       addedBy:/^[a-z0-9_-]{1,24}$/.test(String(x.addedBy||'')) ? String(x.addedBy) : '',
-      poster:/^\/[A-Za-z0-9_-]{5,60}\.(jpg|png|webp)$/.test(String(x.poster||'')) ? String(x.poster) : ''};
+      poster:/^(\/[A-Za-z0-9_-]{5,60}\.(jpg|png|webp)|custom-[0-9a-f]{16})$/.test(String(x.poster||'')) ? String(x.poster) : ''};
   }
   // R7 (the chat) adds movies here: the same path as the add box, marked as added by R7, skipping titles already on the list.
   function addFromChat(items){
