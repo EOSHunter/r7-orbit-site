@@ -233,7 +233,7 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
       )
       .join('')}</ul>`,
   button: (d) =>
-    `<p class="sec-button"><a class="btn solid" href="${attr(safeLink(d.url))}">${escapeHtml(d.label)}${isExternal(d.url) ? icon('external') : ''}</a></p>`,
+    `<p class="sec-button"><a class="btn solid" href="${attr(safeLink(d.url))}"${d.newTab ? ' target="_blank" rel="noopener"' : ''}>${escapeHtml(d.label)}${isExternal(d.url) ? icon('external') : ''}</a></p>`,
   toc: (d, env) => {
     // The headings as typed: the Heading blocks, and the ## and ### inside Markdown boxes, in page order, read by the same projection
     // the page and the post's contents list use (src/lib/sections-to-content.ts).

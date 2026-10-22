@@ -296,7 +296,7 @@ Worth an evening if you like slow puzzles. [Play Lantern Tiles in your browser](
 <VideoEmbed id="jof6-qj53Lg" title="So you've got an AI that writes code. Cool. What if you had ten?" duration="2:52" />
 ```
 
-**Button** (sections only). `button`: `label` (40 characters at most), `url` (`https://…` or `/page/`). In MDX there is no button component: use a sentence link, in a tip Callout for a call to action. A project's Play, Open and live buttons come from its front matter.
+**Button** (sections only). `button`: `label` (40 characters at most), `url` (`https://…` or `/page/`), `newTab` (`true` opens it in a new tab, e.g. a game beside the post; default off). In MDX there is no button component: use a sentence link, in a tip Callout for a call to action. A project's Play, Open and live buttons come from its front matter.
 
 ```yaml
   - type: button

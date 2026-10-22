@@ -505,6 +505,7 @@ Sits: In the reading column, with the other text blocks.
 | --- | --- | --- | --- |
 | `label` | One line | yes | Short, e.g. "Read more". At most 40 characters. |
 | `url` | One line (checked) | yes | https://… for another site, or /about/ for a page on this site. |
+| `newTab` | Switch | no | For a game or another site that the reader should keep this page open beside. Default `false`. |
 
 ```yaml
 sections:

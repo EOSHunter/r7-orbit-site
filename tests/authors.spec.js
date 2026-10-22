@@ -23,7 +23,10 @@ const postPaths = KINDS.flatMap((kind) =>
     : [],
 );
 const credited = (path) => (/class="author" data-author="([^"]+)"/.exec(read(path))?.[1]);
-const agentPosts = postPaths.filter((p) => credited(p) === 'r7');
+const isAgentSlug = (slug) => authorFile(slug).kind === 'agent';
+/** Posts by any agent (R7 or one of the writing team), and R7's own. */
+const agentPosts = postPaths.filter((p) => isAgentSlug(credited(p)));
+const r7Posts = postPaths.filter((p) => credited(p) === 'r7');
 const personPosts = postPaths.filter((p) => credited(p) === 'hunter-newton');
 
 const jsonLd = (page) =>
@@ -37,8 +40,9 @@ const overflowOf = (page) => page.evaluate(() => document.documentElement.scroll
 
 test('every post names an author that exists, and the sample content has one of each kind', () => {
   expect(postPaths.length).toBeGreaterThan(0);
-  for (const path of postPaths) expect(['hunter-newton', 'r7'], path).toContain(credited(path));
-  expect(agentPosts.length, 'a post by R7').toBeGreaterThan(0);
+  const slugs = readdirSync(new URL('../src/content/authors/', import.meta.url)).map((f) => f.replace(/\.json$/, ''));
+  for (const path of postPaths) expect(slugs, path).toContain(credited(path));
+  expect(agentPosts.length, 'a post by an agent').toBeGreaterThan(0);
   expect(personPosts.length, 'a post by Hunter Newton').toBeGreaterThan(0);
 });
 
@@ -63,9 +67,9 @@ test('R7 page: avatar, name, subtitle, bio, the AI-written label, and a plain st
 test('R7 page lists R7\'s posts of every kind, and only those', async ({ page }) => {
   await page.goto('/authors/r7/');
   const cards = page.locator('[data-items] [data-item]');
-  await expect(cards).toHaveCount(agentPosts.length);
-  expect(await cards.evaluateAll((els) => els.map((e) => e.dataset.author))).toEqual(Array(agentPosts.length).fill('r7'));
-  for (const path of agentPosts) await expect(page.locator(`[data-items] a[href="${path}"]`)).toHaveCount(1);
+  await expect(cards).toHaveCount(r7Posts.length);
+  expect(await cards.evaluateAll((els) => els.map((e) => e.dataset.author))).toEqual(Array(r7Posts.length).fill('r7'));
+  for (const path of r7Posts) await expect(page.locator(`[data-items] a[href="${path}"]`)).toHaveCount(1);
 });
 
 test('Hunter Newton page: his name, bio and photo come from site.json, with no AI-written label', async ({ page }) => {
@@ -129,11 +133,13 @@ for (const path of ['/authors/r7/', '/authors/hunter-newton/', '/styleguide/auth
 test("an agent's post: byline with avatar, name, subtitle and AI-written, and no footer note", async ({ page }) => {
   for (const path of agentPosts) {
     await page.goto(path);
-    const byline = page.locator('.author[data-author="r7"]');
+    const slug = credited(path);
+    const file = authorFile(slug);
+    const byline = page.locator(`.author[data-author="${slug}"]`);
     await expect(byline, path).toHaveCount(1);
-    await expect(byline.locator('.avatar img')).toHaveAttribute('src', '/assets/r7-mark.svg');
-    await expect(byline.getByRole('link', { name: 'R7', exact: true })).toHaveAttribute('href', '/authors/r7/');
-    await expect(byline.getByText('Orbit AI Agent')).toBeVisible();
+    await expect(byline.locator('.avatar img')).toHaveAttribute('src', file.avatar);
+    await expect(byline.getByRole('link', { name: file.name, exact: true })).toHaveAttribute('href', `/authors/${slug}/`);
+    await expect(byline.getByText(file.subtitle)).toBeVisible();
     await expect(byline.locator('.chip.ai-written')).toHaveText('AI-written');
 
     // The byline and its label are the credit (the footer note was removed on 2026-10-21, docs/DECISIONS.md), and one
@@ -183,19 +189,21 @@ test('the AI-written label is on a post exactly when its author is an agent, and
   for (const path of postPaths) {
     const html = read(path);
     expect(html.includes('data-author-note'), path).toBe(false);
-    expect(html.includes('ai-written'), path).toBe(credited(path) === 'r7');
+    expect(html.includes('ai-written'), path).toBe(isAgentSlug(credited(path)));
   }
 });
 
-test("structured data names the author: a Person for Hunter's posts, an Organization for R7's", async ({ page }) => {
+test("structured data names the author: a Person for Hunter's posts, an Organization for an agent's", async ({ page }) => {
   for (const path of postPaths) {
     await page.goto(path);
     const ld = await jsonLd(page);
     const kinds = ['BlogPosting', 'NewsArticle', 'VideoObject', 'SoftwareApplication', 'SoftwareSourceCode'];
     const main = ld.find((d) => [d['@type']].flat().some((t) => kinds.includes(t)));
     expect(main, path).toBeTruthy();
-    if (credited(path) === 'r7') {
-      expect(main.author, path).toEqual({ '@type': 'Organization', name: 'R7', description: 'Orbit AI Agent', url: `${site.url}/authors/r7/` });
+    const slug = credited(path);
+    if (isAgentSlug(slug)) {
+      const file = authorFile(slug);
+      expect(main.author, path).toEqual({ '@type': 'Organization', name: file.name, description: file.subtitle, url: `${site.url}/authors/${slug}/` });
     } else {
       expect(main.author, path).toMatchObject({ '@type': 'Person', name: site.author.name, url: `${site.url}/authors/hunter-newton/` });
     }
@@ -208,16 +216,18 @@ test('/latest/ has a By author filter with every author who has posts; picking o
   await page.goto('/latest/');
   const filter = page.locator('[data-filter="author"]');
   await expect(page.getByText('By author', { exact: true })).toBeVisible();
-  await expect(filter.getByRole('button')).toHaveText(['All', site.author.name, 'R7']);
+  // People first, then agents, alphabetical inside each (sortAuthors in src/lib/authors.ts).
+  const agentNames = [...new Set(agentPosts.map(credited))].map((slug) => authorFile(slug).name).sort((a, b) => a.localeCompare(b));
+  await expect(filter.getByRole('button')).toHaveText(['All', site.author.name, ...agentNames]);
   const visible = () => page.locator('[data-items] [data-item]:not([hidden])');
   const total = postPaths.length;
   await expect(visible()).toHaveCount(total);
 
   await filter.getByRole('button', { name: 'R7' }).click();
   await expect(filter.getByRole('button', { name: 'R7' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(visible()).toHaveCount(agentPosts.length);
-  expect(await visible().evaluateAll((els) => els.map((e) => e.dataset.author))).toEqual(Array(agentPosts.length).fill('r7'));
-  await expect(page.locator('[data-count]')).toHaveText(`${agentPosts.length} of ${total} posts`);
+  await expect(visible()).toHaveCount(r7Posts.length);
+  expect(await visible().evaluateAll((els) => els.map((e) => e.dataset.author))).toEqual(Array(r7Posts.length).fill('r7'));
+  await expect(page.locator('[data-count]')).toHaveText(`${r7Posts.length} of ${total} posts`);
   expect(page.url()).toContain('author=r7');
 
   await filter.getByRole('button', { name: site.author.name }).click();
@@ -232,10 +242,10 @@ test('/latest/ has a By author filter with every author who has posts; picking o
 test('the filter is read from the address, and works together with the kind filter', async ({ page }) => {
   await page.goto('/latest/?author=r7');
   await expect(page.locator('[data-filter="author"] button[aria-pressed="true"]')).toHaveText('R7');
-  await expect(page.locator('[data-items] [data-item]:not([hidden])')).toHaveCount(agentPosts.length);
+  await expect(page.locator('[data-items] [data-item]:not([hidden])')).toHaveCount(r7Posts.length);
 
   await page.goto('/latest/?author=r7&kind=vlog');
-  const vlogs = agentPosts.filter((p) => p.startsWith('/vlogs/')).length;
+  const vlogs = r7Posts.filter((p) => p.startsWith('/vlogs/')).length;
   await expect(page.locator('[data-items] [data-item]:not([hidden])')).toHaveCount(vlogs);
 
   await page.goto('/latest/?author=nobody');

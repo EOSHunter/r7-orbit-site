@@ -570,6 +570,7 @@ const button = defineBlock(
   {
     label: text({ label: 'Button text', max: 40, hint: 'Short, e.g. "Read more".' }),
     url: link('Address', ADDRESS_HINT),
+    newTab: flag('Open in a new tab', 'For a game or another site that the reader should keep this page open beside.'),
   },
 );
 

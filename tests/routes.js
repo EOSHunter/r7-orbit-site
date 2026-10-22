@@ -65,9 +65,9 @@ const routes = [
   listing('/apps/'), // noindex while no app is published (empty state); the layout variants are tested on /styleguide/apps/
   listing('/tags/'),
   ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
-  { path: '/authors/hunter-newton/' },
-  { path: '/authors/r7/' },
-  listing('/authors/parallax/'), // an agent with no posts (it writes notes, not posts): noindex and out of the sitemap while it has none
+  // Every author page in dist/. One with no posts (Parallax, which writes notes, not posts, or a writing agent before its
+  // first post) is noindex and out of the sitemap while it has none, so like a listing it is read from the build.
+  ...pagesIn('authors').reverse().map((slug) => listing(`/authors/${slug}/`)),
   { path: '/about/' },
   { path: '/privacy/' },
   { path: '/search/', noindex: true },
