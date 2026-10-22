@@ -36,6 +36,10 @@ When to use which, with recipes per kind and density rules: [`WRITING_GUIDE.md`]
 
 ## Rules
 
+**Pictures open larger.** On every post page (blog, news, vlog, project, repo) a picture with alt text, the cover and the pictures in the body, is turned by `src/scripts/image-zoom.js` into a button ("Enlarge: <alt>") that opens it in a dialog (`ImageZoom.astro`, the project gallery's lightbox), with Previous and Next across the post's pictures. Decorative pictures, pictures inside a link or a button, the project gallery, the Play poster and the hero behind a headline are left alone. Without JavaScript nothing changes.
+
+**Callouts.** The label is a small eyebrow in the callout's colour; its full stop is for screen readers only. A note (`info`) is a brass rule beside ivory text, not a box; a tip keeps the brass panel and a warning the muted red one.
+
 Images must be local: `/src/assets/...` (optimised) or `/media/...` (`public/media/`, served as it is); an `http(s)` source throws at build, and so does a body image with no alt text (`docs/IMAGES.md`). `getHeadings()` only sees Markdown headings (`##`), not `Heading` components, so use `##` for sections that should appear in a contents list.
 
 **The brand pieces** (`AgentCards`, `OrbitDiagram`, `StatDial`, `Divider variant="orbit"`, `Pullquote ring`) draw their markup with `src/lib/article-brand.ts`, which the editor's preview uses too, so the preview is the component itself rather than a copy. The geometry of the ring is `src/lib/orbit.ts`. All of them are editor blocks in /admin (`src/admin/blocks.ts`), and the rules for using them are in `docs/IMAGE_STYLE.md` section 8.3.

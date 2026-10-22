@@ -9,7 +9,7 @@ import { describeShape, valuesWhere } from './describe';
 import { whereOf } from './checks';
 import { headingsInHtml, withHeadingIds, type PageHeading } from './headings';
 import type { Section } from './schema';
-import { sectionsHeadings } from '../sections-to-content';
+import { headingBefore, sectionsHeadings } from '../sections-to-content';
 
 /** What one block's component is given besides the block itself. */
 export interface BlockContext {
@@ -29,6 +29,8 @@ export interface BlockContext {
   headings: PageHeading[];
   /** `page`: rows the width of the window (About). `column`: inside a post's text column, where nothing reaches the window's edges. */
   layout: 'page' | 'column';
+  /** An h2 comes before this block on the page (sections-to-content.ts, headingBefore): its own headings are then h3, else h2. */
+  afterHeading: boolean;
 }
 
 export interface PrepareOptions {
@@ -61,7 +63,7 @@ export async function prepareSections(
     const data = section as unknown as Record<string, unknown>;
     const html: Record<string, string> = {};
     const sizes = new Map<string, ImageSize>();
-    const ctx: BlockContext = { where, index, source, html, sizes, headings, layout };
+    const ctx: BlockContext = { where, index, source, html, sizes, headings, layout, afterHeading: headingBefore(sections, index) };
     contexts.set(section, ctx);
 
     try {

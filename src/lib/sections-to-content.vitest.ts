@@ -5,6 +5,7 @@ import { renderSectionMarkdown } from './section-markdown';
 import { countWords } from './content';
 import {
   hasSections,
+  headingBefore,
   markdownToText,
   sectionsHeadings,
   sectionsToText,
@@ -125,6 +126,19 @@ describe('sectionsHeadings', () => {
 
   it('is empty for a body with no headings', () => {
     expect(sectionsHeadings(parse([{ type: 'text', text: 'Just text.' }]))).toEqual([]);
+  });
+});
+
+describe('headingBefore (the Team block names its members h2 or h3 by it)', () => {
+  const team = { type: 'team', members: [{ author: 'r7', title: 'Lead agent' }] };
+  it('is false for the first block and for blocks with only h3 or no heading above them', () => {
+    expect(headingBefore(parse([team]), 0)).toBe(false);
+    expect(headingBefore(parse([{ type: 'text', text: 'Intro.\n\n### Small' }, { type: 'heading', text: 'Sub', level: 3 }, team]), 2)).toBe(false);
+  });
+  it('is true under a Heading block or a ## in a Markdown box, and only for blocks after it', () => {
+    expect(headingBefore(parse([{ type: 'heading', text: 'Meet the team', level: 2 }, team]), 1)).toBe(true);
+    expect(headingBefore(parse([{ type: 'text', text: 'Intro.\n\n## The team' }, team]), 1)).toBe(true);
+    expect(headingBefore(parse([team, { type: 'heading', text: 'After', level: 2 }]), 0)).toBe(false);
   });
 });
 
