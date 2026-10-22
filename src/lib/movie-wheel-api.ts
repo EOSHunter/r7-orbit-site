@@ -77,6 +77,8 @@ export const MESSAGES = {
   noTmdb: 'The TMDB token is not set on the site yet.',
   tmdbDown: 'The movie database could not be reached just now.',
   tmdbRefused: 'TMDB did not accept the site\'s token.',
+  badPicture: 'That is not a picture the site can keep (a JPEG, PNG or WebP under 400 KB).',
+  postersFull: 'The site already keeps as many uploaded posters as it allows.',
 };
 
 function json(body: unknown, status = 200): Response {
@@ -258,7 +260,11 @@ interface Row {
   deleted_at: number;
 }
 
-const POSTER_PATH = /^\/[A-Za-z0-9_-]{5,60}\.(jpg|png|webp)$/;
+/** TMDB's poster file path, such as '/abc123.jpg'. */
+const TMDB_PATH = /^\/[A-Za-z0-9_-]{5,60}\.(jpg|png|webp)$/;
+/** The name of a picture the owner uploaded, such as 'custom-0123456789abcdef'. */
+const UPLOAD_NAME = /^custom-[0-9a-f]{16}$/;
+const POSTER_PATH = { test: (v: string) => TMDB_PATH.test(v) || UPLOAD_NAME.test(v) };
 
 /** Keeps only what a movie is allowed to hold, trimmed to size. Anything else the page sends is dropped. */
 export function cleanMovie(x: unknown): Movie | null {
@@ -406,7 +412,7 @@ function tmdbMovie(x: unknown): TmdbMovie | null {
     id,
     title,
     year: Math.max(0, Math.min(2100, Math.round(Number(String(r.release_date ?? '').slice(0, 4))) || 0)),
-    poster: POSTER_PATH.test(String(r.poster_path ?? '')) ? String(r.poster_path) : '',
+    poster: TMDB_PATH.test(String(r.poster_path ?? '')) ? String(r.poster_path) : '',
     overview: String(r.overview ?? '').slice(0, 300),
     genres: ids.map((g) => TMDB_GENRES[Number(g)]).filter((g): g is string => !!g),
   };
@@ -430,7 +436,7 @@ export async function handleTmdb(ctx: MovieWheelContext): Promise<Response> {
   const img = params.get('img');
   if (img !== null) {
     const size = params.get('w') ?? 'w185';
-    if (!POSTER_PATH.test(img) || !POSTER_SIZES.has(size)) return fail(400, MESSAGES.badBody);
+    if (!TMDB_PATH.test(img) || !POSTER_SIZES.has(size)) return fail(400, MESSAGES.badBody);
     let res: Response;
     try {
       res = await doFetch(`https://image.tmdb.org/t/p/${size}${img}`);
@@ -480,6 +486,62 @@ export async function handleTmdb(ctx: MovieWheelContext): Promise<Response> {
   const found = (data as { results?: unknown })?.results;
   const results = (Array.isArray(found) ? found : []).map(tmdbMovie).filter((m): m is TmdbMovie => !!m).slice(0, 8);
   return new Response(JSON.stringify({ results }), { headers });
+}
+
+// ---- Uploaded posters ---------------------------------------------------------------------------------------------------------
+
+const MAX_UPLOAD_BYTES = 400_000;
+const MAX_UPLOADS = 500;
+const PICTURE_TYPES: Record<string, (b: Uint8Array) => boolean> = {
+  'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  'image/png': (b) => b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47,
+  'image/webp': (b) => b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+};
+
+function toBase64(bytes: Uint8Array): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(out);
+}
+function fromBase64(text: string): Uint8Array {
+  const raw = atob(text);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+/**
+ * POST /api/movie-wheel/poster (the picture as the body: JPEG, PNG or WebP, under 400 KB) -> { poster: 'custom-...' }
+ * GET  /api/movie-wheel/poster?id=custom-...   -> the picture, kept by the browser for a year (the name changes with every upload)
+ * The page shrinks a picture before sending it, so a poster is about 30 KB.
+ */
+export async function handlePoster(ctx: MovieWheelContext): Promise<Response> {
+  const who = await guard(ctx, ['GET', 'POST']);
+  if (who instanceof Response) return who;
+  const db = database(ctx.env);
+  if (!db) return fail(503, MESSAGES.noDatabase);
+
+  if (ctx.request.method === 'GET') {
+    const id = new URL(ctx.request.url).searchParams.get('id') ?? '';
+    if (!UPLOAD_NAME.test(id)) return fail(400, MESSAGES.badBody);
+    const row = (await db.prepare('SELECT type, data FROM movie_wheel_posters WHERE token = ?').bind(id).all<{ type: string; data: string }>()).results[0];
+    if (!row || !PICTURE_TYPES[row.type]) return fail(404, MESSAGES.badBody);
+    return new Response(fromBase64(row.data), {
+      headers: { 'Content-Type': row.type, 'Cache-Control': 'private, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' },
+    });
+  }
+
+  const type = (ctx.request.headers.get('Content-Type') ?? '').split(';')[0].trim().toLowerCase();
+  const check = PICTURE_TYPES[type];
+  if (!check) return fail(415, MESSAGES.badPicture);
+  const bytes = new Uint8Array(await ctx.request.arrayBuffer());
+  if (!bytes.length || bytes.length > MAX_UPLOAD_BYTES || !check(bytes)) return fail(400, MESSAGES.badPicture);
+  const count = (await db.prepare('SELECT COUNT(*) AS n FROM movie_wheel_posters').all<{ n: number }>()).results[0]?.n ?? 0;
+  if (count >= MAX_UPLOADS) return fail(507, MESSAGES.postersFull);
+  const random = crypto.getRandomValues(new Uint8Array(8));
+  const token = `custom-${[...random].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
+  await db.prepare('INSERT INTO movie_wheel_posters (token, type, data, created_at) VALUES (?, ?, ?, ?)').bind(token, type, toBase64(bytes), ctx.now ?? Date.now()).run();
+  return json({ poster: token });
 }
 
 // ---- The chat ---------------------------------------------------------------------------------------------------------------

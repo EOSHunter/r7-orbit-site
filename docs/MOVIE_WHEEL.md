@@ -39,7 +39,13 @@ The posters came after that, in a file of their own:
 npx wrangler d1 execute r7-waitlist --remote --file=migrations/0005_movie_wheel_poster.sql
 ```
 
-0004 and 0005 add a column each, so running one twice stops with "duplicate column name": that means it was already applied.
+Uploaded posters have a table of their own:
+
+```
+npx wrangler d1 execute r7-waitlist --remote --file=migrations/0006_movie_wheel_uploaded_posters.sql
+```
+
+0004 and 0005 add a column each, so running one twice stops with "duplicate column name": that means it was already applied. 0006 can be run twice.
 
 ### 2. Put the page and the API behind Cloudflare Access
 
@@ -111,7 +117,8 @@ Posters and film details come from [TMDB](https://www.themoviedb.org) (free for 
 - **Where it shows.** On the List tab each movie is a card with a gap between cards. With a poster, the poster (120 px wide) sits at the card's left edge, as tall as the card; beside it are the title, the stars (watched movies only, not tappable), length, year and up to two genres ("+2" for the rest). Two quiet grey icon buttons sit at the right (centred on the card on a wide screen, at the bottom right on a phone): a check (mark watched, on the To watch tab; on a phone it has the words "Mark watched" beside it) and a pencil (edit, which holds the rating and review). The list shows no review text; the Reviews tab has it, with a pencil to edit a review. The "Tonight you watch" pop-up has a larger poster. A movie with no poster has the same details without the picture.
 - **Posters grid.** The two buttons beside the To watch / Watched tabs switch the list between those cards and a grid of posters (two across on a phone), each with its name, year, length and rating under it; a movie with no poster is a tile with its name on it. Tapping a poster opens a sheet with the movie, its stars and the buttons (Mark watched or Write a review, and Edit). The choice is remembered on that device.
 - **The token stays on the server.** The page asks `/api/movie-wheel/tmdb` (behind the same sign-in), which holds the token, searches TMDB and serves the poster pictures itself, so the page never contacts anyone but its own site. Without `TMDB_TOKEN` the page works as before, with no posters.
-- **If a poster is wrong,** open the movie's **Edit**, choose **Choose a different poster** (or **Remove poster**), and Save.
+- **If a poster is wrong or missing,** open the movie's **Edit** and use the **Poster** section: **Find a poster** searches TMDB again (fix the spelling of the title first if it found nothing), **Upload a picture** takes a photo or an image from your phone or computer, and **Remove poster** clears it. Then Save.
+- **Uploaded pictures.** The page shrinks a picture to poster size (at most 342 px wide, as a JPEG of about 30 KB) and sends it to `/api/movie-wheel/poster`, which keeps it in the `movie_wheel_posters` table of the same database (up to 500 pictures, each under 400 KB, JPEG, PNG or WebP). The movie holds the picture's name (`custom-...`), so every device shows it, and it is served only to signed-in people. A picture you replace stays in the table; it is small and harmless.
 
 ## What to know
 

@@ -12,6 +12,7 @@ import {
   handleChats,
   handleList,
   handleMe,
+  handlePoster,
   handleTmdb,
   MESSAGES,
   splitFollowups,
@@ -26,7 +27,7 @@ import {
 
 // node:sqlite is built into Node 22.13 and later (engines allows 22.12, where it needs a flag): without it these tests are skipped.
 const sqlite = await import('node:sqlite').catch(() => undefined);
-const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by', '0005_movie_wheel_poster']
+const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by', '0005_movie_wheel_poster', '0006_movie_wheel_uploaded_posters']
   .map((name) => readFileSync(`migrations/${name}.sql`, 'utf8'))
   .join('\n');
 
@@ -108,7 +109,7 @@ async function setup(env: Partial<MovieWheelEnv> = {}) {
     const request = new Request(o.url ?? URL_LIST, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     const ctx: MovieWheelContext = { request, env: o.env ?? base, fetch: o.fetch ?? a.keyFetch, now: o.now ?? NOW };
     const url = ctx.request.url;
-    return { ctx, response: await (url.includes('/chats') ? handleChats(ctx) : url.endsWith('/chat') ? handleChat(ctx) : url.endsWith('/me') ? handleMe(ctx) : url.includes('/tmdb') ? handleTmdb(ctx) : handleList(ctx)) };
+    return { ctx, response: await (url.includes('/chats') ? handleChats(ctx) : url.endsWith('/chat') ? handleChat(ctx) : url.endsWith('/me') ? handleMe(ctx) : url.includes('/tmdb') ? handleTmdb(ctx) : url.includes('/poster') ? handlePoster(ctx) : handleList(ctx)) };
   };
   return { a, db, env: base, call };
 }
@@ -812,6 +813,101 @@ describe.skipIf(!sqlite)('the TMDB endpoint', () => {
     const { call } = await setup({ TMDB_TOKEN: TOKEN });
     expect((await call('POST', {}, { url: TMDB_URL })).response.status).toBe(405);
     const { onRequest } = await import('../../functions/api/movie-wheel/tmdb');
+    expect(typeof onRequest).toBe('function');
+  });
+});
+
+// Posters the owner uploads for movies TMDB has no picture of.
+const POSTER_URL = 'https://r7orbit.io/api/movie-wheel/poster';
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 5, 6, 7, 8]);
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2]);
+const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 9, 9, 9, 9, 0x57, 0x45, 0x42, 0x50, 1, 2]);
+
+/** Sends a picture to the endpoint with its own request, since the shared helper sends JSON. */
+async function send(s: Awaited<ReturnType<typeof setup>>, method: string, url: string, body?: Uint8Array, type?: string, token?: string | null) {
+  const jwt = token === undefined ? await s.a.sign(s.a.good) : token;
+  const headers: Record<string, string> = {};
+  if (jwt) headers['Cf-Access-Jwt-Assertion'] = jwt;
+  if (type) headers['Content-Type'] = type;
+  const request = new Request(url, { method, headers, body: body as BodyInit | undefined });
+  return handlePoster({ request, env: s.env, fetch: s.a.keyFetch, now: NOW });
+}
+
+describe.skipIf(!sqlite)('uploaded posters', () => {
+  it('keeps a picture and serves it back, byte for byte, with a long cache', async () => {
+    const s = await setup();
+    for (const [bytes, type] of [[JPEG, 'image/jpeg'], [PNG, 'image/png'], [WEBP, 'image/webp']] as const) {
+      const up = await send(s, 'POST', POSTER_URL, bytes, type);
+      expect(up.status).toBe(200);
+      const { poster } = (await up.json()) as { poster: string };
+      expect(poster).toMatch(/^custom-[0-9a-f]{16}$/);
+      const got = await send(s, 'GET', `${POSTER_URL}?id=${poster}`);
+      expect(got.status).toBe(200);
+      expect(got.headers.get('Content-Type')).toBe(type);
+      expect(got.headers.get('Cache-Control')).toContain('max-age=31536000');
+      expect(new Uint8Array(await got.arrayBuffer())).toEqual(bytes);
+    }
+  });
+
+  it('gives every upload its own name, and a movie can hold it as its poster', async () => {
+    const s = await setup();
+    const a = ((await (await send(s, 'POST', POSTER_URL, JPEG, 'image/jpeg')).json()) as { poster: string }).poster;
+    const b = ((await (await send(s, 'POST', POSTER_URL, JPEG, 'image/jpeg')).json()) as { poster: string }).poster;
+    expect(a).not.toBe(b);
+    expect(cleanMovie({ id: 'x', title: 'X', poster: a })?.poster).toBe(a);
+    expect(cleanMovie({ id: 'x', title: 'X', poster: 'custom-zz' })?.poster).toBe('');
+    expect(cleanMovie({ id: 'x', title: 'X', poster: 'custom-0123456789abcdef0' })?.poster).toBe('');
+    const saved = await s.call('PUT', { list: [movie('m', 'M', 5, { poster: a })] });
+    expect(saved.response.status).toBe(200);
+    const { list } = (await (await s.call('GET')).response.json()) as { list: { poster: string }[] };
+    expect(list[0].poster).toBe(a);
+  });
+
+  it('refuses what is not a picture: a wrong type, a type that does not match the bytes, nothing, or too much', async () => {
+    const s = await setup();
+    expect((await send(s, 'POST', POSTER_URL, JPEG, 'text/html')).status).toBe(415);
+    expect((await send(s, 'POST', POSTER_URL, JPEG, 'image/svg+xml')).status).toBe(415);
+    expect((await send(s, 'POST', POSTER_URL, PNG, 'image/jpeg')).status).toBe(400);
+    expect((await send(s, 'POST', POSTER_URL, new Uint8Array(0), 'image/png')).status).toBe(400);
+    const big = new Uint8Array(400_001);
+    big.set(JPEG);
+    expect((await send(s, 'POST', POSTER_URL, big, 'image/jpeg')).status).toBe(400);
+    const ok = new Uint8Array(400_000);
+    ok.set(JPEG);
+    expect((await send(s, 'POST', POSTER_URL, ok, 'image/jpeg')).status).toBe(200);
+  });
+
+  it('answers 404 for a name that was never kept, and 400 for one that is not a name at all', async () => {
+    const s = await setup();
+    expect((await send(s, 'GET', `${POSTER_URL}?id=custom-0123456789abcdef`)).status).toBe(404);
+    expect((await send(s, 'GET', `${POSTER_URL}?id=../x`)).status).toBe(400);
+    expect((await send(s, 'GET', POSTER_URL)).status).toBe(400);
+  });
+
+  it('asks for sign-in, refuses other methods and a request from another site, and needs the database', async () => {
+    const s = await setup();
+    expect((await send(s, 'POST', POSTER_URL, JPEG, 'image/jpeg', null)).status).toBe(401);
+    expect((await send(s, 'GET', `${POSTER_URL}?id=custom-0123456789abcdef`, undefined, undefined, null)).status).toBe(401);
+    expect((await send(s, 'DELETE', POSTER_URL)).status).toBe(405);
+    const jwt = await s.a.sign(s.a.good);
+    const cross = new Request(POSTER_URL, { method: 'POST', headers: { 'Cf-Access-Jwt-Assertion': jwt, 'Content-Type': 'image/jpeg', Origin: 'https://evil.example' }, body: JPEG as BodyInit });
+    expect((await handlePoster({ request: cross, env: s.env, fetch: s.a.keyFetch, now: NOW })).status).toBe(403);
+    const noDb = await setup();
+    const request = new Request(POSTER_URL, { method: 'POST', headers: { 'Cf-Access-Jwt-Assertion': await noDb.a.sign(noDb.a.good), 'Content-Type': 'image/jpeg' }, body: JPEG as BodyInit });
+    expect((await handlePoster({ request, env: { ...noDb.env, WAITLIST_DB: undefined }, fetch: noDb.a.keyFetch, now: NOW })).status).toBe(503);
+  });
+
+  it('stops keeping pictures at 500', async () => {
+    const s = await setup();
+    const insert = s.db.d1.prepare('INSERT INTO movie_wheel_posters (token, type, data, created_at) VALUES (?, ?, ?, ?)');
+    for (let i = 0; i < 500; i++) await insert.bind(`custom-${i.toString(16).padStart(16, '0')}`, 'image/jpeg', 'AA==', 1).run();
+    const res = await send(s, 'POST', POSTER_URL, JPEG, 'image/jpeg');
+    expect(res.status).toBe(507);
+    expect(((await res.json()) as { error: string }).error).toBe(MESSAGES.postersFull);
+  });
+
+  it('is wired up by its Function file', async () => {
+    const { onRequest } = await import('../../functions/api/movie-wheel/poster');
     expect(typeof onRequest).toBe('function');
   });
 });
