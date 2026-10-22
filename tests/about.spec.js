@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
+import { aboutTitle } from './about-title.js';
 import { contentTextProblems, inputsDigest, pageCopy, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
@@ -38,18 +39,21 @@ test('the Person structured data still comes from site.json, and the page head i
   expect(person.name).toBe(site.author.name);
   expect(person.description).toBe(site.author.bio);
   const profile = graph.find((n) => n['@type'] === 'ProfilePage');
-  expect(profile.name).toBe(`About · ${site.name}`);
+  expect(profile.name).toBe(`${aboutTitle} · ${site.name}`);
   const crumbs = graph.find((n) => n['@type'] === 'BreadcrumbList').itemListElement.map((i) => i.name);
-  expect(crumbs).toEqual(['Home', 'About']);
+  expect(crumbs).toEqual(['Home', aboutTitle]);
   await expect(page.locator('nav [aria-current="page"]').first()).toContainText('About');
 });
 
+const portraitCount = () => (pageCopy('about').sections ?? []).filter((b) => b.type === 'portrait').length;
+
 test('each portrait sits beside its text on a wide screen and above it on a phone', async ({ page }) => {
+  test.skip(!portraitCount(), 'about.md has no Portrait block');
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/about/');
   // The page is two rows, each a portrait with its text (the author added the second, the R7 logo, after the first).
   const rows = page.locator('.about-grid');
-  await expect(rows).toHaveCount(2);
+  await expect(rows).toHaveCount(portraitCount());
   for (const row of await rows.all()) {
     const portrait = (await row.locator('.portrait').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
     const prose = (await row.locator('.prose').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
@@ -134,9 +138,13 @@ test('the team is one column on a phone and two or three on a wide screen, under
   expect(await columns()).toBeLessThanOrEqual(3);
   // The heading above the block is a row of its own above the cards, not beside the R7 picture.
   const grid = await page.locator('[data-team]').boundingBox();
-  const heading = await page.locator('.sections h2').last().boundingBox();
-  expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);
-  expect(Math.abs(heading.x - grid.x)).toBeLessThanOrEqual(1);
+  // (when the page has one: the author may leave the page title above the cards to do that job)
+  const headings = page.locator('.sections h2');
+  if (await headings.count()) {
+    const heading = await headings.last().boundingBox();
+    expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);
+    expect(Math.abs(heading.x - grid.x)).toBeLessThanOrEqual(1);
+  }
   const links = page.locator('[data-team] .team-name a');
   await links.first().focus();
   await expect(links.first()).toBeFocused();

@@ -4,6 +4,7 @@ import { definitions } from '../src/lib/sections/definitions.ts';
 import { describeShape } from '../src/lib/sections/describe.ts';
 import { sectionsSchema } from '../src/lib/sections/schema.ts';
 import { ABOUT_MD, PIXEL, openAdmin } from './admin-mock.js';
+import { aboutTitle } from './about-title.js';
 
 // Every block of the library, added in the real editor under its Content-Security-Policy with GitHub stood in for (tests/admin-mock.js):
 // the form offers it, it can be filled in with what its definition says, the live preview draws it and finds nothing to warn about
@@ -54,7 +55,7 @@ async function openAbout(page) {
   const seen = await openAdmin(page, { signedIn: true });
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
-  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue(aboutTitle, { timeout: 15_000 });
   return seen;
 }
 
@@ -168,6 +169,8 @@ test('the "Add section" menu offers every block of the library, in its order', a
 for (const d of definitions) {
   test(`${d.id}: added in the editor, filled in, drawn by the preview with nothing to fix, and saved as a page the schema reads`, async ({ page }) => {
     const seen = await openAbout(page);
+    // A table of contents lists the page's headings, so it needs one above it when the page has none.
+    if (d.id === 'toc') await addAndFill(page, definitions.find((x) => x.id === 'heading'));
     await addAndFill(page, d);
 
     // The preview (the page with the site's styles) shows the block, and has nothing to warn about.

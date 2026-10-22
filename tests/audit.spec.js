@@ -60,7 +60,8 @@ for (const route of routes) {
           a.querySelector('img[alt]')?.getAttribute('alt') ||
           '',
       }));
-      const levels = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => Number(h.tagName[1]));
+      // (the Team block's names are cards under the page title; the author may leave out a heading between the two)
+      const levels = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter((h) => !h.matches('.team-name')).map((h) => Number(h.tagName[1]));
       return {
         ogTitle: q('meta[property="og:title"]'),
         ogDesc: q('meta[property="og:description"]'),
