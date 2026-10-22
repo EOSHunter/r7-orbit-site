@@ -365,9 +365,29 @@ li.row .acts .btn.main{flex:1}
 .sheet.winner .sheet-foot .btn.solid{flex:1 1 100%}
 /* posters (from TMDB, through the site): a thumbnail beside a row or a review, a larger one in the winner pop-up */
 .poster{display:block;flex:none;border-radius:8px;background:var(--surface-1);border:1px solid var(--line);object-fit:cover;aspect-ratio:2/3}
-li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:14px;row-gap:10px;align-items:start}
-li.row.hasp>*,.rcard.hasp>*{grid-column:2}
-li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:64px;height:96px}
+/* a card with a poster: the poster flush left at the card's edge, the details beside it, the buttons in a row across the bottom */
+li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:100px minmax(0,1fr);gap:0;padding:0;align-items:start;overflow:hidden}
+.hasp>.poster{grid-column:1;grid-row:1;width:100px;height:150px;border:0;border-radius:0;border-right:1px solid var(--line)}
+.hasp>.rbody{grid-column:2;grid-row:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:14px 14px 12px}
+.hasp>.acts{grid-column:1 / -1;grid-row:2;margin:0;padding:12px 14px 14px;border-top:1px solid var(--line)}
+.hasp .stars .star{min-width:38px}
+.listbar{display:flex;flex-wrap:wrap;gap:var(--s-2);align-items:flex-start;justify-content:space-between}
+.listbar{flex-wrap:nowrap}
+.listbar .seg button{padding:0 12px}
+.seg.vmode button{padding:0 12px;justify-content:center}
+.seg.vmode svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 12px}
+.ptile{display:flex;flex-direction:column;gap:6px;min-width:0;background:transparent;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;border-radius:12px}
+.ptile .poster{width:100%;height:auto;border-radius:10px}
+.ptile:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.ptile .pph{aspect-ratio:2/3;border-radius:10px;border:1px dashed var(--line-strong);background:var(--surface-2);display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;font:500 18px/1.2 var(--display);color:var(--text-2);overflow-wrap:anywhere}
+.ptile .pt{font:500 17px/1.2 var(--display);color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.ptile .pm{font:400 12px/1.2 var(--mono);color:var(--text-2);display:flex;gap:8px;align-items:center}
+.ptile .pm .r{color:var(--brass-bright)}
+.mpeek{display:flex;gap:16px;align-items:flex-start}
+.mpeek .poster{width:120px;height:180px}
+.mpeek .mi{min-width:0;display:flex;flex-direction:column;gap:10px}
+.mpeek .stars .star{min-width:34px;font-size:26px}
 .win-top{display:flex;gap:16px;align-items:flex-start}
 .win-top .wp{width:104px;height:156px}
 .win-text{min-width:0;display:flex;flex-direction:column;gap:8px}
@@ -428,9 +448,15 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
       <div class="fine" id="pickInfo" hidden></div>
       <div id="addGenres" hidden></div>
       <div class="field-error" id="err" role="alert" hidden></div>
-      <div class="seg" role="group" aria-label="Show">
-        <button type="button" id="tabTodo" aria-pressed="true">To watch <span class="n" id="nTodo">0</span></button>
-        <button type="button" id="tabDone" aria-pressed="false">Watched <span class="n" id="nDone">0</span></button>
+      <div class="listbar">
+        <div class="seg" role="group" aria-label="Show">
+          <button type="button" id="tabTodo" aria-pressed="true">To watch <span class="n" id="nTodo">0</span></button>
+          <button type="button" id="tabDone" aria-pressed="false">Watched <span class="n" id="nDone">0</span></button>
+        </div>
+        <div class="seg vmode" id="vmode" role="group" aria-label="Layout" hidden>
+          <button type="button" id="vList" aria-pressed="true" aria-label="List" title="List"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6.5h12M8 12h12M8 17.5h12M4 6.5h.01M4 12h.01M4 17.5h.01"/></svg></button>
+          <button type="button" id="vGrid" aria-pressed="false" aria-label="Posters" title="Posters"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/></svg></button>
+        </div>
       </div>
       <div class="lfilter" id="lfilter" hidden></div>
       <div id="listHost"></div>
@@ -1141,9 +1167,66 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
         : 'Nothing watched yet. Mark a film as watched and it moves here.';
       host.append(el('div','none',msg)); return;
     }
+    if(listMode==='grid'){
+      var g=el('div','pgrid'); g.setAttribute('role','list');
+      items.forEach(function(m){ g.append(posterTile(m)); });
+      host.append(g); return;
+    }
     var ul=el('ul');
     items.forEach(function(m){ ul.append(movieRow(m)); });
     host.append(ul);
+  }
+
+  /* ---------- layout: the list as cards, or a grid of posters ---------- */
+  var LMODE='movie-wheel-list-mode', listMode='list';
+  try{ if(localStorage.getItem(LMODE)==='grid') listMode='grid'; }catch(e){}
+  function syncMode(){
+    $('vmode').hidden=!API;
+    if(!API) listMode='list';
+    $('vList').setAttribute('aria-pressed',String(listMode==='list')); $('vGrid').setAttribute('aria-pressed',String(listMode==='grid'));
+  }
+  function setMode(x){ listMode=x; try{ localStorage.setItem(LMODE,x); }catch(e){} syncMode(); render(); }
+  // a poster, with the name and year under it; a movie with no poster gets a tile with its name on it
+  function posterTile(m){
+    var b=el('button','ptile'); b.type='button'; b.setAttribute('role','listitem'); b.setAttribute('aria-label',m.title+(m.year?' ('+m.year+')':''));
+    var pi=posterImg(m.poster,'w342',null,300,450);
+    b.append(pi || el('span','pph',m.title));
+    b.append(el('span','pt',m.title));
+    var pm=el('span','pm'); if(m.year) pm.append(el('span',null,String(m.year)));
+    if(m.runtime) pm.append(el('span',null,fmtLen(m.runtime)));
+    if(m.rating) pm.append(el('span','r','★ '+m.rating));
+    if(pm.children.length) b.append(pm);
+    b.onclick=function(){ movieSheet(m.id); };
+    return b;
+  }
+  // tapping a poster: the movie larger, with what you would do next
+  function movieSheet(id){
+    var m=movies.find(function(x){return x.id===id}); if(!m) return;
+    var sh=openSheet({title:m.title,focus:'.sheet-foot .btn.solid'}), b=sh.body;
+    var top=el('div','mpeek'), pi=posterImg(m.poster,'w342',null,120,180); if(pi) top.append(pi);
+    var mi=el('div','mi'), gl=el('div','gl');
+    var lenTxt=[fmtLen(m.runtime), m.year||''].filter(Boolean).join(' · '); if(lenTxt) gl.append(el('span','chip len',lenTxt));
+    if(m.addedBy) gl.append(el('span','chip who'+(m.addedBy==='r7'?' r7':''),srcName(m.addedBy)));
+    gens(m).slice().sort(function(a,b){return a.localeCompare(b)}).forEach(function(g){ gl.append(el('span','chip',gname(g))); });
+    if(gl.children.length) mi.append(gl);
+    if(m.watched) mi.append(starRow(m.rating,function(n){ store.patch(m.id,{rating:n}); if(n) pendingDrop(m.id); },'Rating for '+m.title));
+    if(m.review) mi.append(el('div','review',m.review));
+    top.append(mi); b.append(top);
+    if(m.watched) sh.foot.append(btn('Edit','btn quiet',function(){ sh.close('edit'); editMovie(m.id); }), btn(m.review?'Edit review':'Write a review','btn solid',function(){ sh.close('review'); reviewSheet(m,false); }));
+    else { var mb=btn('Mark watched','btn solid',function(){ sh.close('watched'); markWatched(m.id); }); mb.insertAdjacentHTML('afterbegin',CHECK); sh.foot.append(btn('Edit','btn quiet',function(){ sh.close('edit'); editMovie(m.id); }),mb); }
+  }
+  function capGenres(gl,n){        // the first n genres, and "+2" for the rest
+    var g=[].filter.call(gl.children,function(c){ return c.classList.contains('chip') && !c.classList.contains('len') && !c.classList.contains('who'); });
+    if(g.length>n){ g.slice(n).forEach(function(c){ c.remove(); }); gl.append(el('span','chip','+'+(g.length-n))); }
+  }
+  // a card with a poster: the poster at the left edge, the details beside it, the buttons across the bottom
+  function posterCard(card,path,genres){
+    var pi=posterImg(path,'w185',null,100,150); if(!pi) return;
+    card.classList.add('hasp');
+    var kids=[].slice.call(card.children), acts=kids.pop(), rb=el('div','rbody');
+    kids.forEach(function(k){ rb.append(k); });
+    var gl=rb.querySelector('.gl'); if(gl && genres) capGenres(gl,genres);
+    card.append(pi,rb,acts);
   }
   function movieRow(m){
     var li=el('li','row'+(m.watched?' done':''));
@@ -1163,7 +1246,7 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
     else { var mb=btn('Mark watched','btn solid main',function(){ markWatched(m.id); }); mb.insertAdjacentHTML('afterbegin',CHECK); acts.append(mb); }
     acts.append(btn('Edit','btn',function(){ editMovie(m.id); }));
     li.append(acts);
-    var pi=posterImg(m.poster,'w154',null,64,96); if(pi){ li.classList.add('hasp'); li.prepend(pi); }
+    posterCard(li,m.poster,2);
     return li;
   }
 
@@ -1322,7 +1405,7 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
       if(m.review) c.append(el('div','review',m.review));
       var gl=el('div','gl'); gens(m).slice().sort(function(a,b){return a.localeCompare(b)}).forEach(function(g){ gl.append(el('span','chip',gname(g))); }); if(gl.children.length) c.append(gl);
       var acts=el('div','acts'); acts.append(btn(m.review?'Edit review':'Add a review','btn',function(){ reviewSheet(m,false); }),btn('Edit movie','btn quiet',function(){ editMovie(m.id); })); c.append(acts);
-      var rp=posterImg(m.poster,'w154',null,64,96); if(rp){ c.classList.add('hasp'); c.prepend(rp); }
+      posterCard(c,m.poster,2);
       rvUI.list.append(c);
     });
   }
@@ -1493,6 +1576,8 @@ li.row.hasp>.poster,.rcard.hasp>.poster{grid-column:1;grid-row:1 / span 4;width:
   function syncSound(){ var b=$('sound'); b.textContent=muted?'Sound off':'Sound on'; b.setAttribute('aria-pressed',String(!muted)); }
   $('sound').onclick=function(){ muted=!muted; try{localStorage.setItem('movie-wheel-muted',muted?'1':'0');}catch(e){} syncSound(); if(!muted){ audio(); tick(.4); } };
   syncSound();
+  $('vList').onclick=function(){ setMode('list'); }; $('vGrid').onclick=function(){ setMode('grid'); };
+  syncMode();
   $('tabTodo').onclick=function(){tab='todo';editingId=null;render();};
   $('tabDone').onclick=function(){tab='done';editingId=null;render();};
 
