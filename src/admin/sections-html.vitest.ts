@@ -17,6 +17,19 @@ const css = [
   .join('\n');
 
 const about = parseFrontmatter(readFileSync('src/content/pages/about.md', 'utf8')).frontmatter.sections;
+// A page of two portrait rows, the shape About had when the portrait rows were built: a heading, then two portraits (the second
+// with its own heading inside). Fixed words, so the tests check the preview, not the author's About page, which changes in /admin.
+const portraitRows = [
+  { type: 'heading', level: 2, text: 'First person · Their role' },
+  { type: 'portrait', image: '/media/about/first.jpg', alt: 'Portrait of the first person', side: 'left', text: 'The first text beside its picture.' },
+  {
+    type: 'portrait',
+    image: '/media/about/second.png',
+    alt: 'The second picture',
+    side: 'left',
+    text: '## Second person · Their role\n\nThe second text is beside its own picture.\n\n**A bold lead-in:** and the end of the row.',
+  },
+];
 const example = (id: string) => ({ type: id, ...definitions.find((d) => d.id === id)!.example });
 const html = (blocks: unknown[], authors: Parameters<typeof sectionsHtml>[2] = []) => sectionsHtml(blocks, resolve, authors);
 
@@ -93,11 +106,11 @@ describe('previewProblems', () => {
 });
 
 describe('sectionsHtml', () => {
-  it('draws the About page like the site: one portrait row holding both sections, level, in order', () => {
-    const out = html(about as unknown[]);
+  it('draws portrait rows like the site: each picture with its text, the heading above the first in its column, level, in order', () => {
+    const out = html(portraitRows);
     expect(out).toMatch(/^<div class="sections"><div class="container wide sec-row"><div class="about-grid" data-side="left">/);
-    expect(out).toContain('<div class="portrait"><img src="blob:/media/about/hunter-newton.jpg" alt="Portrait of Hunter Newton" /></div>');
-    const order = ['<h2>Hunter Newton · R7 Orbit Creator</h2>', 'I build software', '<h2>R7 · Orbit AI Agent</h2>', 'R7 is the AI agent', '<strong>Where it can go wrong:</strong>'];
+    expect(out).toContain('<div class="portrait"><img src="blob:/media/about/first.jpg" alt="Portrait of the first person" /></div>');
+    const order = ['<h2>First person · Their role</h2>', 'The first text', '<h2>Second person · Their role</h2>', 'The second text', '<strong>A bold lead-in:</strong>'];
     const at = order.map((s) => out.indexOf(s));
     expect(at.every((i) => i >= 0), JSON.stringify(at)).toBe(true);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
@@ -105,9 +118,9 @@ describe('sectionsHtml', () => {
   });
 
   it('follows a re-ordered list', () => {
-    const [h1, first, second] = about as Record<string, unknown>[];
+    const [h1, first, second] = portraitRows;
     const out = html([second, h1, first]);
-    expect(out.indexOf('R7 is the AI agent')).toBeLessThan(out.indexOf('Hunter Newton'));
+    expect(out.indexOf('The second text')).toBeLessThan(out.indexOf('First person'));
     expect(out.match(/class="about-grid"/g)).toHaveLength(2);
   });
 

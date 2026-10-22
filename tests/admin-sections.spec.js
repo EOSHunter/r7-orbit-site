@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import { definitions } from '../src/lib/sections/definitions.ts';
 import { describeShape } from '../src/lib/sections/describe.ts';
 import { sectionsSchema } from '../src/lib/sections/schema.ts';
+import { sectionsHeadings } from '../src/lib/sections-to-content.ts';
 import { ABOUT_MD, PIXEL, openAdmin } from './admin-mock.js';
 
 // Every block of the library, added in the real editor under its Content-Security-Policy with GitHub stood in for (tests/admin-mock.js):
@@ -13,6 +14,10 @@ import { ABOUT_MD, PIXEL, openAdmin } from './admin-mock.js';
 
 // The names the author menu shows (src/admin/authors.ts: the name, then the subtitle if there is one).
 const AUTHORS = { 'hunter-newton': 'Hunter Newton', r7: 'R7 · Orbit AI Agent' };
+// The About page's heading, from its file (the author edits it in /admin).
+const ABOUT_TITLE = parseFrontmatter(ABOUT_MD).frontmatter.title;
+// A Table of contents lists the page's headings; on an About page with none, the preview says so instead of drawing an empty list.
+const ABOUT_HAS_HEADINGS = sectionsHeadings(parseFrontmatter(ABOUT_MD).frontmatter.sections ?? []).length > 0;
 
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const labelRe = (label) => new RegExp(`^${escape(label)}( \\(optional\\))?$`);
@@ -54,7 +59,7 @@ async function openAbout(page) {
   const seen = await openAdmin(page, { signedIn: true });
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
-  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue(ABOUT_TITLE, { timeout: 15_000 });
   return seen;
 }
 
@@ -172,7 +177,8 @@ for (const d of definitions) {
 
     // The preview (the page with the site's styles) shows the block, and has nothing to warn about.
     const preview = page.locator('iframe').first().contentFrame();
-    await expect(preview.locator(SHOWS[d.id]).last()).toBeVisible({ timeout: 15_000 });
+    if (d.id === 'toc' && !ABOUT_HAS_HEADINGS) await expect(preview.getByText(/^No headings yet/)).toBeVisible({ timeout: 15_000 });
+    else await expect(preview.locator(SHOWS[d.id]).last()).toBeVisible({ timeout: 15_000 });
     await expect(preview.getByText('Fix before saving.')).toHaveCount(0);
     // `.last()`: the page may already hold a block of the same type (About has a Team block).
     if (d.previewNote) await expect(preview.getByText(`Preview: ${d.previewNote}`).last()).toBeVisible();
