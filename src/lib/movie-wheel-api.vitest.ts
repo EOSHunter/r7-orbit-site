@@ -12,6 +12,7 @@ import {
   handleChats,
   handleList,
   handleMe,
+  handleTmdb,
   MESSAGES,
   splitFollowups,
   type D1Database,
@@ -25,7 +26,7 @@ import {
 
 // node:sqlite is built into Node 22.13 and later (engines allows 22.12, where it needs a flag): without it these tests are skipped.
 const sqlite = await import('node:sqlite').catch(() => undefined);
-const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by']
+const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by', '0005_movie_wheel_poster']
   .map((name) => readFileSync(`migrations/${name}.sql`, 'utf8'))
   .join('\n');
 
@@ -107,7 +108,7 @@ async function setup(env: Partial<MovieWheelEnv> = {}) {
     const request = new Request(o.url ?? URL_LIST, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     const ctx: MovieWheelContext = { request, env: o.env ?? base, fetch: o.fetch ?? a.keyFetch, now: o.now ?? NOW };
     const url = ctx.request.url;
-    return { ctx, response: await (url.includes('/chats') ? handleChats(ctx) : url.endsWith('/chat') ? handleChat(ctx) : url.endsWith('/me') ? handleMe(ctx) : handleList(ctx)) };
+    return { ctx, response: await (url.includes('/chats') ? handleChats(ctx) : url.endsWith('/chat') ? handleChat(ctx) : url.endsWith('/me') ? handleMe(ctx) : url.includes('/tmdb') ? handleTmdb(ctx) : handleList(ctx)) };
   };
   return { a, db, env: base, call };
 }
@@ -659,5 +660,158 @@ describe.skipIf(!sqlite)('follow-up suggestions', () => {
     }) as unknown as typeof fetch;
     await call('POST', ask, { url: CHAT, fetch: f });
     expect(system).toContain('[[followups: first | second | third]]');
+  });
+});
+
+// The Movie Database: its answers are fakes made here; no test calls the network.
+const TMDB_URL = 'https://r7orbit.io/api/movie-wheel/tmdb';
+const TOKEN = 'tmdb-secret-token';
+
+async function tmdbSetup(handler: (url: URL, init?: RequestInit) => Response | Promise<Response>, env: Partial<MovieWheelEnv> = {}) {
+  const s = await setup({ TMDB_TOKEN: TOKEN, ...env });
+  const t = { calls: [] as { url: string; auth: string | null }[] };
+  const fake = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(String(input));
+    if (url.host.endsWith('cloudflareaccess.com')) return (s.a.keyFetch as typeof fetch)(input, init);
+    t.calls.push({ url: String(input), auth: new Headers(init?.headers).get('Authorization') });
+    return handler(url, init);
+  }) as typeof fetch;
+  const get = (query: string, o: { token?: string | null; env?: MovieWheelEnv } = {}) => s.call('GET', undefined, { url: `${TMDB_URL}?${query}`, fetch: fake, ...o });
+  return { ...s, t, get };
+}
+
+const SEARCH = {
+  results: [
+    { id: 603, title: 'The Matrix', release_date: '1999-03-30', poster_path: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'A hacker learns the truth.', genre_ids: [28, 878] },
+    { id: 604, title: 'The Matrix Reloaded', release_date: '2003-05-15', poster_path: null, overview: '', genre_ids: [878, 53, 10770, 99999] },
+    { id: 0, title: 'No id' },
+    { title: 'Bad' },
+  ],
+};
+
+describe.skipIf(!sqlite)('posters on the list', () => {
+  it('stores a poster path and returns it, and drops anything that is not a TMDB path', async () => {
+    const { call } = await setup();
+    await call('PUT', {
+      list: [
+        movie('a', 'A', 5, { poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg' }),
+        movie('b', 'B', 5, { poster: 'https://evil.example/x.jpg' }),
+        movie('c', 'C', 5, { poster: '/../../etc/passwd' }),
+        movie('d', 'D', 5, { poster: '/ok123.svg' }),
+      ],
+    });
+    const { list } = (await (await call('GET')).response.json()) as { list: { id: string; poster: string }[] };
+    expect(list.map((m) => [m.id, m.poster])).toEqual([
+      ['a', '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg'],
+      ['b', ''],
+      ['c', ''],
+      ['d', ''],
+    ]);
+  });
+
+  it('keeps the poster with the newest edit like any other field', async () => {
+    const { call } = await setup();
+    await call('PUT', { list: [movie('a', 'A', 5)] });
+    await call('PUT', { list: [movie('a', 'A', 9, { poster: '/abcde12345.jpg' })] });
+    await call('PUT', { list: [movie('a', 'A', 7)] });
+    const { list } = (await (await call('GET')).response.json()) as { list: { poster: string }[] };
+    expect(list[0].poster).toBe('/abcde12345.jpg');
+  });
+
+  it('cleans a poster in cleanMovie', () => {
+    expect(cleanMovie({ id: 'x', title: 'X', poster: '/abcde.jpg' })?.poster).toBe('/abcde.jpg');
+    expect(cleanMovie({ id: 'x', title: 'X', poster: 7 })?.poster).toBe('');
+    expect(cleanMovie({ id: 'x', title: 'X' })?.poster).toBe('');
+  });
+});
+
+describe.skipIf(!sqlite)('the TMDB endpoint', () => {
+  it('searches by title and year with the token, and answers the best matches in the page\'s own words', async () => {
+    const { get, t } = await tmdbSetup(() => new Response(JSON.stringify(SEARCH), { status: 200 }));
+    const res = await get('q=The%20Matrix&year=1999');
+    expect(res.response.status).toBe(200);
+    const body = (await res.response.json()) as { results: Record<string, unknown>[] };
+    expect(body.results).toEqual([
+      { id: 603, title: 'The Matrix', year: 1999, poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'A hacker learns the truth.', genres: ['Action', 'Sci-fi'] },
+      { id: 604, title: 'The Matrix Reloaded', year: 2003, poster: '', overview: '', genres: ['Sci-fi', 'Thriller'] },
+    ]);
+    expect(t.calls).toHaveLength(1);
+    expect(t.calls[0].url).toBe('https://api.themoviedb.org/3/search/movie?query=The%20Matrix&include_adult=false&language=en-US&page=1&year=1999');
+    expect(t.calls[0].auth).toBe(`Bearer ${TOKEN}`);
+    expect(JSON.stringify(body)).not.toContain(TOKEN);
+  });
+
+  it('leaves the year out of the search when there is none, and refuses a short title', async () => {
+    const { get, t } = await tmdbSetup(() => new Response(JSON.stringify(SEARCH), { status: 200 }));
+    expect((await get('q=Alien')).response.status).toBe(200);
+    expect(t.calls[0].url).not.toContain('year=');
+    expect((await get('q=A')).response.status).toBe(400);
+    expect((await get('')).response.status).toBe(400);
+    expect(t.calls).toHaveLength(1);
+  });
+
+  it('reads one movie with its length', async () => {
+    const { get, t } = await tmdbSetup(() =>
+      new Response(JSON.stringify({ id: 603, title: 'The Matrix', release_date: '1999-03-30', poster_path: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'x', runtime: 136, genres: [{ id: 28, name: 'Action' }, { id: 878, name: 'Science Fiction' }] }), { status: 200 }),
+    );
+    const res = await get('id=603');
+    expect(await res.response.json()).toEqual({ id: 603, title: 'The Matrix', year: 1999, poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'x', genres: ['Action', 'Sci-fi'], runtime: 136 });
+    expect(t.calls[0].url).toBe('https://api.themoviedb.org/3/movie/603?language=en-US');
+    expect((await get('id=abc')).response.status).toBe(400);
+    expect((await get('id=1/../../account')).response.status).toBe(400);
+  });
+
+  it('serves a poster picture without the token, only for a TMDB path and a known size', async () => {
+    const png = new Uint8Array([137, 80, 78, 71]);
+    const { get, t } = await tmdbSetup(() => new Response(png, { status: 200, headers: { 'Content-Type': 'image/jpeg' } }), { TMDB_TOKEN: undefined });
+    const res = await get('img=/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg&w=w154');
+    expect(res.response.status).toBe(200);
+    expect(res.response.headers.get('Content-Type')).toBe('image/jpeg');
+    expect(res.response.headers.get('Cache-Control')).toContain('max-age=31536000');
+    expect(new Uint8Array(await res.response.arrayBuffer())).toEqual(png);
+    expect(t.calls[0].url).toBe('https://image.tmdb.org/t/p/w154/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg');
+    expect(t.calls[0].auth).toBeNull();
+    expect((await get('img=/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg&w=original')).response.status).toBe(400);
+    expect((await get('img=https://evil.example/a.jpg')).response.status).toBe(400);
+    expect((await get('img=/../secret.jpg')).response.status).toBe(400);
+    expect(t.calls).toHaveLength(1);
+  });
+
+  it('does not pass on something that is not a picture, nor a missing picture', async () => {
+    const html = await tmdbSetup(() => new Response('<html>', { status: 200, headers: { 'Content-Type': 'text/html' } }));
+    expect((await html.get('img=/abcde12345.jpg')).response.status).toBe(502);
+    const gone = await tmdbSetup(() => new Response('no', { status: 404 }));
+    expect((await gone.get('img=/abcde12345.jpg')).response.status).toBe(404);
+  });
+
+  it('asks for sign-in first, and says so when the token is not set or TMDB refuses it or is down', async () => {
+    const ok = () => new Response(JSON.stringify(SEARCH), { status: 200 });
+    const signedOut = await tmdbSetup(ok);
+    expect((await signedOut.get('q=Matrix', { token: null })).response.status).toBe(401);
+    expect(signedOut.t.calls).toHaveLength(0);
+
+    const noToken = await tmdbSetup(ok, { TMDB_TOKEN: undefined });
+    const missing = await noToken.get('q=Matrix');
+    expect(missing.response.status).toBe(503);
+    expect(((await missing.response.json()) as { error: string }).error).toBe(MESSAGES.noTmdb);
+
+    const refused = await tmdbSetup(() => new Response('{}', { status: 401 }));
+    const r = await refused.get('q=Matrix');
+    expect(r.response.status).toBe(502);
+    expect(((await r.response.json()) as { error: string }).error).toBe(MESSAGES.tmdbRefused);
+
+    const down = await tmdbSetup(() => {
+      throw new Error('network');
+    });
+    expect((await down.get('q=Matrix')).response.status).toBe(502);
+    const broken = await tmdbSetup(() => new Response('not json', { status: 200 }));
+    expect((await broken.get('q=Matrix')).response.status).toBe(502);
+  });
+
+  it('only answers GET, and is wired up by its Function file', async () => {
+    const { call } = await setup({ TMDB_TOKEN: TOKEN });
+    expect((await call('POST', {}, { url: TMDB_URL })).response.status).toBe(405);
+    const { onRequest } = await import('../../functions/api/movie-wheel/tmdb');
+    expect(typeof onRequest).toBe('function');
   });
 });

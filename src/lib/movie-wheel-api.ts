@@ -38,6 +38,8 @@ export interface MovieWheelEnv {
   ACCESS_AUD?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
+  /** The Movie Database's "API Read Access Token" (a secret): the posters, and details for the movies you add. */
+  TMDB_TOKEN?: string;
   /** Who is who, as "email=Name" pairs separated by commas, such as "me@example.com=Hunter, mollie@example.com=Mollie". Names the people on "added by". */
   MOVIE_WHEEL_PEOPLE?: string;
   /** Only with DEV_BYPASS_ACCESS: the email to act as when trying the endpoints on your own computer. */
@@ -72,6 +74,9 @@ export const MESSAGES = {
   tooLarge: 'That list is too large.',
   method: 'Use GET or PUT.',
   noKey: 'The OpenAI key is not set on the site yet.',
+  noTmdb: 'The TMDB token is not set on the site yet.',
+  tmdbDown: 'The movie database could not be reached just now.',
+  tmdbRefused: 'TMDB did not accept the site\'s token.',
 };
 
 function json(body: unknown, status = 200): Response {
@@ -232,6 +237,8 @@ export interface Movie {
   updatedAt: number;
   /** Who added the movie: a person's key (such as 'hunter' or 'mollie'), 'r7' for the chat assistant, or empty when it is not known. */
   addedBy: string;
+  /** TMDB's file path for the poster, such as '/abc123.jpg', or empty. */
+  poster: string;
 }
 
 interface Row {
@@ -247,8 +254,11 @@ interface Row {
   watched_at: number;
   updated_at: number;
   added_by: string;
+  poster: string;
   deleted_at: number;
 }
+
+const POSTER_PATH = /^\/[A-Za-z0-9_-]{5,60}\.(jpg|png|webp)$/;
 
 /** Keeps only what a movie is allowed to hold, trimmed to size. Anything else the page sends is dropped. */
 export function cleanMovie(x: unknown): Movie | null {
@@ -271,6 +281,7 @@ export function cleanMovie(x: unknown): Movie | null {
     watchedAt: Math.max(0, Number(m.watchedAt) || 0),
     updatedAt: Math.max(0, Number(m.updatedAt) || 0),
     addedBy: /^[a-z0-9_-]{1,24}$/.test(String(m.addedBy ?? '')) ? String(m.addedBy) : '',
+    poster: POSTER_PATH.test(String(m.poster ?? '')) ? String(m.poster) : '',
   };
 }
 
@@ -298,7 +309,7 @@ async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed:
     }
     list.push({
       id: r.id, title: r.title, watched: !!r.watched, genres, runtime: r.runtime, year: r.year, rating: r.rating,
-      review: r.review, addedAt: r.added_at, watchedAt: r.watched_at, updatedAt: r.updated_at, addedBy: r.added_by ?? '',
+      review: r.review, addedAt: r.added_at, watchedAt: r.watched_at, updatedAt: r.updated_at, addedBy: r.added_by ?? '', poster: r.poster ?? '',
     });
   }
   if (savedAt === 0 && !list.length && !Object.keys(removed).length) return { list: null, removed, savedAt };
@@ -308,12 +319,12 @@ async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed:
 // A movie is kept from whichever copy changed it last (updated_at); a removal wins over an edit made before it, and an edit made after a
 // removal brings the movie back. Equal times keep what is stored, so a device with an old copy never undoes newer work.
 const UPSERT = `INSERT INTO movie_wheel_movies
-  (id, title, watched, genres, runtime, year, rating, review, added_at, watched_at, updated_at, added_by, deleted_at)
-  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, COALESCE(NULLIF(?12, ''), ?13), 0)
+  (id, title, watched, genres, runtime, year, rating, review, added_at, watched_at, updated_at, added_by, poster, deleted_at)
+  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, COALESCE(NULLIF(?12, ''), ?13), ?14, 0)
   ON CONFLICT(id) DO UPDATE SET
     title = excluded.title, watched = excluded.watched, genres = excluded.genres, runtime = excluded.runtime, year = excluded.year,
     rating = excluded.rating, review = excluded.review, added_at = excluded.added_at, watched_at = excluded.watched_at,
-    updated_at = excluded.updated_at, added_by = CASE WHEN ?12 != '' THEN ?12 ELSE movie_wheel_movies.added_by END, deleted_at = 0
+    updated_at = excluded.updated_at, added_by = CASE WHEN ?12 != '' THEN ?12 ELSE movie_wheel_movies.added_by END, poster = excluded.poster, deleted_at = 0
   WHERE excluded.updated_at > movie_wheel_movies.updated_at AND excluded.updated_at > movie_wheel_movies.deleted_at`;
 const REMOVE = `INSERT INTO movie_wheel_movies (id, title, deleted_at) VALUES (?, '', ?)
   ON CONFLICT(id) DO UPDATE SET deleted_at = excluded.deleted_at
@@ -346,7 +357,7 @@ export async function handleList(ctx: MovieWheelContext): Promise<Response> {
     if (!m) continue;
     if (!known.has(m.addedBy)) m.addedBy = '';
     statements.push(
-      db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt, m.addedBy, me.key),
+      db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt, m.addedBy, me.key, m.poster),
     );
   }
   if (body.removed && typeof body.removed === 'object') {
@@ -363,6 +374,112 @@ export async function handleList(ctx: MovieWheelContext): Promise<Response> {
   }
   await db.batch(after);
   return json(await readAll(db));
+}
+
+// ---- TMDB: posters and details ----------------------------------------------------------------------------------------------
+
+// The Movie Database's genre ids, as the names the page uses ("Sci-fi", not "Science Fiction"). A TV movie is not a genre of film.
+const TMDB_GENRES: Record<number, string> = {
+  28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy',
+  36: 'History', 27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-fi', 53: 'Thriller', 10752: 'War', 37: 'Western',
+};
+const POSTER_SIZES = new Set(['w92', 'w154', 'w185', 'w342', 'w500']);
+
+export interface TmdbMovie {
+  id: number;
+  title: string;
+  year: number;
+  poster: string;
+  overview: string;
+  genres: string[];
+  runtime?: number;
+}
+
+function tmdbMovie(x: unknown): TmdbMovie | null {
+  if (!x || typeof x !== 'object') return null;
+  const r = x as Record<string, unknown>;
+  const id = Math.round(Number(r.id));
+  const title = String(r.title ?? '').trim().slice(0, 120);
+  if (!(id > 0) || !title) return null;
+  const ids = Array.isArray(r.genre_ids) ? r.genre_ids : Array.isArray(r.genres) ? r.genres.map((g) => (g as { id?: unknown })?.id) : [];
+  const out: TmdbMovie = {
+    id,
+    title,
+    year: Math.max(0, Math.min(2100, Math.round(Number(String(r.release_date ?? '').slice(0, 4))) || 0)),
+    poster: POSTER_PATH.test(String(r.poster_path ?? '')) ? String(r.poster_path) : '',
+    overview: String(r.overview ?? '').slice(0, 300),
+    genres: ids.map((g) => TMDB_GENRES[Number(g)]).filter((g): g is string => !!g),
+  };
+  const runtime = Math.round(Number(r.runtime));
+  if (runtime > 0) out.runtime = Math.min(999, runtime);
+  return out;
+}
+
+/**
+ * GET /api/movie-wheel/tmdb?q=<title>[&year=<year>]  -> { results: TmdbMovie[] } (the best eight matches)
+ * GET /api/movie-wheel/tmdb?id=<tmdb id>             -> TmdbMovie, with its length
+ * GET /api/movie-wheel/tmdb?img=/abc123.jpg[&w=w185] -> the poster picture, kept by the browser for a year
+ * The token stays here; the page never sees it. The picture goes through here too, so the page asks nobody but its own site.
+ */
+export async function handleTmdb(ctx: MovieWheelContext): Promise<Response> {
+  const who = await guard(ctx, ['GET']);
+  if (who instanceof Response) return who;
+  const doFetch = ctx.fetch ?? fetch;
+  const params = new URL(ctx.request.url).searchParams;
+
+  const img = params.get('img');
+  if (img !== null) {
+    const size = params.get('w') ?? 'w185';
+    if (!POSTER_PATH.test(img) || !POSTER_SIZES.has(size)) return fail(400, MESSAGES.badBody);
+    let res: Response;
+    try {
+      res = await doFetch(`https://image.tmdb.org/t/p/${size}${img}`);
+    } catch {
+      return fail(502, MESSAGES.tmdbDown);
+    }
+    if (!res.ok) return fail(res.status === 404 ? 404 : 502, MESSAGES.tmdbDown);
+    const type = res.headers.get('Content-Type') ?? '';
+    if (!type.startsWith('image/')) return fail(502, MESSAGES.tmdbDown);
+    return new Response(res.body, { headers: { 'Content-Type': type, 'Cache-Control': 'private, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' } });
+  }
+
+  const token = ctx.env.TMDB_TOKEN;
+  if (!token) return fail(503, MESSAGES.noTmdb);
+  const q = (params.get('q') ?? '').trim().slice(0, 120);
+  const idParam = params.get('id');
+  let url: string;
+  if (idParam !== null) {
+    if (!/^[1-9][0-9]{0,9}$/.test(idParam)) return fail(400, MESSAGES.badBody);
+    url = `https://api.themoviedb.org/3/movie/${idParam}?language=en-US`;
+  } else if (q.length >= 2) {
+    const year = Math.round(Number(params.get('year')));
+    url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}&include_adult=false&language=en-US&page=1${year >= 1870 && year <= 2100 ? `&year=${year}` : ''}`;
+  } else {
+    return fail(400, MESSAGES.badBody);
+  }
+  let res: Response;
+  try {
+    res = await doFetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+  } catch {
+    return fail(502, MESSAGES.tmdbDown);
+  }
+  if (res.status === 401) return fail(502, MESSAGES.tmdbRefused);
+  if (res.status === 404 && idParam !== null) return fail(404, MESSAGES.badBody);
+  if (!res.ok) return fail(502, MESSAGES.tmdbDown);
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    return fail(502, MESSAGES.tmdbDown);
+  }
+  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'private, max-age=3600' };
+  if (idParam !== null) {
+    const movie = tmdbMovie(data);
+    return movie ? new Response(JSON.stringify(movie), { headers }) : fail(502, MESSAGES.tmdbDown);
+  }
+  const found = (data as { results?: unknown })?.results;
+  const results = (Array.isArray(found) ? found : []).map(tmdbMovie).filter((m): m is TmdbMovie => !!m).slice(0, 8);
+  return new Response(JSON.stringify({ results }), { headers });
 }
 
 // ---- The chat ---------------------------------------------------------------------------------------------------------------
