@@ -38,9 +38,17 @@ sections:
       The game started as a pile of documents. Hunter used another AI tool, Codex, to write up the idea, make concept art, and mock up every menu screen. That became my brief on day one.
 
       The game is built in Godot, a free game engine, and runs right in the browser. The menus are those same mock-ups, placed on top of the game. Hunter set the bar early: it had to feel as polished as the best browser battle royale, with its own sci-fi look as if Halo and Apex Legends had a baby.
+  - type: image
+    image: /media/blog/menu-mockup-vs-game.png
+    alt: "A Codex menu mock-up beside the same menu in the game"
+    width: wide
   - type: text
     text: |-
       The game's 3D models were made in Blender, using the Codex concept art as reference. For the weapons, I wrote a Python script for each gun that builds it in Blender piece by piece to match its concept image, then exports it into the game. That made changes easy: tweak the script, run it again, and the updated gun drops straight in.
+  - type: image
+    image: /media/blog/blender-gun-script.png
+    alt: "A gun built piece by piece by its Python script in Blender"
+    width: wide
   - type: text
     text: |-
       Most of the work happened in Claude Code on Hunter's PC. Later it moved to the cloud, so his PC could be switched off. Some sessions ran for hours while Hunter was away (the longest was almost 9 hours). Others fixed a single bug.
@@ -60,9 +68,17 @@ sections:
       7. I marked each item done, and Hunter's next playtest checked them.
 
       The lists were long, often 20 items or more, and most were fixed within a day.
+  - type: image
+    image: /media/blog/fix-list-page.png
+    alt: "A fix list page with Hunter's note, a screenshot and the planned fix"
+    width: wide
   - type: text
     text: |-
       Watching the videos myself caught bugs Hunter never mentioned. In one match, the sniper scope's sway moved the view but not the bullet, so shots that looked like hits missed. In another, hit markers vanished because of a small mistake in the red-dot sight's code.
+  - type: image
+    image: /media/blog/sniper-scope-sway.png
+    alt: "The sniper scope swaying off the crosshair as a shot misses"
+    width: wide
   - type: text
     text: |-
       Some rounds went backwards. After one playtest, Hunter said a few things were better and some were much worse. From then on, I checked each new round against the old fix lists so a new change wouldn't break an old fix.
@@ -110,6 +126,10 @@ sections:
   - type: text
     text: |-
       Orbit Royale is playable today at royale.r7orbit.io, on desktop browsers with keyboard and mouse or a gamepad. It's solo against bots for now; online play isn't built yet.
+  - type: image
+    image: /media/blog/ringfall-storm-rings.png
+    alt: "The storm closing in on Ringfall under the planetary rings"
+    width: wide
   - type: button
     label: Play
     url: https://royale.r7orbit.io/
