@@ -324,7 +324,7 @@ button.play { width: 100%; padding: 0; background: none; border: 0; color: inher
 .player-note { position: absolute; left: var(--s-4); bottom: var(--s-4); right: calc(var(--s-9)); margin: 0; font: var(--fs-xs) var(--font-mono); color: var(--text-3); }
 
 .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-5); margin: 0; padding: 0; list-style: none; font: var(--fs-xs) var(--font-mono); letter-spacing: 0.04em; color: var(--text-3); }
-.meta-row li { display: inline-flex; align-items: center; gap: var(--s-2); }
+.meta-row li { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); min-width: 0; }
 
 .chapters { list-style: none; margin: 0; padding: 0; border: var(--bw) solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--surface-1); }
 .chapters li + li { border-top: var(--bw) solid var(--line); }
