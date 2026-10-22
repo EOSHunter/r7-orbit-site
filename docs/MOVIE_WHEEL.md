@@ -102,6 +102,10 @@ The page is built phone-first (it is mostly used that way).
 - **Sizes:** every control is at least 44 px, text boxes are 16 px (so iPhones do not zoom in), and the screen respects the notch and the home bar (`viewport-fit=cover`, safe-area padding).
 - **Add to Home Screen** (Safari: Share, then Add to Home Screen) puts it on your phone like an app.
 
+## Search
+
+The **Search your movies** box on the List tab looks through the whole list at once, to watch and watched together. It matches the title, the genres, the year and the words of your review, and several words must all match ("horror 2012"). While there is something in the box, the To watch / Watched tabs and the filters step aside and the results are grouped under **To watch** and **Watched**, as cards or as the poster grid, whichever is chosen. The × (or Escape) clears it and brings the tabs back; Enter closes the phone's keyboard.
+
 ## Reviews
 
 The **Reviews** tab lists every movie you have rated or written about, newest first, with search and filters (All, Written, Favorites) and a sort (Recent, Top rated). At the top, **Waiting for your take** lists watched movies with no rating or review yet, each with a **Rate it** button.

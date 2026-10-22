@@ -429,6 +429,15 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
 .suggest .opt .tm .poster{width:28px;height:42px;border-radius:4px}
 .suggest .opt .src{font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
 .credit{margin:var(--s-5) 0 0;font:400 12px/1.5 var(--ui);color:var(--text-3);max-width:62ch}
+.listbar .vmode{margin-left:auto}
+.lsearch{position:relative;display:flex;align-items:center}
+.lsearch .field{width:100%;padding-left:38px;padding-right:44px;-webkit-appearance:none;appearance:none}
+.lsearch .field::-webkit-search-cancel-button{display:none}
+.lsearch>svg{position:absolute;left:12px;width:18px;height:18px;fill:none;stroke:var(--text-3);stroke-width:1.8;stroke-linecap:round;pointer-events:none}
+.lsearch .icon-btn{position:absolute;right:2px;top:50%;transform:translateY(-50%);height:36px;min-width:36px;padding:0;font-size:20px;border:0;background:transparent;color:var(--text-2)}
+.gh{display:flex;align-items:baseline;gap:8px;margin:var(--s-2) 0 var(--s-3);font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}
+.gh .n{color:var(--brass-dim)}
+.gh~.gh{margin-top:var(--s-5)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -474,7 +483,7 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
       <div id="addGenres" hidden></div>
       <div class="field-error" id="err" role="alert" hidden></div>
       <div class="listbar">
-        <div class="seg" role="group" aria-label="Show">
+        <div class="seg" id="tabsSeg" role="group" aria-label="Show">
           <button type="button" id="tabTodo" aria-pressed="true">To watch <span class="n" id="nTodo">0</span></button>
           <button type="button" id="tabDone" aria-pressed="false">Watched <span class="n" id="nDone">0</span></button>
         </div>
@@ -482,6 +491,11 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
           <button type="button" id="vList" aria-pressed="true" aria-label="List" title="List"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6.5h12M8 12h12M8 17.5h12M4 6.5h.01M4 12h.01M4 17.5h.01"/></svg></button>
           <button type="button" id="vGrid" aria-pressed="false" aria-label="Posters" title="Posters"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/></svg></button>
         </div>
+      </div>
+      <div class="lsearch">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input class="field" id="lsearch" type="search" placeholder="Search your movies" aria-label="Search your movies" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+        <button class="icon-btn" id="lsearchClear" type="button" aria-label="Clear search" hidden>×</button>
       </div>
       <div class="lfilter" id="lfilter" hidden></div>
       <div id="listHost"></div>
@@ -1206,8 +1220,10 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
     $('nTodo').textContent=todoList.length; $('nDone').textContent=doneAll.length;
     $('tabTodo').setAttribute('aria-pressed',tab==='todo'); $('tabDone').setAttribute('aria-pressed',tab==='done');
     renderListFilter();
+    var q=norm(lq), host=$('listHost'); host.innerHTML='';
+    $('lsearchClear').hidden=!lq; $('tabsSeg').hidden=!!q;
+    if(q){ $('lfilter').hidden=true; renderSearch(q,host); return; }
     var items = tab==='todo'? pool() : watchedList();
-    var host=$('listHost'); host.innerHTML='';
     if(!items.length){
       var filtered = tab==='todo' ? (selected.length||srcSel.length) : (wf.mode!=='all'||wf.genres.length||wf.src.length);
       var msg = filtered ? 'Nothing matches these filters.'
@@ -1215,15 +1231,37 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
         : 'Nothing watched yet. Mark a film as watched and it moves here.';
       host.append(el('div','none',msg)); return;
     }
+    host.append(listOf(items));
+  }
+  // the movies as the list or the poster grid, whichever is chosen
+  function listOf(items){
     if(listMode==='grid'){
       var g=el('div','pgrid'); g.setAttribute('role','list');
       items.forEach(function(m){ g.append(posterTile(m)); });
-      host.append(g); return;
+      return g;
     }
     var ul=el('ul');
     items.forEach(function(m){ ul.append(movieRow(m)); });
-    host.append(ul);
+    return ul;
   }
+
+  /* ---------- search: the whole list, to watch and watched together ---------- */
+  var lq='';
+  function matches(m,tokens){
+    var hay=norm([m.title, gens(m).map(gname).join(' '), m.year||'', m.review||''].join(' '));
+    return tokens.every(function(t){ return hay.indexOf(t)>=0; });
+  }
+  function renderSearch(q,host){
+    var tokens=q.split(' '), hits=movies.filter(function(m){ return matches(m,tokens); });
+    var todoHits=hits.filter(function(m){return !m.watched}).sort(function(a,b){return a.addedAt-b.addedAt});
+    var doneHits=hits.filter(function(m){return m.watched}).sort(function(a,b){return (b.watchedAt||b.updatedAt||0)-(a.watchedAt||a.updatedAt||0)});
+    if(!hits.length){ host.append(el('div','none','No movies match "'+lq.trim()+'".')); return; }
+    [['To watch',todoHits],['Watched',doneHits]].forEach(function(g){
+      if(!g[1].length) return;
+      var h=el('h3','gh',g[0]); h.append(el('span','n',String(g[1].length))); host.append(h, listOf(g[1]));
+    });
+  }
+  function setSearch(v){ lq=v; var i=$('lsearch'); if(i.value!==v) i.value=v; render(); }
 
   /* ---------- layout: the list as cards, or a grid of posters ---------- */
   var LMODE='movie-wheel-list-mode', listMode='list';
@@ -1638,6 +1676,12 @@ li.row .gl .chip.len{font-size:14px;padding-inline:0}
   function syncSound(){ var b=$('sound'); b.textContent=muted?'Sound off':'Sound on'; b.setAttribute('aria-pressed',String(!muted)); }
   $('sound').onclick=function(){ muted=!muted; try{localStorage.setItem('movie-wheel-muted',muted?'1':'0');}catch(e){} syncSound(); if(!muted){ audio(); tick(.4); } };
   syncSound();
+  $('lsearch').addEventListener('input',function(){ setSearch(this.value); });
+  $('lsearch').addEventListener('keydown',function(e){
+    if(e.key==='Enter'){ e.preventDefault(); this.blur(); }                       // closes the phone's keyboard
+    else if(e.key==='Escape' && this.value){ e.stopPropagation(); setSearch(''); }
+  });
+  $('lsearchClear').onclick=function(){ setSearch(''); $('lsearch').focus(); };
   $('vList').onclick=function(){ setMode('list'); }; $('vGrid').onclick=function(){ setMode('grid'); };
   syncMode();
   $('tabTodo').onclick=function(){tab='todo';editingId=null;render();};
