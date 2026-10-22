@@ -38,7 +38,7 @@ src/
                               PageBlocks (library blocks drawn in place inside a page's own frame: privacy, 404, search),
                               ArchivePage + ArchiveList + Pagination, ArticlePage (blog/news) + TableOfContents, ShareRow, SeriesNav,
                               VlogPage, ProjectPage, RepoPage (the vlog, project and repo pages; their routes only fetch, like ArticlePage's),
-                              PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ReadmeBlock, StatsRow,
+                              PrevNext, RelatedPosts, ArticleJsonLd, YouTubeFacade + vlog/, ProjectJsonLd, Gallery, ImageZoom (every post page: its pictures open larger in a dialog), ReadmeBlock, StatsRow,
                               WaitlistForm (hero, band, remove; draws nothing while the waitlist is off) + waitlist/WaitlistFields (docs/PAGES.md "Waitlist")
   admin/                      Decap CMS for /admin: settings.ts (the "Site settings" file collection over src/data/site.json), config.ts (a collection per kind, mirroring content.config.ts), blocks.ts (article components as editor blocks),
                               preview.ts + preview-html.ts + preview.css (live blog preview with the site's CSS), main.ts (entry);
@@ -72,7 +72,7 @@ src/
   styles/markdown.css         Markdown output (code theme from tokens, callouts, figures, anchors); import it where a post body is rendered
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
   scripts/                    site.js (menu, filters, copy; bundled by Astro), orbit.js (hero and 404 only),
-                              gallery.js (project gallery dialog), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro),
+                              gallery.js (project gallery dialog), image-zoom.js (a post's pictures become buttons that open them larger; ImageZoom.astro), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro),
                               waitlist.js (the waitlist forms: loads Turnstile on first interaction, sends with fetch)
   styles/waitlist.css         the waitlist form; printed inline by WaitlistForm only on a page that draws one
 tests/                        fixtures/layout-check/ (a wall-of-text and a well laid out post, MDX and sections: the before/after of docs/WRITING_GUIDE.md, read by src/lib/layout-check.vitest.ts),

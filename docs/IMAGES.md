@@ -86,6 +86,10 @@ Before that, it writes smaller **WebP copies** of every picture from `public/` t
 
 Measured on this repository: `public/media/screenshot-2026-10-03-195701.png` (2293×1206, 1.3 MB) becomes 2000×1052, 386 KB. A synthetic 4032×3024 phone-sized JPEG with EXIF (4.0 MB, noise-heavy so a worst case) becomes 2000×1500, 725 KB, with the EXIF gone.
 
+### Opening a picture larger (every post page)
+
+A post's pictures with alt text (its cover and its body's pictures) open in a dialog when clicked, or with Enter or Space (`src/components/ImageZoom.astro`, `src/scripts/image-zoom.js`; tested in `tests/image-zoom.spec.js`). The dialog shows the same file with a larger `sizes`: the screen's width from 1200px up, a 1600px copy below that so pinching to zoom on a phone shows the detail. So a bigger file is fetched only when a reader opens one. Decorative pictures (`alt=""`) are not enlargeable, nor is anything inside a link or a button (cards, video and game posters, the project gallery, which has its own lightbox).
+
 ### What a 6 MB phone photo does, step by step
 
 1. **In the admin.** The picker accepts it (the limit is 10 MB). It is named `img_4021.jpg`.
