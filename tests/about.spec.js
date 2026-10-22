@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
+import { headingBefore } from '../src/lib/sections-to-content.ts';
 import { contentTextProblems, inputsDigest, pageCopy, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
@@ -37,29 +38,35 @@ test('the Person structured data still comes from site.json, and the page head i
   const person = graph.find((n) => n['@type'] === 'Person');
   expect(person.name).toBe(site.author.name);
   expect(person.description).toBe(site.author.bio);
+  // The page's title is about.md's, and its nav item is the one whose address is /about/ (labels are the author's, in /admin).
+  const { title } = pageCopy('about');
   const profile = graph.find((n) => n['@type'] === 'ProfilePage');
-  expect(profile.name).toBe(`About · ${site.name}`);
+  expect(profile.name).toBe(`${title} · ${site.name}`);
   const crumbs = graph.find((n) => n['@type'] === 'BreadcrumbList').itemListElement.map((i) => i.name);
-  expect(crumbs).toEqual(['Home', 'About']);
-  await expect(page.locator('nav [aria-current="page"]').first()).toContainText('About');
+  expect(crumbs).toEqual(['Home', title]);
+  const item = site.nav.find((n) => n.href === '/about/');
+  if (item) await expect(page.locator('nav [aria-current="page"]').first()).toContainText(item.label);
 });
 
 test('each portrait sits beside its text on a wide screen and above it on a phone', async ({ page }) => {
+  // One row per Portrait block in about.md, each a picture with its text. The layout itself is also checked on /styleguide/sections/.
+  const portraits = (pageCopy('about').sections ?? []).filter((b) => b.type === 'portrait').length;
+  test.skip(portraits === 0, 'about.md has no Portrait block');
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/about/');
-  // The page is two rows, each a portrait with its text (the author added the second, the R7 logo, after the first).
   const rows = page.locator('.about-grid');
-  await expect(rows).toHaveCount(2);
+  await expect(rows).toHaveCount(portraits);
   for (const row of await rows.all()) {
     const portrait = (await row.locator('.portrait').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
     const prose = (await row.locator('.prose').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
     expect(portrait.x + portrait.width, 'portrait is left of the text').toBeLessThanOrEqual(prose.x);
     expect(Math.abs(portrait.y - prose.y), 'the two start level').toBeLessThanOrEqual(1);
   }
-  // The heading above the first portrait is in the text column beside it, not above the row.
-  const prose = (await rows.first().locator('.prose').boundingBox()) ?? { x: 0 };
-  const lead = (await page.getByRole('heading', { level: 2, name: /R7 Orbit Creator/ }).boundingBox()) ?? { x: 0 };
-  expect(lead.x).toBeGreaterThanOrEqual(prose.x);
+  // A heading in a row (the Heading block above a portrait, or one inside its text) is in the text column beside it, not above the row.
+  for (const row of await rows.all()) {
+    const prose = (await row.locator('.prose').boundingBox()) ?? { x: 0 };
+    for (const h of await row.locator('h2, h3').all()) expect(((await h.boundingBox()) ?? { x: 0 }).x).toBeGreaterThanOrEqual(prose.x);
+  }
 
   await page.setViewportSize({ width: 375, height: 800 });
   for (const row of await rows.all()) {
@@ -80,13 +87,16 @@ test('the team cards follow about.md: name, title, subtitle, bio, avatar and a l
   await page.goto('/about/');
   const cards = page.locator('[data-team] > li');
   await expect(cards).toHaveCount(block.members.length);
+  // Names are h3 under a section heading, h2 when the Team block has none above it (the page never skips a level).
+  const sections = pageCopy('about').sections;
+  const level = headingBefore(sections, sections.findIndex((b) => b.type === 'team')) ? 3 : 2;
   for (const [i, member] of block.members.entries()) {
     const file = authorFile(member.author);
     const person = file.kind === 'person';
     const card = cards.nth(i);
     await expect(card).toHaveAttribute('data-team-member', member.author);
     const name = file.name ?? site.author.name;
-    await expect(card.getByRole('heading', { level: 3 })).toHaveText(name);
+    await expect(card.getByRole('heading', { level })).toHaveText(name);
     await expect(card.getByRole('link', { name })).toHaveAttribute('href', `/authors/${member.author}/`);
     await expect(card.locator('.team-role')).toContainText(member.title);
     if (file.subtitle) await expect(card.locator('.team-role .author-sub')).toHaveText(file.subtitle);
@@ -132,11 +142,15 @@ test('the team is one column on a phone and two or three on a wide screen, under
   await page.setViewportSize({ width: 1280, height: 800 });
   expect(await columns()).toBeGreaterThanOrEqual(2);
   expect(await columns()).toBeLessThanOrEqual(3);
-  // The heading above the block is a row of its own above the cards, not beside the R7 picture.
-  const grid = await page.locator('[data-team]').boundingBox();
-  const heading = await page.locator('.sections h2').last().boundingBox();
-  expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);
-  expect(Math.abs(heading.x - grid.x)).toBeLessThanOrEqual(1);
+  // A Heading block right above the team is a row of its own above the cards, not beside a picture.
+  const sections = pageCopy('about').sections ?? [];
+  const before = sections[sections.findIndex((b) => b.type === 'team') - 1];
+  if (before?.type === 'heading') {
+    const grid = await page.locator('[data-team]').boundingBox();
+    const heading = await page.locator('.sections h2:not(.team-name)').last().boundingBox();
+    expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);
+    expect(Math.abs(heading.x - grid.x)).toBeLessThanOrEqual(1);
+  }
   const links = page.locator('[data-team] .team-name a');
   await links.first().focus();
   await expect(links.first()).toBeFocused();

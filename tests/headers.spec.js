@@ -180,21 +180,28 @@ test('the About page opens in the editor with its blocks and a live preview, wit
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
 
-  // The form shows the page's heading and its blocks, each with a line saying what it holds.
-  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
-  await expect(page.getByText('Heading: Hunter Newton · R7 Orbit Creator')).toBeVisible();
-  await expect(page.getByText(/^Portrait: I build software/)).toBeVisible();
-  await expect(page.getByText(/^Portrait: ## R7 · Orbit AI Agent/)).toBeVisible();
+  // The form shows the page's heading and its blocks, each with a line saying what it holds. All of it is read from about.md, which
+  // the author edits in /admin: the title, every Heading block, every portrait (with its alt text) and the Team block's cards.
+  const { title, sections } = parseFrontmatter(ABOUT_MD).frontmatter;
+  await expect(page.getByLabel('Page heading')).toHaveValue(title, { timeout: 15_000 });
+  const headings = sections.filter((s) => s.type === 'heading');
+  const portraits = sections.filter((s) => s.type === 'portrait');
+  for (const h of headings) await expect(page.getByText(`Heading: ${h.text}`, { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Portrait: /)).toHaveCount(portraits.length);
 
-  // The preview is the page with the site's styles: the h1, the two headings in order (the second is inside the second portrait's
-  // text), the portrait grid.
+  // The preview is the page with the site's styles: the h1, the Heading blocks in order, the portraits, the team.
   const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.getByRole('heading', { level: 1 })).toHaveText('About');
-  await expect(preview.getByRole('heading', { level: 2 })).toHaveText(['Hunter Newton · R7 Orbit Creator', 'R7 · Orbit AI Agent', 'Meet the team']);
-  const team = parseFrontmatter(ABOUT_MD).frontmatter.sections.find((s) => s.type === 'team');
-  await expect(preview.locator('.team-grid .team-card')).toHaveCount(team.members.length);
-  await expect(preview.locator('.about-grid .portrait img').first()).toHaveAttribute('alt', 'Portrait of Hunter Newton');
-  await expect(preview.getByText('How a piece gets here:')).toBeVisible();
+  await expect(preview.getByRole('heading', { level: 1 })).toHaveText(title);
+  const h2 = await preview.getByRole('heading', { level: 2 }).allInnerTexts();
+  const shown = headings.filter((h) => h.level === 2).map((h) => h2.indexOf(h.text.replace(/\*/g, '')));
+  expect(shown.every((i) => i >= 0), `Heading blocks among the preview's h2: ${h2.join(' | ')}`).toBe(true);
+  expect([...shown].sort((x, y) => x - y)).toEqual(shown);
+  await expect(preview.locator('.about-grid .portrait img')).toHaveCount(portraits.length);
+  for (const [i, p] of portraits.entries()) {
+    await expect(preview.locator('.about-grid .portrait img').nth(i)).toHaveAttribute('alt', p.decorative ? '' : p.alt);
+  }
+  const team = sections.find((s) => s.type === 'team');
+  await expect(preview.locator('.team-grid .team-card')).toHaveCount(team?.members.length ?? 0);
 
   expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
   expect(seen.violations).toEqual([]);
@@ -210,7 +217,7 @@ test('saving an About change works under the admin CSP: a new image block, two s
   const seen = await openAdmin(page, { signedIn: true });
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
-  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue(parseFrontmatter(ABOUT_MD).frontmatter.title, { timeout: 15_000 });
 
   // Add an Image block (it opens at the end of the list), choose a picture and describe it.
   await page.getByRole('button', { name: /add section/i }).click();
@@ -295,7 +302,7 @@ test('the editor refuses a button address that is not https or a page on the sit
   const seen = await openAdmin(page, { signedIn: true });
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
-  await expect(page.getByLabel('Page heading')).toHaveValue('About', { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue(parseFrontmatter(ABOUT_MD).frontmatter.title, { timeout: 15_000 });
 
   await page.getByRole('button', { name: /add section/i }).click();
   await page.getByRole('menuitem', { name: 'Button', exact: true }).click();

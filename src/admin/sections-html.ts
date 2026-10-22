@@ -19,7 +19,7 @@ import {
   type SectionType,
 } from '../lib/sections';
 import { onceProblems } from '../lib/sections/checks';
-import { sectionsHeadings } from '../lib/sections-to-content';
+import { headingBefore, sectionsHeadings } from '../lib/sections-to-content';
 import { titleParts } from '../lib/text';
 import {
   blocksHtml,
@@ -305,6 +305,9 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
   },
   // TeamBlock.astro's cards, with initials for the avatars (the pictures are files of the built site).
   team: (d, env) => {
+    // The page's rule (TeamBlock.astro): h3 under a section heading, h2 when nothing comes before.
+    const at = env.sections.indexOf(d);
+    const h = at > 0 && headingBefore(env.sections, at) ? 'h3' : 'h2';
     const cards = (Array.isArray(d.members) ? d.members : []).map((m) => {
       const who = env.authors.find((a) => a.slug === m.author);
       if (!who) {
@@ -321,7 +324,7 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
       return (
         `<li class="card team-card"><div class="card-body"><div class="team-card-head">` +
         `<span class="avatar initials lg" aria-hidden="true"><span>${escapeHtml(initials)}</span></span>` +
-        `<div class="team-card-id"><h3 class="card-title team-name"><a class="author-name" href="#">${escapeHtml(who.name)}</a></h3>` +
+        `<div class="team-card-id"><${h} class="card-title team-name"><a class="author-name" href="#">${escapeHtml(who.name)}</a></${h}>` +
         `<p class="team-role"><span>${escapeHtml(m.title ?? '')}</span>${sub ? ` ${sub}` : ''}</p>${label}</div></div>` +
         `<p class="team-bio">${escapeHtml(m.blurb?.trim() || who.bio)}</p></div></li>`
       );
