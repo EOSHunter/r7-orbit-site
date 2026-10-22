@@ -366,13 +366,17 @@ li.row .acts .btn.main{flex:1}
 /* posters (from TMDB, through the site): a thumbnail beside a row or a review, a larger one in the winner pop-up */
 .poster{display:block;flex:none;border-radius:8px;background:var(--surface-1);border:1px solid var(--line);object-fit:cover;aspect-ratio:2/3}
 /* a card with a poster: the poster flush left and as tall as the card, the details beside it, two icon buttons at the bottom right */
-li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:96px minmax(0,1fr);gap:0;padding:0;align-items:stretch;overflow:hidden}
-.hasp>.poster{grid-column:1;grid-row:1;width:96px;height:100%;min-height:144px;border:0;border-radius:0;border-right:1px solid var(--line)}
+#listHost ul{border:0;border-radius:0;gap:14px;overflow:visible}
+#listHost li.row{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:120px minmax(0,1fr);gap:0;padding:0;align-items:stretch;overflow:hidden}
+.hasp>.poster{grid-column:1;grid-row:1;width:120px;height:100%;min-height:180px;border:0;border-radius:0}
 .hasp>.rbody{grid-column:2;grid-row:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:12px 12px 12px 14px}
 .hasp .rbody .acts{margin-top:auto;padding:0;border:0}
-.btn.ibtn{width:44px;min-width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.btn.ibtn{width:44px;min-width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text-2)}
+.btn.ibtn:hover:not(:disabled){background:var(--surface-3);color:var(--text)}
+.btn.ibtn:active:not(:disabled){background:var(--surface-3)}
+li.row .sr{font-size:16px;letter-spacing:1px;line-height:1}
 .btn.ibtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.chip.rate{color:var(--brass-bright);border-color:var(--brass-dim)}
 .listbar{display:flex;flex-wrap:wrap;gap:var(--s-2);align-items:flex-start;justify-content:space-between}
 .listbar{flex-wrap:nowrap}
 .listbar .seg button{padding:0 12px}
@@ -1223,7 +1227,7 @@ li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:96px minmax(0,1fr);ga
   }
   // a card with a poster: the poster at the left edge, as tall as the card, and everything else beside it
   function posterCard(card,path,genres){
-    var pi=posterImg(path,'w185',null,96,144); if(!pi) return;
+    var pi=posterImg(path,'w342',null,120,180); if(!pi) return;
     card.classList.add('hasp');
     var rb=el('div','rbody');
     [].slice.call(card.children).forEach(function(k){ rb.append(k); });
@@ -1238,8 +1242,8 @@ li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:96px minmax(0,1fr);ga
   function movieRow(m){
     var li=el('li','row'+(m.watched?' done':''));
     li.append(el('span','t',m.title));
+    if(m.watched) li.append(staticStars(m.rating||0));
     var gl=el('div','gl');
-    if(m.watched && m.rating) gl.append(el('span','chip rate','★ '+m.rating));
     var lenTxt=[fmtLen(m.runtime), m.year||''].filter(Boolean).join(' · ');
     if(lenTxt) gl.append(el('span','chip len',lenTxt));
     if(m.addedBy) gl.append(el('span','chip who'+(m.addedBy==='r7'?' r7':''),srcName(m.addedBy)));
@@ -1248,7 +1252,7 @@ li.row.hasp,.rcard.hasp{display:grid;grid-template-columns:96px minmax(0,1fr);ga
     });
     if(gl.children.length) li.append(gl);
     var acts=el('div','acts');
-    if(!m.watched) acts.append(iconBtn('Mark '+m.title+' as watched',CHECK,'solid',function(){ markWatched(m.id); }));
+    if(!m.watched) acts.append(iconBtn('Mark '+m.title+' as watched',CHECK,'',function(){ markWatched(m.id); }));
     acts.append(iconBtn('Edit '+m.title,PENCIL,'',function(){ editMovie(m.id); }));
     li.append(acts);
     posterCard(li,m.poster,2);
