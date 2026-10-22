@@ -16,7 +16,8 @@ const css = [
   .map((f) => readFileSync(f, 'utf8'))
   .join('\n');
 
-const about = parseFrontmatter(readFileSync('src/content/pages/about.md', 'utf8')).frontmatter.sections;
+// A fixed copy of the About page's portrait layout, so the tests do not change when the page is edited in the admin.
+const about = parseFrontmatter(readFileSync('src/admin/fixtures/about-sections.md', 'utf8')).frontmatter.sections;
 const example = (id: string) => ({ type: id, ...definitions.find((d) => d.id === id)!.example });
 const html = (blocks: unknown[], authors: Parameters<typeof sectionsHtml>[2] = []) => sectionsHtml(blocks, resolve, authors);
 
