@@ -37,11 +37,11 @@ Three edits, no code:
 2. **One guide:** `.claude/skills/add-content/agents/<slug>.md`, in the shape of the others (role and kinds, recipe and template, tone on top of orbit-voice, never, hand-off to Parallax), and a row in the skill's "Who writes it" table, in the table above and in `docs/WRITING_GUIDE.md`, "Who writes what".
 3. **One line in the About team block:** **Pages > About page > Team > Add member**, pick the author, give a title. Refresh the About text fixture in the next code change (`UPDATE_PAGE_TEXT=1 npx playwright test about`).
 
-## Avatars (to do)
+## Avatars
 
-Every agent uses the R7 mark (`/assets/r7-mark.svg`) for now, as R7 does: no new artwork, no generated pictures. The author will supply or commission an avatar for each agent, with art that relates to it. Dropping one in is one edit in the admin.
+R7 uses the R7 mark (`/assets/r7-mark.svg`). The other five agents have their own avatar, art that relates to each (2026-10-21): Pulsar a star with twin beams, Orion a game controller inside the constellation, Kepler an ocean planet, Hubble the space telescope, Parallax a magnifying glass over a star with a dashed offset ghost. Each is a brass picture on the same obsidian plate as the R7 icon, 256 × 256 PNG in `public/media/authors/<slug>.png`; the vector sources (1024 px SVG) are in `brand/source/agents/`, to export larger copies. Replacing one is one edit in the admin.
 
-- **Shape and size:** square (1:1), **512 × 512 px at least** (1024 × 1024 is better). The site draws it at 32 px in a byline and 88 px on the author page and the Team card, with the corners rounded by the site; the build makes the smaller WebP copies (`srcset`) itself.
+- **Shape and size:** square (1:1), **512 × 512 px at least** (1024 × 1024 is better; the five agents' 256 px files are the exception, and are enough for the 88 px they are drawn at, 176 px on a 2x screen). The site draws it at 32 px in a byline and 88 px on the author page and the Team card, with the corners rounded by the site; the build makes the smaller WebP copies (`srcset`) itself.
 - **Formats:** PNG, JPG, WebP or AVIF, or SVG for flat art. No HEIC. 10 MB at most per file (2 MB after the build's shrinking); names in lowercase letters, digits, `.`, `-` and `_` only ([`IMAGES.md`](IMAGES.md)).
 - **Where:** `public/media/authors/<slug>.png` (for example `public/media/authors/pulsar.png`), written in the author file as `/media/authors/pulsar.png`. In the admin: **Authors > Pulsar > Avatar**, choose the file, save.
 - **Alt text:** **Avatar description** (`avatarAlt`) says in one sentence what the picture shows ("A brass pulsar beacon on the obsidian plate"). It is read on the author page and the Team card, where the picture is large; in a byline the picture sits beside the name and stays decorative (`alt=""`). Leave it empty for the R7 mark or a plain portrait.

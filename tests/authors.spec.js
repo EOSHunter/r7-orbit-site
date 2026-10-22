@@ -300,17 +300,19 @@ const TEAM = [
 ];
 const hasPosts = (slug) => postPaths.some((p) => credited(p) === slug);
 
-test('the five writing agents are agents with the R7 mark, no footer note, and their bio on their page', async ({ page }) => {
+test('the five writing agents are agents with their own avatar, no footer note, and their bio on their page', async ({ page }) => {
   for (const [slug, name, subtitle] of TEAM) {
     const file = authorFile(slug);
-    expect(file, slug).toMatchObject({ slug, kind: 'agent', name, subtitle, avatar: '/assets/r7-mark.svg' });
+    expect(file, slug).toMatchObject({ slug, kind: 'agent', name, subtitle, avatar: `/media/authors/${slug}.png` });
+    expect(file.avatarAlt, slug).toBeTruthy();
     expect(file, slug).not.toHaveProperty('note');
     await page.goto(`/authors/${slug}/`);
     const head = page.locator(`[data-author-page="${slug}"]`);
     await expect(head.getByRole('heading', { level: 1, name })).toBeVisible();
     await expect(head.getByText(subtitle)).toBeVisible();
     await expect(head.locator('.t-lead')).toHaveText(file.bio);
-    await expect(head.locator('.avatar img')).toHaveAttribute('src', '/assets/r7-mark.svg');
+    await expect(head.locator('.avatar img')).toHaveAttribute('src', `/media/authors/${slug}.png`);
+    await expect(head.locator('.avatar img')).toHaveAttribute('alt', file.avatarAlt);
   }
 });
 

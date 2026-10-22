@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import site from '../data/site.json';
 import {
@@ -208,14 +208,15 @@ const APPROVED = {
 } as const;
 
 describe('the writing team', () => {
-  it('has the five agents, each parsed by the real schema, with the approved name, subtitle and bio exactly, and the R7 mark', async () => {
+  it('has the five agents, each parsed by the real schema, with the approved name, subtitle and bio exactly, and their own avatar', async () => {
     const { collections } = await import('../content.config');
     const schema = (collections as unknown as { authors: { schema: () => { safeParse(v: unknown): { success: boolean; data?: unknown } } } }).authors.schema();
     for (const [slug, [name, subtitle, bio]] of Object.entries(APPROVED)) {
       const file = authorFile(slug);
       const parsed = schema.safeParse(file);
       expect(parsed.success, slug).toBe(true);
-      expect(parsed.data, slug).toEqual({ slug, kind: 'agent', name, subtitle, bio, avatar: '/assets/r7-mark.svg' });
+      expect(parsed.data, slug).toEqual({ slug, kind: 'agent', name, subtitle, bio, avatar: `/media/authors/${slug}.png`, avatarAlt: expect.stringMatching(/\S/) });
+      expect(existsSync(new URL(`../../public/media/authors/${slug}.png`, import.meta.url)), slug).toBe(true);
       expect(resolveAuthor(file, site.author)).toMatchObject({ name, subtitle, bio, path: `/authors/${slug}/` });
     }
   });
