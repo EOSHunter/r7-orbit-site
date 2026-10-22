@@ -143,6 +143,13 @@ describe('sectionsHtml', () => {
     expect(out).toContain('data-variant="dots"');
   });
 
+  it('opens a button in a new tab only when the block asks', () => {
+    expect(html([{ type: 'button', label: 'Play', url: 'https://example.com', newTab: true }])).toContain(
+      '<a class="btn solid" href="https://example.com" target="_blank" rel="noopener">Play',
+    );
+    expect(html([{ type: 'button', label: 'Go', url: 'https://example.com' }])).not.toContain('target=');
+  });
+
   it('does not link an address the build would refuse', () => {
     expect(html([{ type: 'button', label: 'Go', url: 'javascript:alert(1)' }])).toContain('href="#"');
     expect(html([{ type: 'game', title: 'G', playUrl: 'javascript:alert(1)', playMode: 'link' }])).toContain('href="#"');
