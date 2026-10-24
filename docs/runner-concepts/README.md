@@ -10,4 +10,7 @@ Copied byte for byte from the author's `pictures/` folder (2026-10-23); not used
 | `obstacles.png` | `runner-concept-3-obstacles.png` | the rover from three sides (six wheels, brass beacon), the slab with `404`, the barrier, the gate, broken-link and ring pieces, pickups and a crash burst |
 | `blended-fade.png` | `runner-concept-6-blended-fade.png` | the chosen 404 page: "Page *not* found", a line under it and "Back to home" over the game, which fills the page and fades into it; low-poly rocks beside the track, `SCORE 00420` on the right, "Press space to play" at the bottom |
 
+`rover-preview.png` is not a concept: it is the game's rover (step 2a) in three views, rendered by
+`tools/runner/build_rover.py -- --preview` (docs/RUNNER.md, "The rover"), so the author can judge the model.
+
 The other concepts in that folder (1 key art, 4 a framed 404 page, 5 a full-bleed blend) were not chosen and are not copied.

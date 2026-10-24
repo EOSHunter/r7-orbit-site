@@ -90,6 +90,7 @@ test('keyboard: distance rises, a crash ends the run, the best is saved, Space r
 });
 
 test('the saved best shows on mount; blocked storage never breaks the game', async ({ page, context }) => {
+  test.setTimeout(60_000); // two games mount, one after the other, each compiling its shaders on SwiftShader
   await context.addInitScript(() => localStorage.setItem('r7-runner-best', '420'));
   await boot(page);
   await expect(page.locator('.runner-best')).toHaveText('Best 00420 m');
@@ -332,6 +333,35 @@ test('unmount and mount again: nothing left behind, no errors', async ({ page, b
   await expect(game(page)).toHaveAttribute('data-runner-state', 'playing', MOUNTED);
   await expect(page.locator('canvas')).toHaveCount(1);
   expect(problems).toEqual([]);
+});
+
+test('the rover model loads after the game, and a missing one leaves the stand-in rover, throwing nothing', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  const models = [];
+  page.on('request', (r) => r.url().endsWith('.glb') && models.push(r.url()));
+  await page.route('**/*.glb', (route) => route.fulfill({ status: 404, body: '' }));
+  const problems = watchPage(page, baseURL);
+  await page.goto(`${FIXTURE}?seed=7`, { waitUntil: 'networkidle' });
+  expect(models, 'no model before the game is asked for').toEqual([]);
+  await host(page).focus();
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing', MOUNTED);
+  await expect.poll(() => models.length).toBeGreaterThan(0);
+  // The game goes on with the stand-in: it drives, crashes and restarts.
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'over', { timeout: 90_000 });
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  // The only complaints are the 404 this test made: the response, the browser's console line about it, and the request
+  // reported as aborted (the loader drops the body of a failed response).
+  const expected = (p) =>
+    /bad response 404: .*\.glb$/.test(p) ||
+    /console error: Failed to load resource.*404/.test(p) ||
+    /request failed: .*\.glb \(net::ERR_ABORTED\)$/.test(p);
+  expect(problems.filter((p) => !expected(p))).toEqual([]);
 });
 
 test('without WebGL the game says so, in neutral words, and throws nothing', async ({ page, baseURL }) => {

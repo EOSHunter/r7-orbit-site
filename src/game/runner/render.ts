@@ -3,11 +3,8 @@
 // moves towards the camera: an object `rel` metres ahead of the rover is drawn at z = -rel.
 
 import {
-  AmbientLight,
   BoxGeometry,
   CanvasTexture,
-  DirectionalLight,
-  Fog,
   Group,
   InstancedMesh,
   Mesh,
@@ -27,6 +24,9 @@ import { createEnvironment, type EnvironmentInfo } from './environment'; // envi
 import { RUNNER_COLORS as C, RUNNER_CONFIG, type RunnerConfig } from './config';
 import type { ObstacleKind } from './generator';
 import type { RunnerSim } from './sim';
+// rover+camera (step 2a)
+import { ChaseRig } from './camera';
+import { createRover } from './rover';
 
 export interface View {
   /** The drawing size in CSS pixels and the device pixel ratio to use (already capped by the caller). */
@@ -75,45 +75,23 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
   const lw = cfg.track.laneWidth;
   const r = cfg.render;
   const scene = new Scene();
-  scene.fog = new Fog(C.obsidian, r.fog.near, r.fog.far);
   const camera = new PerspectiveCamera(r.fov, 16 / 9, 0.1, r.fog.far + 20);
-  scene.add(new AmbientLight(C.ivory, 1.1));
-  const sun = new DirectionalLight(C.ivory, 1.6);
-  sun.position.set(-3, 8, 6);
-  scene.add(sun);
 
   const ivory = mat(new MeshLambertMaterial({ color: C.ivory }));
-  const shade = mat(new MeshLambertMaterial({ color: C.shade }));
   const brass = mat(new MeshBasicMaterial({ color: C.brass }));
 
-  // environment (step 2b): the sky, planet, stars, ring tunnel, track, rocks, glows, lights and fog (environment.ts). It
-  // replaces the lights and fog made above; delete those lines once steps 2a and 2b are merged.
+  // environment (step 2b): the sky, planet, stars, ring tunnel, track, rocks, glows, lights and fog (environment.ts).
   const env = createEnvironment({ renderer, scene, cfg, doc: canvas.ownerDocument });
   // end environment (step 2b)
 
-  // The rover: a box body, six wheels and a brass beacon on the roof.
-  const rover = new Group();
-  const body = new Mesh(geo(new BoxGeometry(1.1, 0.6, 1.5)), ivory);
-  body.position.y = 0.55;
-  rover.add(body);
-  const wheelGeo = geo(new BoxGeometry(0.22, 0.44, 0.44));
-  for (const side of [-1, 1]) {
-    for (const z of [-0.55, 0, 0.55]) {
-      const wheel = new Mesh(wheelGeo, shade);
-      wheel.position.set(side * 0.62, 0.22, z);
-      rover.add(wheel);
-    }
-  }
-  const mast = new Mesh(geo(new BoxGeometry(0.05, 0.18, 0.05)), shade);
-  mast.position.set(0, 0.94, 0.2);
-  rover.add(mast);
-  const beacon = new Mesh(
-    geo(new SphereGeometry(0.12, 16, 12)),
-    mat(new MeshBasicMaterial({ color: C.brassHighlight })),
-  );
-  beacon.position.set(0, 1.08, 0.2);
-  rover.add(beacon);
-  scene.add(rover);
+  // rover+camera (step 2a): the rover model and its effects (rover.ts), the chase camera (camera.ts).
+  const win = canvas.ownerDocument.defaultView;
+  const motion = win?.matchMedia?.('(prefers-reduced-motion: reduce)');
+  const rover = createRover(cfg, { reducedMotion: () => motion?.matches ?? false });
+  scene.add(rover.object);
+  const rig = new ChaseRig(cfg);
+  let lastFrame: number | null = null;
+  // end rover+camera (step 2a)
 
   // Obstacles, drawn at their hitbox sizes. The slab carries 404 on the face that looks at the rover.
   const hb = cfg.hitbox;
@@ -172,15 +150,16 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
     render(sim, alpha) {
       const d = lerp(sim.prev.distance, sim.distance, alpha);
       const x = lerp(sim.prev.x, sim.x, alpha);
-      const y = lerp(sim.prev.y, sim.y, alpha);
 
-      rover.position.set(x, y, 0);
-      rover.scale.y = sim.sliding ? 0.5 : 1;
-      rover.rotation.z = (x - sim.lane * lw) * 0.06; // a small lean into a lane change
-
-      const cam = r.camera;
-      camera.position.set(x * cam.follow, cam.height, cam.back);
-      camera.lookAt(x * cam.follow * 0.5, cam.lookHeight, -cam.lookAhead);
+      // rover+camera (step 2a): wall-clock dt for the view's own motion (the sim's time is untouched).
+      const now = win?.performance.now() ?? 0;
+      const dt = lastFrame === null ? 0 : (now - lastFrame) / 1000;
+      lastFrame = now;
+      const reduced = motion?.matches ?? false;
+      rig.update(dt, { x, speed: sim.speed, phase: sim.phase, run: sim.run, reducedMotion: reduced });
+      rover.update(sim, alpha, rig.frozen ? 0 : Math.min(dt, 0.1), rig.impact);
+      rig.apply(camera);
+      // end rover+camera (step 2a)
 
       env.update(sim, alpha); // environment (step 2b)
 
@@ -231,6 +210,7 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
       for (const m of materials) m.dispose();
       for (const t of textures) t.dispose();
       pickups.dispose();
+      rover.dispose(); // rover+camera (step 2a)
       scene.clear();
       live.clear();
       renderer.dispose();
