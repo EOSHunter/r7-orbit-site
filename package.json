@@ -20,7 +20,8 @@
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node --test \"src/**/*.test.ts\" && vitest run",
     "test:e2e": "playwright test",
-    "test:lighthouse": "node tests/lighthouse.mjs"
+    "test:lighthouse": "node tests/lighthouse.mjs",
+    "runner:bots": "node scripts/runner-bots.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.2",
