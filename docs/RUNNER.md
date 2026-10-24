@@ -66,12 +66,14 @@ moves do nothing, and a short still press is a tap. One swipe per touch.
 | `rover.ts` | the rover: loads `assets/rover.glb`, animates it from the sim, the dust trail and the crash burst (below) |
 | `camera.ts` | `ChaseRig`, the chase camera, the hit-stop and the shake (below) |
 | `assets/rover.glb` | the rover model, built by `tools/runner/build_rover.py` (never edited by hand) |
+| `environment.ts` | the world around the track: sky, planet, stars, ring tunnel, track, rocks, glows, lights, fog (below, "The world") |
+| `world.ts` | the world's motion as pure maths: scroll, easing, fades, ring slots, the planet's place |
 | `index.ts` | `mountRunner(container, options)`: DOM, HUD, the loop, pause rules, resize, cleanup; the words (`RUNNER_TEXT`) |
 | `runner.css` | the HUD's styles, tokens only; imported by the page that hosts the game, never global |
 
 ```ts
 const { mountRunner } = await import('../game/runner/index'); // a separate lazy chunk, three.js included
-const game = mountRunner(container, { seed, onStats }); // { start, pause, resume, destroy }
+const game = mountRunner(container, { seed, variant: 'blended', onStats }); // { start, pause, resume, destroy }
 game.start();
 // later
 game.destroy(); // removes the canvas and HUD, every listener, the animation frame, the ResizeObserver, the WebGL context
@@ -81,8 +83,13 @@ The **host** supplies the container: positioned (the game fills it with `positio
 (`tabindex="0"`) with a visible focus ring, an accessible name, and its instructions as text pointed to by `aria-describedby`.
 The fixture uses `role="application"` so screen readers pass the keys through. The game adds a canvas (`role="img"`,
 `aria-label="Endless runner game"`), the score, a message and a polite live region that says "Game over, score N". The root
-carries `data-runner-state` (`ready`, `playing`, `over`, `unsupported`), `data-runner-paused` and `data-runner-lane`, for the
-tests and for the steps after this one.
+carries `data-runner-state` (`ready`, `playing`, `over`, `unsupported`), `data-runner-paused`, `data-runner-lane` and
+`data-runner-variant`, for the tests and for the steps after this one.
+
+`variant` is how the game meets its page: `blended` (the default, for the 404 page, concept 6) lays gradients from the page's
+background over the scene's top and sides (`.runner-blend`, `aria-hidden`, no pointer events), and the canvas clears to the
+same `--bg`, so there is no box and no edge; `framed` leaves them out, for a host that draws its own frame (the fixture's
+hairline border). The fixture shows `framed`, or `blended` with `?variant=blended`.
 
 **Three.js** (`three`, MIT) is the one runtime dependency added. It is imported by name in `render.ts` only, and only
 `index.ts` is imported dynamically, so it is never in a page's first load. The lazy chunk is about 551 kB, **138 kB
@@ -204,7 +211,8 @@ All in `src/game/runner/config.ts` (`RUNNER_CONFIG`); `withConfig({...})` makes 
 | `generator.pickup*` | see file | pickup chance, spacing, line length, heights |
 | `score.pickupBonus`, `score.restartDelay` | 5 m, 0.35 s | |
 | `input.*` | 30 px, 1.25, 12 px, 350 ms | swipe threshold, dominance, tap slop and length |
-| `render.*` | see file | pixel ratio caps, fog, rings (`render.camera` and `render.fov` are no longer read: the camera's numbers are in `camera.ts`) |
+| `render.*` | see file | pixel ratio caps, fog, rings (`ringSpacing` 9 m, `ringCount` 18; `render.camera` and `render.fov` are no longer read: the camera's numbers are in `camera.ts`) |
+| `WORLD` (in `world.ts`) | see file | the idle cruise (6 m/s), the eases (0.8 s, 0.6 s), the dim after a crash, the closed fog, rocks, the planet's size and place |
 
 ## Tuning difficulty
 
@@ -251,17 +259,78 @@ Suggested first tuning, not applied: `spawn.firstRowAt` 70 → 40 m; `jump.durat
   stays as it is.
 - **Step 4, QA:** `tests/runner.spec.js` and the unit tests are the base; the fixture's `?seed=N` repeats a course, and `?start=0` mounts the game on the ready screen instead of starting a run.
 
+## The world (step 2b)
+
+`environment.ts` builds everything around the track, in code: no files, no downloaded assets, no post-processing. Its only
+textures are four canvases of at most 64 x 128 px (a soft glow, the lane dashes, the planet's ring bands, the track's sheen).
+
+- **Sky, its own pass.** `drawSky(camera)` clears the canvas to obsidian (`--bg`) and draws the sky scene with a camera that
+  copies the game camera's rotation and almost none of its position: it never moves with the lanes and the game camera's far
+  plane never cuts it. The game's scene is drawn over it; its obsidian ground hides the sky under the horizon, and a haze band
+  (obsidian, clear a few degrees up) softens the line where they meet.
+- **The planet:** a low-poly sphere (320 facets) with latitude bands in `--surface-2`, `--text-3-app` and `--brass-deep`,
+  shaded per facet by its own light (a small shader: one light, a terminator, a thin ivory limb), and a tilted ring system
+  (ivory and faint brass bands). About a third of the view high, left of the vanishing point, its base under the horizon; in
+  a narrow view it shrinks to fit (`planetPlacement()`). It spins 4 degrees a minute.
+- **Stars:** 360 points, ivory at low brightness, no twinkle.
+- **The ring tunnel:** 18 flat brass rings 4.5 cm wide, one instanced draw, additive. They scroll with the world, fade in from
+  150 m, fade out just before the camera, and are recycled to the far end (`slotZ()`). Each casts a faint band of light on the
+  track under it.
+- **The track:** `--surface-1`, two lane hairlines with dashes scrolling at the world's speed, ivory edge hairlines with a
+  brass line inside, a soft brass sheen from the vanishing point, all in obsidian fog: the horizon has no edge.
+- **Rocks:** 28, low and faceted, from four shapes (one instanced draw each), at least 9.5 m from the centre line, so the
+  lanes and the middle of the view stay empty. Dark (`--surface-3`) with a faint ivory rim.
+- **Light:** a soft ivory key from above and behind the camera, an ivory rim light from far ahead, a low brass fill, a little
+  ambient; no shadow maps and no blob shadows (on a track this dark they would not show). The environment owns the scene's
+  lights and fog (it replaces those made before it).
+- **Brass glow** without post-processing: additive quads with the glow texture at the vanishing point and behind each pickup.
+
+**Motion** (`world.ts`, `WorldMotion`). The world scrolls by its own offset, never the sim's distance, advanced in the sim's
+fixed steps (the view counts `sim.steps`), so it is frame-rate independent, interpolated like the sim, and stops whenever the
+loop stops (a hidden tab, a pause).
+
+| | Ready (the idle scene) | Playing | Game over |
+| --- | --- | --- | --- |
+| World speed | 6 m/s cruise | eases into the sim's speed over 0.8 s, then equals it | eases to a stop over 0.6 s |
+| Fog | closed (14 to 64 m): no obstacles in view | eases open to 35 to 150 m: the rows come out of it | closes again |
+| Rings and glows | a slow brass pulse (`--dur-orbit` / 3, as the prompt's hairlines) | steady | dimmed by 45% |
+
+With `prefers-reduced-motion` the idle scene is a still frame (no scroll, no pulse, no spin) and every change is immediate; a
+run still moves, since that is the game. A restart is a new run: the world eases back up from its stop.
+
+**HUD and overlays** (`runner.css`): "Off course" in Cormorant Garamond, sized by the game's own box (a size container), in the
+sky above the tunnel; the score top right in JetBrains Mono, the best and pickups smaller and dimmer (on a small stage they
+step aside at game over, when the result line says the same); the prompt in small mono capitals at the bottom between two
+brass hairlines that breathe while idle. Soft pools of the background behind the words, no boxes. The message fades and
+settles a few pixels between states (`hidden` stays the switch; CSS keeps it laid out until the fade ends).
+
+**Budgets**, measured in the fixture (SwiftShader, 1280 x 720, seed 11): the environment is about 5,400 triangles and 20 draw
+calls (sky 4, track 7, tunnel 2, vanishing point 2, rocks 4, pickup glows 1 when any are near). The whole frame, with the placeholder rover and
+the obstacles and pickups in range: 12,438 triangles and 49 calls in the idle scene, 13,500 to 13,900 and 65 to 68 in a run,
+15,010 and 80 after a crash (the fogged rows still count); 25 to 27 geometries and 5 textures on the GPU. No allocation per
+frame: instances are written in place. Everything is disposed in `dispose()`.
+
+**In `render.ts`** the environment is one block and four calls, each marked `// environment (step 2b)`: create it after the
+lights, `env.update(sim, alpha)` in place of the old ring scroll, `env.drawSky(camera)` before `renderer.render`, and
+`env.dispose()`. `View.info()` (optional) passes its numbers to `onStats` as `view`, for the fixture's readout. The scene's
+lights and fog are made only there (the step 1 ones were removed when steps 2a and 2b were merged).
+
 ## Tests
 
 - Unit (Vitest): `camera.vitest.ts` (damping and its frame-rate independence, the FOV mapping, the camera's height and look
   target through jumps, slides and lane changes, the hit-stop and shake), `rover.vitest.ts` (the stand-in when the model is
-  missing, wheel spin at 60 and 144 Hz, slide, yaw, reduced motion), `sim.vitest.ts` (speed curve, phases, lanes, jump, slide, collisions per obstacle, the clock, frame-rate
+  missing, wheel spin at 60 and 144 Hz, slide, yaw, reduced motion), `world.vitest.ts` (ring slots and recycling, fades,
+  the idle scroll, the eases into a run and to a stop, the pulse, reduced motion, the planet's place), `sim.vitest.ts` (speed curve, phases, lanes, jump, slide, collisions per obstacle, the clock, frame-rate
   independence), `generator.vitest.ts` (fairness), `input.vitest.ts`, `storage.vitest.ts`, `index.vitest.ts` (mount and
   destroy on a small fake DOM: no listener, frame, observer or element left).
 - End to end (Playwright): `tests/runner.spec.js` on the fixture, with WebGL on SwiftShader: loads only when asked, no console
   errors, keyboard play to a crash and a restart, best score saved and blocked storage, lanes and no page scroll, synthetic
   swipes, the focus ring, axe in every state, no horizontal scroll at 320, 375 and 1280 px, unmount and mount again, and
-  the WebGL fallback, and a missing `rover.glb` (requested only after the game starts; the stand-in plays to a crash and a restart). The fixture is in `tests/routes.js`, so the shared smoke, axe, budget, audit, keyboard and Lighthouse
+  the WebGL fallback, and a missing `rover.glb` (requested only after the game starts; the stand-in plays to a crash and a
+  restart); since step 2b also the idle scene (the world scrolls while the distance stays 0), reduced motion (a
+  still frame, the game still plays), both variants (the blend, axe, no layout shift, no horizontal scroll at 320, 375 and
+  1280 px) and the triangle budget in every state. The file runs one test at a time (`mode: 'default'`): each runs WebGL on
+  the CPU, and ten at once starved each other into timeouts. The fixture is in `tests/routes.js`, so the shared smoke, axe, budget, audit, keyboard and Lighthouse
   checks run on it too (before the game loads).
 
 ## Design references

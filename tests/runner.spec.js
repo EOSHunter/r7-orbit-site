@@ -10,12 +10,26 @@ const FIXTURE = '/styleguide/runner/';
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 test.use({ launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } });
+// One test at a time in this file: each runs WebGL on the CPU (SwiftShader), and ten at once starve each other into timeouts.
+// The other spec files still run in parallel beside it.
+test.describe.configure({ mode: 'default' });
 
 const host = (page) => page.locator('[data-runner-host]');
 const game = (page) => page.locator('[data-runner]');
 // Loading the chunk and compiling the shaders on SwiftShader takes a few seconds when several tests run at once.
 const MOUNTED = { timeout: 30_000 };
 const score = async (page) => Number((await page.locator('.runner-score').innerText()).slice(0, 5));
+/** A number from the fixture's debug readout (drawn four times a second). */
+const stat = async (page, name) => parseFloat(await page.locator(`[data-stat="${name}"]`).innerText());
+
+/** Open the fixture on the ready screen (the idle scene): the game loads, no run starts. */
+async function idle(page, query = '') {
+  await page.goto(`${FIXTURE}?seed=5&start=0${query}`, { waitUntil: 'networkidle' });
+  await host(page).focus();
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'ready', MOUNTED);
+  await expect.poll(() => stat(page, 'scroll')).not.toBeNaN();
+}
 
 /** Open the fixture, focus the stage and press Space: the game loads and a run starts. */
 async function boot(page, seed = 7) {
@@ -103,6 +117,10 @@ test('the saved best shows on mount; blocked storage never breaks the game', asy
 test('arrows change lane; keys do not scroll the page while the game has focus', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 500 });
   await boot(page);
+  // Focusing the stage scrolled it into view, smoothly (scroll-behavior: smooth): wait until that scroll has finished.
+  await page.waitForFunction(
+    () => new Promise((done) => ((y) => setTimeout(() => done(window.scrollY === y), 250))(window.scrollY)),
+  );
   const y = await page.evaluate(() => window.scrollY);
   await page.keyboard.press('ArrowRight');
   await expect(game(page)).toHaveAttribute('data-runner-lane', '1');
@@ -198,10 +216,102 @@ test('axe passes on the fixture, before and during a run and after a crash', asy
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
 });
 
-for (const width of [320, 375, 1280]) {
-  test(`no horizontal scroll at ${width}px with the game running`, async ({ page }) => {
+test('the idle scene: the world scrolls while the sim stands still, then eases into the run', async ({ page }) => {
+  await idle(page);
+  const first = await stat(page, 'scroll');
+  await expect.poll(() => stat(page, 'scroll'), { timeout: 10_000 }).toBeGreaterThan(first + 1);
+  expect(await stat(page, 'distance')).toBe(0);
+  await expect(page.locator('.runner-message')).toBeVisible();
+  await expect(page.locator('.runner-title')).toHaveText('Off course');
+
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await expect.poll(() => stat(page, 'distance')).toBeGreaterThan(5);
+  await expect(page.locator('.runner-message')).toBeHidden(); // after its fade
+});
+
+test('reduced motion: the idle scene is a still frame, and the game still plays', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await idle(page);
+  await page.waitForTimeout(600); // a few readouts
+  const still = await stat(page, 'scroll');
+  await page.waitForTimeout(1200);
+  expect(await stat(page, 'scroll')).toBe(still);
+  const breath = await page.locator('.runner-prompt').evaluate((el) => getComputedStyle(el, '::before').animationName);
+  expect(breath).toBe('none');
+
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await expect.poll(() => stat(page, 'distance')).toBeGreaterThan(5);
+  expect(await stat(page, 'scroll')).toBeGreaterThan(still);
+});
+
+test('the scene stays within its budgets in the idle scene, a run and after a crash', async ({ page }) => {
+  test.setTimeout(120_000);
+  await idle(page);
+  const counts = async () => ({
+    triangles: await stat(page, 'triangles'),
+    calls: await stat(page, 'calls'),
+  });
+  await expect.poll(() => stat(page, 'triangles')).toBeGreaterThan(0);
+  const ready = await counts();
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(3000);
+  const playing = await counts();
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'over', { timeout: 90_000 });
+  await page.waitForTimeout(500);
+  const over = await counts();
+  console.log('renderer.info', JSON.stringify({ ready, playing, over }));
+  for (const c of [ready, playing, over]) expect(c.triangles).toBeLessThan(25_000);
+});
+
+for (const variant of ['framed', 'blended']) {
+  test(`the ${variant} variant: the page blend only where asked, no layout shift`, async ({ page }) => {
+    // Shifts from the moment the game is asked for (the page's own font swap before it is not the game's).
+    await page.addInitScript(() => {
+      window.__shift = 0;
+      window.__from = Infinity;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) if (entry.startTime >= window.__from) window.__shift += entry.value;
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(`${FIXTURE}?seed=5&start=0&variant=${variant}`, { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready.then(() => (window.__from = performance.now())));
+    await host(page).focus();
+    await page.keyboard.press('Space');
+    await expect(game(page)).toHaveAttribute('data-runner-state', 'ready', MOUNTED);
+    await expect(game(page)).toHaveAttribute('data-runner-variant', variant);
+    const blend = page.locator('.runner-blend');
+    await expect(blend).toHaveAttribute('aria-hidden', 'true');
+    if (variant === 'blended') {
+      await expect(blend).toBeVisible();
+      expect(await blend.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none');
+      expect(await host(page).evaluate((el) => getComputedStyle(el).borderTopColor)).toBe('rgba(0, 0, 0, 0)');
+    } else {
+      await expect(blend).toBeHidden();
+    }
+    expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
+    await page.keyboard.press('Space');
+    await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+    await page.waitForTimeout(500);
+    expect(await page.evaluate(() => window.__shift)).toBe(0);
+  });
+}
+
+for (const [width, variant] of [
+  [320, 'framed'],
+  [375, 'framed'],
+  [1280, 'framed'],
+  [320, 'blended'],
+  [375, 'blended'],
+  [1280, 'blended'],
+]) {
+  test(`no horizontal scroll at ${width}px with the game running (${variant})`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
-    await boot(page);
+    await page.goto(`${FIXTURE}?seed=7&variant=${variant}`, { waitUntil: 'networkidle' });
+    await host(page).focus();
+    await page.keyboard.press('Space');
+    await expect(game(page)).toHaveAttribute('data-runner-state', 'playing', MOUNTED);
     const box = await game(page).boundingBox();
     expect(box.width / box.height).toBeCloseTo(16 / 9, 1);
     const overflow = await page.evaluate(

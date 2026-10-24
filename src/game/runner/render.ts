@@ -3,11 +3,8 @@
 // moves towards the camera: an object `rel` metres ahead of the rover is drawn at z = -rel.
 
 import {
-  AmbientLight,
   BoxGeometry,
   CanvasTexture,
-  DirectionalLight,
-  Fog,
   Group,
   InstancedMesh,
   Mesh,
@@ -15,16 +12,15 @@ import {
   MeshLambertMaterial,
   Object3D,
   PerspectiveCamera,
-  PlaneGeometry,
   SRGBColorSpace,
   Scene,
   SphereGeometry,
-  TorusGeometry,
   WebGLRenderer,
   type BufferGeometry,
   type Material,
   type Texture,
 } from 'three';
+import { createEnvironment, type EnvironmentInfo } from './environment'; // environment (step 2b)
 import { RUNNER_COLORS as C, RUNNER_CONFIG, type RunnerConfig } from './config';
 import type { ObstacleKind } from './generator';
 import type { RunnerSim } from './sim';
@@ -39,6 +35,8 @@ export interface View {
   render(sim: RunnerSim, alpha: number): void;
   /** Free every geometry, material, texture and the WebGL context. */
   dispose(): void;
+  /** environment (step 2b): the world's scroll and renderer.info for the last frame (the fixture's readout, the tests). */
+  info?(): EnvironmentInfo;
 }
 
 /** Whether this browser can give a WebGL 2 context (three.js needs one). Asked on a throwaway canvas, then released. */
@@ -77,43 +75,14 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
   const lw = cfg.track.laneWidth;
   const r = cfg.render;
   const scene = new Scene();
-  scene.fog = new Fog(C.obsidian, r.fog.near, r.fog.far);
   const camera = new PerspectiveCamera(r.fov, 16 / 9, 0.1, r.fog.far + 20);
-  scene.add(new AmbientLight(C.ivory, 1.1));
-  const sun = new DirectionalLight(C.ivory, 1.6);
-  sun.position.set(-3, 8, 6);
-  scene.add(sun);
 
   const ivory = mat(new MeshLambertMaterial({ color: C.ivory }));
   const brass = mat(new MeshBasicMaterial({ color: C.brass }));
-  const hairline = mat(new MeshBasicMaterial({ color: C.ivory, transparent: true, opacity: 0.4 }));
 
-  // The track: a dark plane with ivory hairlines on the lane edges.
-  const trackLength = r.fog.far + 60;
-  const track = new Mesh(
-    geo(new PlaneGeometry(lw * 3 + 1.2, trackLength)),
-    mat(new MeshLambertMaterial({ color: C.track })),
-  );
-  track.rotation.x = -Math.PI / 2;
-  track.position.z = -trackLength / 2 + 20;
-  scene.add(track);
-  const lineGeo = geo(new PlaneGeometry(0.05, trackLength));
-  for (const x of [-1.5, -0.5, 0.5, 1.5]) {
-    const line = new Mesh(lineGeo, hairline);
-    line.rotation.x = -Math.PI / 2;
-    line.position.set(x * lw, 0.005, track.position.z);
-    scene.add(line);
-  }
-
-  // The tunnel: thin brass rings, moved back by one spacing as the rover passes one (they look endless).
-  const rings = new Group();
-  const ringGeo = geo(new TorusGeometry(r.ringRadius, 0.035, 6, 96));
-  for (let i = 0; i < r.ringCount; i++) {
-    const ring = new Mesh(ringGeo, brass);
-    ring.position.set(0, 2, -i * r.ringSpacing);
-    rings.add(ring);
-  }
-  scene.add(rings);
+  // environment (step 2b): the sky, planet, stars, ring tunnel, track, rocks, glows, lights and fog (environment.ts).
+  const env = createEnvironment({ renderer, scene, cfg, doc: canvas.ownerDocument });
+  // end environment (step 2b)
 
   // rover+camera (step 2a): the rover model and its effects (rover.ts), the chase camera (camera.ts).
   const win = canvas.ownerDocument.defaultView;
@@ -192,7 +161,7 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
       rig.apply(camera);
       // end rover+camera (step 2a)
 
-      rings.position.z = d % r.ringSpacing;
+      env.update(sim, alpha); // environment (step 2b)
 
       const seen = new Set<number>();
       for (const o of sim.obstacles) {
@@ -229,10 +198,14 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
       pickups.count = n;
       pickups.instanceMatrix.needsUpdate = true;
 
+      env.drawSky(camera); // environment (step 2b): clears, then the sky pass
       renderer.render(scene, camera);
     },
 
+    info: () => env.info(), // environment (step 2b)
+
     dispose() {
+      env.dispose(); // environment (step 2b)
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();
       for (const t of textures) t.dispose();

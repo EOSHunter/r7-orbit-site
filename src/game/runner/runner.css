@@ -1,12 +1,14 @@
-/* The runner's own words over the canvas: score, best, pickups, the message and the WebGL fallback (src/game/runner/index.ts).
-   Not global: only a page that hosts the game imports this file. The host's container must be positioned; the game fills it.
-   Tokens only (CLAUDE.md, design rules). The look pass (step 2) may restyle this. */
+/* The runner's own words over the canvas: score, best, pickups, the message and the WebGL fallback (src/game/runner/index.ts),
+   and the page blend. Not global: only a page that hosts the game imports this file. The host's container must be positioned;
+   the game fills it. Tokens only (CLAUDE.md, design rules). Sizes follow the game's own box (a size container), so the same
+   words fit a 200 px phone stage and a full page. */
 
 .runner {
   position: absolute;
   inset: 0;
   overflow: hidden;
   border-radius: inherit;
+  container: runner / size;
 }
 
 .runner-canvas {
@@ -20,75 +22,203 @@
   margin: 0;
 }
 
+/* The page blend (variant "blended", the 404 page): the scene melts into the page's background at the top and the sides, so
+   there is no box and no edge. The canvas clears to the same --bg underneath. */
+.runner-blend {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.runner[data-runner-variant='blended'] .runner-blend {
+  display: block;
+  background:
+    linear-gradient(
+      to bottom,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 82%, transparent) 7%,
+      color-mix(in srgb, var(--bg) 45%, transparent) 17%,
+      color-mix(in srgb, var(--bg) 12%, transparent) 27%,
+      transparent 36%
+    ),
+    linear-gradient(
+      to right,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 6%,
+      transparent 16%,
+      transparent 84%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 94%,
+      var(--bg) 100%
+    );
+}
+
+/* The score, top right, in mono; the best and the pickups under it, smaller and dimmer. A soft scrim, not a box. */
 .runner-hud {
   position: absolute;
-  top: var(--s-3);
-  right: var(--s-4);
+  top: var(--s-2);
+  right: var(--s-2);
   display: grid;
   justify-items: end;
   gap: var(--s-1);
+  padding: var(--s-2) var(--s-3);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--bg) 65%, transparent), transparent);
   pointer-events: none;
 }
 
 .runner-score {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-wide);
   color: var(--text);
 }
 
-.runner-best {
-  font-size: var(--fs-xs);
-  color: var(--text-3);
+.runner-best,
+.runner-pickups {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+.runner-best,
+.runner-pickups {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s;
+}
+
+/* On a small stage the game-over line (score and best) would run under these two; it says the same, so they step aside. */
+@container runner (max-width: 40rem) {
+  .runner[data-runner-state='over'] .runner-best,
+  .runner[data-runner-state='over'] .runner-pickups {
+    visibility: hidden;
+    opacity: 0;
+  }
 }
 
 .runner-pickups {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: var(--fs-xs);
-  color: var(--text-2);
 }
 
 .runner-dot {
-  width: var(--s-2);
-  height: var(--s-2);
+  width: var(--s-1);
+  height: var(--s-1);
   border-radius: var(--r-full);
   background: var(--brass);
 }
 
+/* The message: the title in the sky above the tunnel, the result under it after a crash, the prompt at the bottom. It fades
+   (and settles by a few pixels) between ready, playing and game over: index.ts sets `hidden`, and this keeps the element laid
+   out so the change can be animated; visibility, switched at the end, takes it out of the accessibility tree. */
 .runner-message {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--s-2);
-  padding: var(--s-4);
+  padding: clamp(var(--s-4), 11cqh, var(--s-9)) var(--s-4) clamp(var(--s-3), 5cqh, var(--s-7));
   text-align: center;
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
   pointer-events: none;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-slow) var(--ease),
+    transform var(--dur-slow) var(--ease),
+    visibility 0s linear 0s;
+}
+
+.runner-message[hidden] {
+  display: flex !important; /* over site.css's [hidden] rule, so the fade can run */
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(var(--s-1));
+  transition:
+    opacity var(--dur-slow) var(--ease),
+    transform var(--dur-slow) var(--ease),
+    visibility 0s linear var(--dur-slow);
+}
+
+/* A scrim behind the words only: two soft pools of the background, no edges. */
+.runner-message::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(46% 24% at 50% 20%, color-mix(in srgb, var(--bg) 62%, transparent), transparent),
+    radial-gradient(42% 13% at 50% 93%, color-mix(in srgb, var(--bg) 72%, transparent), transparent);
 }
 
 .runner-title {
   font-family: var(--font-display);
-  font-size: var(--fs-xl);
-  line-height: 1.1;
+  font-weight: var(--fw-regular);
+  font-size: clamp(var(--fs-xl), 12cqh, var(--fs-5xl));
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
   color: var(--text);
 }
 
 .runner-result {
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
   color: var(--text-2);
 }
 
-.runner-prompt {
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
+/* The prompt: small mono capitals between two brass hairlines that breathe with the scene's idle pulse. */
+.runner .runner-prompt {
+  margin-top: auto; /* the bottom of the stage, under the rover (over .runner p) */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
   color: var(--text-2);
+}
+
+.runner-prompt::before,
+.runner-prompt::after {
+  content: '';
+  inline-size: var(--s-6);
+  block-size: var(--bw);
+  background: var(--line-brass);
+}
+
+.runner[data-runner-state='ready'] .runner-prompt::before,
+.runner[data-runner-state='ready'] .runner-prompt::after {
+  /* --dur-orbit / 3: the scene's pulse (WORLD.pulsePeriod in world.ts) has the same period. */
+  animation: runner-breathe calc(var(--dur-orbit) / 3) ease-in-out infinite;
+}
+
+.runner-prompt::before {
+  transform-origin: right;
+}
+
+.runner-prompt::after {
+  transform-origin: left;
+}
+
+@keyframes runner-breathe {
+  0%,
+  100% {
+    transform: scaleX(0.55);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
 }
 
 .runner-fallback {
@@ -103,20 +233,39 @@
   text-align: center;
 }
 
-@media (min-width: 48rem) {
+@container runner (min-width: 40rem) {
+  .runner-hud {
+    top: var(--s-3);
+    right: var(--s-3);
+  }
+
   .runner-score {
     font-size: var(--fs-xl);
   }
 
-  .runner-title {
-    font-size: var(--fs-3xl);
-  }
-
-  .runner-result {
-    font-size: var(--fs-sm);
-  }
-
+  .runner-best,
+  .runner-pickups,
+  .runner-result,
   .runner-prompt {
-    font-size: var(--fs-md);
+    font-size: var(--fs-xs);
+  }
+
+  .runner-prompt::before,
+  .runner-prompt::after {
+    inline-size: var(--s-7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner-message,
+  .runner-message[hidden] {
+    transform: none;
+  }
+
+  .runner[data-runner-state='ready'] .runner-prompt::before,
+  .runner[data-runner-state='ready'] .runner-prompt::after {
+    animation: none;
+    transform: none;
+    opacity: 1;
   }
 }

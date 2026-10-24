@@ -11,6 +11,7 @@
 import { RUNNER_CONFIG, type RunnerConfig } from './config';
 import { FixedStepClock } from './clock';
 import { createInput } from './input';
+import type { EnvironmentInfo } from './environment';
 import { createView, type View } from './render';
 import { RunnerSim, type Intent, type Phase } from './sim';
 import { loadBest, saveBest } from './storage';
@@ -40,7 +41,15 @@ export interface RunnerStats {
   phase: Phase;
   paused: boolean;
   score: number;
+  /** The view's world scroll and renderer counts (environment.ts), when the view reports them. */
+  view?: EnvironmentInfo;
 }
+
+/**
+ * How the game meets its page. `blended` (the default, the 404 page): the scene melts into the page's background at the top
+ * and the sides, with no edge. `framed`: the scene runs to the container's edges (the fixture draws a hairline frame round it).
+ */
+export type RunnerVariant = 'blended' | 'framed';
 
 export interface RunnerOptions {
   /** Seed of the first course (default Date.now()). The fixture page passes ?seed= so its tests can repeat a run. */
@@ -50,6 +59,8 @@ export interface RunnerOptions {
   touch?: boolean;
   /** Move keyboard focus to the container on mount (default true). */
   focus?: boolean;
+  /** See RunnerVariant (default `blended`). */
+  variant?: RunnerVariant;
   /** Called after every frame (the fixture page's debug readout). */
   onStats?: (stats: RunnerStats) => void;
 }
@@ -88,6 +99,7 @@ export function mountRunner(
 
   const root = el('div', 'runner');
   root.setAttribute('data-runner', '');
+  root.dataset.runnerVariant = options.variant ?? 'blended';
   const canvas = el('canvas', 'runner-canvas');
   canvas.setAttribute('role', 'img');
   canvas.setAttribute('aria-label', RUNNER_TEXT.canvasLabel);
@@ -125,7 +137,10 @@ export function mountRunner(
   const live = el('p', 'visually-hidden');
   live.setAttribute('aria-live', 'polite');
   live.setAttribute('data-runner-live', '');
-  root.append(hud, message, live);
+  // The page blend: gradients from the page's background over the scene's top and sides (runner.css; blended only).
+  const blend = el('div', 'runner-blend');
+  blend.setAttribute('aria-hidden', 'true');
+  root.append(blend, hud, message, live);
 
   const coarse = win.matchMedia?.('(pointer: coarse)').matches ?? false;
   let touch = options.touch ?? coarse;
@@ -201,6 +216,7 @@ export function mountRunner(
       phase: sim.phase,
       paused,
       score: sim.score,
+      view: view.info?.(),
     });
     raf = win.requestAnimationFrame(frame);
   };

@@ -117,9 +117,9 @@ export const RUNNER_CONFIG = {
     fov: 60,
     camera: { height: 3.2, back: 6.5, lookAhead: 10, lookHeight: 1, follow: 0.55 },
     fog: { near: 35, far: 150 },
-    /** The tunnel: a thin brass ring every ringSpacing metres. */
-    ringSpacing: 14,
-    ringCount: 12,
+    /** The tunnel: a thin brass ring every ringSpacing metres (environment.ts; the count covers the fog's depth). */
+    ringSpacing: 9,
+    ringCount: 18,
     ringRadius: 7.5,
   },
 };
@@ -133,6 +133,12 @@ export const RUNNER_COLORS = {
   obsidian: 0x09090a,
   /** --surface-1: the track, one tone up from the background. */
   track: 0x0f0f11,
+  /** --surface-2: the planet's night side, a step above the sky. */
+  night: 0x151518,
+  /** --text-3-app: the planet's lit side, a dark warm grey. */
+  stone: 0x6b675f,
+  /** --brass-deep: brass in shadow, the planet's darker bands. */
+  brassDeep: 0x5c4d2c,
   /** --text: ivory, every solid (rover, slab, barrier, gate) and the lane hairlines. */
   ivory: 0xece6d8,
   /** --brass: the one accent (rings, pickups, the rover's beacon). */
