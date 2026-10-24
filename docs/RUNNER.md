@@ -568,3 +568,70 @@ concepts, not specs: shapes, mood, the HUD and the page layout.
 Differences in this prototype, on purpose: the track has four hairlines (both edges and the two lane lines) as in the
 gameplay concept; the broken-link and ring-fragment obstacles, the rocks and asteroids, the striped barrier and the crash
 burst are left to the look pass.
+
+## On the 404 page (step 3)
+
+<!-- Written by the page-integration task; the difficulty and atmosphere tasks edit other sections of this file. -->
+
+`src/pages/404.astro` draws everything it drew before (the orbit, "Error 404", the heading and words of `src/content/pages/404.md`,
+the search form, the two buttons, `noindex`, the real 404 status) and, under the buttons, `src/components/RunnerStage.astro`:
+a full-bleed stage with no frame (concept 6, the game's `blended` variant), its top edge fading into the page.
+
+**Size** (`src/styles/runner-stage.css`, the `.runner-stage` rule, the one place to move or resize it): 16:9 on a wide screen, 3:4
+under 40rem (so the track has room on a phone), never under 60svh, never over 45rem (720px), and never taller than the screen
+under the sticky header and the page's scroll padding (`100svh - header - 24px`) (so a phone on its side still shows the whole stage). It holds that space before anything loads, so
+nothing shifts. A negative top margin pulls its solid top edge into the buttons' empty bottom padding, so there is no bare gap.
+Without JavaScript (`@media (scripting: none)`) the stage is not drawn at all: no game, no empty gap.
+
+**Before anyone asks: a poster.** Inline SVG and CSS, no image, no WebGL, no script needed to draw it: the tunnel's brass rings,
+a faint ringed planet, a few stars, three lane lines and two edges, a few brass pickups, a small rover with its beacon, all in
+tokens, and one real `<button>` with the game's own words (`RUNNER_TEXT.play`: "Press space to play", or "Tap to play" on a
+coarse pointer, chosen by `@media (pointer: coarse)` so there is no flash). The words come from `src/game/runner/text.ts`,
+which holds `RUNNER_TEXT` on its own (`index.ts` re-exports it) so the page can print them without importing three.js. The page
+adds no copy of its own.
+
+**Loading.** The game (three.js chunk, about 170 kB gzipped, and `rover.glb`) is requested only on the first interaction with
+the stage: a click or tap anywhere on it, or Space or Enter on the focused button. Space, a click or a tap start a run at once
+(on a touch screen the words and `touch: true` are the touch ones); Enter loads the idle scene and waits for Space. While it
+downloads the stage says `data-stage="loading"` (`aria-busy`, the button's hairlines pulse faster); if the download fails the
+poster stays and another press tries again.
+
+**Prefetch.** After the `load` event, `requestIdleCallback` (a 3 s timer where there is none) and the page's largest paint plus 1.5 s (a `PerformanceObserver` on `largest-contentful-paint`; 3 s after load where there is no such entry), and only when the stage is
+within one screen of the viewport (an `IntersectionObserver`, `rootMargin: 100% 0`) and the connection is not data-saver or 2G,
+the page adds `<link rel="prefetch" crossorigin="anonymous">` for the chunk and the model (`shouldPrefetch()` in
+`src/lib/runner-stage.ts`). They are fetched, not run; nothing is mounted. The paint gate matters: Lighthouse's model counts every request that starts before the paint, and a prefetch that began ahead of a slow first paint pushed the 404 page's LCP from 1.6 s to 2.9 s in one noisy run; started after the paint it cannot. A press then asks for the same addresses, which the
+host's immutable `/_astro/*` rule serves from the cache. The chunk's built address comes from `virtual:runner-chunk-url`, a
+small Vite plugin in `astro.config.mjs` (`runnerChunkUrl`) that emits the runner as a chunk and hands the page its hashed
+address; in `astro dev` it is `null` and there is no prefetch. The page imports the chunk by that address (`import(url)`), never
+through a relative path.
+
+**Works from any 404 address.** The host serves `404.html` for an unknown address at any depth, so every address the page uses is
+root-absolute: the chunk (`/_astro/runner.<hash>.js`), the model (`/_astro/rover.<hash>.glb`, printed into `data-rover` and
+fetched by the game with its Vite asset URL), the stylesheet and the fonts. `tests/runner-404.spec.js` reads `dist/` for this and
+loads the page from `/a/b/c/d/e/no-such-page/?utm=x#top`.
+
+**Touch.** Swipes and taps are the game's own (`input.ts`). The stage sets `touch-action: pan-y pinch-zoom` on the canvas (the page
+scrolls with a vertical drag that starts in it; no double-tap zoom) and `touch-action: none` only while a run is in progress and
+not paused (`[data-runner-state='playing'][data-runner-paused='false']`), so a swipe during a run never scrolls the page. The
+browser reads `touch-action` when a touch starts, so a first touch on the ready or game-over screen scrolls; a tap there starts.
+
+**Keyboard and focus.** The poster's button is the only tab stop until the game loads, then the stage itself (`tabindex="0"`,
+`role="application"`, named "Off course: endless runner game", described by the game's prompt line) takes focus. Space and the
+arrows are prevented only while the stage has focus (the game's own rule); elsewhere on the page they scroll as usual. Escape
+pauses a run, Space or a tap resumes, Tab leaves (and the game pauses, its own rule). The whole stage is brought into view
+(`scrollIntoView`, `block: 'nearest'`; smooth, instant with reduced motion, after the fonts are ready) when the game mounts. It is smooth on purpose: the browser's own scroll to the focused button may still be running, and a second smooth scroll takes over its target where an instant one is overtaken by it (the HUD ended up under the header in a test). A visible focus ring is drawn inside the stage's edge.
+
+**Score.** The game's HUD is the score on the page (score, pickups, best; top right, under the header). The best score is shown
+only once there is one (`data-has-best` on the stage; the game draws 00000 before a first run), and is saved only in the
+browser (`r7-runner-best`).
+
+**Reduced motion.** Nothing autoplays: the poster's hairlines stand still, the game appears without its fade, the idle scene is a
+still frame (the game's own rule) and a run still plays on request. A hidden tab pauses (the game's own rule).
+
+**Without WebGL** the stage keeps its poster scenery, hides the button and shows the game's "This game needs WebGL." The rest of
+the page works as before.
+
+**Lighthouse** (mobile, `/no-such-page/` which is audited as `/404.html`), before and after: performance 1 and 1, accessibility, best practices 1 and 1, LCP 1503 ms and 1656 ms (limit 2000), CLS 0 and 0, TBT 0 and 0, FCP 1053 ms and 1056 ms, transfer 107 kB and 110 kB without the prefetch (the stage adds 3 kB: the poster's SVG and CSS and a 1.5 kB script) and 343 kB with it (the chunk, 172 kB, and the model, 59 kB, fetched after the paint, which the audit counts in its total). Requests 10 and 14. `/` is untouched; it sits on the 2000 ms line by itself (2030 ms before and after, 1894 ms in another run).
+
+**Tests:** `tests/runner-404.spec.js` (20 tests; see its header), `src/lib/runner-stage.vitest.ts`, and the 404 line added to
+`tests/fixtures/pages/404.txt`.

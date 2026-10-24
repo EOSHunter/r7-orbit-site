@@ -295,10 +295,9 @@ import '../../../game/runner/runner.css';
     if (!host || handle || loading) return;
     loading = true;
     try {
-      const { mountRunner } = await import('../../../game/runner/index');
+      const { mountRunner, withConfig } = await import('../../../game/runner/index');
       const query = new URLSearchParams(location.search);
       const seed = Number(query.get('seed'));
-      const { withConfig } = await import('../../../game/runner/config');
       // ?all=1: every pattern and the new hazards from the first row (a fixture for the tests; the game never does this).
       // atmosphere polish: ?comet=1 sends a shooting star 1.5 s after mount, from a fixed sky seed (the tests, a quick look).
       // They combine: each adds its own part of the config.
