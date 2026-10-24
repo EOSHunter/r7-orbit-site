@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
 import { aboutTitle } from './about-title.js';
+import { headingBefore } from '../src/lib/sections-to-content.ts';
 import { contentTextProblems, inputsDigest, pageCopy, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
@@ -38,8 +39,6 @@ test('the Person structured data still comes from site.json, and the page head i
   const person = graph.find((n) => n['@type'] === 'Person');
   expect(person.name).toBe(site.author.name);
   expect(person.description).toBe(site.author.bio);
-  // The page's title is about.md's, and its nav item is the one whose address is /about/ (labels are the author's, in /admin).
-  const { title } = pageCopy('about');
   const profile = graph.find((n) => n['@type'] === 'ProfilePage');
   expect(profile.name).toBe(`${aboutTitle} · ${site.name}`);
   const crumbs = graph.find((n) => n['@type'] === 'BreadcrumbList').itemListElement.map((i) => i.name);
@@ -144,7 +143,8 @@ test('the team is one column on a phone and two or three on a wide screen, under
   // The heading above the block is a row of its own above the cards, not beside the R7 picture.
   const grid = await page.locator('[data-team]').boundingBox();
   // (when the page has one: the author may leave the page title above the cards to do that job)
-  const headings = page.locator('.sections h2');
+  // (not the card names: with no heading above it the Team block draws them as h2)
+  const headings = page.locator('.sections h2:not(.team-name)');
   if (await headings.count()) {
     const heading = await headings.last().boundingBox();
     expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);

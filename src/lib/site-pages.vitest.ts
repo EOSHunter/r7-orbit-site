@@ -48,17 +48,34 @@ describe('the site pages', () => {
     }
   });
 
-  it('can be saved in the editor as it is: every block writes out each menu and number the form requires (Decap does not fill in a default for a block already in the file)', () => {
+  it('reads every block in the files as it is: a menu or number the schema gives a default (alwaysHasValue) may be left out, the build fills it in', () => {
+    // The files are the author's, saved from /admin or written by an agent: a block without `order`, `look` or `count` is valid because
+    // the schema supplies the default (this used to demand every one of them in the file, which failed on a Latest block without `order`).
+    // What a block must have is what the schema requires: a field with a default is never "missing".
     for (const file of ['about', ...SITE_PAGES.map((p) => p.id)]) {
       const data = read(file);
       for (const list of ['sections', 'introSections', 'outroSections']) {
         for (const [i, block] of ((data[list] as Record<string, unknown>[] | undefined) ?? []).entries()) {
+          const where = `${file}.md ${list} block ${i + 1} (${String(block.type)})`;
           const fields = describeShape(definitionOf(String(block.type))!.schema.shape);
-          const missing = fields.filter((f) => alwaysHasValue(f) && block[f.name] === undefined).map((f) => f.name);
-          expect(missing, `${file}.md ${list} block ${i + 1} (${String(block.type)})`).toEqual([]);
+          const missing = fields.filter((f) => f.required && !f.hasDefault && block[f.name] === undefined).map((f) => f.name);
+          expect(missing, where).toEqual([]);
+          // A field the file leaves out and the form always fills (alwaysHasValue) comes back from the schema as its default.
+          const parsed = sectionsSchema.safeParse([block]);
+          expect(parsed.success ? '' : JSON.stringify(parsed.error.issues), where).toBe('');
+          for (const f of fields) if (alwaysHasValue(f) && block[f.name] === undefined) expect(parsed.data![0], where).toHaveProperty(f.name);
         }
       }
     }
+  });
+
+  it('accepts a Latest block as the editor wrote it without "order", and gives it the default (newest first)', () => {
+    const block = { type: 'latest', eyebrow: 'Writing about it', heading: 'Behind *Orbit Royale*', kinds: ['blog'], tag: 'orbit-royale', count: 3, look: 'section', ifEmpty: 'hide' };
+    const parsed = sectionsSchema.safeParse([block]);
+    expect(parsed.success ? '' : JSON.stringify(parsed.error.issues)).toBe('');
+    expect(parsed.data![0]).toMatchObject({ type: 'latest', order: 'newest' });
+    // The page that holds one (the Projects page) passes its own rules too.
+    expect(pageProblems(sitePage('projects'), { ...read('projects') })).toEqual([]);
   });
 
   it('prints the site settings through tokens, never by typing their values (the settings stay the one place for them)', () => {

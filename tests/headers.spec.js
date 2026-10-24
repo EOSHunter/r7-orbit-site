@@ -198,7 +198,7 @@ test('the About page opens in the editor with its blocks and a live preview, wit
     // (a heading in a portrait's own text is an h2 too)
     await expect(preview.locator('.about-grid .portrait')).toHaveCount(portraits.length);
   }
-  if (!portraits.some((p) => /^## /m.test(p.text ?? ''))) await expect(preview.getByRole('heading', { level: 2 })).toHaveText(shown);
+  if (!portraits.some((p) => /^## /m.test(p.text ?? ''))) await expect(preview.locator('h2:not(.team-name)')).toHaveText(shown); // (the Team block's names are h2 when no heading is above it)
   const team = types('team')[0];
   if (team) await expect(preview.locator('.team-grid .team-card')).toHaveCount(team.members.length);
 
