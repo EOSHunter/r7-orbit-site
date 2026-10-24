@@ -1,4 +1,4 @@
-inputs: sha256:199aaf06e780a51f
+inputs: sha256:812768f818fb324a
 title: Page not found · R7 Orbit
 description: That page has drifted out of orbit. It may have moved, or it never existed.
 robots: noindex
@@ -11,3 +11,4 @@ input: search "Search posts"
 button: Search
 a: Back home -> /
 a: See the latest -> /#latest
+button: Press space to play Tap to play

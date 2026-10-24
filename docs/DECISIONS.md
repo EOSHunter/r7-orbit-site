@@ -199,3 +199,11 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
   - **Two render passes:** the sky (planet, stars, a horizon haze) is drawn first with a camera that copies only the game camera's rotation, so it never moves with the lanes and is never cut by the far plane; `renderer.autoClear` is off and `renderer.info` counts both passes.
   - **No texture larger than 64 x 128 px** (four canvases drawn in code) and no post-processing; the glows are additive quads.
   - **Lazy chunk:** 551,336 B / 138,294 B gzipped before, 569,018 B / 144,706 B after (+6.4 kB gzipped: the shader, points and polyhedra parts of three.js).
+
+- **The runner on the 404 page, step 3** (2026-10-24). The author chose concept 6 and said the 404 text "is fine as it is today". Docs: `docs/RUNNER.md` "On the 404 page" and `docs/PAGES.md` "404". Decided, without the author:
+  - **The game goes under the page's buttons as a full-bleed stage with no frame**, the `blended` variant; 16:9 on a wide screen (60svh to 720px), 3:4 on a phone. Nothing already on the page changed, and no new copy: the poster button uses the game's own `RUNNER_TEXT.play` words.
+  - **Before the first interaction the stage is a CSS and inline-SVG poster with a real button**; the game (three.js chunk, `rover.glb`) loads on the first click, tap, Space or Enter. A click, tap or Space also starts a run; Enter stops on the idle scene.
+  - **Idle prefetch** (`<link rel="prefetch">`, fetched not run) after `load` and idle, only when the stage is within one screen and the connection is not data-saver or 2G. It needs the chunk's hashed address, which a small Vite plugin in `astro.config.mjs` (`runnerChunkUrl`, virtual module `virtual:runner-chunk-url`) hands to the page; no new dependency.
+  - **`RUNNER_TEXT` moved to `src/game/runner/text.ts`** (`index.ts` re-exports it) so the page can print the words at build time without pulling in three.js.
+  - **`touch-action`** is `none` only while a run is in progress; `pan-y pinch-zoom` otherwise. **Escape pauses** a run (added by the page, not the game).
+  - **No JavaScript means no stage** (`@media (scripting: none)`), not a poster with a dead button.

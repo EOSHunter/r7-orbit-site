@@ -1,0 +1,241 @@
+---
+// The 404 page's game stage (docs/RUNNER.md, "On the 404 page"; the author chose concept 6, the game blended into the page).
+// Before anyone asks, it is a poster of inline SVG and CSS (no image, no WebGL, no JavaScript needed to draw it) with one real
+// button, in a box that holds its space (no layout shift). The game itself (three.js, the rover model) is fetched only on the
+// first click, tap, Space or Enter on the stage, and quietly prefetched when the page has gone idle and the stage is near.
+// The words are the game's own (RUNNER_TEXT): this component adds none.
+import { RUNNER_TEXT } from '../game/runner/text';
+import roverUrl from '../game/runner/assets/rover.glb?url';
+import '../game/runner/runner.css';
+import '../styles/runner-stage.css';
+
+// What the stage prints for its script, so the script imports nothing from the game: the container's name once the game is
+// mounted, and the rover model's built address (for the prefetch).
+const label = `${RUNNER_TEXT.title}: ${RUNNER_TEXT.canvasLabel.toLowerCase()}`;
+
+// The scene is drawn on a 1600 x 900 sheet, cropped to the stage (the middle stays); the horizon is a little above the middle,
+// as in the game. The tunnel's rings are circles round the vanishing point, closer together the further away.
+const CENTER = { x: 800, y: 390 };
+const rings = [14, 24, 40, 64, 98, 148, 222, 330, 480, 690].map((r, i, all) => ({
+  r,
+  opacity: (0.2 + 0.5 * (i / (all.length - 1))).toFixed(2),
+}));
+// The track: two edges and two lane lines from the vanishing point to the bottom of the sheet.
+const edges = [-700, 700].map((dx) => ({ x: CENTER.x + dx, y: 900 }));
+const inner = [-640, 640].map((dx) => ({ x: CENTER.x + dx, y: 900 }));
+const lanes = [-232, 232].map((dx) => ({ x: CENTER.x + dx, y: 900 }));
+const pickups = [
+  { y: 440, r: 3 },
+  { y: 478, r: 4.5 },
+  { y: 528, r: 6.5 },
+];
+// A few stars, always in the same places (a small fixed sequence, so every build draws the same sky).
+let seed = 7;
+const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const stars = Array.from({ length: 34 }, () => ({
+  x: (next() * 1560 + 20).toFixed(0),
+  y: (next() * (CENTER.y - 60) + 20).toFixed(0),
+  r: (0.7 + next() * 0.9).toFixed(1),
+  o: (0.25 + next() * 0.4).toFixed(2),
+}));
+---
+
+<div class="runner-stage" data-runner-stage data-label={label} data-rover={roverUrl}>
+  <div class="runner-poster" data-runner-poster>
+    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <defs>
+        <clipPath id="rs-sky"><rect x="0" y="0" width="1600" height={CENTER.y + 40}></rect></clipPath>
+        <radialGradient id="rs-glow">
+          <stop offset="0" class="rs-glow-core"></stop>
+          <stop offset="1" class="rs-glow-edge"></stop>
+        </radialGradient>
+        <linearGradient id="rs-haze" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="rs-haze-clear"></stop>
+          <stop offset="1" class="rs-haze-solid"></stop>
+        </linearGradient>
+      </defs>
+      {stars.map((star) => <circle cx={star.x} cy={star.y} r={star.r} opacity={star.o} class="rs-star"></circle>)}
+      <g class="rs-planet" transform="translate(340 250)">
+        <ellipse rx="300" ry="46" transform="rotate(-14)" class="rs-planet-ring"></ellipse>
+        <circle r="150" class="rs-planet-body"></circle>
+      </g>
+      <g clip-path="url(#rs-sky)">
+        {rings.map((ring) => <circle cx={CENTER.x} cy={CENTER.y} r={ring.r} class="rs-ring" opacity={ring.opacity}></circle>)}
+      </g>
+      <rect x="0" y={CENTER.y} width="1600" height={900 - CENTER.y} class="rs-ground"></rect>
+      <polygon points={`${CENTER.x},${CENTER.y} ${edges[0].x},900 ${edges[1].x},900`} class="rs-track"></polygon>
+      <rect x="0" y={CENTER.y - 90} width="1600" height="90" fill="url(#rs-haze)"></rect>
+      <circle cx={CENTER.x} cy={CENTER.y} r="70" fill="url(#rs-glow)"></circle>
+      {edges.map((p) => <line x1={CENTER.x} y1={CENTER.y} x2={p.x} y2={p.y} class="rs-edge"></line>)}
+      {inner.map((p) => <line x1={CENTER.x} y1={CENTER.y} x2={p.x} y2={p.y} class="rs-edge-brass"></line>)}
+      {lanes.map((p) => <line x1={CENTER.x} y1={CENTER.y} x2={p.x} y2={p.y} class="rs-lane"></line>)}
+      {pickups.map((p) => <circle cx={CENTER.x} cy={p.y} r={p.r} class="rs-pickup"></circle>)}
+      <g class="rs-rover" transform="translate(800 712)">
+        <rect x="-64" y="-12" width="22" height="40" rx="3" class="rs-wheel"></rect>
+        <rect x="42" y="-12" width="22" height="40" rx="3" class="rs-wheel"></rect>
+        <path d="M-54 -10 L-36 -40 L36 -40 L54 -10 L58 20 L-58 20 Z" class="rs-hull"></path>
+        <path d="M-30 -24 L30 -24" class="rs-visor"></path>
+        <line x1="0" y1="-40" x2="0" y2="-64" class="rs-mast"></line>
+        <circle cx="0" cy="-70" r="6" class="rs-beacon"></circle>
+      </g>
+    </svg>
+    <button class="runner-play" type="button" data-runner-play>
+      <span class="runner-keys">{RUNNER_TEXT.play.keys}</span>{' '}
+      <span class="runner-touch">{RUNNER_TEXT.play.touch}</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  import { shouldPrefetch, startsRun, useTouchWords, type ConnectionInfo } from '../lib/runner-stage';
+  // The built chunk's final address, or null in `astro dev` (astro.config.mjs, runnerChunkUrl).
+  import chunkUrl from 'virtual:runner-chunk-url';
+  import type { RunnerHandle } from '../game/runner/index';
+
+  // The game's own chunk, by its built address (no preload helper, no second request for a shared bit); `astro dev` has no chunk.
+  // A browser remembers a module that failed to load, so a retry asks for it under a new query.
+  let attempts = 0;
+  const loadRunner = (): Promise<typeof import('../game/runner/index')> =>
+    import.meta.env.DEV
+      ? import('../game/runner/index')
+      : import(/* @vite-ignore */ `${chunkUrl}${attempts++ ? `?retry=${attempts}` : ''}`);
+
+  const stage = document.querySelector<HTMLElement>('[data-runner-stage]');
+  const poster = stage?.querySelector<HTMLElement>('[data-runner-poster]');
+  const play = stage?.querySelector<HTMLButtonElement>('[data-runner-play]');
+
+  if (stage && poster && play) {
+    let handle: RunnerHandle | null = null;
+    let loading = false;
+    let lastKey: string | null = null;
+
+    play.addEventListener('keydown', (e) => (lastKey = e.key));
+
+    // The first interaction: fetch the game, replace the poster with it, and (unless it was Enter) start a run at once.
+    const boot = async (event: MouseEvent) => {
+      if (handle || loading) return;
+      loading = true;
+      const key = event.detail === 0 ? lastKey : null; // a keyboard click has no click count
+      const pointerType = (event as PointerEvent).pointerType;
+      stage.dataset.stage = 'loading';
+      stage.setAttribute('aria-busy', 'true');
+      try {
+        const { mountRunner } = await loadRunner();
+        const coarse = window.matchMedia('(pointer: coarse)').matches;
+        // The stage becomes the game's container: focusable, named, and it reads its keys (docs/RUNNER.md, "The host").
+        stage.tabIndex = 0;
+        stage.setAttribute('role', 'application');
+        stage.setAttribute('aria-label', stage.dataset.label ?? '');
+        play.hidden = true;
+        stage.removeEventListener('click', boot);
+        handle = mountRunner(stage, {
+          variant: 'blended',
+          touch: useTouchWords(coarse, pointerType) || undefined,
+        });
+        stage.dataset.stage = 'live';
+        const root = stage.querySelector<HTMLElement>('[data-runner]');
+        if (root?.dataset.runnerState === 'unsupported') {
+          // No WebGL: the game says so (RUNNER_TEXT.noWebGL) over the poster's scenery; nothing here can be played or focused.
+          stage.dataset.stage = 'unsupported';
+          stage.removeAttribute('tabindex');
+          stage.removeAttribute('role');
+          stage.removeAttribute('aria-label');
+          return;
+        }
+        // The game fades in over the poster (runner-stage.css); the poster goes when that ends, at once with reduced motion.
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) poster.hidden = true;
+        else {
+          root?.addEventListener('animationend', (e) => e.target === root && (poster.hidden = true));
+          setTimeout(() => (poster.hidden = true), 1500); // if the animation never ends (a hidden tab)
+        }
+        // The prompt names what Space does in the current state ("Press space to play", "Paused...", "...try again").
+        const prompt = stage.querySelector<HTMLElement>('.runner-prompt');
+        if (prompt) {
+          prompt.id = 'runner-stage-prompt';
+          stage.setAttribute('aria-describedby', prompt.id);
+        }
+        // The best score shows only once there is one (the game draws 00000 before a first run).
+        const best = stage.querySelector<HTMLElement>('.runner-best span');
+        if (best) {
+          const sync = () => (stage.dataset.hasBest = String(best.textContent !== '00000'));
+          sync();
+          new MutationObserver(sync).observe(best, { childList: true, characterData: true, subtree: true });
+        }
+        // Escape pauses a run (Space or a tap resumes); Tab leaves the stage, which pauses it too (the game's own rule).
+        stage.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && stage.querySelector('[data-runner-state="playing"]')) handle?.pause();
+        });
+        // Bring the whole stage into view below the sticky header, so the run is not played half off the screen (after the
+        // fonts, whose swap can move the page above it).
+        // Smooth, like the browser's own scroll to the focused button, which may still be running: a second smooth scroll
+        // takes over its target, where an instant one would be overtaken by it. Instant with reduced motion.
+        await document.fonts?.ready;
+        stage.scrollIntoView({ block: 'nearest', behavior: reduce ? 'instant' : 'smooth' });
+        if (startsRun(key)) handle.start();
+      } catch {
+        // Offline or the file would not load: the poster and its button stay, and another press tries again.
+        play.hidden = false;
+        stage.dataset.stage = 'poster';
+      } finally {
+        loading = false;
+        stage.removeAttribute('aria-busy');
+      }
+    };
+    stage.addEventListener('click', boot);
+
+    // Prefetch: once the page has loaded and gone idle, and the stage is within a screen of the viewport, fetch (not run) the
+    // game's chunk and the rover model so a first press feels instant. Never on data-saver or 2G, and only once.
+    const prefetch = () => {
+      const links: [string | null, string][] = [
+        [chunkUrl, 'script'],
+        [stage.dataset.rover ?? null, 'fetch'],
+      ];
+      for (const [href, as] of links) {
+        if (!href) continue;
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = as;
+        link.crossOrigin = 'anonymous'; // the same request mode as import() and fetch(), so the cached copy is reused
+        link.href = href;
+        document.head.append(link);
+      }
+    };
+    const arm = () => {
+      if (handle || loading || !('IntersectionObserver' in window)) return;
+      const connection = (navigator as Navigator & { connection?: ConnectionInfo }).connection;
+      const watcher = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          watcher.disconnect();
+          if (!handle && shouldPrefetch({ nearViewport: true, connection })) prefetch();
+        },
+        { rootMargin: '100% 0px' }, // one screen above and below the viewport
+      );
+      watcher.observe(stage);
+    };
+    // Never before the page has painted its largest content (plus a moment): a prefetch that starts ahead of the first paint
+    // would compete with the page's own files, and Lighthouse's model counts every request that starts before the paint.
+    // Browsers with no LCP entry (Firefox, Safari) wait three seconds after load instead.
+    const afterPaint = (run: () => void) => {
+      const later = (ms: number) => setTimeout(run, ms);
+      try {
+        const watcher = new PerformanceObserver((list) => {
+          if (!list.getEntries().length) return;
+          watcher.disconnect();
+          later(1500);
+        });
+        watcher.observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch {
+        later(3000);
+      }
+    };
+    const idle = () => {
+      const go = () => afterPaint(arm);
+      if ('requestIdleCallback' in window) window.requestIdleCallback(go, { timeout: 5000 });
+      else setTimeout(go, 3000);
+    };
+    if (document.readyState === 'complete') idle();
+    else window.addEventListener('load', idle, { once: true });
+  }
+</script>

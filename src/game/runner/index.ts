@@ -15,20 +15,10 @@ import type { EnvironmentInfo } from './environment';
 import { createView, type View } from './render';
 import { RunnerSim, type Intent, type Phase } from './sim';
 import { loadBest, saveBest } from './storage';
+import { RUNNER_TEXT } from './text';
 
-/** Every word the game draws. The look pass and the 404 page may restyle them; changing the words is the author's call. */
-export const RUNNER_TEXT = {
-  canvasLabel: 'Endless runner game',
-  title: 'Off course',
-  play: { keys: 'Press space to play', touch: 'Tap to play' },
-  again: { keys: 'Press space to try again', touch: 'Tap to try again' },
-  paused: { keys: 'Paused. Press space to continue', touch: 'Paused. Tap to continue' },
-  best: 'Best',
-  score: 'Score',
-  pickups: 'Pickups',
-  noWebGL: 'This game needs WebGL.',
-  gameOver: (score: number) => `Game over, score ${score}`,
-};
+// The words moved to text.ts (404 page step: the page prints them at build time without loading three.js); still exported here.
+export { RUNNER_TEXT };
 
 export interface RunnerStats {
   /** Frames per second, smoothed. */
