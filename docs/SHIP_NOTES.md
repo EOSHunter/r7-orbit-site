@@ -36,7 +36,24 @@ Written 2026-10-24 by the ship check. Everything below was run on a clean `npm c
 
 ## Results
 
-See the end of this file for the numbers; filled in when the runs finished.
+Run on a clean `npm ci` of the merged result, in a separate worktree:
+
+| Step | Result |
+| --- | --- |
+| `npm run check` | 0 errors, 0 warnings (before the fix: 1 error in `movie-wheel-api.ts`, which is on main too) |
+| `npm run lint` | clean |
+| `npm run test:unit` | 9 node tests + 949 Vitest tests (59 files), all pass |
+| `npm run build` (the Cloudflare command) | passes: picture guard, Astro build, media shrink, no-contact, search index |
+| Playwright e2e (`--workers=2`) | 798 passed, 3 skipped; 3 failed on the first run, all three fixed and re-run green (About tests: the Team block's names are `h2` when no heading is above it; a leftover Table-of-contents special case) |
+| Lighthouse (404, runner styleguide page, About, Projects) | all assertions pass |
+
+Not run here: the full Lighthouse over every route and the `WAITLIST_PREVIEW=1` build with `tests/waitlist.spec.js` that CI also runs (the waitlist is not touched by this branch).
+
+Build output: 392 files, 22.6 MB; largest file 5.65 MB (the editor bundle, `/admin/` only); the game chunk is 0.64 MB; nothing near Cloudflare's 25 MiB per file limit.
+
+The game on the 404 page: `dist/404.html` exists; the game script, the `runner` chunk and `rover.glb` are referenced only by `404.html` and `/styleguide/runner/`, with root-absolute addresses (`/_astro/...`). A deep missing address (`/nope/deeper/path/`, run through `astro preview`) answered HTTP 404 with the 404 page words and the stage button. The chunk and model are requested as idle `prefetch` (fetched, not run) once the page has loaded: that is the design (`RunnerStage.astro`, tested by `tests/runner-404.spec.js`), not a request before the page is ready.
+
+Admin and host files: no change to `public/_headers`, `public/_redirects` or `site.json`. `src/admin/` has two small changes that follow the components (Callout label in the preview; Team name heading level in the block preview). `WAITLIST_PREVIEW` is set only in `.github/workflows/ci.yml`'s waitlist step.
 
 ## Not included yet
 
