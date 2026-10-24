@@ -51,6 +51,8 @@ export const BOT_PROFILES: Record<BotName, BotProfile> = {
 export interface Bot {
   /** Called before every sim step: looks, thinks, presses. */
   act(sim: RunnerSim): void;
+  /** What went wrong in the plan the bot was following (a mistake's name), or null for a clean one: for the death table. */
+  cause?(): string | null;
 }
 
 /** A row of obstacles as the bot sees it: what is in each lane, how long it is, where it is. */
@@ -69,6 +71,8 @@ interface Plan {
   actAt: number;
   steered: boolean;
   pressed: boolean;
+  /** The sim's jump count when the plan was made: a jump press worked once it has gone up. */
+  jumpsAtPlan: number;
   /** Seconds added to the jump or crouch press (its noise, plus a mistimed jump's error). */
   offset: number;
   /** When to let go of a crouch: once cleared (the normal way), a moment after the row's front, or late. */
@@ -96,6 +100,7 @@ function rowsAhead(sim: RunnerSim, from: number, limit: number): SeenRow[] {
       rows.push(row);
     }
     row.lanes[o.lane + 1] = o.kind;
+    if (o.kind === 'sweeper') row.lanes[o.lane + 2] = 'sweeper'; // it swings over this lane and the next
     row.length = Math.max(row.length, hb[o.kind].length);
   }
   return rows;
@@ -111,6 +116,7 @@ export function createBot(profile: BotProfile, seed: number): Bot {
   let clearedAt = 0;
   let releaseAt: number | null = null;
   let held = false;
+  let lastMistake: Mistake | null = null;
 
   const press = (sim: RunnerSim, p: Plan): void => {
     if (p.mode === 'crouch') {
@@ -142,6 +148,7 @@ export function createBot(profile: BotProfile, seed: number): Bot {
       actAt: 0,
       steered: false,
       pressed: false,
+      jumpsAtPlan: sim.jumps,
       offset: profile.timing * gaussian(rand),
       release: 'cleared',
       mistake: null,
@@ -186,6 +193,7 @@ export function createBot(profile: BotProfile, seed: number): Bot {
   };
 
   return {
+    cause: () => plan?.mistake ?? lastMistake,
     act(sim) {
       if (sim.phase !== 'playing') return;
       const cfg = sim.cfg;
@@ -202,6 +210,7 @@ export function createBot(profile: BotProfile, seed: number): Bot {
           clearedAt = sim.time;
           lastMode = plan?.mode ?? 'run';
           noticed.delete(targetZ);
+          lastMistake = plan?.mistake ?? null;
           if (plan?.mode === 'crouch' && held) {
             // Let go: at once when the plan was to, a little late for the careless.
             releaseAt = sim.time + (plan.release === 'late' ? 0.4 : Math.abs(profile.timing * gaussian(rand)));
@@ -254,7 +263,10 @@ export function createBot(profile: BotProfile, seed: number): Bot {
         const lead = jumpLeadTime(cfg);
         const through = (len + rover.length) / sim.speed;
         const slack = Math.max(0, cfg.jump.duration - 2 * lead - through);
-        if (toContact <= lead + slack / 2 - plan.offset) press(sim, plan);
+        // Pressed every step until the rover is in the air: a press while still airborne from the last row is held by the
+        // sim for 0.12 s before landing, which is how a player taps again as they come down.
+        if (toContact <= lead + slack / 2 - plan.offset) sim.input('jump');
+        if (sim.jumps > plan.jumpsAtPlan) plan.pressed = true;
       } else if (plan.mode === 'crouch') {
         if (!plan.pressed) {
           const fall = sim.grounded ? 0 : sim.y / cfg.crouch.slamSpeed;
@@ -279,7 +291,7 @@ export interface RunResult {
   distance: number;
   score: number;
   /** Where it ended: the obstacle's kind, the speed then, and whether the cap stopped it instead. */
-  crash: { kind: string; speed: number } | null;
+  crash: { kind: string; speed: number; cause: string | null } | null;
 }
 
 export interface PlayOptions {
@@ -303,7 +315,7 @@ export function playRun(profile: BotProfile, seed: number, opts: PlayOptions = {
     time: sim.time,
     distance: sim.distance,
     score: sim.score,
-    crash: sim.crash ? { kind: sim.crash.kind, speed: sim.speed } : null,
+    crash: sim.crash ? { kind: sim.crash.kind, speed: sim.speed, cause: bot.cause?.() ?? null } : null,
   };
 }
 
@@ -316,6 +328,8 @@ export interface Summary {
   distance: { median: number; mean: number; p90: number };
   /** Deaths per obstacle kind, and per band of speed (by `speedBand` m/s). */
   byKind: Record<string, number>;
+  /** Deaths per mistake that was in play ('none' = a clean plan that was still not fast enough). */
+  byCause: Record<string, number>;
   bySpeed: { from: number; to: number; deaths: number }[];
 }
 
@@ -336,6 +350,7 @@ export function summarize(bot: BotName, results: RunResult[], speedBand = 5): Su
     };
   };
   const byKind: Record<string, number> = {};
+  const byCause: Record<string, number> = {};
   const bands = new Map<number, number>();
   let survivors = 0;
   for (const r of results) {
@@ -344,6 +359,8 @@ export function summarize(bot: BotName, results: RunResult[], speedBand = 5): Su
       continue;
     }
     byKind[r.crash.kind] = (byKind[r.crash.kind] ?? 0) + 1;
+    const cause = r.crash.cause ?? 'none';
+    byCause[cause] = (byCause[cause] ?? 0) + 1;
     const band = Math.floor(r.crash.speed / speedBand) * speedBand;
     bands.set(band, (bands.get(band) ?? 0) + 1);
   }
@@ -354,6 +371,7 @@ export function summarize(bot: BotName, results: RunResult[], speedBand = 5): Su
     time: stat(results.map((r) => r.time)),
     distance: stat(results.map((r) => r.distance)),
     byKind,
+    byCause,
     bySpeed: [...bands.entries()].sort((a, b) => a[0] - b[0]).map(([from, deaths]) => ({ from, to: from + speedBand, deaths })),
   };
 }
@@ -377,14 +395,15 @@ export function formatTable(summaries: Summary[]): string {
       `| ${s.bot} | ${s.runs} | ${f(s.time.median, 1)} s | ${f(s.time.mean, 1)} s | ${f(s.time.p90, 1)} s | ${f(s.distance.median)} m | ${f(s.distance.mean)} m | ${f(s.distance.p90)} m | ${s.survivors} |`,
     );
   }
-  lines.push('', '| Bot | Deaths by obstacle | Deaths by speed (m/s) |', '| --- | --- | --- |');
-  for (const s of summaries) {
-    const kinds = Object.entries(s.byKind)
-      .sort((a, b) => b[1] - a[1])
+  lines.push('', '| Bot | Deaths by obstacle | Deaths by cause | Deaths by speed (m/s) |', '| --- | --- | --- | --- |');
+  const list = (counts: Record<string, number>) =>
+    Object.entries(counts)
+      .sort((x, y) => y[1] - x[1])
       .map(([k, n]) => `${k} ${n}`)
-      .join(', ');
+      .join(', ') || 'none';
+  for (const s of summaries) {
     const speeds = s.bySpeed.map((b) => `${b.from}-${b.to}: ${b.deaths}`).join(', ');
-    lines.push(`| ${s.bot} | ${kinds || 'none'} | ${speeds || 'none'} |`);
+    lines.push(`| ${s.bot} | ${list(s.byKind)} | ${list(s.byCause)} | ${speeds || 'none'} |`);
   }
   return lines.join('\n');
 }

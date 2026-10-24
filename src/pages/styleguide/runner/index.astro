@@ -2,7 +2,8 @@
 // Prototype for the 404 page's game (docs/RUNNER.md, step 1 of 4: the core, with placeholder shapes). The game is loaded with
 // a dynamic import on the first click, tap or key, so three.js is a lazy chunk and never in this page's first load. Under the
 // game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course; ?start=0 stops on
-// the ready screen; ?variant=blended shows the 404 page's blended style instead of the hairline frame). Not linked from
+// the ready screen; ?variant=blended shows the 404 page's blended style instead of the hairline frame; ?all=1 lets every
+// pattern and hazard appear from the first row, to look at the wall and the sweeper at once). Not linked from
 // anywhere and kept out of search engines, like the rest of the styleguide.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import '../../../game/runner/runner.css';
@@ -281,9 +282,16 @@ import '../../../game/runner/runner.css';
       const { mountRunner } = await import('../../../game/runner/index');
       const query = new URLSearchParams(location.search);
       const seed = Number(query.get('seed'));
+      // ?all=1: every pattern and the new hazards from the first row (a fixture for the tests; the game never does this).
+      const { withConfig } = await import('../../../game/runner/config');
+      const config =
+        query.get('all') === '1'
+          ? withConfig({ generator: { tiers: { two: 0, three: 0 }, hazards: { wall: 0, sweeper: 0 } } })
+          : undefined;
       if (poster) poster.hidden = true;
       handle = mountRunner(host, {
         seed: Number.isFinite(seed) && seed > 0 ? seed : undefined,
+        config,
         variant,
         onStats,
       });

@@ -4,7 +4,7 @@
 // a frame gets; clock.ts). render.ts only reads this state.
 
 import { RUNNER_CONFIG, jumpPhysics, speedAt, touchMinCrouch, type RunnerConfig } from './config';
-import { createGenerator, type Generator, type Lane, type ObstacleKind, type Row } from './generator';
+import { createGenerator, sweepFraction, type Generator, type Lane, type ObstacleKind, type Row, type Sweep } from './generator';
 
 /**
  * What a player asks for. `primary` is Space: start or restart when not playing, jump while playing. `start` is a tap.
@@ -27,9 +27,12 @@ export type Phase = 'ready' | 'playing' | 'over';
 export interface Obstacle {
   id: number;
   kind: ObstacleKind;
+  /** The lane it is in (a sweeper: the lower of the two lanes it swings between, see `sweep`). */
   lane: Lane;
   /** Distance along the track of its centre. */
   z: number;
+  /** A sweeper's path; it moves sideways with the play time (obstacleX). */
+  sweep?: Sweep;
 }
 
 export interface Pickup {
@@ -66,6 +69,8 @@ export class RunnerSim {
   seed = 0;
   /** Steps taken since the sim was made. */
   steps = 0;
+  /** Jumps taken in this run (the bots read it to know their press worked). */
+  jumps = 0;
 
   distance = 0;
   speed = 0;
@@ -126,6 +131,7 @@ export class RunnerSim {
     this.y = 0;
     this.vy = 0;
     this.grounded = true;
+    this.jumps = 0;
     this.crouchHeld = false;
     this.crouchMin = 0;
     this.crouch = 0;
@@ -173,6 +179,12 @@ export class RunnerSim {
   /** The old name for `crouching`, still what rover.ts reads. */
   get sliding(): boolean {
     return this.crouching;
+  }
+
+  /** Sideways position of an obstacle's centre at play time `time` (default: now): its lane, or a sweeper's place on its swing. */
+  obstacleX(o: Obstacle, time: number = this.time): number {
+    const lw = this.cfg.track.laneWidth;
+    return o.sweep ? (o.lane + sweepFraction(o.sweep, time)) * lw : o.lane * lw;
   }
 
   /** Height of the rover's collision box right now: it follows the crouch amount, so it stands up over crouch.outTime. */
@@ -271,6 +283,7 @@ export class RunnerSim {
     this.crouchHeld = false;
     this.crouchMin = 0;
     this.slamMin = false;
+    this.jumps += 1;
     this.grounded = false;
     this.vy = this.takeoff;
     this.jumpBuffer = 0;
@@ -308,7 +321,11 @@ export class RunnerSim {
   private addRow(row: Row): void {
     for (let i = 0; i < 3; i++) {
       const kind = row.lanes[i];
-      if (kind) this.obstacles.push({ id: this.nextId++, kind, lane: (i - 1) as Lane, z: row.z });
+      // A sweeper marks both its lanes in the row (blocked, for fairness) but is one obstacle that moves between them.
+      if (kind && kind !== 'sweeper') this.obstacles.push({ id: this.nextId++, kind, lane: (i - 1) as Lane, z: row.z });
+    }
+    if (row.sweep) {
+      this.obstacles.push({ id: this.nextId++, kind: 'sweeper', lane: row.sweep.lane, z: row.z, sweep: row.sweep });
     }
     for (const p of row.pickups) this.items.push({ id: this.nextId++, lane: p.lane, z: p.z, y: p.y, taken: false });
     this.items.sort((a, b) => a.z - b.z);
@@ -321,7 +338,7 @@ export class RunnerSim {
     for (const o of this.obstacles) {
       const box = hitbox[o.kind];
       if (Math.abs(o.z - this.distance) >= (r.length + box.length) / 2) continue;
-      if (Math.abs(o.lane * track.laneWidth - this.x) >= (r.width + box.width) / 2) continue;
+      if (Math.abs(this.obstacleX(o) - this.x) >= (r.width + box.width) / 2) continue;
       if (this.y >= box.top || top <= box.bottom) continue;
       this.crash = o;
       this.phase = 'over';

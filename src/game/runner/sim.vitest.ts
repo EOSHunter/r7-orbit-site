@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FixedStepClock } from './clock';
-import { RUNNER_CONFIG, jumpPhysics, speedAt, touchMinCrouch, withConfig } from './config';
+import { RUNNER_CONFIG, jumpPhysics, speedAt, timeAtDistance, touchMinCrouch, withConfig } from './config';
 import { fixedCourse, type Row } from './generator';
 import { RunnerSim, type Intent } from './sim';
 
@@ -380,7 +380,7 @@ describe('crouch (hold to crouch)', () => {
     expect(through(() => rearClear + 1).phase, 'held through, released after').toBe('playing');
     expect(through(() => null).phase, 'held for ever').toBe('playing');
     expect(through((z) => z - 0.5).crash?.kind, 'released before the beam').toBe('gate');
-    expect(through((z) => z - 0.1).crash?.kind, 'released under the beam').toBe('gate');
+    expect(through((z) => z - 0.6).crash?.kind, 'released under the beam').toBe('gate');
     expect(through(() => rearClear + 1, 100).crash?.kind, 'never crouched').toBe('gate');
   });
 });
@@ -454,6 +454,99 @@ describe('collisions', () => {
     driveTo(sim, 30);
     expect(sim.pickups).toBe(3);
     expect(sim.score).toBe(Math.floor(sim.distance) + 3 * cfg.score.pickupBonus);
+  });
+});
+
+describe('the wall with one opening and the sweeper', () => {
+  const lw = cfg.track.laneWidth;
+  const hit = (sim: RunnerSim, kind: string) => sim.crash?.kind === kind;
+
+  it('a wall: the open lane is the way through; a panel ends the run; a gate or barrier in the opening is passed as usual', () => {
+    const wall = [{ z: 30, lanes: ['wall', null, 'wall'] as Row['lanes'] }];
+    const through = simOn(wall);
+    driveTo(through, 60, [{ at: 0, intent: 'left' }, { at: 1, intent: 'right' }]);
+    expect(through.phase, 'drove through the opening').toBe('playing');
+    const crashed = simOn(wall);
+    driveTo(crashed, 60, [{ at: 5, intent: 'left' }]);
+    expect(hit(crashed, 'wall')).toBe(true);
+    const jumped = simOn(wall);
+    driveTo(jumped, 60, [{ at: 5, intent: 'left' }, { at: 29 - 2.6, intent: 'jump' }]);
+    expect(hit(jumped, 'wall'), 'a wall is full height: jumping does not clear it').toBe(true);
+
+    const gate = [{ z: 30, lanes: ['wall', 'gate', 'wall'] as Row['lanes'] }];
+    const ok = simOn(gate);
+    driveTo(ok, 60, [
+      { at: 20, intent: 'crouch' },
+      { at: 34, intent: 'crouchEnd' },
+    ]);
+    expect(ok.phase).toBe('playing');
+    const ran = simOn(gate);
+    driveTo(ran, 60);
+    expect(hit(ran, 'gate')).toBe(true);
+  });
+
+  it('a wall is thin: at the cap the rover cannot step through it between two steps', () => {
+    const fast = withConfig({ speed: { start: 40, max: 40 } });
+    const sim = simOn([{ z: 60, lanes: ['wall', 'wall', 'wall'] }], fast);
+    driveTo(sim, 100);
+    expect(hit(sim, 'wall')).toBe(true);
+    expect(cfg.hitbox.wall.length + cfg.hitbox.rover.length).toBeGreaterThan(40 * STEP);
+  });
+
+  /** A sweeper over lanes -1 and 0 that is `where` ('lower', 'upper' or 'between') when the rover arrives at z = 60. */
+  const sweeper = (where: 'lower' | 'upper' | 'between') => {
+    const z = 60;
+    const arrive = timeAtDistance(z);
+    const period = 3.4;
+    const t0 = arrive - (where === 'upper' ? period / 2 : where === 'between' ? period / 4 : 0);
+    return [{ z, lanes: ['sweeper', 'sweeper', null] as Row['lanes'], sweep: { lane: -1 as const, period, t0 } }];
+  };
+  const passWith = (rows: ReturnType<typeof sweeper>, lane: 'left' | 'none' | 'right') => {
+    const sim = simOn(rows);
+    const todo: { at: number; intent: Intent }[] = [];
+    if (lane === 'left') todo.push({ at: 0, intent: 'left' });
+    if (lane === 'right') todo.push({ at: 0, intent: 'right' });
+    driveTo(sim, 90, todo);
+    return sim;
+  };
+
+  it('a sweeper at one end of its swing when the rover arrives leaves the other lane open, and the third lane is always open', () => {
+    // Over the lower lane (-1): the middle lane is open.
+    expect(hit(passWith(sweeper('lower'), 'left'), 'sweeper')).toBe(true);
+    expect(passWith(sweeper('lower'), 'none').phase).toBe('playing');
+    expect(passWith(sweeper('lower'), 'right').phase).toBe('playing');
+    // Over the upper lane (0): the left lane is open.
+    expect(hit(passWith(sweeper('upper'), 'none'), 'sweeper')).toBe(true);
+    const left = simOn(sweeper('upper'));
+    driveTo(left, 90, [{ at: 0, intent: 'left' }]);
+    expect(left.phase).toBe('playing');
+    expect(passWith(sweeper('upper'), 'right').phase).toBe('playing');
+  });
+
+  it('halfway through its swing a sweeper blocks both its lanes (the third is the safe one)', () => {
+    expect(hit(passWith(sweeper('between'), 'none'), 'sweeper')).toBe(true);
+    expect(hit(passWith(sweeper('between'), 'left'), 'sweeper')).toBe(true);
+    expect(passWith(sweeper('between'), 'right').phase).toBe('playing');
+  });
+
+  it('a sweeper moves smoothly with the play time: slow at the ends, over each lane in turn, never jumping', () => {
+    const rows = sweeper('lower');
+    const sim = simOn(rows);
+    const o = sim.obstacles.find((x) => x.kind === 'sweeper')!;
+    const { period, t0 } = rows[0].sweep;
+    expect(sim.obstacleX(o, t0)).toBeCloseTo(-lw, 9);
+    expect(sim.obstacleX(o, t0 + period / 2)).toBeCloseTo(0, 9);
+    expect(sim.obstacleX(o, t0 + period)).toBeCloseTo(-lw, 9);
+    let fastest = 0;
+    let last = sim.obstacleX(o, t0);
+    for (let t = t0 + STEP; t <= t0 + period; t += STEP) {
+      const x = sim.obstacleX(o, t);
+      fastest = Math.max(fastest, Math.abs(x - last) / STEP);
+      last = x;
+    }
+    // Its top speed is pi/2 lanes per half period: slow compared with the rover's lane change (laneWidth / laneChangeTime).
+    expect(fastest).toBeLessThan(lw / cfg.track.laneChangeTime / 4);
+    expect(fastest).toBeCloseTo((Math.PI * lw) / period, 1);
   });
 });
 

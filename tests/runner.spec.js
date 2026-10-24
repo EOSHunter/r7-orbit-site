@@ -356,6 +356,28 @@ test('the scene stays within its budgets in the idle scene, a run and after a cr
   for (const c of [ready, playing, over]) expect(c.triangles).toBeLessThan(25_000);
 });
 
+// The wall with one opening (seed 3) and the sweeper (seed 1) start at 500 m and 1,000 m in a real run; ?all=1 lets them come
+// from the first row, so they are in view within the first seconds. Seed 2 is two walls in a row (the slalom).
+test('the wall and the sweeper are drawn within the triangle budget, with a clean console', async ({ page, baseURL }) => {
+  test.setTimeout(180_000);
+  const problems = watchPage(page, baseURL);
+  for (const seed of [3, 1, 2]) {
+    await page.goto(`${FIXTURE}?seed=${seed}&all=1`, { waitUntil: 'networkidle' });
+    await host(page).focus();
+    await page.keyboard.press('Space');
+    await expect(game(page)).toHaveAttribute('data-runner-state', 'playing', MOUNTED);
+    let most = 0;
+    // Nothing is pressed: the rover drives into the first obstacle, passing the rows after it only in the readout's range.
+    for (let i = 0; i < 400 && (await game(page).getAttribute('data-runner-state')) === 'playing'; i++) {
+      most = Math.max(most, await stat(page, 'triangles'));
+      await page.waitForTimeout(150);
+    }
+    expect(most, `seed ${seed}`).toBeGreaterThan(5000);
+    expect(most, `seed ${seed}`).toBeLessThan(25_000);
+  }
+  expect(problems).toEqual([]);
+});
+
 for (const variant of ['framed', 'blended']) {
   test(`the ${variant} variant: the page blend only where asked, no layout shift`, async ({ page }) => {
     // Shifts from the moment the game is asked for (the page's own font swap before it is not the game's).
