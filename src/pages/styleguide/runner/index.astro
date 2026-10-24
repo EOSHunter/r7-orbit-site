@@ -99,6 +99,16 @@ import '../../../game/runner/runner.css';
               <dt>geometries, textures</dt>
               <dd data-stat="memory">-</dd>
             </div>
+            {/* atmosphere polish */}
+            <div>
+              <dt>sky clock</dt>
+              <dd data-stat="sky">-</dd>
+            </div>
+            <div>
+              <dt>shooting stars</dt>
+              <dd data-stat="comets">-</dd>
+            </div>
+            {/* end atmosphere polish */}
           </dl>
           <button class="btn sm" type="button" data-runner-unmount hidden>
             Unmount the game
@@ -237,6 +247,8 @@ import '../../../game/runner/runner.css';
     triangles: stat('triangles'),
     calls: stat('calls'),
     memory: stat('memory'),
+    sky: stat('sky'), // atmosphere polish
+    comets: stat('comets'), // atmosphere polish
   };
 
   // ?variant=blended: the 404 page's style. The frame goes before the game loads, so the poster shows it too.
@@ -264,6 +276,10 @@ import '../../../game/runner/runner.css';
       if (out.triangles) out.triangles.textContent = String(s.view.triangles);
       if (out.calls) out.calls.textContent = String(s.view.calls);
       if (out.memory) out.memory.textContent = `${s.view.geometries}, ${s.view.textures}`;
+      // atmosphere polish
+      if (out.sky) out.sky.textContent = `${s.view.skyTime.toFixed(2)} s`;
+      if (out.comets) out.comets.textContent = `${s.view.comets}${s.view.cometFlying ? ', flying' : ''}`;
+      // end atmosphere polish
     }
   };
 
@@ -275,10 +291,16 @@ import '../../../game/runner/runner.css';
       const query = new URLSearchParams(location.search);
       const seed = Number(query.get('seed'));
       if (poster) poster.hidden = true;
+      // atmosphere polish: ?comet=1 sends a shooting star 1.5 s after mount, from a fixed sky seed (the tests, a quick look).
+      const { withConfig } = await import('../../../game/runner/config');
+      const config =
+        query.get('comet') === '1' ? withConfig({ render: { atmosphere: { seed: 11, firstComet: 1.5 } } }) : undefined;
+      // end atmosphere polish
       handle = mountRunner(host, {
         seed: Number.isFinite(seed) && seed > 0 ? seed : undefined,
         variant,
         onStats,
+        config, // atmosphere polish
       });
       if (query.get('start') !== '0') handle.start();
       if (unmount) unmount.hidden = false;

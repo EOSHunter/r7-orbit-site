@@ -121,6 +121,13 @@ export const RUNNER_CONFIG = {
     ringSpacing: 9,
     ringCount: 18,
     ringRadius: 7.5,
+    // atmosphere polish
+    /**
+     * The sky's own random generator (the shooting stars), apart from the course's: 0 seeds it from the clock. `firstComet`
+     * (seconds, 0 = at random like the rest) brings the first shooting star early: the fixture's ?comet=1 and its tests.
+     */
+    atmosphere: { seed: 0, firstComet: 0 },
+    // end atmosphere polish
   },
 };
 
