@@ -22,7 +22,8 @@ import {
 } from 'three';
 import { createEnvironment, type EnvironmentInfo } from './environment'; // environment (step 2b)
 import { RUNNER_COLORS as C, RUNNER_CONFIG, type RunnerConfig } from './config';
-import type { ObstacleKind } from './generator';
+import type { BasicKind } from './generator';
+import { createHazards } from './hazards'; // hazards (difficulty)
 import type { RunnerSim } from './sim';
 // rover+camera (step 2a)
 import { ChaseRig } from './camera';
@@ -104,7 +105,7 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
   const beamGeo = geo(new BoxGeometry(hb.gate.width + 0.3, beamHeight, hb.gate.length));
   const postGeo = geo(new BoxGeometry(0.16, hb.gate.bottom + beamHeight, hb.gate.length));
 
-  const build: Record<ObstacleKind, () => Object3D> = {
+  const build: Record<BasicKind, () => Object3D> = {
     slab: () => {
       // BoxGeometry's faces: +x, -x, +y, -y, +z (towards the camera), -z.
       const m = new Mesh(slabGeo, [ivory, ivory, ivory, ivory, slabFace, ivory]);
@@ -129,14 +130,19 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
       return g;
     },
   };
-  const pools: Record<ObstacleKind, Object3D[]> = { slab: [], barrier: [], gate: [] };
-  const live = new Map<number, { kind: ObstacleKind; obj: Object3D }>();
+  const pools: Record<BasicKind, Object3D[]> = { slab: [], barrier: [], gate: [] };
+  const live = new Map<number, { kind: BasicKind; obj: Object3D }>();
 
   const pickups = new InstancedMesh(geo(new SphereGeometry(0.2, 12, 8)), brass, PICKUP_CAPACITY);
   pickups.count = 0;
   pickups.frustumCulled = false;
   scene.add(pickups);
   const dummy = new Object3D();
+
+  // hazards (difficulty): the wall with one opening and the sweeper, instanced (hazards.ts).
+  const hazards = createHazards(cfg, { ivory, brass });
+  scene.add(hazards.object);
+  // end hazards (difficulty)
 
   return {
     resize(width, height, pixelRatio) {
@@ -165,6 +171,7 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
 
       const seen = new Set<number>();
       for (const o of sim.obstacles) {
+        if (o.kind === 'wall' || o.kind === 'sweeper') continue; // hazards (difficulty): drawn by hazards.ts
         const rel = o.z - d;
         if (rel > r.fog.far + 10) continue;
         let entry = live.get(o.id);
@@ -186,6 +193,8 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
         live.delete(id);
       }
 
+      hazards.update(sim, d, sim.time - (1 - alpha) * cfg.step); // hazards (difficulty)
+
       let n = 0;
       for (const p of sim.items) {
         if (p.taken) continue;
@@ -205,6 +214,7 @@ export function createView(canvas: HTMLCanvasElement, cfg: RunnerConfig = RUNNER
     info: () => env.info(), // environment (step 2b)
 
     dispose() {
+      hazards.dispose(); // hazards (difficulty)
       env.dispose(); // environment (step 2b)
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();

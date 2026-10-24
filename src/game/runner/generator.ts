@@ -1,20 +1,40 @@
-// The course: rows of obstacles across the three lanes, and lines of pickups between them. Pure logic, no rendering.
+// The course: rows of obstacles across the three lanes, in patterns, and lines of pickups between them. Pure logic, no
+// rendering.
 //
 // Fairness (docs/RUNNER.md, "Fairness"): every row leaves at least one lane the rover can pass (a free lane, a barrier to jump
-// or a gate to slide under; never three slabs), and the gap before each row is long enough that, from ANY lane the player
-// could have used to pass the row before it, there is a lane of the new row they can reach in time: a reaction time, then the
-// lane changes and the jump or slide that lane needs, at the speed the rover will have when it gets there. The player can
-// never pick a lane that traps them. src/game/runner/generator.vitest.ts proves it by playing thousands of seeded courses.
+// or a gate to crouch under; never three blocked lanes), and the gap before each row is long enough that, from ANY lane the
+// player could have used to pass the row before it, there is a lane of the new row they can reach in time: a reaction time,
+// then the lane changes and the jump or crouch that lane needs, at the speed the rover will have when it gets there. The
+// player can never pick a lane that traps them. generator.vitest.ts proves it by playing thousands of seeded courses.
+//
+// Difficulty (docs/RUNNER.md, "Difficulty and bots"): a pattern is one to three rows. The gap between patterns shrinks with the
+// speed (never below `generator.minGap`); the rows inside a pattern are only a little further apart than fairness needs (a
+// combination). Which patterns can appear depends on the DISTANCE (tiers), and the two hazards, the wall with one opening and
+// the sweeper, start at their own distances.
 
-import { RUNNER_CONFIG, jumpPhysics, type RunnerConfig } from './config';
-import { mulberry32, pickWeighted, type Random } from './random';
+import { RUNNER_CONFIG, jumpPhysics, speedProgress, timeAtDistance, type RunnerConfig } from './config';
+import { mulberry32, pickWeighted } from './random';
 
-export type ObstacleKind = 'slab' | 'barrier' | 'gate';
+export type BasicKind = 'slab' | 'barrier' | 'gate';
+/** `wall` is one panel of a wall across the track (the lane left open is the way through); `sweeper` drifts between two lanes. */
+export type ObstacleKind = BasicKind | 'wall' | 'sweeper';
 export type Lane = -1 | 0 | 1;
 export const LANES: readonly Lane[] = [-1, 0, 1];
 
-/** How the rover gets through a lane of a row: drive on, jump, slide, or not at all (a slab). */
-export type PassMode = 'run' | 'jump' | 'slide';
+/** How the rover gets through a lane of a row: drive on, jump, crouch, or not at all (a slab, a wall, a sweeper). */
+export type PassMode = 'run' | 'jump' | 'crouch';
+
+/**
+ * A sweeper's path: it swings between lane `lane` and the lane to its right, along a smooth sine (so it is slow at the ends
+ * and fastest in the middle), once there and back every `period` seconds of play. It is over `lane` at play time `t0` plus any
+ * whole number of periods, and over the next lane half a period later. The generator sets `t0` so it is at one end exactly
+ * when the rover arrives (the speed does not depend on the player), so one of the two lanes is open then.
+ */
+export interface Sweep {
+  lane: Lane;
+  period: number;
+  t0: number;
+}
 
 /** One row across the track. `lanes[lane + 1]` is the obstacle in that lane, or null when it is open. */
 export interface Row {
@@ -22,12 +42,16 @@ export interface Row {
   z: number;
   lanes: [ObstacleKind | null, ObstacleKind | null, ObstacleKind | null];
   pickups: { lane: Lane; z: number; y: number }[];
+  /** A row of a sweeper marks both its lanes `sweeper` (blocked, for fairness) and says how it moves here. */
+  sweep?: Sweep;
+  /** The pattern this row belongs to, for the tests and the bots' table (the sim ignores it). */
+  pattern?: string;
 }
 
 export function passMode(kind: ObstacleKind | null): PassMode | null {
   if (kind === null) return 'run';
   if (kind === 'barrier') return 'jump';
-  if (kind === 'gate') return 'slide';
+  if (kind === 'gate') return 'crouch';
   return null;
 }
 
@@ -53,15 +77,15 @@ export function jumpLeadTime(cfg: RunnerConfig = RUNNER_CONFIG): number {
   return (takeoff - Math.sqrt(takeoff * takeoff - 2 * gravity * h)) / gravity;
 }
 
-/** Longest a slam (slide pressed in the air) can take to bring the rover down from the top of a jump. */
+/** Longest a slam (crouch pressed in the air) can take to bring the rover down from the top of a jump. */
 export function slamTime(cfg: RunnerConfig = RUNNER_CONFIG): number {
-  return cfg.jump.height / cfg.slide.slamSpeed;
+  return cfg.jump.height / cfg.crouch.slamSpeed;
 }
 
 /**
  * Seconds needed between the moment the rover has fully cleared lane `a` of one row (passed with `modeA`) and the moment its
  * front reaches lane `b` of the next (to be passed with `modeB`): the reaction time, then the lane changes and the vertical
- * move, which can overlap (the rover can change lanes in the air or while sliding).
+ * move, which can overlap (the rover can change lanes in the air or while crouched).
  */
 export function requiredTime(
   a: Lane,
@@ -71,12 +95,12 @@ export function requiredTime(
   cfg: RunnerConfig = RUNNER_CONFIG,
 ): number {
   const laneTime = Math.abs(a - b) * cfg.track.laneChangeTime;
-  // Still in the air from jumping the last row: a new jump waits for the landing (at worst a whole jump), a slide slams down.
-  // From the ground or a slide everything can start at once: jump cancels a slide, and slide restarts one.
+  // Still in the air from jumping the last row: a new jump waits for the landing (at worst a whole jump), a crouch slams down.
+  // From the ground or a crouch everything can start at once: a jump ends a crouch, and a crouch can be pressed again.
   let ready = 0;
   if (modeA === 'jump' && modeB === 'jump') ready = cfg.jump.duration;
-  if (modeA === 'jump' && modeB === 'slide') ready = slamTime(cfg);
-  const lead = modeB === 'jump' ? jumpLeadTime(cfg) : modeB === 'slide' ? 0.05 : 0;
+  if (modeA === 'jump' && modeB === 'crouch') ready = slamTime(cfg);
+  const lead = modeB === 'jump' ? jumpLeadTime(cfg) : modeB === 'crouch' ? cfg.crouch.inTime : 0;
   return cfg.generator.reactionTime + Math.max(laneTime, ready + lead);
 }
 
@@ -101,19 +125,36 @@ export function rowGapTime(
   return worst;
 }
 
-/**
- * The centre-to-centre distance two rows must be apart at `speed`: the rover's centre travels from "cleared the first" to
- * "front at the second" in the required time, plus half of each row's length and the rover's length.
- */
+/** The centre-to-centre distance two rows must be apart for the rover to have `time` between clearing one and reaching the next. */
+export function spacingForTime(
+  prev: Pick<Row, 'lanes'>,
+  next: Pick<Row, 'lanes'>,
+  speed: number,
+  time: number,
+  cfg: RunnerConfig = RUNNER_CONFIG,
+): number {
+  return (rowLength(prev, cfg) + rowLength(next, cfg)) / 2 + cfg.hitbox.rover.length + speed * time;
+}
+
+/** The least two rows may be apart at `speed`: what fairness needs and nothing more. */
 export function minRowSpacing(
   prev: Pick<Row, 'lanes'>,
   next: Pick<Row, 'lanes'>,
   speed: number,
   cfg: RunnerConfig = RUNNER_CONFIG,
 ): number {
-  return (
-    (rowLength(prev, cfg) + rowLength(next, cfg)) / 2 + cfg.hitbox.rover.length + speed * rowGapTime(prev, next, cfg)
-  );
+  return spacingForTime(prev, next, speed, rowGapTime(prev, next, cfg), cfg);
+}
+
+/** Which tier (1, 2 or 3) the course is in at distance `z`. */
+export function tierAt(z: number, cfg: RunnerConfig = RUNNER_CONFIG): 1 | 2 | 3 {
+  const { two, three } = cfg.generator.tiers;
+  return z >= three ? 3 : z >= two ? 2 : 1;
+}
+
+/** The sweeper's position in lanes from its lower lane (0 = over `lane`, 1 = over the next one) at play time `time`. */
+export function sweepFraction(sweep: Sweep, time: number): number {
+  return 0.5 - 0.5 * Math.cos((2 * Math.PI * (time - sweep.t0)) / sweep.period);
 }
 
 export interface Generator {
@@ -121,68 +162,211 @@ export interface Generator {
   next(speed: number): Row;
 }
 
-/** A row's obstacles at a difficulty from 0 (start speed) to 1 (the cap). Never three slabs. */
-export function randomLanes(rand: Random, difficulty: number, cfg: RunnerConfig = RUNNER_CONFIG): Row['lanes'] {
-  const g = cfg.generator;
-  const at = ([lo, hi]: readonly [number, number] | readonly number[]) => lo + (hi - lo) * difficulty;
-  const pattern = pickWeighted(rand, {
-    single: at(g.weights.single),
-    double: at(g.weights.double),
-    wall: at(g.weights.wall),
-  });
-  const count = pattern === 'single' ? 1 : pattern === 'double' ? 2 : 3;
-  const lanes: Row['lanes'] = [null, null, null];
-  const order = [0, 1, 2];
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  for (let i = 0; i < count; i++) lanes[order[i]] = pickWeighted(rand, { ...g.kinds });
-  if (lanes[0] === 'slab' && lanes[1] === 'slab' && lanes[2] === 'slab') {
-    lanes[Math.floor(rand() * 3)] = rand() < 0.5 ? 'barrier' : 'gate';
-  }
-  return lanes;
+interface Planned {
+  lanes: Row['lanes'];
+  /** A sweeper row: its lower lane, and whether it is over the upper one when the rover arrives. */
+  sweep?: { lane: Lane; atUpper: boolean };
 }
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export function createGenerator(seed: number, cfg: RunnerConfig = RUNNER_CONFIG): Generator {
   const rand = mulberry32(seed);
   const g = cfg.generator;
   let prev: Row | null = null;
+  const queue: Row[] = [];
+  const sweepAtUpper = new WeakMap<Row, boolean>();
+
+  const shuffle3 = (): [number, number, number] => {
+    const order = [0, 1, 2];
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order as [number, number, number];
+  };
+  const kind = (): BasicKind => pickWeighted(rand, { ...g.kinds });
+  const blank = (): Row['lanes'] => [null, null, null];
+  const modeKind = (mode: PassMode): ObstacleKind | null => (mode === 'run' ? null : mode === 'jump' ? 'barrier' : 'gate');
+  /** A row with exactly one way through: lane index `pass`, by `mode`; every other lane is a slab. */
+  const forced = (pass: number, mode: PassMode): Planned => {
+    const lanes: Row['lanes'] = ['slab', 'slab', 'slab'];
+    lanes[pass] = modeKind(mode);
+    return { lanes };
+  };
+  const anyMode = (runShare: number): PassMode => {
+    const r = rand();
+    return r < runShare ? 'run' : r < runShare + (1 - runShare) / 2 ? 'jump' : 'crouch';
+  };
+  const opening = (): ObstacleKind | null => {
+    const r = rand();
+    return r < g.wallOpeningBarrier ? 'barrier' : r < g.wallOpeningBarrier + g.wallOpeningGate ? 'gate' : null;
+  };
+  const wallRow = (open: number): Planned => {
+    const lanes: Row['lanes'] = ['wall', 'wall', 'wall'];
+    lanes[open] = opening();
+    return { lanes };
+  };
+
+  const builders: Record<string, () => Planned[]> = {
+    single: () => {
+      const lanes = blank();
+      lanes[shuffle3()[0]] = kind();
+      return [{ lanes }];
+    },
+    pair: () => {
+      const [a, b] = shuffle3();
+      const lanes = blank();
+      lanes[a] = kind();
+      lanes[b] = kind();
+      return [{ lanes }];
+    },
+    // Jump and at once crouch, or the other way round, in the one lane the slabs leave.
+    barrierGate: () => {
+      const [a] = shuffle3();
+      return (rand() < 0.5 ? (['jump', 'crouch'] as const) : (['crouch', 'jump'] as const)).map((m) => forced(a, m));
+    },
+    // Crouch under a gate, then at once a lane change.
+    gateDodge: () => {
+      const [a, b] = shuffle3();
+      return [forced(a, 'crouch'), forced(b, anyMode(0.7))];
+    },
+    // A slab in your lane, the free lane beside it a barrier (or a gate): change lane, then jump.
+    dodgeJump: () => [forced(shuffle3()[1], rand() < 0.75 ? 'jump' : 'crouch')],
+    trio: () => {
+      const [a, b, c] = shuffle3();
+      const lanes = blank();
+      lanes[a] = 'slab';
+      lanes[b] = 'barrier';
+      lanes[c] = 'gate';
+      return [{ lanes }];
+    },
+    // From one side of the track to the other.
+    slalom: () => {
+      const left = rand() < 0.5;
+      return [forced(left ? 0 : 2, anyMode(0.6)), forced(left ? 2 : 0, anyMode(0.6))];
+    },
+    chain3: () => [0, 1, 2].map(() => forced(Math.floor(rand() * 3), anyMode(0.4))),
+    wall: () => [wallRow(Math.floor(rand() * 3))],
+    wallSlalom: () => {
+      const left = rand() < 0.5;
+      return [wallRow(left ? 0 : 2), wallRow(left ? 2 : 0)];
+    },
+    sweeper: () => {
+      const lower: Lane = rand() < 0.5 ? -1 : 0;
+      const lanes = blank();
+      lanes[lower + 1] = 'sweeper';
+      lanes[lower + 2] = 'sweeper';
+      const third = lower === -1 ? 2 : 0;
+      const r = rand();
+      lanes[third] = r < 0.3 ? 'barrier' : r < 0.5 ? 'gate' : null;
+      return [{ lanes, sweep: { lane: lower, atUpper: rand() < 0.5 } }];
+    },
+  };
+  const comboNames = new Set(Object.keys(builders).filter((n) => n !== 'single' && n !== 'pair'));
+
+  /** The patterns open at distance `z`, with their odds. */
+  const available = (z: number): Record<string, number> => {
+    const tier = tierAt(z, cfg);
+    const out: Record<string, number> = {};
+    for (const [name, weights] of Object.entries(g.patterns)) {
+      if ((name === 'wall' || name === 'wallSlalom') && z < g.hazards.wall) continue;
+      if (name === 'sweeper' && z < g.hazards.sweeper) continue;
+      const w = weights[tier - 1];
+      if (w > 0) out[name] = w;
+    }
+    return out;
+  };
+
+  /** The way the rover goes through a row, for the pickups to lead along: a risky way when there is a safe one, by chance. */
+  const route = (row: Row): { lane: Lane; mode: PassMode } | null => {
+    if (row.sweep) {
+      // The reward for reading the sweeper: the lane it has left open when the rover arrives.
+      const lane = sweepAtUpper.get(row) ? row.sweep.lane : ((row.sweep.lane + 1) as Lane);
+      return { lane, mode: 'run' };
+    }
+    const open = passableLanes(row);
+    if (!open.length) return null;
+    const risky = open.filter((o) => o.mode !== 'run');
+    const safe = open.filter((o) => o.mode === 'run');
+    const pool = risky.length && safe.length ? (rand() < g.pickupRisk ? risky : safe) : open;
+    return pool[Math.floor(rand() * pool.length)];
+  };
+
+  /** A line of pickups in `way`'s lane, running up to `row` from the row before, with one on the jump or the crouch. */
+  const pickupLine = (before: Row | null, row: Row, way: { lane: Lane; mode: PassMode }): Row['pickups'] => {
+    const start = (before ? before.z + rowLength(before, cfg) / 2 : 0) + 4;
+    const end = row.z - rowLength(row, cfg) / 2 - 3;
+    const out: Row['pickups'] = [];
+    for (let z = end; z >= start && out.length < g.pickupMaxInLine; z -= g.pickupSpacing)
+      out.unshift({ lane: way.lane, z, y: g.pickupHeight });
+    if (way.mode === 'jump') out.push({ lane: way.lane, z: row.z, y: g.pickupHeightOverBarrier });
+    if (way.mode === 'crouch') out.push({ lane: way.lane, z: row.z, y: g.pickupHeightUnderGate });
+    return out.length >= 2 ? out : [];
+  };
+
+  /** Place a pattern's rows after the last one: the first after the window between patterns, the rest after the margin. */
+  const place = (name: string, planned: Planned[], speed: number): Row[] => {
+    const d = speedProgress(speed, cfg);
+    const out: Row[] = [];
+    const before = prev;
+    const tight = g.tighten[(before ? tierAt(before.z, cfg) : 1) - 1];
+    for (let i = 0; i < planned.length; i++) {
+      const p = planned[i];
+      const row: Row = { z: 0, lanes: p.lanes, pickups: [], pattern: name };
+      const last: Row | null = out[i - 1] ?? before;
+      if (!last) {
+        row.z = cfg.spawn.firstRowAt;
+      } else {
+        const need = rowGapTime(last, row, cfg);
+        let time: number;
+        if (i === 0) {
+          const window = lerp(g.window.start, g.window.cap, d) * tight;
+          time = Math.max(need, window, g.minGap) + rand() * lerp(g.extra.start, g.extra.cap, d) * tight;
+        } else {
+          time = Math.max(need + lerp(g.margin.start, g.margin.cap, d) * tight, g.minGap);
+        }
+        row.z = last.z + spacingForTime(last, row, speed, time, cfg);
+      }
+      if (p.sweep) {
+        // At play time `arrive` the rover's centre is over the row; the sweeper is at one end of its swing then.
+        const arrive = timeAtDistance(row.z, cfg);
+        const t0 = arrive - (p.sweep.atUpper ? g.sweeperPeriod / 2 : 0);
+        row.sweep = { lane: p.sweep.lane, period: g.sweeperPeriod, t0 };
+        sweepAtUpper.set(row, p.sweep.atUpper);
+      }
+      out.push(row);
+    }
+    if (rand() < (comboNames.has(name) ? g.pickupChanceCombo : g.pickupChance)) {
+      out.forEach((row, i) => {
+        const way = route(row);
+        if (way) row.pickups = pickupLine(out[i - 1] ?? before, row, way);
+      });
+    }
+    return out;
+  };
 
   return {
     next(speed: number): Row {
-      const range = cfg.speed.max - cfg.speed.start;
-      const difficulty = range > 0 ? Math.min(1, Math.max(0, (speed - cfg.speed.start) / range)) : 1;
-      const lanes = randomLanes(rand, difficulty, cfg);
-      let z: number;
-      if (!prev) {
-        z = cfg.spawn.firstRowAt;
-      } else {
-        const extra =
-          (g.extraTimeMin + rand() * (g.extraTimeMax - g.extraTimeMin)) * (1 - g.extraTimeShrink * difficulty);
-        z = prev.z + minRowSpacing(prev, { lanes }, speed, cfg) + speed * extra;
+      if (!queue.length) {
+        let name = 'single';
+        let planned: Planned[];
+        if (!prev) {
+          // The first obstacle is always in the middle lane, where the rover starts: a run that does nothing ends on it.
+          const lanes = blank();
+          lanes[1] = rand() < 0.55 ? 'slab' : 'barrier';
+          planned = [{ lanes }];
+        } else {
+          name = pickWeighted(rand, available(prev.z));
+          planned = builders[name]();
+        }
+        queue.push(...place(name, planned, speed));
       }
-      const row: Row = { z, lanes, pickups: [] };
-      if (rand() < g.pickupChance) row.pickups = pickupLine(rand, prev, row, cfg);
+      const row = queue.shift()!;
       prev = row;
       return row;
     },
   };
-}
-
-/** A line of pickups in one open lane of `row`, running up to it from the row before, with one on the jump or the slide. */
-function pickupLine(rand: Random, prev: Row | null, row: Row, cfg: RunnerConfig): Row['pickups'] {
-  const g = cfg.generator;
-  const open = passableLanes(row);
-  const { lane, mode } = open[Math.floor(rand() * open.length)];
-  const start = (prev ? prev.z + rowLength(prev, cfg) / 2 : 0) + 4;
-  const end = row.z - rowLength(row, cfg) / 2 - 3;
-  const out: Row['pickups'] = [];
-  for (let z = end; z >= start && out.length < g.pickupMaxInLine; z -= g.pickupSpacing)
-    out.unshift({ lane, z, y: g.pickupHeight });
-  if (mode === 'jump') out.push({ lane, z: row.z, y: g.pickupHeightOverBarrier });
-  if (mode === 'slide') out.push({ lane, z: row.z, y: g.pickupHeightUnderGate });
-  return out.length >= 2 ? out : [];
 }
 
 /** A fixed list of rows instead of random ones (the tests' hand-made courses). Returns rows far away once it runs out. */

@@ -2,7 +2,8 @@
 // Prototype for the 404 page's game (docs/RUNNER.md, step 1 of 4: the core, with placeholder shapes). The game is loaded with
 // a dynamic import on the first click, tap or key, so three.js is a lazy chunk and never in this page's first load. Under the
 // game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course; ?start=0 stops on
-// the ready screen; ?variant=blended shows the 404 page's blended style instead of the hairline frame). Not linked from
+// the ready screen; ?variant=blended shows the 404 page's blended style instead of the hairline frame; ?all=1 lets every
+// pattern and hazard appear from the first row, to look at the wall and the sweeper at once). Not linked from
 // anywhere and kept out of search engines, like the rest of the styleguide.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import '../../../game/runner/runner.css';
@@ -51,11 +52,12 @@ import '../../../game/runner/runner.css';
       <div class="rn-below">
         <div id="rn-howto" class="rn-howto">
           <p>
-            Left and right arrows, or A and D, change lane. Up arrow, W or Space jumps. Down arrow or S slides. On a
-            touch screen, swipe left, right, up or down. Space or a tap starts and restarts.
+            Left and right arrows, or A and D, change lane. Up arrow, W or Space jumps. Hold S or Down to crouch. On a
+            touch screen, swipe left, right or up; swipe down and keep your finger down to crouch. Space or a tap starts
+            and restarts.
           </p>
           <p>
-            Change lane at a slab marked 404, jump a low barrier, slide under a gate. Each brass dot adds 5 m to the
+            Change lane at a slab marked 404, jump a low barrier, crouch under a gate. Each brass dot adds 5 m to the
             score.
           </p>
         </div>
@@ -82,6 +84,10 @@ import '../../../game/runner/runner.css';
             <div>
               <dt>lane</dt>
               <dd data-stat="lane">-</dd>
+            </div>
+            <div>
+              <dt>crouch</dt>
+              <dd data-stat="crouch">-</dd>
             </div>
             <div>
               <dt>world scroll</dt>
@@ -243,6 +249,7 @@ import '../../../game/runner/runner.css';
     speed: stat('speed'),
     distance: stat('distance'),
     lane: stat('lane'),
+    crouch: stat('crouch'),
     scroll: stat('scroll'),
     triangles: stat('triangles'),
     calls: stat('calls'),
@@ -271,6 +278,7 @@ import '../../../game/runner/runner.css';
     if (out.speed) out.speed.textContent = `${s.speed.toFixed(1)} m/s`;
     if (out.distance) out.distance.textContent = `${s.distance.toFixed(1)} m`;
     if (out.lane) out.lane.textContent = String(s.lane);
+    if (out.crouch) out.crouch.textContent = s.crouch.toFixed(2);
     if (s.view) {
       if (out.scroll) out.scroll.textContent = `${s.view.scroll.toFixed(2)} m`;
       if (out.triangles) out.triangles.textContent = String(s.view.triangles);
@@ -290,17 +298,25 @@ import '../../../game/runner/runner.css';
       const { mountRunner } = await import('../../../game/runner/index');
       const query = new URLSearchParams(location.search);
       const seed = Number(query.get('seed'));
-      if (poster) poster.hidden = true;
-      // atmosphere polish: ?comet=1 sends a shooting star 1.5 s after mount, from a fixed sky seed (the tests, a quick look).
       const { withConfig } = await import('../../../game/runner/config');
+      // ?all=1: every pattern and the new hazards from the first row (a fixture for the tests; the game never does this).
+      // atmosphere polish: ?comet=1 sends a shooting star 1.5 s after mount, from a fixed sky seed (the tests, a quick look).
+      // They combine: each adds its own part of the config.
+      const all = query.get('all') === '1';
+      const comet = query.get('comet') === '1';
       const config =
-        query.get('comet') === '1' ? withConfig({ render: { atmosphere: { seed: 11, firstComet: 1.5 } } }) : undefined;
-      // end atmosphere polish
+        all || comet
+          ? withConfig({
+              ...(all ? { generator: { tiers: { two: 0, three: 0 }, hazards: { wall: 0, sweeper: 0 } } } : {}),
+              ...(comet ? { render: { atmosphere: { seed: 11, firstComet: 1.5 } } } : {}),
+            })
+          : undefined;
+      if (poster) poster.hidden = true;
       handle = mountRunner(host, {
         seed: Number.isFinite(seed) && seed > 0 ? seed : undefined,
+        config,
         variant,
         onStats,
-        config, // atmosphere polish
       });
       if (query.get('start') !== '0') handle.start();
       if (unmount) unmount.hidden = false;
