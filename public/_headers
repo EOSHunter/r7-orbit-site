@@ -28,9 +28,11 @@
   Content-Security-Policy: frame-src https://vesper.r7orbit.io https://housepainter.r7orbit.io https://challenges.cloudflare.com
 
 # An unlisted page (the Movie Wheel). It is not linked from the nav, the sitemap or robots.txt (listing it there would advertise it); this keeps
-# it out of search results too. Anyone with the address can still open it, so it holds no data: its list is saved in each visitor's own browser.
+# it out of search results too. Sign-in (Cloudflare Access, docs/MOVIE_WHEEL.md) protects it. no-cache makes a browser check for a newer copy of the
+# page and its scripts on every visit (a quick check, not a full download), so an update reaches a phone that opened the page before.
 /mw-554e0676db47baa4/*
   X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-cache
 
 # Built assets have a content hash in the file name, so they never change under the same URL.
 /_astro/*
