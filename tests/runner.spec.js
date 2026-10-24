@@ -158,6 +158,18 @@ test('touch: synthetic swipes change lanes, a tap resumes after a pause', async 
   await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
 });
 
+test('?start=0 mounts the game on its ready screen; Space then starts a run', async ({ page }) => {
+  await page.goto(`${FIXTURE}?seed=5&start=0`, { waitUntil: 'networkidle' });
+  await host(page).focus();
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'ready', MOUNTED);
+  await expect(page.locator('.runner-prompt')).toHaveText('Press space to play');
+  await expect(page.locator('.runner-score')).toHaveText('00000 m');
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await expect(page.locator('.runner-message')).toBeHidden();
+});
+
 test('the stage is focusable with a visible focus ring', async ({ page }) => {
   await page.goto(FIXTURE, { waitUntil: 'networkidle' });
   await host(page).focus();

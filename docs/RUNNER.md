@@ -83,8 +83,8 @@ tests and for the steps after this one.
 
 **Three.js** (`three`, MIT) is the one runtime dependency added. It is imported by name in `render.ts` only, and only
 `index.ts` is imported dynamically, so it is never in a page's first load. The lazy chunk is about 551 kB, **138 kB
-gzipped** (2026-10-23 build, three 0.186); the fixture page's own script is 1.3 kB. Nearly all of it is three.js's
-`WebGLRenderer`: tree-shaking leaves little else to cut.
+gzipped** (2026-10-23 build, three 0.186); nearly all of it is three.js's `WebGLRenderer`, and tree-shaking leaves little
+else to cut. The fixture page's own script is 1.3 kB, plus Vite's 1.5 kB preload helper (docs/DECISIONS.md, the runner).
 
 ## Frame rate
 
@@ -150,6 +150,30 @@ All in `src/game/runner/config.ts` (`RUNNER_CONFIG`); `withConfig({...})` makes 
 After any change run `npx vitest run src/game/runner`: the fairness and frame-rate tests replay thousands of courses with
 the new numbers.
 
+## Playtest (2026-10-23, default config)
+
+Measured on the sim (40 seeds) and seen in headless Chromium on SwiftShader at 1280x720 (keys) and 390x844 (touch, 3x
+screen): 60 fps, 2 steps a frame, no console messages, and seed 11 ends at exactly 87.5 m at both sizes.
+
+| | 30 s | 60 s |
+| --- | --- | --- |
+| Speed | 20.2 m/s | 25.4 m/s (cap 28 at 100 s) |
+| Distance, perfect bot (no crash in 40 runs) | 490 m | 1,181 m |
+| Rows passed | about 20 | about 47 |
+| Gap between rows, median (shortest) | 1.2 s (0.7 s) | 1.0 s (0.6 s) |
+| Rows with two / three obstacles | 39% / 18% | 45% / 25% |
+
+Doing nothing crashes at a median of 89.5 m after 6.9 s (68.9 to 180.3 m), on a slab, gate or barrier about equally. In 62 s
+the bot jumps about 10 times, slides about 11 times and changes lane about 17 lanes' worth.
+
+How it plays: the lane change (0.14 s) and the slide are crisp; the jump (0.62 s, 7 m long at the start speed) is on the
+floaty side; the first 5.8 s before the first row is too long for a game you meet on an error page; the ramp is steep early
+(12 to 20 m/s in 30 s) and flat late. A crash has no feedback yet (the rover just stops); that is the look pass's. On a phone
+the 16:9 stage is about 200 px tall and far obstacles are specks, so step 3 should give the game more height there.
+
+Suggested first tuning, not applied: `spawn.firstRowAt` 70 → 40 m; `jump.duration` 0.62 → 0.56 s; `speed.rampTime` 100 →
+120 s for a gentler middle. Re-run the unit tests after any of them.
+
 ## How the next steps plug in
 
 - **Step 2, the look:** replace the art in `render.ts` (models, materials, lights, effects) and restyle `runner.css`. Keep
@@ -159,7 +183,7 @@ the new numbers.
   text, the game loaded with `import()` on the first key or tap, `destroy()` if the page ever unmounts it. Import
   `runner.css` in that page only. Mind the page's budgets: the chunk only loads on interaction, so the 404 page's first load
   stays as it is.
-- **Step 4, QA:** `tests/runner.spec.js` and the unit tests are the base; the fixture's `?seed=N` repeats a course.
+- **Step 4, QA:** `tests/runner.spec.js` and the unit tests are the base; the fixture's `?seed=N` repeats a course, and `?start=0` mounts the game on the ready screen instead of starting a run.
 
 ## Tests
 
@@ -174,13 +198,17 @@ the new numbers.
 
 ## Design references
 
-The author's three approved concept images, for the look pass (they are concepts, not specs: shapes, mood and the HUD).
+The author's three approved concept images, in `docs/runner-concepts/` (its README says where each came from). They are
+concepts, not specs: shapes, mood, the HUD and the page layout.
 
-- `docs/runner-concepts/key-art.png`: the rover in the ring tunnel, slab, barrier and broken-link pieces, asteroids.
-- `docs/runner-concepts/gameplay.png`: the in-game view, a gate and a barrier, a line of pickups, the HUD top right
-  (`01248 m`, `BEST 03850 m`).
-- `docs/runner-concepts/obstacles.png`: the rover from three sides (six wheels, beacon), the slab with `404`, the barrier,
-  the gate, the broken link and ring pieces, pickups and a crash burst.
+- `gameplay.png` (concept 2): the in-game view, a gate and a barrier, a line of pickups, the HUD top right
+  (`01248 m`, `BEST 03850 m`). The prototype's camera, lanes and HUD follow it.
+- `obstacles.png` (concept 3): the rover from three sides (six wheels, beacon), the slab with `404`, the barrier, the gate,
+  the broken link and ring pieces, pickups and a crash burst. The look pass models these.
+- `blended-fade.png` (concept 6, the 404 page the author chose): "Page *not* found", a line and "Back to home" over the
+  game, which fills the page and fades into it, low-poly rocks beside the track, the score on the right, "Press space to
+  play" at the bottom. This is the target for step 3; the words on it are the mock-up's, not decided copy.
 
 Differences in this prototype, on purpose: the track has four hairlines (both edges and the two lane lines) as in the
-gameplay concept; the broken-link and ring-fragment obstacles, the asteroids and the crash burst are left to the look pass.
+gameplay concept; the broken-link and ring-fragment obstacles, the rocks and asteroids, the striped barrier and the crash
+burst are left to the look pass.

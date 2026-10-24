@@ -1,7 +1,7 @@
 ---
 // Prototype for the 404 page's game (docs/RUNNER.md, step 1 of 4: the core, with placeholder shapes). The game is loaded with
 // a dynamic import on the first click, tap or key, so three.js is a lazy chunk and never in this page's first load. Under the
-// game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course). Not linked from
+// game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course; ?start=0 stops on the ready screen). Not linked from
 // anywhere and kept out of search engines, like the rest of the styleguide.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import '../../../game/runner/runner.css';
@@ -212,10 +212,11 @@ import '../../../game/runner/runner.css';
     loading = true;
     try {
       const { mountRunner } = await import('../../../game/runner/index');
-      const seed = Number(new URLSearchParams(location.search).get('seed'));
+      const query = new URLSearchParams(location.search);
+      const seed = Number(query.get('seed'));
       if (poster) poster.hidden = true;
       handle = mountRunner(host, { seed: Number.isFinite(seed) && seed > 0 ? seed : undefined, onStats });
-      handle.start();
+      if (query.get('start') !== '0') handle.start();
       if (unmount) unmount.hidden = false;
     } finally {
       loading = false;
