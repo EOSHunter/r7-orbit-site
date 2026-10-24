@@ -1,0 +1,122 @@
+/* The runner's own words over the canvas: score, best, pickups, the message and the WebGL fallback (src/game/runner/index.ts).
+   Not global: only a page that hosts the game imports this file. The host's container must be positioned; the game fills it.
+   Tokens only (CLAUDE.md, design rules). The look pass (step 2) may restyle this. */
+
+.runner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.runner-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* swipes steer the rover instead of scrolling the page */
+}
+
+.runner p {
+  margin: 0;
+}
+
+.runner-hud {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-4);
+  display: grid;
+  justify-items: end;
+  gap: var(--s-1);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.runner-score {
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+
+.runner-best {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.runner-pickups {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.runner-dot {
+  width: var(--s-2);
+  height: var(--s-2);
+  border-radius: var(--r-full);
+  background: var(--brass);
+}
+
+.runner-message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  text-align: center;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  pointer-events: none;
+}
+
+.runner-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.runner-result {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.runner-prompt {
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.runner-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: var(--s-4);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  color: var(--text-2);
+  text-align: center;
+}
+
+@media (min-width: 48rem) {
+  .runner-score {
+    font-size: var(--fs-xl);
+  }
+
+  .runner-title {
+    font-size: var(--fs-3xl);
+  }
+
+  .runner-result {
+    font-size: var(--fs-sm);
+  }
+
+  .runner-prompt {
+    font-size: var(--fs-md);
+  }
+}
