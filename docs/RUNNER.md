@@ -15,10 +15,12 @@ solids are ivory (CLAUDE.md, design rules).
 | --- | --- | --- |
 | Slab | a tall block across its lane, `404` on its face | change lane (it is too tall to jump) |
 | Barrier | a low block | jump |
-| Gate | an overhead arch (a beam on two posts) | slide under the beam |
+| Gate | an overhead arch (a beam on two posts) | crouch (hold) under the beam |
+| Wall | a thin full-height curtain across the track with one lane left open, the opening marked by brass hairlines (from 500 m) | the open lane |
+| Sweeper | a tall hexagonal pylon swaying between two lanes along a brass line (from 1,000 m) | the third lane, or the lane it has left open when you arrive |
 
-Brass dots come in lines between the rows (and over a barrier, on the jump; under a gate, on the slide). Each one adds 1 to
-the pickup count and 5 m to the score.
+Brass dots come in lines between the rows (and over a barrier, on the jump; under a gate, crouched), and lead along the
+harder way through a row and through combinations. Each one adds 1 to the pickup count and 5 m to the score.
 
 ## Controls
 
@@ -27,24 +29,26 @@ the pickup count and 5 m to the score.
 | Start, restart, resume | Space | tap |
 | Change lane | Left / Right arrow, A / D | swipe left / right |
 | Jump | Up arrow, W, Space (while playing) | swipe up |
-| Slide | Down arrow, S | swipe down |
+| Crouch (hold) | Hold S or Down arrow | swipe down and keep the finger down |
 
 Keys are heard only while the game's container has focus, and Space and the arrows do not scroll the page then. A swipe
 counts once the finger has moved 30 px along one axis and that axis is at least 1.25 times the other; shorter or diagonal
-moves do nothing, and a short still press is a tap. One swipe per touch.
+moves do nothing, and a short still press is a tap. One swipe per touch, except while a finger is holding a crouch: a swipe
+left, right or up from where the crouch began then changes lane or jumps (see "Hold to crouch").
 
 ## Rules
 
 - **Score** = whole metres driven + 5 per pickup, shown as five digits (`00420 m`). The **best score** is under it, dimmer.
-- **Speed** starts at 12 m/s and eases out to the cap, 28 m/s, over 100 s of play.
+- **Speed** starts at 13 m/s and rises to the cap, 40 m/s, over 180 s of play, on a smooth curve (see "Difficulty and bots").
 - **States:** ready ("Press space to play" / "Tap to play"), playing, game over (score, best, "Press space to try again" /
   "Tap to try again"). A restart is ignored for 0.35 s after a crash, so a key still held does not restart by accident.
   The words switch to the touch ones on a coarse pointer or at the first touch.
 - **Paused** when the tab is hidden, the window loses focus, or keyboard focus leaves the game during a run. Space or a tap
   resumes (that press does nothing else).
 - **Jump:** 1.3 m high, 0.62 s long. No double jump; a jump pressed up to 0.12 s before landing happens on landing.
-- **Slide:** 0.65 s. Slide again restarts it; jump cancels it. Slide in the air slams the rover down and it slides on landing.
-- **Lanes:** one lane per press, 0.14 s per lane, also in the air and while sliding; the edges stop it.
+- **Crouch:** the rover is low for exactly as long as S or Down is held (see "Hold to crouch"). Jump cancels it. Crouch in the
+  air slams the rover down and it crouches on landing.
+- **Lanes:** one lane per press, 0.14 s per lane, also in the air and while crouched; the edges stop it.
 - **Best score** is saved only in the visitor's browser: `localStorage`, key `r7-runner-best`. Nothing is sent anywhere.
   Every access is in `try/catch`: with storage blocked (private browsing, a sandboxed frame) the best lasts for the visit.
 - **Without WebGL** the game shows "This game needs WebGL." and nothing else.
@@ -57,10 +61,12 @@ moves do nothing, and a short still press is a tap. One swipe per touch.
 | --- | --- |
 | `config.ts` | every tunable number (below), the scene colours, `speedAt()` and the jump's gravity |
 | `random.ts` | mulberry32, a small seeded generator: the same seed is the same course |
-| `generator.ts` | rows of obstacles and pickup lines, and the fairness arithmetic |
-| `sim.ts` | `RunnerSim`: state, `step()` (exactly one fixed step), lanes, jump and slide, collisions, spawning, score |
+| `generator.ts` | patterns of rows (tiers, combinations, the wall, the sweeper), pickup lines, and the fairness arithmetic |
+| `hazards.ts` | the look of the wall and the sweeper: four instanced draw calls, called from a marked block in `render.ts` |
+| `bots.ts` | the bots (novice, average, expert, perfect, idle) that play the real sim headless, and the summary table; run by `npm run runner:bots` (`scripts/runner-bots.mjs`) |
+| `sim.ts` | `RunnerSim`: state, `step()` (exactly one fixed step), lanes, jump and held crouch, collisions, spawning, score |
 | `clock.ts` | `FixedStepClock`: frame timestamps to a number of steps and an interpolation `alpha` |
-| `input.ts` | keyboard, swipe and tap to intents (`left`, `right`, `jump`, `slide`, `primary` = Space, `start` = tap) |
+| `input.ts` | keyboard, swipe and tap to intents (`left`, `right`, `jump`, `crouch` / `crouchTouch` / `crouchEnd` / `crouchCancel`, `primary` = Space, `start` = tap) |
 | `storage.ts` | best score load and save |
 | `render.ts` | the Three.js view: reads the sim, draws the scene; `createView()` is null without WebGL |
 | `rover.ts` | the rover: loads `assets/rover.glb`, animates it from the sim, the dust trail and the crash burst (below) |
@@ -120,7 +126,7 @@ and the file size; keep them under 6,000 and 150 kB.
 | Axes | +Y up, facing -Z (glTF); Blender builds it Z up facing +Y |
 
 **Node names** (the contract with `rover.ts`): `rover` (root, on the ground); `rover_body` (shell, bobs and rolls on the
-suspension); `antenna` (pivot at its foot, folds back in a slide) with `beacon` in it; `rocker_L`, `rocker_R` (pivot at the
+suspension); `antenna` (pivot at its foot, folds back while crouched) with `beacon` in it; `rocker_L`, `rocker_R` (pivot at the
 body joint) carrying `wheel_FL` / `wheel_FR` and `bogie_L`, `bogie_R` (pivot at the rocker joint), which carry `wheel_ML`,
 `wheel_RL` / `wheel_MR`, `wheel_RR`. Each wheel's origin is its axle, so a rotation about local X spins it.
 
@@ -132,9 +138,9 @@ on; nothing is thrown. `destroy()` frees both.
 
 - wheels turn by the distance driven over their radius (rolling, any frame rate);
 - the body bobs a little with distance and speed, rockers and bogies rock a degree or so, and a landing dips the body on its
-  spring (harder when it slams into a slide);
-- in the air the rover tips back up to 4 degrees while rising; a slide drops the body 8 cm, tips it forward 2.5 degrees and
-  folds the antenna back flat (so the rover is under a gate's beam);
+  spring (harder when it slams into a crouch);
+- in the air the rover tips back up to 4 degrees while rising; a crouch drops the body 8 cm, tips it forward 2.5 degrees and
+  folds the antenna back flat (so the rover is under a gate's beam), and holds it there for as long as the key is held;
 - a lane change yaws the rover up to 7 degrees towards the new lane and rolls the body up to 3 degrees away from the turn,
   both easing back as it arrives;
 - the beacon's emissive glow and a soft halo pulse, from 0.6 Hz at the start speed to 2.4 Hz at the cap;
@@ -142,14 +148,14 @@ on; nothing is thrown. `destroy()` frees both.
 - a crash: after the hit-stop, 22 brass shards burst from the nose (0.55 s), dust is thrown up, the beacon flashes, and the
   rover is pushed back 45 cm with a small hop, tipping and turning a few degrees.
 
-**Reduced motion** (`prefers-reduced-motion: reduce`): the wheel spin, trail, yaw, slide drop, antenna fold and burst stay
+**Reduced motion** (`prefers-reduced-motion: reduce`): the wheel spin, trail, yaw, crouch drop, antenna fold and burst stay
 (they say what the rover is doing); the bob, pitch, roll, landing dip, tumble and the camera shake go.
 
 ## Camera
 
 `ChaseRig` (`camera.ts`) fixes the camera to the **track**, which is what stopped the view from switching perspective: it
 stays 3.1 m up and 6.4 m back whatever the rover does, follows 40% of the rover's sideways offset through a critically damped
-spring (0.32 s), never moves up or down with a jump or a slide, never rolls, and always looks at one point 14 m ahead on the
+spring (0.32 s), never moves up or down with a jump or a crouch, never rolls, and always looks at one point 14 m ahead on the
 track's centre line, 0.9 m up, so the horizon is level and still. The field of view eases from 58 degrees at the start speed
 to 64 at the cap. A crash holds the picture for 90 ms (a hit-stop: the view's own motion stops, the sim's time is not
 touched), then shakes it for 150 ms, at most 7 cm, damped (none with reduced motion). Every number is a named constant at
@@ -179,18 +185,181 @@ frame that shows the rover past a point.
 Every row leaves a lane the rover can pass (never three slabs). The gap before a row is long enough that from **any** lane
 a player could have used to pass the previous row, some lane of the new row is reachable: after the rover has cleared the
 previous row, a reaction time (0.25 s), then the lane changes and the vertical move, which can overlap (lane changes work in
-the air and while sliding). The vertical move costs:
+the air and while crouched). The vertical move costs:
 
-- from the ground or a slide: a jump needs its lead (the time to rise above a barrier); a slide starts at once (jump cancels
-  a slide);
-- from a jump: another jump waits for the landing (counted as a whole jump), a slide waits for the slam.
+- from the ground or a crouch: a jump needs its lead (the time to rise above a barrier); a crouch needs its ease in (60 ms)
+  (a jump cancels a crouch);
+- from a jump: another jump waits for the landing (counted as a whole jump), a crouch waits for the slam.
 
 So a course never asks for "two lane changes and a jump" faster than both can be done. Spacing uses the speed the rover will
-have on arrival (an upper bound, since the speed only rises), plus a random 0.45 to 1.3 s that shrinks by up to 45% at the cap.
+have on arrival (an upper bound, since the speed only rises); how much time a gap gets beyond that minimum is the
+difficulty (below). A wall panel and a sweeper count as blocked lanes, like a slab, so every row still has a way through.
 
-`generator.vitest.ts` checks this two ways: the structure of 10,000 seeded courses of 60 rows at 12, 18, 23 and 28 m/s, and
-a bot that plays 2,000 seeded courses at those speeds, and 60 long ones on the speed curve, through the real sim, only acting
-after the reaction time, and never crashes. It does crash on a deliberately unfair course, so the check has teeth.
+`generator.vitest.ts` checks this two ways: the structure of 7,500 seeded courses of 40 rows at 13, 20, 27, 34 and 40 m/s
+with every pattern and hazard allowed from the first row, and a bot that plays 1,000 of them (and 80 long ones on a fast
+speed curve with the real tiers) through the real sim, acting only after the reaction time, and never crashes. It does crash
+on a deliberately unfair course, so the check has teeth.
+
+<!-- hold to crouch + difficulty and bots: start (the 2026-10-24 job; the sections between these marks are its) -->
+
+## Hold to crouch
+
+The rover is crouched (antenna down, hitbox 0.5 m high, so it passes under a gate) for exactly as long as the key is held. There
+is no timer and no auto-recovery.
+
+| | Keyboard | Touch |
+| --- | --- | --- |
+| Starts | S or Down arrow pressed (key repeat is ignored: holding is one press) | a swipe down |
+| Lasts | while any crouch key is down (S and Down together: until the last is let go) | while the finger stays down after the swipe, and at least `touchMinCrouch(speed)` |
+| Ends | the keyup; then the rover stands up over `crouch.outTime` (0.1 s), never while held | the pointerup, pointercancel or lostpointercapture |
+
+- **The crouch amount** (`sim.crouch`, 0 to 1) eases up over `crouch.inTime` (60 ms) after the press and down over 100 ms from
+  the release. The collision box follows it (1.1 m standing, 0.5 m crouched), so a gate is passed only while crouched, and a
+  release under the beam costs: the box is back above the beam's underside 75 ms later, so letting go with more than that left
+  under the beam is a crash, and at 40 m/s (the whole gate takes 47 ms) it is harmless. The fixture shows it as `crouch` in the
+  debug readout (1.00 while held). `rover.ts` reads `sim.sliding`, which is now `sim.crouching`, so it needed no change; the
+  camera does not react to a crouch.
+- **Touch minimum:** a flick down is a crouch of at least `touchMinCrouch(speed)`: 0.35 s at the start speed (`crouch.touchMinTime`),
+  the same distance at higher speeds, and never less than the time to get under and through the longest gate with a quarter
+  to spare (1.25 x (rover + gate length) / speed + the ease in). At 40 m/s it is 0.12 s.
+- **Lane changes** work while crouched and do not end it. **A jump wins over a crouch** (it also covers a buffered jump): it
+  cancels the hold, and the key, still down, has to be pressed again (key repeat does not bring the crouch back, so a jump is
+  not pulled out of the air by a held S). **Crouch in the air** slams the rover down at 18 m/s and it is crouched on landing if
+  the key is still held (a swipe in the air starts its minimum on landing). While holding with a finger, a swipe left or right
+  from where the crouch began changes lane, a swipe up jumps (which ends the crouch), and another swipe down crouches again.
+- **Cleared, so the rover is never stuck low:** a crash, a restart (and a key pressed on the ready or game-over screen, which
+  is ignored); `input.release()` (intent `crouchCancel`, which also forgets the touch minimum) when the game pauses or
+  resumes, the window blurs, the tab is hidden, or the container loses focus; a new finger replacing one whose pointerup was lost.
+  A keyup that happened while the page was away is never heard, so after any of these the key has to be pressed again.
+  Pointer capture is taken on pointerdown so a finger (or a mouse) that leaves the game's box still delivers its pointerup.
+- **Frame rate:** the sim sees `crouch` and `crouchEnd` as intents applied at the start of a step, like the others, so a held
+  crouch is the same number of steps at 30, 60, 120, 144 and 240 Hz and across a 2 s stall (`sim.vitest.ts`).
+
+## Difficulty and bots
+
+**Targets (approved):** a first-time player lasts about 30 to 45 s, a good player a few minutes, the speed rises steadily, the
+course is fair but demanding. Kept as they were: three lanes; slab (change lane), barrier (jump), gate (crouch) always
+passable; a passable route with enough reaction time in every row; the fixed 1/120 s step; the seeded generator; scoring.
+
+### The course
+
+- **Speed** 13 m/s rising to 40 m/s over 180 s: `13 + 27 * (1 - (1 - t/180)^1.6)`, about 0.24 m/s every second at first, 20 m/s
+  after 30 s, 29 m/s after 80 s, and it eases into the cap (no jolt). The speed never depends on the player, so the rover's
+  place at any play time is known (`distanceAt`, `timeAtDistance` in `config.ts`).
+- **Reaction window.** Between patterns the clear running time, from the rover clearing a row to reaching the next, is 2.3 s at
+  the start speed shrinking to 0.6 s at the cap, plus a random extra of up to 1.1 s shrinking to 0.3 s; tier 2 and tier 3
+  close both by 10% and 22%. The rows inside a pattern are only `margin` (0.06 s at the start speed, 0.03 s at the cap) more
+  than fairness needs. **No gap is ever under 0.45 s** (`generator.minGap`: 18 m at the cap), whatever the speed or pattern.
+- **An easy start:** the first obstacle is 105 m out, 8 s of free running, and always in the middle lane (a slab or a barrier),
+  where the rover starts, so a run that does nothing ends on it.
+- **Tiers by distance, not time.** Tier 1 (0 to 200 m): single obstacles. Tier 2 (from 200 m): also pairs (two obstacles in one
+  row) and combinations. Tier 3 (from 1,100 m): also the slalom and chains of three rows, with the tighter spacing.
+- **Combinations** (every row forces its way: the other lanes are slabs):
+
+| Pattern | What it asks |
+| --- | --- |
+| `barrierGate` | jump and at once crouch in the same lane, or crouch then at once jump |
+| `gateDodge` | crouch under a gate, then at once a lane change (to a free lane, a barrier or a gate) |
+| `dodgeJump` | a slab in your lane, the free lane beside it a barrier: lane change, then jump (or crouch) |
+| `trio` | one row with a slab, a barrier and a gate |
+| `slalom` | across the track: one side, then the other (tier 3) |
+| `chain3` | three forced rows in a row, any lane, any move (tier 3) |
+
+- **The wall with one opening** (from 500 m; `wall`, and `wallSlalom` for two walls with the openings at opposite sides). Every
+  lane but one is a wall panel (3.2 m tall, 0.3 m thick: the rover cannot clear it or slip through between two steps even at
+  40 m/s); the open lane is the way through, with a barrier or a gate in it a quarter and a fifth of the time. Telegraphed in
+  brass: a hairline up each edge of the opening and one across it on the track. Different from a slab by shape: a thin
+  full-width curtain, no `404` on it.
+- **The sweeper** (from 1,000 m): a hexagonal pylon, narrower at the top, with a brass band, swaying between two lanes along a
+  sine (3.4 s there and back, slowest at the ends, at most 2 m/s sideways) over a brass line on the track that shows the whole
+  swing. The third lane is never blocked (empty, a barrier or a gate), so there is always a way through, and the generator
+  sets the sweeper's phase from the rover's known arrival time so that it is over one of its two lanes exactly when the rover
+  gets there: the other lane is open then. The fair route is the third lane; the reward is pickups in the lane it has left
+  open. Halfway through its swing it blocks both lanes (tested).
+- **Pickups reward risk:** in a pattern with a forced route the line of pickups leads through it (over the barrier, under the gate,
+  through the wall's opening, into the sweeper's open lane), nine times in ten; in singles and pairs, six in ten, and then
+  65% of the time along the harder way (a jump or a crouch) when there is an easier one.
+
+### The bots
+
+Players made of code (`bots.ts`), run headless through the real `RunnerSim`: each step they look at what the sim shows and press
+the same intents a player does, a crouch held and let go like a key (pressed shortly before a gate, let go once the rover has
+cleared it). A bot starts to think about a row when it has noticed it (within `sight` seconds of travel) and the row before has
+been cleared; after its `reaction` time it picks the way that needs the least time, steers, and jumps or crouches at the
+middle of the window, within its timing noise. With chance `mistake` per row that needs an action it errs: the wrong lane, a
+forgotten action (both noticed `noticeLag` later and put right if there is time), a slow reaction (+0.25 s), a mistimed jump,
+or (under a gate) letting go too early. Nothing crashes it by script: the sim decides. Everything comes from a seeded generator,
+so a run is a pure function of (bot, seed, config).
+
+| Bot | Reaction | Mistakes | Timing noise | Notes |
+| --- | --- | --- | --- | --- |
+| `novice` | 350 ms | 15% | 70 ms | notices a row 1.4 s ahead |
+| `average` | 250 ms | 8% | 40 ms | exactly the generator's fairness budget |
+| `expert` | 140 ms | 2% | 20 ms | |
+| `perfect` | 0 | never | 0 | the oracle: also picks the lane that keeps the row after next easy to reach |
+| `idle` | | | | presses nothing |
+
+`npm run runner:bots` plays 300 seeded runs per bot (`-- --runs N`, `-- --bots novice,expert`, `-- --max 600` seconds of play
+at most, `-- --json`) and prints the tables below; about 100 s. Run lengths are capped at 600 s.
+
+### Results
+
+**Before** (the first difficulty, 12 to 28 m/s over 100 s, the old patterns, the hold-to-crouch rule; 300 runs per bot):
+
+| Bot | Runs | Median time | Mean time | 90th pct time | Median distance | Mean distance | 90th pct distance | Alive at cap |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| idle | 300 | 5.4 s | 6.5 s | 8.7 s | 69 m | 85 m | 116 m | 0 |
+| novice | 300 | 53.2 s | 62.1 s | 114.4 s | 1012 m | 1311 m | 2670 m | 0 |
+| average | 300 | 194.9 s | 235.3 s | 534.4 s | 4924 m | 6092 m | 14429 m | 21 |
+| expert | 300 | 600.0 s | 466.3 s | 600.0 s | 16267 m | 12533 m | 16267 m | 163 |
+| perfect | 300 | 600.0 s | 600.0 s | 600.0 s | 16267 m | 16267 m | 16267 m | 300 |
+
+| Bot | Deaths by obstacle | Deaths by cause | Deaths by speed (m/s) |
+| --- | --- | --- | --- |
+| idle | slab 127, barrier 99, gate 74 | none 300 | 10-15: 286, 15-20: 14 |
+| novice | barrier 167, slab 95, gate 38 | none 135, mistime 74, forget 46, wrongLane 24, slow 12, earlyRelease 9 | 10-15: 14, 15-20: 53, 20-25: 90, 25-30: 143 |
+| average | barrier 223, gate 33, slab 23 | mistime 206, none 64, earlyRelease 7, slow 2 | 10-15: 5, 15-20: 24, 20-25: 16, 25-30: 234 |
+| expert | barrier 115, gate 22 | mistime 115, none 18, earlyRelease 4 | 10-15: 2, 15-20: 6, 20-25: 2, 25-30: 127 |
+| perfect | none | none | none |
+
+The old game was easy: the average bot lasted over three minutes, the expert survived 10 minutes more often than not, and
+the deaths of the good bots were almost all a mistimed jump at the cap.
+
+**After** (13 to 40 m/s over 180 s, tiers, combinations, the wall and the sweeper; 300 runs per bot):
+
+| Bot | Runs | Median time | Mean time | 90th pct time | Median distance | Mean distance | 90th pct distance | Alive at cap |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| idle | 300 | 7.5 s | 7.5 s | 7.5 s | 104 m | 104 m | 104 m | 0 |
+| novice | 300 | 40.1 s | 41.9 s | 64.9 s | 706 m | 781 m | 1311 m | 0 |
+| average | 300 | 73.7 s | 76.6 s | 124.5 s | 1553 m | 1738 m | 3200 m | 0 |
+| expert | 300 | 177.2 s | 209.2 s | 405.8 s | 5220 m | 6629 m | 14363 m | 11 |
+| perfect | 300 | 600.0 s | 600.0 s | 600.0 s | 22131 m | 22131 m | 22131 m | 300 |
+
+| Bot | Deaths by obstacle | Deaths by cause | Deaths by speed (m/s) |
+| --- | --- | --- | --- |
+| idle | slab 156, barrier 144 | none 300 | 10-15: 300 |
+| novice | slab 176, barrier 69, wall 33, gate 22 | none 158, slow 37, wrongLane 34, mistime 33, forget 29, earlyRelease 9 | 10-15: 12, 15-20: 91, 20-25: 96, 25-30: 101 |
+| average | slab 167, barrier 71, gate 36, wall 25, sweeper 1 | slow 74, none 69, wrongLane 58, forget 53, mistime 45, earlyRelease 1 | 10-15: 2, 15-20: 31, 20-25: 41, 25-30: 109, 30-35: 79, 35-40: 37, 40-45: 1 |
+| expert | slab 153, wall 50, barrier 48, gate 38 | none 154, slow 98, mistime 37 | 10-15: 2, 15-20: 4, 20-25: 6, 25-30: 23, 30-35: 41, 35-40: 80, 40-45: 133 |
+| perfect | none | none | none |
+
+| | Target | Now |
+| --- | --- | --- |
+| idle | dies on the first obstacle within about 12 s | 7.5 s, all 300 on the first row (a slab or a barrier in the middle lane) |
+| novice | median about 25 to 45 s | 40 s (90th percentile 65 s) |
+| average | median about 60 to 120 s | 74 s (90th percentile 125 s) |
+| expert | at least 150 s, high 90th percentile | 177 s median, 406 s at the 90th percentile; 11 runs of 300 lasted the 600 s |
+| perfect | survives at the cap for a very long run | all 300 runs lasted 600 s, 420 s of it at the cap (22,131 m); `bots.vitest.ts` plays 12 minutes of it |
+
+How it was tuned: the bots' mistakes are the same in both tables, so the difference is the course. Going from the old numbers to
+these, the first pass (13 to 40 m/s, the window and the patterns above) put the novice at 44 s, the average at 60 s and the
+expert at 215 s; the 0.06 s margin inside combinations made the novice's 350 ms reaction (0.1 s more than the budget) fail the
+tight ones from tier 2 on (44 s to 38 s) while the average's 250 ms still passes them; moving tier 3 from 700 m to 1,100 m, and
+widening the window a little (2.1 to 2.3 s, 0.55 to 0.6 s), gave the average and the expert the room to reach their bands
+without moving the novice. The expert at the cap dies mostly to its 2% of mistakes, not to speed, which is the sign that the
+reaction window (0.45 s minimum) is enough for a player with a 140 ms reaction. The oracle shows the course can be beaten.
+
+<!-- hold to crouch + difficulty and bots: end -->
 
 ## Config knobs
 
@@ -200,15 +369,16 @@ All in `src/game/runner/config.ts` (`RUNNER_CONFIG`); `withConfig({...})` makes 
 | --- | --- | --- |
 | `step`, `maxFrameDelta`, `maxStepsPerFrame` | 1/120 s, 0.1 s, 8 | the fixed step and its safety limits |
 | `track.laneWidth`, `track.laneChangeTime` | 2.2 m, 0.14 s | lane spacing, sideways speed |
-| `speed.start`, `speed.max`, `speed.rampTime` | 12, 28 m/s, 100 s | the speed curve |
+| `speed.start`, `speed.max`, `speed.rampTime`, `speed.curve` | 13, 40 m/s, 180 s, 1.6 | the speed curve |
 | `jump.height`, `jump.duration`, `jump.buffer` | 1.3 m, 0.62 s, 0.12 s | the jump (gravity is derived) |
-| `slide.duration`, `slide.slamSpeed` | 0.65 s, 18 m/s | the slide and the slam |
+| `crouch.inTime`, `crouch.outTime`, `crouch.touchMinTime`, `crouch.slamSpeed` | 0.06 s, 0.1 s, 0.35 s, 18 m/s | the crouch's eases, the touch minimum, the slam |
 | `hitbox.*` | see file | collision boxes of the rover and each obstacle, pickup radius |
-| `spawn.ahead`, `spawn.behind`, `spawn.firstRowAt` | 160, 12, 70 m | how far the course is made and kept |
-| `generator.reactionTime` | 0.25 s | the fairness budget |
-| `generator.extraTimeMin/Max/Shrink` | 0.45, 1.3 s, 45% | breathing room between rows |
-| `generator.weights`, `generator.kinds` | see file | one, two or three obstacles per row (start → cap); kind odds |
-| `generator.pickup*` | see file | pickup chance, spacing, line length, heights |
+| `spawn.ahead`, `spawn.behind`, `spawn.firstRowAt` | 160, 12, 105 m | how far the course is made and kept; the free run before the first row (8 s) |
+| `generator.reactionTime`, `generator.minGap` | 0.25 s, 0.45 s | the fairness budget; the shortest gap between rows at any speed |
+| `generator.window`, `generator.extra`, `generator.margin`, `generator.tighten` | see file | free running between patterns (start speed → cap), a random extra on top, the margin inside a combination, how much tiers 2 and 3 close both |
+| `generator.tiers`, `generator.hazards` | 200 / 1,100 m; 500 / 1,000 m | where tiers 2 and 3 begin; where the wall and the sweeper begin |
+| `generator.patterns`, `generator.kinds` | see file | the weight of each pattern in each tier; the odds of the three basic kinds |
+| `generator.pickup*` | see file | pickup chances, spacing, line length, heights, how often the line follows the risky way |
 | `score.pickupBonus`, `score.restartDelay` | 5 m, 0.35 s | |
 | `input.*` | 30 px, 1.25, 12 px, 350 ms | swipe threshold, dominance, tap slop and length |
 | `render.*` | see file | pixel ratio caps, fog, rings (`ringSpacing` 9 m, `ringCount` 18; `render.camera` and `render.fov` are no longer read: the camera's numbers are in `camera.ts`) |
@@ -216,15 +386,18 @@ All in `src/game/runner/config.ts` (`RUNNER_CONFIG`); `withConfig({...})` makes 
 
 ## Tuning difficulty
 
-- **Harder sooner:** lower `speed.rampTime`, raise `speed.start`; raise the `wall` and `double` weights.
-- **Tighter rows:** lower `extraTimeMin/Max` or raise `extraTimeShrink`. These never go below fair.
+- **Harder sooner:** lower `speed.rampTime`, raise `speed.start`; bring `generator.tiers` and `generator.hazards` closer; raise
+  the weights of the combinations in `generator.patterns`.
+- **Tighter rows:** lower `generator.window`, `generator.extra` and `generator.margin`. These never go below fair (and
+  `generator.minGap` is the floor).
 - **Less forgiving:** lower `generator.reactionTime`. This one moves the fairness line itself; keep it at 0.2 s or more.
-- **Different moves:** `jump.*`, `slide.*` and `track.laneChangeTime` change both the feel and the fairness arithmetic.
+- **Different moves:** `jump.*`, `crouch.*` and `track.laneChangeTime` change both the feel and the fairness arithmetic.
 
 After any change run `npx vitest run src/game/runner`: the fairness and frame-rate tests replay thousands of courses with
-the new numbers.
+the new numbers, then `npm run runner:bots` (add `-- --config '{"generator":{"margin":{"start":0.08}}}'` to try a variant
+without editing the file) to see what it did to the bots' times.
 
-## Playtest (2026-10-23, default config)
+## Playtest (2026-10-23, the first difficulty: 12 to 28 m/s, slide on a timer; kept as it was, see "Difficulty and bots" for today's)
 
 Measured on the sim (40 seeds) and seen in headless Chromium on SwiftShader at 1280x720 (keys) and 390x844 (touch, 3x
 screen): 60 fps, 2 steps a frame, no console messages, and seed 11 ends at exactly 87.5 m at both sizes.
@@ -317,15 +490,16 @@ lights and fog are made only there (the step 1 ones were removed when steps 2a a
 
 ## Tests
 
-- Unit (Vitest): `camera.vitest.ts` (damping and its frame-rate independence, the FOV mapping, the camera's height and look
-  target through jumps, slides and lane changes, the hit-stop and shake), `rover.vitest.ts` (the stand-in when the model is
-  missing, wheel spin at 60 and 144 Hz, slide, yaw, reduced motion), `world.vitest.ts` (ring slots and recycling, fades,
-  the idle scroll, the eases into a run and to a stop, the pulse, reduced motion, the planet's place), `sim.vitest.ts` (speed curve, phases, lanes, jump, slide, collisions per obstacle, the clock, frame-rate
+- Unit (Vitest): `bots.vitest.ts` (the bots' runs are reproducible; idle, novice, average, expert and the oracle land in their bands), `hazards.vitest.ts` (the wall and the sweeper placed, instanced, disposed), `camera.vitest.ts` (damping and its frame-rate independence, the FOV mapping, the camera's height and look
+  target through jumps, a held crouch and lane changes, the hit-stop and shake), `rover.vitest.ts` (the stand-in when the model is
+  missing, wheel spin at 60 and 144 Hz, a held crouch, yaw, reduced motion), `world.vitest.ts` (ring slots and recycling, fades,
+  the idle scroll, the eases into a run and to a stop, the pulse, reduced motion, the planet's place), `sim.vitest.ts` (speed curve, phases, lanes, jump, hold to crouch, collisions per obstacle incl. the wall and the sweeper, the clock, frame-rate
   independence), `generator.vitest.ts` (fairness), `input.vitest.ts`, `storage.vitest.ts`, `index.vitest.ts` (mount and
   destroy on a small fake DOM: no listener, frame, observer or element left).
 - End to end (Playwright): `tests/runner.spec.js` on the fixture, with WebGL on SwiftShader: loads only when asked, no console
   errors, keyboard play to a crash and a restart, best score saved and blocked storage, lanes and no page scroll, synthetic
-  swipes, the focus ring, axe in every state, no horizontal scroll at 320, 375 and 1280 px, unmount and mount again, and
+  swipes, hold S, Down and a finger for 2 s (crouched the whole time, standing after the release, cleared on blur), the wall and the
+  sweeper within the triangle budget (the fixture's `?all=1` lets every pattern appear from the first row), the focus ring, axe in every state, no horizontal scroll at 320, 375 and 1280 px, unmount and mount again, and
   the WebGL fallback, and a missing `rover.glb` (requested only after the game starts; the stand-in plays to a crash and a
   restart); since step 2b also the idle scene (the world scrolls while the distance stays 0), reduced motion (a
   still frame, the game still plays), both variants (the blend, axe, no layout shift, no horizontal scroll at 320, 375 and
