@@ -1,0 +1,35 @@
+import { chromium } from '@playwright/test';
+const base = process.env.BASE ?? 'http://localhost:4405';
+const out = process.env.OUT ?? 'C:/Users/hunte/AppData/Local/Temp/shots';
+const only = process.env.ONLY;
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const sizes = [[1280, 720, 1], [390, 844, 3]];
+for (const variant of ['framed', 'blended']) for (const [w, h, dpr] of sizes) {
+  if (only && !`${variant}-${w}`.includes(only)) continue;
+  const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: dpr, reducedMotion: process.env.REDUCED ? 'reduce' : 'no-preference' });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/styleguide/runner/?seed=11&start=0&variant=${variant}`, { waitUntil: 'networkidle' });
+  const host = page.locator('[data-runner-host]');
+  await host.scrollIntoViewIfNeeded();
+  await host.focus();
+  await page.keyboard.press('Space');
+  await page.locator('[data-runner]').waitFor({ timeout: 30000 });
+  await page.waitForTimeout(2500);
+  const box = await host.boundingBox();
+  const clip = { x: 0, y: Math.max(0, box.y - 60), width: w, height: Math.min(box.height + 120, h) };
+  const stats = async () => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-stat]')].map((e) => [e.dataset.stat, e.textContent])));
+  const shot = async (name) => { await page.screenshot({ path: `${out}/${variant}-${w}-${name}.png`, clip }); console.log(variant, w, name, JSON.stringify(await stats())); };
+  await shot('idle');
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(process.env.PLAYMS ? Number(process.env.PLAYMS) : 4500);
+  await shot('playing');
+  await page.locator('[data-runner]').and(page.locator('[data-runner-state="over"]')).waitFor({ timeout: 90000 });
+  await page.waitForTimeout(1200);
+  await shot('over');
+  if (errors.length) console.log('ERRORS', errors);
+  await ctx.close();
+}
+await browser.close();

@@ -1,7 +1,8 @@
 ---
 // Prototype for the 404 page's game (docs/RUNNER.md, step 1 of 4: the core, with placeholder shapes). The game is loaded with
 // a dynamic import on the first click, tap or key, so three.js is a lazy chunk and never in this page's first load. Under the
-// game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course; ?start=0 stops on the ready screen). Not linked from
+// game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course; ?start=0 stops on
+// the ready screen; ?variant=blended shows the 404 page's blended style instead of the hairline frame). Not linked from
 // anywhere and kept out of search engines, like the rest of the styleguide.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import '../../../game/runner/runner.css';
@@ -19,6 +20,16 @@ import '../../../game/runner/runner.css';
         Runner prototype
       </h1>
       <p class="t-lead">The core of the 404 page's game, with placeholder shapes. Step 1 of 4.</p>
+      <p class="rn-variants">
+        Style:{' '}
+        <a href="?variant=framed" data-variant-link="framed">
+          framed
+        </a>
+        <span aria-hidden="true">{' · '}</span>
+        <a href="?variant=blended" data-variant-link="blended">
+          blended into the page
+        </a>
+      </p>
 
       <div
         class="rn-stage"
@@ -72,6 +83,22 @@ import '../../../game/runner/runner.css';
               <dt>lane</dt>
               <dd data-stat="lane">-</dd>
             </div>
+            <div>
+              <dt>world scroll</dt>
+              <dd data-stat="scroll">-</dd>
+            </div>
+            <div>
+              <dt>triangles</dt>
+              <dd data-stat="triangles">-</dd>
+            </div>
+            <div>
+              <dt>draw calls</dt>
+              <dd data-stat="calls">-</dd>
+            </div>
+            <div>
+              <dt>geometries, textures</dt>
+              <dd data-stat="memory">-</dd>
+            </div>
           </dl>
           <button class="btn sm" type="button" data-runner-unmount hidden>
             Unmount the game
@@ -93,6 +120,23 @@ import '../../../game/runner/runner.css';
     border-radius: var(--r-lg);
     overflow: hidden;
     cursor: pointer;
+  }
+
+  /* The blended variant (the 404 page's style): no frame; the game fades into the page itself. */
+  .rn-stage[data-variant='blended'] {
+    border-color: transparent;
+    border-radius: 0;
+  }
+
+  .rn-variants {
+    margin: var(--s-3) 0 0;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+
+  .rn-variants [aria-current] {
+    color: var(--text);
+    text-decoration: none;
   }
 
   .rn-stage:focus-visible {
@@ -177,7 +221,7 @@ import '../../../game/runner/runner.css';
 </style>
 
 <script>
-  import type { RunnerHandle, RunnerStats } from '../../../game/runner/index';
+  import type { RunnerHandle, RunnerStats, RunnerVariant } from '../../../game/runner/index';
 
   const host = document.querySelector<HTMLElement>('[data-runner-host]');
   const poster = document.querySelector<HTMLElement>('[data-runner-poster]');
@@ -189,7 +233,17 @@ import '../../../game/runner/runner.css';
     speed: stat('speed'),
     distance: stat('distance'),
     lane: stat('lane'),
+    scroll: stat('scroll'),
+    triangles: stat('triangles'),
+    calls: stat('calls'),
+    memory: stat('memory'),
   };
+
+  // ?variant=blended: the 404 page's style. The frame goes before the game loads, so the poster shows it too.
+  const variant: RunnerVariant =
+    new URLSearchParams(location.search).get('variant') === 'blended' ? 'blended' : 'framed';
+  if (host) host.dataset.variant = variant;
+  document.querySelector(`[data-variant-link="${variant}"]`)?.setAttribute('aria-current', 'page');
 
   let handle: RunnerHandle | null = null;
   let loading = false;
@@ -205,6 +259,12 @@ import '../../../game/runner/runner.css';
     if (out.speed) out.speed.textContent = `${s.speed.toFixed(1)} m/s`;
     if (out.distance) out.distance.textContent = `${s.distance.toFixed(1)} m`;
     if (out.lane) out.lane.textContent = String(s.lane);
+    if (s.view) {
+      if (out.scroll) out.scroll.textContent = `${s.view.scroll.toFixed(2)} m`;
+      if (out.triangles) out.triangles.textContent = String(s.view.triangles);
+      if (out.calls) out.calls.textContent = String(s.view.calls);
+      if (out.memory) out.memory.textContent = `${s.view.geometries}, ${s.view.textures}`;
+    }
   };
 
   async function boot() {
@@ -215,7 +275,11 @@ import '../../../game/runner/runner.css';
       const query = new URLSearchParams(location.search);
       const seed = Number(query.get('seed'));
       if (poster) poster.hidden = true;
-      handle = mountRunner(host, { seed: Number.isFinite(seed) && seed > 0 ? seed : undefined, onStats });
+      handle = mountRunner(host, {
+        seed: Number.isFinite(seed) && seed > 0 ? seed : undefined,
+        variant,
+        onStats,
+      });
       if (query.get('start') !== '0') handle.start();
       if (unmount) unmount.hidden = false;
     } finally {
