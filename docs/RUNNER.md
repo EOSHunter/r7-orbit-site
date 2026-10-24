@@ -62,7 +62,10 @@ moves do nothing, and a short still press is a tap. One swipe per touch.
 | `clock.ts` | `FixedStepClock`: frame timestamps to a number of steps and an interpolation `alpha` |
 | `input.ts` | keyboard, swipe and tap to intents (`left`, `right`, `jump`, `slide`, `primary` = Space, `start` = tap) |
 | `storage.ts` | best score load and save |
-| `render.ts` | the Three.js view: reads the sim, draws placeholder primitives; `createView()` is null without WebGL |
+| `render.ts` | the Three.js view: reads the sim, draws the scene; `createView()` is null without WebGL |
+| `rover.ts` | the rover: loads `assets/rover.glb`, animates it from the sim, the dust trail and the crash burst (below) |
+| `camera.ts` | `ChaseRig`, the chase camera, the hit-stop and the shake (below) |
+| `assets/rover.glb` | the rover model, built by `tools/runner/build_rover.py` (never edited by hand) |
 | `index.ts` | `mountRunner(container, options)`: DOM, HUD, the loop, pause rules, resize, cleanup; the words (`RUNNER_TEXT`) |
 | `runner.css` | the HUD's styles, tokens only; imported by the page that hosts the game, never global |
 
@@ -84,7 +87,70 @@ tests and for the steps after this one.
 **Three.js** (`three`, MIT) is the one runtime dependency added. It is imported by name in `render.ts` only, and only
 `index.ts` is imported dynamically, so it is never in a page's first load. The lazy chunk is about 551 kB, **138 kB
 gzipped** (2026-10-23 build, three 0.186); nearly all of it is three.js's `WebGLRenderer`, and tree-shaking leaves little
-else to cut. The fixture page's own script is 1.3 kB, plus Vite's 1.5 kB preload helper (docs/DECISIONS.md, the runner).
+else to cut. Step 2a added `GLTFLoader` and the rover: **648 kB, 165 kB gzipped**, plus the 59 kB model, fetched after
+the game starts. The fixture page's own script is 1.3 kB, plus Vite's 1.5 kB preload helper (docs/DECISIONS.md, the runner).
+
+## The rover
+
+A six-wheeled rover after concept 3's silhouette (`docs/runner-concepts/obstacles.png`): a long, low, faceted ivory hull over
+a narrower ivory skirt and a dark underbody, recessed obsidian slits (a visor at the front of the deck, one along each side of
+the deck and of the belt line, one across the tail), a recessed deck hatch, six dark wheels with chunky tread blocks and
+recessed ivory hub caps, a dark rocker-bogie suspension with ivory joint caps, and a thin mast with the brass beacon. Brass is
+on the beacon only (the concept's brass hubs and lights are left out: brass is the site's one accent). Preview, three views:
+`docs/runner-concepts/rover-preview.png`.
+
+**Rebuild it:** `blender -b --factory-startup -P tools/runner/build_rover.py` (add `-- --preview` to render the preview
+too). Blender 5.1; on Windows it is `C:Program FilesBlender FoundationBlender 5.1lender.exe`. The script is the only
+source: every size, colour and detail is a number in it, so the same Blender gives the same file. It prints the triangle count
+and the file size; keep them under 6,000 and 150 kB.
+
+| | |
+| --- | --- |
+| Size | 1.69 m across the wheels, 2.6 m long, 1.18 m to the deck, in the model; the game scales it to 0.6 of a lane (1.32 m wide, 2 m long), a little larger than its hitbox (1.0 by 1.4 m), so a near miss can look like a graze |
+| Budget | 3,406 triangles, 13 meshes, 59 kB; no textures, UVs or normals; no Draco or meshopt (no decoder) |
+| Colour | per vertex, linear, from the tokens: `--text` shell, hub and joint caps; `--surface-2` tyres and underbody; `--surface-3` suspension and mast; `--bg` slits. A small ambient-occlusion pass (rays against the rover and the ground) darkens crevices. Beacon: `--brass`, glowing `--brass-highlight` |
+| Shading | flat: the file has no normals, so three.js shades each facet flat. Materials are replaced in `rover.ts`: one `MeshStandardMaterial` with vertex colours (roughness 0.55), one emissive one for the beacon |
+| Axes | +Y up, facing -Z (glTF); Blender builds it Z up facing +Y |
+
+**Node names** (the contract with `rover.ts`): `rover` (root, on the ground); `rover_body` (shell, bobs and rolls on the
+suspension); `antenna` (pivot at its foot, folds back in a slide) with `beacon` in it; `rocker_L`, `rocker_R` (pivot at the
+body joint) carrying `wheel_FL` / `wheel_FR` and `bogie_L`, `bogie_R` (pivot at the rocker joint), which carry `wheel_ML`,
+`wheel_RL` / `wheel_MR`, `wheel_RR`. Each wheel's origin is its axle, so a rotation about local X spins it.
+
+**Loading:** the file is imported as a Vite asset URL (`?url`, hashed) and fetched with `GLTFLoader` after the game mounts.
+Until it arrives, or if it fails (missing, broken), a primitive stand-in with the same node names is drawn and the game plays
+on; nothing is thrown. `destroy()` frees both.
+
+**Animation**, all drawn from the sim's interpolated state and the frame's dt, never written back:
+
+- wheels turn by the distance driven over their radius (rolling, any frame rate);
+- the body bobs a little with distance and speed, rockers and bogies rock a degree or so, and a landing dips the body on its
+  spring (harder when it slams into a slide);
+- in the air the rover tips back up to 4 degrees while rising; a slide drops the body 8 cm, tips it forward 2.5 degrees and
+  folds the antenna back flat (so the rover is under a gate's beam);
+- a lane change yaws the rover up to 7 degrees towards the new lane and rolls the body up to 3 degrees away from the turn,
+  both easing back as it arrives;
+- the beacon's emissive glow and a soft halo pulse, from 0.6 Hz at the start speed to 2.4 Hz at the cap;
+- a faint brass dust trail behind the rear wheels: a fixed pool of 120 additive points, 0.3 to 0.55 s each;
+- a crash: after the hit-stop, 22 brass shards burst from the nose (0.55 s), dust is thrown up, the beacon flashes, and the
+  rover is pushed back 45 cm with a small hop, tipping and turning a few degrees.
+
+**Reduced motion** (`prefers-reduced-motion: reduce`): the wheel spin, trail, yaw, slide drop, antenna fold and burst stay
+(they say what the rover is doing); the bob, pitch, roll, landing dip, tumble and the camera shake go.
+
+## Camera
+
+`ChaseRig` (`camera.ts`) fixes the camera to the **track**, which is what stopped the view from switching perspective: it
+stays 3.1 m up and 6.4 m back whatever the rover does, follows 40% of the rover's sideways offset through a critically damped
+spring (0.32 s), never moves up or down with a jump or a slide, never rolls, and always looks at one point 14 m ahead on the
+track's centre line, 0.9 m up, so the horizon is level and still. The field of view eases from 58 degrees at the start speed
+to 64 at the cap. A crash holds the picture for 90 ms (a hit-stop: the view's own motion stops, the sim's time is not
+touched), then shakes it for 150 ms, at most 7 cm, damped (none with reduced motion). Every number is a named constant at
+the top of `camera.ts`, and every rate uses the frame's dt.
+
+Render cost (Chromium on SwiftShader, whole frame, this step's scene): about 49 draw calls and 21,500 triangles on the ready
+screen, 61 and 21,700 while playing; the rover's share is 15 draw calls (13 meshes, the halo, the trail; 16 with the crash
+burst) and 3,408 triangles, where the prototype's boxes were 9 calls and a few hundred triangles.
 
 ## Frame rate
 
@@ -138,7 +204,7 @@ All in `src/game/runner/config.ts` (`RUNNER_CONFIG`); `withConfig({...})` makes 
 | `generator.pickup*` | see file | pickup chance, spacing, line length, heights |
 | `score.pickupBonus`, `score.restartDelay` | 5 m, 0.35 s | |
 | `input.*` | 30 px, 1.25, 12 px, 350 ms | swipe threshold, dominance, tap slop and length |
-| `render.*` | see file | pixel ratio caps, camera, fog, rings |
+| `render.*` | see file | pixel ratio caps, fog, rings (`render.camera` and `render.fov` are no longer read: the camera's numbers are in `camera.ts`) |
 
 ## Tuning difficulty
 
@@ -187,13 +253,15 @@ Suggested first tuning, not applied: `spawn.firstRowAt` 70 → 40 m; `jump.durat
 
 ## Tests
 
-- Unit (Vitest): `sim.vitest.ts` (speed curve, phases, lanes, jump, slide, collisions per obstacle, the clock, frame-rate
+- Unit (Vitest): `camera.vitest.ts` (damping and its frame-rate independence, the FOV mapping, the camera's height and look
+  target through jumps, slides and lane changes, the hit-stop and shake), `rover.vitest.ts` (the stand-in when the model is
+  missing, wheel spin at 60 and 144 Hz, slide, yaw, reduced motion), `sim.vitest.ts` (speed curve, phases, lanes, jump, slide, collisions per obstacle, the clock, frame-rate
   independence), `generator.vitest.ts` (fairness), `input.vitest.ts`, `storage.vitest.ts`, `index.vitest.ts` (mount and
   destroy on a small fake DOM: no listener, frame, observer or element left).
 - End to end (Playwright): `tests/runner.spec.js` on the fixture, with WebGL on SwiftShader: loads only when asked, no console
   errors, keyboard play to a crash and a restart, best score saved and blocked storage, lanes and no page scroll, synthetic
   swipes, the focus ring, axe in every state, no horizontal scroll at 320, 375 and 1280 px, unmount and mount again, and
-  the WebGL fallback. The fixture is in `tests/routes.js`, so the shared smoke, axe, budget, audit, keyboard and Lighthouse
+  the WebGL fallback, and a missing `rover.glb` (requested only after the game starts; the stand-in plays to a crash and a restart). The fixture is in `tests/routes.js`, so the shared smoke, axe, budget, audit, keyboard and Lighthouse
   checks run on it too (before the game loads).
 
 ## Design references
