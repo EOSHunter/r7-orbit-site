@@ -1,6 +1,6 @@
-// Optional defaults for the chat view. You can also type these into Chat > Connection settings.
+// The page and its API are one site behind Cloudflare Access (docs/MOVIE_WHEEL.md), so there is no Worker address or passphrase to enter.
 window.MW_CONFIG = {
-  workerUrl: '' // for example 'https://r7-movie-wheel-chat.your-name.workers.dev'
+  api: '/api/movie-wheel'
 };
-// Starting list. It loads once, on a browser that has no list yet. Use Export list / Import list to move your list between devices.
+// Starting list. It loads once, on a browser that has no list yet and nothing saved online. After that every device shares one list.
 window.MW_SEED = 'movies-seed.json';

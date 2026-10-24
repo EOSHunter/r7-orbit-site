@@ -48,7 +48,7 @@ const { image, alt = '' } = Astro.props;
   .article-hero-shade {
     position: absolute; inset: 0; z-index: -1;
     background:
-      linear-gradient(to bottom, rgb(9 9 10 / 0.55) 0%, rgb(9 9 10 / 0.72) 45%, rgb(9 9 10 / 0.92) 100%);
+      linear-gradient(to bottom, rgb(9 9 10 / 0.62) 0%, rgb(9 9 10 / 0.74) 45%, rgb(9 9 10 / 0.92) 100%);
   }
   /* Text over a photo: the supporting text and brass are lifted a step, so they keep 4.5:1 where the image is bright. */
   .article-hero-body {
@@ -62,9 +62,9 @@ const { image, alt = '' } = Astro.props;
     color: var(--text);
     padding-bottom: var(--s-4);
   }
-  /* The current crumb is the smallest text at the top, where the veil is lightest: a step brighter than off a photo (4.1:1
-     over a bright screenshot at 320px with --text-3; tests/hero-contrast.spec.js). */
-  .article-hero-body .breadcrumb [aria-current='page'] { color: var(--text-2); }
+  /* The current crumb is the smallest text at the top, where the veil is lightest: as bright as body text (4.1:1
+     over a bright screenshot at 320px with --text-3, 3.5:1 at 1280px with --text-2 on Linux; tests/hero-contrast.spec.js). */
+  .article-hero-body .breadcrumb [aria-current='page'] { color: var(--text); }
   .article-hero-body .post-head { padding-top: var(--s-7); }
   .article-hero-body .post-head h1 { text-shadow: 0 1px 24px rgb(9 9 10 / 0.6); }
   .article-hero-body .avatar img { filter: none; }

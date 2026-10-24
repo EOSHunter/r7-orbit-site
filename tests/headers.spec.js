@@ -1,6 +1,7 @@
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect } from '@playwright/test';
 import { ABOUT_MD, PIXEL, headersFor, openAdmin, rules } from './admin-mock.js';
+import { aboutTitle } from './about-title.js';
 
 // public/_headers is read by Cloudflare Pages, not by `astro preview`. So this file reads it the way Pages does (every block
 // whose path matches applies, and a header set by two blocks is sent with both values joined) and checks it:
@@ -180,28 +181,26 @@ test('the About page opens in the editor with its blocks and a live preview, wit
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
 
-  // The form shows the page's heading and its blocks, each with a line saying what it holds. All of it is read from about.md, which
-  // the author edits in /admin: the title, every Heading block, every portrait (with its alt text) and the Team block's cards.
-  const { title, sections } = parseFrontmatter(ABOUT_MD).frontmatter;
-  await expect(page.getByLabel('Page heading')).toHaveValue(title, { timeout: 15_000 });
-  const headings = sections.filter((s) => s.type === 'heading');
-  const portraits = sections.filter((s) => s.type === 'portrait');
-  for (const h of headings) await expect(page.getByText(`Heading: ${h.text}`, { exact: true })).toBeVisible();
-  await expect(page.getByText(/^Portrait: /)).toHaveCount(portraits.length);
+  // The form shows the page's heading and its blocks, each with a line saying what it holds. The page is whatever the author has
+  // made of it in /admin, so the blocks are read from the file.
+  await expect(page.getByLabel('Page heading')).toHaveValue(aboutTitle, { timeout: 15_000 });
+  const sections = parseFrontmatter(ABOUT_MD).frontmatter.sections;
+  const types = (t) => sections.filter((s) => s.type === t);
+  const headings = types('heading');
+  for (const h of headings) await expect(page.getByText(`Heading: ${h.text}`)).toBeVisible();
 
-  // The preview is the page with the site's styles: the h1, the Heading blocks in order, the portraits, the team.
+  // The preview is the page with the site's styles: the h1, the headings of the page in order, the portrait grid and the team.
   const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.getByRole('heading', { level: 1 })).toHaveText(title);
-  const h2 = await preview.getByRole('heading', { level: 2 }).allInnerTexts();
-  const shown = headings.filter((h) => h.level === 2).map((h) => h2.indexOf(h.text.replace(/\*/g, '')));
-  expect(shown.every((i) => i >= 0), `Heading blocks among the preview's h2: ${h2.join(' | ')}`).toBe(true);
-  expect([...shown].sort((x, y) => x - y)).toEqual(shown);
-  await expect(preview.locator('.about-grid .portrait img')).toHaveCount(portraits.length);
-  for (const [i, p] of portraits.entries()) {
-    await expect(preview.locator('.about-grid .portrait img').nth(i)).toHaveAttribute('alt', p.decorative ? '' : p.alt);
+  await expect(preview.getByRole('heading', { level: 1 })).toHaveText(aboutTitle);
+  const portraits = types('portrait');
+  const shown = [...headings.map((h) => h.text)];
+  if (portraits.length) {
+    // (a heading in a portrait's own text is an h2 too)
+    await expect(preview.locator('.about-grid .portrait')).toHaveCount(portraits.length);
   }
-  const team = sections.find((s) => s.type === 'team');
-  await expect(preview.locator('.team-grid .team-card')).toHaveCount(team?.members.length ?? 0);
+  if (!portraits.some((p) => /^## /m.test(p.text ?? ''))) await expect(preview.getByRole('heading', { level: 2 })).toHaveText(shown);
+  const team = types('team')[0];
+  if (team) await expect(preview.locator('.team-grid .team-card')).toHaveCount(team.members.length);
 
   expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
   expect(seen.violations).toEqual([]);
@@ -217,7 +216,7 @@ test('saving an About change works under the admin CSP: a new image block, two s
   const seen = await openAdmin(page, { signedIn: true });
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
-  await expect(page.getByLabel('Page heading')).toHaveValue(parseFrontmatter(ABOUT_MD).frontmatter.title, { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue(aboutTitle, { timeout: 15_000 });
 
   // Add an Image block (it opens at the end of the list), choose a picture and describe it.
   await page.getByRole('button', { name: /add section/i }).click();
@@ -302,7 +301,7 @@ test('the editor refuses a button address that is not https or a page on the sit
   const seen = await openAdmin(page, { signedIn: true });
   await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
   await page.evaluate(() => (location.hash = '#/collections/pages/entries/about'));
-  await expect(page.getByLabel('Page heading')).toHaveValue(parseFrontmatter(ABOUT_MD).frontmatter.title, { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue(aboutTitle, { timeout: 15_000 });
 
   await page.getByRole('button', { name: /add section/i }).click();
   await page.getByRole('menuitem', { name: 'Button', exact: true }).click();

@@ -3,3 +3,9 @@
 # This is Cloudflare's published Turnstile TEST secret: it accepts any token. Never use it on the live site:
 # the live secret is set in the Cloudflare dashboard (Pages project > Settings > Variables and Secrets).
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
+# The Movie Wheel (docs/MOVIE_WHEEL.md). 1 skips the Cloudflare Access sign-in so the endpoints can be tried on your computer.
+# Never set it on the live site. OPENAI_API_KEY is only needed to try the chat.
+# DEV_BYPASS_ACCESS=1
+# OPENAI_API_KEY=
+# TMDB_TOKEN=   (the posters; the API Read Access Token from themoviedb.org)

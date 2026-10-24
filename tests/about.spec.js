@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import site from '../src/data/site.json' with { type: 'json' };
 import { aboutTextLines } from './about-text.js';
-import { headingBefore } from '../src/lib/sections-to-content.ts';
+import { aboutTitle } from './about-title.js';
 import { contentTextProblems, inputsDigest, pageCopy, readTextFixture, staleNote, textFixture } from './fixture-inputs.js';
 
 // The About page is built from src/content/pages/about.md (edited in /admin). Its wording must not change by accident:
@@ -41,21 +41,20 @@ test('the Person structured data still comes from site.json, and the page head i
   // The page's title is about.md's, and its nav item is the one whose address is /about/ (labels are the author's, in /admin).
   const { title } = pageCopy('about');
   const profile = graph.find((n) => n['@type'] === 'ProfilePage');
-  expect(profile.name).toBe(`${title} · ${site.name}`);
+  expect(profile.name).toBe(`${aboutTitle} · ${site.name}`);
   const crumbs = graph.find((n) => n['@type'] === 'BreadcrumbList').itemListElement.map((i) => i.name);
-  expect(crumbs).toEqual(['Home', title]);
-  const item = site.nav.find((n) => n.href === '/about/');
-  if (item) await expect(page.locator('nav [aria-current="page"]').first()).toContainText(item.label);
+  expect(crumbs).toEqual(['Home', aboutTitle]);
+  await expect(page.locator('nav [aria-current="page"]').first()).toContainText('About');
 });
 
+const portraitCount = () => (pageCopy('about').sections ?? []).filter((b) => b.type === 'portrait').length;
+
 test('each portrait sits beside its text on a wide screen and above it on a phone', async ({ page }) => {
-  // One row per Portrait block in about.md, each a picture with its text. The layout itself is also checked on /styleguide/sections/.
-  const portraits = (pageCopy('about').sections ?? []).filter((b) => b.type === 'portrait').length;
-  test.skip(portraits === 0, 'about.md has no Portrait block');
+  test.skip(!portraitCount(), 'about.md has no Portrait block');
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/about/');
   const rows = page.locator('.about-grid');
-  await expect(rows).toHaveCount(portraits);
+  await expect(rows).toHaveCount(portraitCount());
   for (const row of await rows.all()) {
     const portrait = (await row.locator('.portrait').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
     const prose = (await row.locator('.prose').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
@@ -142,12 +141,12 @@ test('the team is one column on a phone and two or three on a wide screen, under
   await page.setViewportSize({ width: 1280, height: 800 });
   expect(await columns()).toBeGreaterThanOrEqual(2);
   expect(await columns()).toBeLessThanOrEqual(3);
-  // A Heading block right above the team is a row of its own above the cards, not beside a picture.
-  const sections = pageCopy('about').sections ?? [];
-  const before = sections[sections.findIndex((b) => b.type === 'team') - 1];
-  if (before?.type === 'heading') {
-    const grid = await page.locator('[data-team]').boundingBox();
-    const heading = await page.locator('.sections h2:not(.team-name)').last().boundingBox();
+  // The heading above the block is a row of its own above the cards, not beside the R7 picture.
+  const grid = await page.locator('[data-team]').boundingBox();
+  // (when the page has one: the author may leave the page title above the cards to do that job)
+  const headings = page.locator('.sections h2');
+  if (await headings.count()) {
+    const heading = await headings.last().boundingBox();
     expect(heading.y + heading.height).toBeLessThanOrEqual(grid.y);
     expect(Math.abs(heading.x - grid.x)).toBeLessThanOrEqual(1);
   }
