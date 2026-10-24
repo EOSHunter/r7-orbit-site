@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FixedStepClock } from './clock';
-import { RUNNER_CONFIG, jumpPhysics, speedAt, withConfig } from './config';
+import { RUNNER_CONFIG, jumpPhysics, speedAt, touchMinCrouch, withConfig } from './config';
 import { fixedCourse, type Row } from './generator';
 import { RunnerSim, type Intent } from './sim';
 
@@ -125,10 +125,10 @@ describe('lanes', () => {
     expect(sim.x).toBeCloseTo(0, 9);
 
     for (let i = 0; i < stepsFor(1); i++) sim.step();
-    sim.input('slide');
+    sim.input('crouch');
     sim.input('left');
     for (let i = 0; i < n; i++) sim.step();
-    expect(sim.sliding).toBe(true);
+    expect(sim.crouching).toBe(true);
     expect(sim.x).toBeCloseTo(-cfg.track.laneWidth, 9);
   });
 });
@@ -177,53 +177,211 @@ describe('jump', () => {
   });
 });
 
-describe('slide', () => {
-  it('lasts slide.duration; pressing again restarts it', () => {
+describe('crouch (hold to crouch)', () => {
+  const hold = (sim: RunnerSim, seconds: number) => {
+    for (let i = 0; i < stepsFor(seconds); i++) sim.step();
+  };
+
+  it('is held exactly as long as the key is: the amount eases to 1 and stays there for 10 simulated seconds', () => {
     const sim = simOn([]);
-    sim.input('slide');
+    sim.input('crouch');
     sim.step();
-    expect(sim.sliding).toBe(true);
-    expect(sim.roverHeight).toBe(cfg.hitbox.rover.slideHeight);
-    for (let i = 0; i < stepsFor(cfg.slide.duration) - 2; i++) sim.step();
-    expect(sim.sliding).toBe(true);
-    sim.input('slide');
-    for (let i = 0; i < stepsFor(cfg.slide.duration / 2); i++) sim.step();
-    expect(sim.sliding, 'restarted').toBe(true);
-    for (let i = 0; i < stepsFor(cfg.slide.duration); i++) sim.step();
-    expect(sim.sliding).toBe(false);
+    expect(sim.crouching).toBe(true);
+    expect(sim.crouch).toBeGreaterThan(0);
+    hold(sim, cfg.crouch.inTime + 0.02);
+    expect(sim.crouch).toBe(1);
+    expect(sim.roverHeight).toBeCloseTo(cfg.hitbox.rover.crouchHeight, 9);
+    for (let i = 0; i < stepsFor(10); i++) {
+      sim.step();
+      if (sim.crouch !== 1 || !sim.crouching) throw new Error(`stood up while held at ${sim.time.toFixed(3)} s`);
+    }
+    expect(sim.phase).toBe('playing');
+  });
+
+  it('release stands up over crouch.outTime, starting at the release and not before', () => {
+    const sim = simOn([]);
+    sim.input('crouch');
+    hold(sim, 1);
+    sim.input('crouchEnd');
+    sim.step();
+    expect(sim.crouching).toBe(false);
+    expect(sim.crouch).toBeLessThan(1);
+    expect(sim.crouch).toBeGreaterThan(0.9);
+    hold(sim, cfg.crouch.outTime / 2);
+    expect(sim.crouch).toBeGreaterThan(0.3);
+    expect(sim.crouch).toBeLessThan(0.7);
+    hold(sim, cfg.crouch.outTime);
+    expect(sim.crouch).toBe(0);
     expect(sim.roverHeight).toBe(cfg.hitbox.rover.height);
   });
 
-  it('jump cancels a slide', () => {
+  it('key repeat does not retrigger, and a press while crouched changes nothing', () => {
     const sim = simOn([]);
-    sim.input('slide');
-    sim.step();
-    sim.input('jump');
-    sim.step();
-    expect(sim.sliding).toBe(false);
-    expect(sim.grounded).toBe(false);
+    sim.input('crouch');
+    hold(sim, 0.5);
+    const before = { crouch: sim.crouch, held: sim.crouchHeld, min: sim.crouchMin };
+    for (let i = 0; i < 10; i++) sim.input('crouch'); // the same press again and again
+    hold(sim, 0.5);
+    expect({ crouch: sim.crouch, held: sim.crouchHeld, min: sim.crouchMin }).toEqual(before);
   });
 
-  it('slide in the air slams down and slides on landing, sooner than the jump would land', () => {
+  it('a jump cancels the crouch (jump wins; the key must be pressed again), and a crouch pressed in the air slams', () => {
     const sim = simOn([]);
+    sim.input('crouch');
+    hold(sim, 0.3);
     sim.input('jump');
-    for (let i = 0; i < stepsFor(0.15); i++) sim.step();
-    sim.input('slide');
-    let steps = 0;
-    while (!sim.grounded) {
-      sim.step();
-      steps++;
-    }
-    expect(steps * STEP).toBeLessThanOrEqual(cfg.jump.height / cfg.slide.slamSpeed + STEP);
-    expect(sim.sliding).toBe(true);
-    // A jump pressed during the slam does not undo it.
+    sim.step();
+    expect(sim.grounded).toBe(false);
+    expect(sim.crouchHeld).toBe(false);
+    hold(sim, 1);
+    expect(sim.grounded).toBe(true);
+    expect(sim.crouching, 'landed standing: the cancelled hold does not come back').toBe(false);
+
+    // Crouch pressed in the air: drop at slamSpeed, and crouched on landing for as long as it is held.
     const s2 = simOn([]);
     s2.input('jump');
-    for (let i = 0; i < stepsFor(0.15); i++) s2.step();
-    s2.input('slide');
-    s2.input('jump');
-    while (!s2.grounded) s2.step();
-    expect(s2.sliding).toBe(true);
+    hold(s2, 0.15);
+    s2.input('crouch');
+    let steps = 0;
+    while (!s2.grounded) {
+      s2.step();
+      steps++;
+    }
+    expect(steps * STEP).toBeLessThanOrEqual(cfg.jump.height / cfg.crouch.slamSpeed + STEP);
+    expect(s2.crouching).toBe(true);
+    hold(s2, 3);
+    expect(s2.crouch).toBe(1);
+    // A jump pressed during the slam does not undo it.
+    const s3 = simOn([]);
+    s3.input('jump');
+    hold(s3, 0.15);
+    s3.input('crouch');
+    s3.input('jump');
+    while (!s3.grounded) s3.step();
+    expect(s3.crouching).toBe(true);
+    // Let go in the air: the slam still lands, and the rover stands.
+    const s4 = simOn([]);
+    s4.input('jump');
+    hold(s4, 0.15);
+    s4.input('crouch');
+    s4.step();
+    s4.input('crouchEnd');
+    while (!s4.grounded) s4.step();
+    expect(s4.crouching).toBe(false);
+  });
+
+  it('lane changes work while crouched and do not end the crouch', () => {
+    const sim = simOn([]);
+    sim.input('crouch');
+    hold(sim, 0.2);
+    sim.input('right');
+    hold(sim, 0.3);
+    expect(sim.lane).toBe(1);
+    expect(sim.x).toBeCloseTo(cfg.track.laneWidth, 9);
+    expect(sim.crouching).toBe(true);
+  });
+
+  it('is cleared by a crash and a restart (a key still down does not carry over), and ignored when not playing', () => {
+    const ready = new RunnerSim({ seed: 1 });
+    ready.input('crouch');
+    ready.step();
+    expect(ready.crouchHeld).toBe(false);
+
+    const sim = simOn([{ z: 30, lanes: [null, 'slab', null] }]);
+    sim.input('crouch');
+    driveTo(sim, 1000);
+    expect(sim.phase).toBe('over');
+    expect(sim.crouchHeld).toBe(false);
+    expect(sim.crouchMin).toBe(0);
+    sim.input('crouch'); // pressed on the game-over screen: nothing
+    sim.step();
+    expect(sim.crouchHeld).toBe(false);
+    hold(sim, cfg.score.restartDelay + 0.1);
+    sim.input('primary');
+    sim.step();
+    expect(sim.phase).toBe('playing');
+    expect(sim.crouching).toBe(false);
+    expect(sim.crouch).toBe(0);
+  });
+
+  it('crouchCancel (blur, pause) forgets the hold and the touch minimum; crouchEnd keeps the minimum', () => {
+    const sim = simOn([]);
+    sim.input('crouchTouch');
+    hold(sim, 0.05);
+    sim.input('crouchCancel');
+    sim.step();
+    expect(sim.crouching).toBe(false);
+    expect(sim.crouchMin).toBe(0);
+
+    const touch = simOn([]);
+    touch.input('crouchTouch');
+    touch.step();
+    touch.input('crouchEnd');
+    touch.step();
+    expect(touch.crouching, 'the minimum still holds it').toBe(true);
+  });
+
+  it('touch: a swipe down crouches while the finger stays down, and at least touchMinCrouch after a quick flick', () => {
+    const sim = simOn([]);
+    const min = touchMinCrouch(sim.speed, cfg);
+    expect(min).toBeCloseTo(cfg.crouch.touchMinTime, 6); // at the start speed it is the config value
+    sim.input('crouchTouch');
+    sim.step();
+    sim.input('crouchEnd'); // a flick: the finger is up at once
+    hold(sim, min - 0.05);
+    expect(sim.crouching, 'still crouched inside the minimum').toBe(true);
+    hold(sim, 0.1);
+    expect(sim.crouching, 'stood up once it ran out').toBe(false);
+
+    // Finger down for 5 s: crouched the whole time, no timer.
+    const held = simOn([]);
+    held.input('crouchTouch');
+    for (let i = 0; i < stepsFor(5); i++) {
+      held.step();
+      if (!held.crouching) throw new Error('stood up under a finger');
+    }
+    held.input('crouchEnd');
+    hold(held, 0.2);
+    expect(held.crouching).toBe(false);
+
+    // A jump swipe while holding releases the crouch.
+    const jumped = simOn([]);
+    jumped.input('crouchTouch');
+    hold(jumped, 0.1);
+    jumped.input('jump');
+    jumped.step();
+    expect(jumped.grounded).toBe(false);
+    expect(jumped.crouchHeld).toBe(false);
+    expect(jumped.crouchMin).toBe(0);
+  });
+
+  it('the touch minimum covers the longest gate at every speed: speed in, a flick still gets under', () => {
+    const gate = cfg.hitbox.gate;
+    const rover = cfg.hitbox.rover;
+    for (const v of [cfg.speed.start, 18, 25, 32, 40, 60]) {
+      const min = touchMinCrouch(v, cfg);
+      // Distance driven while crouched covers the rover passing under the whole beam.
+      expect(min * v, `at ${v} m/s`).toBeGreaterThanOrEqual(rover.length + gate.length);
+      expect(min).toBeLessThanOrEqual(cfg.crouch.touchMinTime + 1e-9);
+    }
+  });
+
+  it('a gate is passed only while crouched: running, jumping, or standing up under it ends the run', () => {
+    const rows: Parameters<typeof simOn>[0] = [{ z: 40, lanes: [null, 'gate', null] }];
+    const through = (release: (z: number) => number | null, press = 40 - 8) => {
+      const sim = simOn(rows);
+      const acts: { at: number; intent: Intent }[] = [{ at: press, intent: 'crouch' }];
+      const r = release(40);
+      if (r !== null) acts.push({ at: r, intent: 'crouchEnd' });
+      driveTo(sim, 70, acts);
+      return sim;
+    };
+    const rearClear = 40 + cfg.hitbox.gate.length / 2 + cfg.hitbox.rover.length / 2;
+    expect(through(() => rearClear + 1).phase, 'held through, released after').toBe('playing');
+    expect(through(() => null).phase, 'held for ever').toBe('playing');
+    expect(through((z) => z - 0.5).crash?.kind, 'released before the beam').toBe('gate');
+    expect(through((z) => z - 0.1).crash?.kind, 'released under the beam').toBe('gate');
+    expect(through(() => rearClear + 1, 100).crash?.kind, 'never crouched').toBe('gate');
   });
 });
 
@@ -232,7 +390,8 @@ describe('collisions', () => {
     z - cfg.hitbox[kind].length / 2 - cfg.hitbox.rover.length / 2;
   // The rover reaches the row a little over 2 s in, at about 13 m/s; a press this far before contact is mid-window.
   const jumpAt = (z: number) => contact(z, 'barrier') - 2.6;
-  const slideAt = (z: number) => contact(z, 'gate') - 3;
+  const crouchAt = (z: number) => contact(z, 'gate') - 3;
+  const standAt = (z: number) => z + 2;
 
   it('a slab in the lane ends the run; jumping does not clear it; changing lane does', () => {
     const hit = simOn([{ z: 30, lanes: [null, 'slab', null] }]);
@@ -251,7 +410,7 @@ describe('collisions', () => {
     expect(dodged.phase).toBe('playing');
   });
 
-  it('a barrier: jumping over it succeeds, driving or sliding into it ends the run', () => {
+  it('a barrier: jumping over it succeeds, driving or crouching into it ends the run', () => {
     const ok = simOn([{ z: 30, lanes: [null, 'barrier', null] }]);
     driveTo(ok, 100, [{ at: jumpAt(30), intent: 'jump' }]);
     expect(ok.phase).toBe('playing');
@@ -260,14 +419,17 @@ describe('collisions', () => {
     driveTo(ran, 100);
     expect(ran.crash?.kind).toBe('barrier');
 
-    const slid = simOn([{ z: 30, lanes: [null, 'barrier', null] }]);
-    driveTo(slid, 100, [{ at: slideAt(30), intent: 'slide' }]);
-    expect(slid.crash?.kind).toBe('barrier');
+    const crouched = simOn([{ z: 30, lanes: [null, 'barrier', null] }]);
+    driveTo(crouched, 100, [{ at: crouchAt(30), intent: 'crouch' }]);
+    expect(crouched.crash?.kind).toBe('barrier');
   });
 
-  it('a gate: sliding under it succeeds, driving or jumping into it ends the run', () => {
+  it('a gate: crouching under it succeeds, driving or jumping into it ends the run', () => {
     const ok = simOn([{ z: 30, lanes: [null, 'gate', null] }]);
-    driveTo(ok, 100, [{ at: slideAt(30), intent: 'slide' }]);
+    driveTo(ok, 100, [
+      { at: crouchAt(30), intent: 'crouch' },
+      { at: standAt(30), intent: 'crouchEnd' },
+    ]);
     expect(ok.phase).toBe('playing');
 
     const ran = simOn([{ z: 30, lanes: [null, 'gate', null] }]);
@@ -333,7 +495,8 @@ describe('frame-rate independence', () => {
   ];
   const script: { at: number; intent: Intent }[] = [
     { at: contact(60, 'barrier') - 2.8, intent: 'jump' },
-    { at: contact(120, 'gate') - 3.2, intent: 'slide' },
+    { at: contact(120, 'gate') - 3.2, intent: 'crouch' },
+    { at: 124, intent: 'crouchEnd' }, // the key held for about 8 m (0.4 s) through the gate and let go after it
     { at: 150, intent: 'right' },
     // Nothing for the slab at 240 in the right lane: the run ends there.
   ];
@@ -373,6 +536,39 @@ describe('frame-rate independence', () => {
 
   const reference = play(1000 / 120);
 
+  it('held keys: the crouch amount at the gate and at the end of the run match at every frame rate', () => {
+    // The state the held key left behind, not just the outcome: the same steps, so the same crouch amount to the bit.
+    const state = (frameMs: number) => {
+      const sim = new RunnerSim({ seed: 9, course: () => fixedCourse(course) });
+      const clock = new FixedStepClock();
+      sim.start(true);
+      let now = 5000;
+      clock.advance(now);
+      const todo = [...script];
+      let wasCrouched = 0;
+      let longest = 0;
+      let run = 0;
+      for (let f = 0; f < 1e6 && sim.phase === 'playing'; f++) {
+        while (todo.length && sim.distance >= todo[0].at) sim.input(todo.shift()!.intent);
+        now += frameMs;
+        for (let i = clock.advance(now).steps; i > 0; i--) {
+          sim.step();
+          run = sim.crouching ? run + 1 : 0;
+          longest = Math.max(longest, run);
+          if (sim.crouching) wasCrouched++;
+        }
+      }
+      return { wasCrouched, longest };
+    };
+    const ref = state(1000 / 120);
+    expect(ref.longest * STEP).toBeGreaterThan(0.3);
+    for (const hz of [30, 60, 144, 240]) {
+      const got = state(1000 / hz);
+      // The input lands on the first frame past a point: at most one frame (in steps) of difference in the hold.
+      expect(Math.abs(got.wasCrouched - ref.wasCrouched), `${hz} Hz`).toBeLessThanOrEqual(Math.ceil(120 / hz) + 1);
+    }
+  });
+
   it('the reference run passes the barrier and the gate, takes the pickups and hits the slab at 240', () => {
     expect(reference.crash).toMatchObject({ kind: 'slab', z: 240, lane: 1 });
     expect(reference.pickups).toBe(4);
@@ -394,6 +590,40 @@ describe('frame-rate independence', () => {
       expect(run.maxSteps).toBeLessThanOrEqual(cfg.maxStepsPerFrame);
     });
   }
+
+  it('a held crouch lasts as long as the key is held at 30, 60 and 240 Hz, through a 2 s stall, and ends on release', () => {
+    for (const [frameMs, stall] of [
+      [1000 / 30, false],
+      [1000 / 60, false],
+      [1000 / 240, false],
+      [1000 / 60, true],
+    ] as const) {
+      const sim = new RunnerSim({ seed: 2, course: () => fixedCourse([]) });
+      const clock = new FixedStepClock();
+      sim.start(true);
+      let now = 0;
+      clock.advance(now);
+      sim.input('crouch');
+      let crouchedSteps = 0;
+      let stalled = false;
+      while (sim.time < 10) {
+        now += stall && !stalled && sim.time >= 5 ? ((stalled = true), 2000) : frameMs;
+        for (let i = clock.advance(now).steps; i > 0; i--) {
+          sim.step();
+          if (sim.time > cfg.crouch.inTime + STEP) {
+            if (!sim.crouching || sim.crouch !== 1) throw new Error(`stood up while held at ${sim.time.toFixed(2)} s`);
+            crouchedSteps++;
+          }
+        }
+      }
+      expect(crouchedSteps * STEP).toBeGreaterThan(9.5 - (stall ? 0.8 : 0));
+      sim.input('crouchEnd');
+      for (let i = clock.advance(now + 1000).steps; i > 0; i--) sim.step();
+      for (let i = clock.advance(now + 2000).steps; i > 0; i--) sim.step();
+      expect(sim.crouching).toBe(false);
+      expect(sim.crouch).toBe(0);
+    }
+  });
 
   it('equal play time covers equal distance at any frame rate', () => {
     const distanceAfter = (frameMs: number, seconds: number) => {

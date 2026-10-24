@@ -38,6 +38,8 @@ export interface RunnerStats {
   speed: number;
   distance: number;
   lane: number;
+  /** How far down the rover is, 0 to 1 (hold-to-crouch: 1 for as long as the key is held). */
+  crouch: number;
   phase: Phase;
   paused: boolean;
   score: number;
@@ -213,6 +215,7 @@ export function mountRunner(
       speed: sim.speed,
       distance: sim.distance,
       lane: sim.lane,
+      crouch: sim.crouch,
       phase: sim.phase,
       paused,
       score: sim.score,
@@ -227,6 +230,7 @@ export function mountRunner(
 
   const pause = () => {
     if (destroyed || paused) return;
+    input.release(); // hold-to-crouch: a keyup or pointerup that happens while paused is never heard
     paused = true;
     if (raf) win.cancelAnimationFrame(raf);
     raf = 0;
@@ -236,6 +240,7 @@ export function mountRunner(
   const resume = () => {
     if (destroyed || !paused) return;
     paused = false;
+    input.release(); // hold-to-crouch: whatever was held before the pause starts again from a fresh press
     clock.reset();
     lastFrame = null;
     updateHud();

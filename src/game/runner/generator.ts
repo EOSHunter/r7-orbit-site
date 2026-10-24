@@ -3,7 +3,7 @@
 // Fairness (docs/RUNNER.md, "Fairness"): every row leaves at least one lane the rover can pass (a free lane, a barrier to jump
 // or a gate to slide under; never three slabs), and the gap before each row is long enough that, from ANY lane the player
 // could have used to pass the row before it, there is a lane of the new row they can reach in time: a reaction time, then the
-// lane changes and the jump or slide that lane needs, at the speed the rover will have when it gets there. The player can
+// lane changes and the jump or crouch that lane needs, at the speed the rover will have when it gets there. The player can
 // never pick a lane that traps them. src/game/runner/generator.vitest.ts proves it by playing thousands of seeded courses.
 
 import { RUNNER_CONFIG, jumpPhysics, type RunnerConfig } from './config';
@@ -14,7 +14,7 @@ export type Lane = -1 | 0 | 1;
 export const LANES: readonly Lane[] = [-1, 0, 1];
 
 /** How the rover gets through a lane of a row: drive on, jump, slide, or not at all (a slab). */
-export type PassMode = 'run' | 'jump' | 'slide';
+export type PassMode = 'run' | 'jump' | 'crouch';
 
 /** One row across the track. `lanes[lane + 1]` is the obstacle in that lane, or null when it is open. */
 export interface Row {
@@ -27,7 +27,7 @@ export interface Row {
 export function passMode(kind: ObstacleKind | null): PassMode | null {
   if (kind === null) return 'run';
   if (kind === 'barrier') return 'jump';
-  if (kind === 'gate') return 'slide';
+  if (kind === 'gate') return 'crouch';
   return null;
 }
 
@@ -55,7 +55,7 @@ export function jumpLeadTime(cfg: RunnerConfig = RUNNER_CONFIG): number {
 
 /** Longest a slam (slide pressed in the air) can take to bring the rover down from the top of a jump. */
 export function slamTime(cfg: RunnerConfig = RUNNER_CONFIG): number {
-  return cfg.jump.height / cfg.slide.slamSpeed;
+  return cfg.jump.height / cfg.crouch.slamSpeed;
 }
 
 /**
@@ -75,8 +75,8 @@ export function requiredTime(
   // From the ground or a slide everything can start at once: jump cancels a slide, and slide restarts one.
   let ready = 0;
   if (modeA === 'jump' && modeB === 'jump') ready = cfg.jump.duration;
-  if (modeA === 'jump' && modeB === 'slide') ready = slamTime(cfg);
-  const lead = modeB === 'jump' ? jumpLeadTime(cfg) : modeB === 'slide' ? 0.05 : 0;
+  if (modeA === 'jump' && modeB === 'crouch') ready = slamTime(cfg);
+  const lead = modeB === 'jump' ? jumpLeadTime(cfg) : modeB === 'crouch' ? 0.05 : 0;
   return cfg.generator.reactionTime + Math.max(laneTime, ready + lead);
 }
 
@@ -181,7 +181,7 @@ function pickupLine(rand: Random, prev: Row | null, row: Row, cfg: RunnerConfig)
   for (let z = end; z >= start && out.length < g.pickupMaxInLine; z -= g.pickupSpacing)
     out.unshift({ lane, z, y: g.pickupHeight });
   if (mode === 'jump') out.push({ lane, z: row.z, y: g.pickupHeightOverBarrier });
-  if (mode === 'slide') out.push({ lane, z: row.z, y: g.pickupHeightUnderGate });
+  if (mode === 'crouch') out.push({ lane, z: row.z, y: g.pickupHeightUnderGate });
   return out.length >= 2 ? out : [];
 }
 

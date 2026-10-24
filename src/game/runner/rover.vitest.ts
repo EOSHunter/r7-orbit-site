@@ -76,7 +76,7 @@ describe('rover', () => {
     expect(Math.abs(spins[0] - spins[1]) / Math.abs(spins[0])).toBeLessThan(0.01);
   });
 
-  it('a slide lowers the body and folds the antenna; a lane change yaws the rover', () => {
+  it('a held crouch lowers the body and folds the antenna; a lane change yaws the rover', () => {
     const rover = createRover(cfg, { url: 'missing-rover.glb' });
     let lowest = 0;
     let fold = 0;
@@ -86,7 +86,7 @@ describe('rover', () => {
       120,
       1.2,
       [
-        [0.1, 'slide'],
+        [0.1, 'crouch'],
         [0.8, 'right'],
       ],
       (sim) => {
@@ -101,6 +101,35 @@ describe('rover', () => {
     expect(fold).toBeGreaterThan(1);
     expect(yaw).toBeLessThan(-0.05); // nose towards +x: about 7 degrees at most
     expect(yaw).toBeGreaterThan(-8 * (Math.PI / 180));
+    rover.dispose();
+  });
+
+  it('the antenna stays folded and the body low for as long as the crouch is held (5 s), and rises after the release', () => {
+    const rover = createRover(cfg, { url: 'missing-rover.glb' });
+    const folds: number[] = [];
+    const drops: number[] = [];
+    let t = 0;
+    const sim = drive(
+      rover,
+      60,
+      7,
+      [
+        [0.5, 'crouch'],
+        [5.5, 'crouchEnd'],
+      ],
+      () => {
+        t += 1 / 60;
+        if (t > 0.9 && t < 5.5) {
+          folds.push(node(rover, 'antenna').rotation.x);
+          drops.push(node(rover, 'rover_body').position.y);
+        }
+      },
+    );
+    expect(folds.length).toBeGreaterThan(250);
+    expect(Math.min(...folds)).toBeGreaterThan(1.2); // folded back (78 degrees is 1.36 rad) the whole time
+    expect(Math.max(...drops)).toBeLessThan(-0.03); // the body stays down
+    expect(sim.crouching).toBe(false);
+    expect(node(rover, 'antenna').rotation.x).toBeLessThan(0.1); // stood up again, 1.5 s after the release
     rover.dispose();
   });
 

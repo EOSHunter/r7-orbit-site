@@ -1,13 +1,26 @@
-// The game itself: state, the fixed-step update, lanes, jump and slide, collisions, spawning, scoring and the speed curve.
+// The game itself: state, the fixed-step update, lanes, jump and held crouch, collisions, spawning, scoring and the speed curve.
 // Pure logic: no DOM, no clock, no rendering. Every call to step() advances exactly config.step seconds, so the result
 // depends only on the seed and the inputs, never on the display's frame rate (the loop in index.ts decides how many steps
 // a frame gets; clock.ts). render.ts only reads this state.
 
-import { RUNNER_CONFIG, jumpPhysics, speedAt, type RunnerConfig } from './config';
+import { RUNNER_CONFIG, jumpPhysics, speedAt, touchMinCrouch, type RunnerConfig } from './config';
 import { createGenerator, type Generator, type Lane, type ObstacleKind, type Row } from './generator';
 
-/** What a player asks for. `primary` is Space: start or restart when not playing, jump while playing. `start` is a tap. */
-export type Intent = 'left' | 'right' | 'jump' | 'slide' | 'primary' | 'start';
+/**
+ * What a player asks for. `primary` is Space: start or restart when not playing, jump while playing. `start` is a tap.
+ * Crouch is a held state: `crouch` is S or Down pressed, `crouchTouch` a swipe down (the finger stays down; it also crouches at
+ * least touchMinCrouch), `crouchEnd` the key or finger let go, `crouchCancel` let go AND forget the touch minimum (blur, pause).
+ */
+export type Intent =
+  | 'left'
+  | 'right'
+  | 'jump'
+  | 'crouch'
+  | 'crouchTouch'
+  | 'crouchEnd'
+  | 'crouchCancel'
+  | 'primary'
+  | 'start';
 
 export type Phase = 'ready' | 'playing' | 'over';
 
@@ -64,11 +77,17 @@ export class RunnerSim {
   y = 0;
   vy = 0;
   grounded = true;
-  /** Seconds of slide left (0 = not sliding). */
-  slideTime = 0;
+  /** A key or finger is holding crouch. Cleared by crouchEnd, a jump, a crash, a restart: never by a timer. */
+  crouchHeld = false;
+  /** Touch only: seconds of crouch still owed after a swipe down, held or not (0 = none). */
+  crouchMin = 0;
+  /** How far down the rover is, 0 (standing) to 1 (crouched): eases up over crouch.inTime, down over crouch.outTime. */
+  crouch = 0;
+  /** Crouch was swiped in the air: the minimum starts on landing. */
+  private slamMin = false;
   /** Seconds left during which a jump pressed in the air still happens on landing. */
   jumpBuffer = 0;
-  /** Slide was pressed in the air: the rover is dropping fast and slides on landing. */
+  /** Crouch was pressed in the air: the rover is dropping fast and crouches on landing (if still held). */
   slamming = false;
 
   pickups = 0;
@@ -107,7 +126,10 @@ export class RunnerSim {
     this.y = 0;
     this.vy = 0;
     this.grounded = true;
-    this.slideTime = 0;
+    this.crouchHeld = false;
+    this.crouchMin = 0;
+    this.crouch = 0;
+    this.slamMin = false;
     this.jumpBuffer = 0;
     this.slamming = false;
     this.pickups = 0;
@@ -143,14 +165,20 @@ export class RunnerSim {
     return true;
   }
 
-  get sliding(): boolean {
-    return this.slideTime > 0;
+  /** The rover is crouched (or being held down by a touch minimum): on the ground, and held or owed. What rover.ts folds by. */
+  get crouching(): boolean {
+    return this.grounded && (this.crouchHeld || this.crouchMin > 0);
   }
 
-  /** Height of the rover's collision box right now. */
+  /** The old name for `crouching`, still what rover.ts reads. */
+  get sliding(): boolean {
+    return this.crouching;
+  }
+
+  /** Height of the rover's collision box right now: it follows the crouch amount, so it stands up over crouch.outTime. */
   get roverHeight(): number {
     const r = this.cfg.hitbox.rover;
-    return this.sliding ? r.slideHeight : r.height;
+    return r.height - (r.height - r.crouchHeight) * this.crouch;
   }
 
   /** Advance exactly one fixed step (config.step seconds). */
@@ -174,13 +202,17 @@ export class RunnerSim {
 
     // Up and down: exact for constant gravity, so a jump has the same height and length at any step size.
     if (this.grounded) {
-      if (this.slideTime > 0) this.slideTime = Math.max(0, this.slideTime - dt);
+      if (this.crouchMin > 0) this.crouchMin = Math.max(0, this.crouchMin - dt);
     } else {
       this.y += this.vy * dt - 0.5 * this.gravity * dt * dt;
       this.vy -= this.gravity * dt;
       if (this.y <= 0) this.land();
     }
     if (this.jumpBuffer > 0) this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
+
+    // The crouch amount follows the held state: up at once-ish, down only after the release.
+    const { inTime, outTime } = this.cfg.crouch;
+    this.crouch = this.crouching ? Math.min(1, this.crouch + dt / inTime) : Math.max(0, this.crouch - dt / outTime);
 
     this.spawn();
     this.collide();
@@ -204,22 +236,41 @@ export class RunnerSim {
         if (this.grounded) this.jump();
         else if (!this.slamming) this.jumpBuffer = this.cfg.jump.buffer;
         break;
-      case 'slide':
-        if (this.grounded) {
-          this.slideTime = this.cfg.slide.duration;
-        } else {
-          this.slamming = true;
-          this.jumpBuffer = 0;
-          this.vy = Math.min(this.vy, -this.cfg.slide.slamSpeed);
-        }
+      case 'crouch':
+      case 'crouchTouch':
+        this.pressCrouch(intent === 'crouchTouch');
+        break;
+      case 'crouchEnd':
+        this.crouchHeld = false;
+        break;
+      case 'crouchCancel':
+        this.crouchHeld = false;
+        this.crouchMin = 0;
+        this.slamMin = false;
         break;
       case 'start':
         break;
     }
   }
 
+  /** Crouch pressed (a key) or swiped (touch). On the ground it is held from now; in the air it slams the rover down first. */
+  private pressCrouch(touch: boolean): void {
+    this.crouchHeld = true;
+    if (this.grounded) {
+      if (touch) this.crouchMin = touchMinCrouch(this.speed, this.cfg);
+    } else {
+      this.slamming = true;
+      this.slamMin = touch;
+      this.jumpBuffer = 0;
+      this.vy = Math.min(this.vy, -this.cfg.crouch.slamSpeed);
+    }
+  }
+
   private jump(): void {
-    this.slideTime = 0; // jump cancels a slide
+    // A jump request wins over a crouch: it ends the hold (the key may still be down; it must be pressed again).
+    this.crouchHeld = false;
+    this.crouchMin = 0;
+    this.slamMin = false;
     this.grounded = false;
     this.vy = this.takeoff;
     this.jumpBuffer = 0;
@@ -231,7 +282,8 @@ export class RunnerSim {
     this.grounded = true;
     if (this.slamming) {
       this.slamming = false;
-      this.slideTime = this.cfg.slide.duration;
+      if (this.slamMin) this.crouchMin = touchMinCrouch(this.speed, this.cfg);
+      this.slamMin = false;
     } else if (this.jumpBuffer > 0) {
       this.jump();
     }
@@ -274,7 +326,8 @@ export class RunnerSim {
       this.crash = o;
       this.phase = 'over';
       this.phaseTime = 0;
-      this.slideTime = 0;
+      this.crouchHeld = false;
+      this.crouchMin = 0;
       this.score = Math.floor(this.distance) + this.pickups * this.cfg.score.pickupBonus;
       return;
     }

@@ -17,6 +17,10 @@ function key(k: string, extra: Record<string, unknown> = {}): Event {
   });
 }
 
+function keyUp(k: string): Event {
+  return Object.assign(new Event('keyup', { cancelable: true }), { key: k, repeat: false });
+}
+
 /** A PointerEvent-shaped Event. timeStamp is a getter on Event, so every field is defined, not assigned. */
 function pointer(type: string, x: number, y: number, t: number, extra: Record<string, unknown> = {}): Event {
   const fields = { pointerId: 1, pointerType: 'touch', button: 0, clientX: x, clientY: y, timeStamp: t, ...extra };
@@ -30,7 +34,7 @@ describe('keys', () => {
     expect(['ArrowLeft', 'a', 'A'].map(keyIntent)).toEqual(['left', 'left', 'left']);
     expect(['ArrowRight', 'd', 'D'].map(keyIntent)).toEqual(['right', 'right', 'right']);
     expect(['ArrowUp', 'w', 'W'].map(keyIntent)).toEqual(['jump', 'jump', 'jump']);
-    expect(['ArrowDown', 's', 'S'].map(keyIntent)).toEqual(['slide', 'slide', 'slide']);
+    expect(['ArrowDown', 's', 'S'].map(keyIntent)).toEqual(['crouch', 'crouch', 'crouch']);
     expect(keyIntent(' ')).toBe('primary');
     expect(['Enter', 'Tab', 'Escape', 'q', 'Shift'].map(keyIntent)).toEqual([null, null, null, null, null]);
   });
@@ -77,7 +81,7 @@ describe('swipes and taps', () => {
     expect(swipeIntent(-60, 10)).toBe('left');
     expect(swipeIntent(60, -20)).toBe('right');
     expect(swipeIntent(10, -60)).toBe('jump');
-    expect(swipeIntent(-15, 60)).toBe('slide');
+    expect(swipeIntent(-15, 60)).toBe('crouch');
     expect(swipeIntent(60, 60 / swipeDominance + 1)).toBeNull();
     expect(swipeIntent(50, 48)).toBeNull();
   });
@@ -134,5 +138,135 @@ describe('swipes and taps', () => {
     surface.dispatchEvent(pointer('pointerdown', 100, 100, 3000));
     surface.dispatchEvent(pointer('pointerup', 100, 100, 3010));
     expect(got).toEqual(['left', 'start', 'jump']);
+  });
+});
+
+describe('hold to crouch: keys', () => {
+  function setup() {
+    const target = new EventTarget();
+    const got: Intent[] = [];
+    const input = createInput(target, new EventTarget(), (i) => got.push(i));
+    return { target, got, input };
+  }
+
+  it('S or Down: crouch on keydown, crouchEnd on keyup; key repeat adds nothing', () => {
+    for (const k of ['s', 'S', 'ArrowDown']) {
+      const { target, got } = setup();
+      target.dispatchEvent(key(k));
+      for (let i = 0; i < 20; i++) target.dispatchEvent(key(k, { repeat: true }));
+      expect(got, `${k} held`).toEqual(['crouch']);
+      target.dispatchEvent(keyUp(k));
+      expect(got).toEqual(['crouch', 'crouchEnd']);
+      target.dispatchEvent(keyUp(k)); // a second keyup (or one for a key never pressed here) says nothing
+      expect(got).toEqual(['crouch', 'crouchEnd']);
+    }
+  });
+
+  it('with two crouch keys down the crouch ends when the last is let go; Shift changing the letter is the same key', () => {
+    const { target, got } = setup();
+    target.dispatchEvent(key('s'));
+    target.dispatchEvent(key('ArrowDown'));
+    target.dispatchEvent(keyUp('s'));
+    expect(got).toEqual(['crouch', 'crouch']);
+    target.dispatchEvent(keyUp('ArrowDown'));
+    expect(got).toEqual(['crouch', 'crouch', 'crouchEnd']);
+    target.dispatchEvent(key('s'));
+    target.dispatchEvent(keyUp('S')); // Shift went down while S was held
+    expect(got.at(-1)).toBe('crouchEnd');
+  });
+
+  it('blur and release() cancel a held key; the keyup that arrives later is ignored; the next press works', () => {
+    const { target, got, input } = setup();
+    target.dispatchEvent(key('s'));
+    target.dispatchEvent(new Event('blur'));
+    expect(got).toEqual(['crouch', 'crouchCancel']);
+    target.dispatchEvent(keyUp('s'));
+    expect(got).toEqual(['crouch', 'crouchCancel']);
+    target.dispatchEvent(key('s'));
+    input.release();
+    input.release(); // nothing held: nothing said
+    expect(got).toEqual(['crouch', 'crouchCancel', 'crouch', 'crouchCancel']);
+    target.dispatchEvent(key('ArrowDown'));
+    target.dispatchEvent(keyUp('ArrowDown'));
+    expect(got.slice(-2)).toEqual(['crouch', 'crouchEnd']);
+  });
+
+  it('destroy() removes the keyup and blur listeners too', () => {
+    const { target, got, input } = setup();
+    input.destroy();
+    target.dispatchEvent(key('s'));
+    target.dispatchEvent(keyUp('s'));
+    target.dispatchEvent(new Event('blur'));
+    expect(got).toEqual([]);
+  });
+});
+
+describe('hold to crouch: touch', () => {
+  function setup() {
+    const surface = new EventTarget();
+    const got: Intent[] = [];
+    const input = createInput(new EventTarget(), surface, (i) => got.push(i));
+    return { surface, got, input };
+  }
+
+  it('a swipe down crouches and the crouch lasts until the finger lifts', () => {
+    const { surface, got } = setup();
+    surface.dispatchEvent(pointer('pointerdown', 100, 100, 0));
+    surface.dispatchEvent(pointer('pointermove', 100, 140, 16));
+    expect(got).toEqual(['crouchTouch']);
+    surface.dispatchEvent(pointer('pointermove', 102, 150, 32)); // still down, not a new swipe
+    surface.dispatchEvent(pointer('pointermove', 102, 160, 3000));
+    expect(got).toEqual(['crouchTouch']);
+    surface.dispatchEvent(pointer('pointerup', 102, 160, 3100));
+    expect(got).toEqual(['crouchTouch', 'crouchEnd']);
+  });
+
+  it('pointercancel and lostpointercapture end it too; another finger does not', () => {
+    for (const type of ['pointercancel', 'lostpointercapture']) {
+      const { surface, got } = setup();
+      surface.dispatchEvent(pointer('pointerdown', 100, 100, 0));
+      surface.dispatchEvent(pointer('pointermove', 100, 140, 16));
+      surface.dispatchEvent(pointer(type, 100, 140, 20, { pointerId: 2 }));
+      expect(got, `${type} of another finger`).toEqual(['crouchTouch']);
+      surface.dispatchEvent(pointer(type, 100, 140, 30));
+      expect(got).toEqual(['crouchTouch', 'crouchEnd']);
+    }
+  });
+
+  it('a quick flick down is a crouch of the minimum length: crouchTouch then crouchEnd on release', () => {
+    const { surface, got } = setup();
+    surface.dispatchEvent(pointer('pointerdown', 100, 100, 0));
+    surface.dispatchEvent(pointer('pointerup', 100, 150, 30));
+    expect(got).toEqual(['crouchTouch', 'crouchEnd']);
+  });
+
+  it('swiping another way while holding is a lane change or a jump, and a new swipe down crouches again', () => {
+    const { surface, got } = setup();
+    surface.dispatchEvent(pointer('pointerdown', 100, 100, 0));
+    surface.dispatchEvent(pointer('pointermove', 100, 140, 16)); // crouch
+    surface.dispatchEvent(pointer('pointermove', 150, 142, 32)); // 50 px right of where the crouch began: a lane change
+    surface.dispatchEvent(pointer('pointermove', 150, 90, 48)); // up: a jump
+    surface.dispatchEvent(pointer('pointermove', 150, 140, 64)); // down again: crouch again
+    expect(got).toEqual(['crouchTouch', 'right', 'jump', 'crouchTouch']);
+    surface.dispatchEvent(pointer('pointerup', 150, 140, 80));
+    expect(got.at(-1)).toBe('crouchEnd');
+  });
+
+  it('release() (pause, blur) cancels a held finger; its pointerup later says nothing', () => {
+    const { surface, got, input } = setup();
+    surface.dispatchEvent(pointer('pointerdown', 100, 100, 0));
+    surface.dispatchEvent(pointer('pointermove', 100, 140, 16));
+    input.release();
+    expect(got).toEqual(['crouchTouch', 'crouchCancel']);
+    surface.dispatchEvent(pointer('pointerup', 100, 140, 40));
+    expect(got).toEqual(['crouchTouch', 'crouchCancel']);
+  });
+
+  it('a new finger replaces one whose pointerup was lost, and ends its crouch', () => {
+    const { surface, got } = setup();
+    surface.dispatchEvent(pointer('pointerdown', 100, 100, 0));
+    surface.dispatchEvent(pointer('pointermove', 100, 140, 16));
+    surface.dispatchEvent(pointer('pointerdown', 200, 100, 5000, { pointerId: 3 }));
+    expect(got).toEqual(['crouchTouch', 'crouchEnd']);
   });
 });

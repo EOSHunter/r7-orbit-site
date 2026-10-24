@@ -35,21 +35,29 @@ export const RUNNER_CONFIG = {
     buffer: 0.12,
   },
 
-  slide: {
-    /** How long a slide keeps the rover low. Pressing slide again restarts it; jump cancels it. */
-    duration: 0.65,
-    /** Slide pressed in the air drops the rover at this speed, and it slides on landing. */
+  /**
+   * Crouch (docs/RUNNER.md, "Controls"): the rover is low for exactly as long as S or Down is held (or a finger stays down after
+   * a swipe down). There is no timer: these are the eases and the touch minimum.
+   */
+  crouch: {
+    /** Time for the crouch amount to go from 0 to 1 after a press. */
+    inTime: 0.06,
+    /** Time for it to go from 1 to 0 once the key is let go (the stand-up ease; it never starts while the key is held). */
+    outTime: 0.1,
+    /** Touch: a swipe down crouches at least this long at the start speed (see touchMinCrouch for other speeds). */
+    touchMinTime: 0.35,
+    /** Crouch pressed in the air drops the rover at this speed, and it crouches on landing. */
     slamSpeed: 18,
   },
 
   /** Collision boxes, in metres. They are a little smaller than the art so a near miss counts as a miss. */
   hitbox: {
-    rover: { width: 1.0, length: 1.4, height: 1.1, slideHeight: 0.5 },
+    rover: { width: 1.0, length: 1.4, height: 1.1, crouchHeight: 0.5 },
     /** A tall block across its lane: only a lane change gets past it. */
     slab: { width: 1.8, length: 0.8, bottom: 0, top: 2.6 },
     /** A low block: jump over it. */
     barrier: { width: 1.9, length: 0.5, bottom: 0, top: 0.7 },
-    /** The beam of an overhead arch: slide under it. Its posts stand on the lane edges and are scenery, not obstacles. */
+    /** The beam of an overhead arch: crouch under it. Its posts stand on the lane edges and are scenery, not obstacles. */
     gate: { width: 2.0, length: 0.5, bottom: 0.95, top: 2.6 },
     /** A pickup is collected when the rover's box comes within this radius of its centre. */
     pickupRadius: 0.45,
@@ -87,7 +95,7 @@ export const RUNNER_CONFIG = {
     pickupChance: 0.6,
     pickupSpacing: 3,
     pickupMaxInLine: 8,
-    /** Height of a pickup on the ground run, over a barrier (on the jump) and under a gate (on the slide). */
+    /** Height of a pickup on the ground run, over a barrier (on the jump) and under a gate (crouched). */
     pickupHeight: 0.6,
     pickupHeightOverBarrier: 1.7,
     pickupHeightUnderGate: 0.3,
@@ -186,4 +194,16 @@ export function speedAt(time: number, cfg: RunnerConfig = RUNNER_CONFIG): number
   const { start, max, rampTime } = cfg.speed;
   const u = Math.min(1, Math.max(0, time / rampTime));
   return start + (max - start) * (1 - (1 - u) * (1 - u));
+}
+
+/**
+ * How long a swipe down keeps the rover crouched at least (seconds), at the speed the rover has now. A finger that stays down
+ * keeps it crouched longer; a quick flick gets this much. It is the larger of two things: the distance of touchMinTime at the
+ * start speed (so the feel is the same at every speed), and the time to get under and through the longest gate with a quarter
+ * to spare, plus the ease down.
+ */
+export function touchMinCrouch(speed: number, cfg: RunnerConfig = RUNNER_CONFIG): number {
+  const v = Math.max(speed, 1e-6);
+  const gate = 1.25 * ((cfg.hitbox.rover.length + cfg.hitbox.gate.length) / v) + cfg.crouch.inTime;
+  return Math.max((cfg.crouch.touchMinTime * cfg.speed.start) / v, gate);
 }

@@ -137,6 +137,7 @@ function botPlay(
     if (next !== targetZ) {
       if (targetZ >= 0) {
         passed++;
+        if (plan?.mode === 'crouch') sim.input('crouchEnd');
         clearedAt = sim.time;
         lastMode = plan?.mode ?? 'run';
       }
@@ -165,9 +166,9 @@ function botPlay(
         sim.input('jump');
         plan.done = true;
       }
-      const fall = sim.grounded ? 0 : sim.y / config.slide.slamSpeed;
-      if (!plan.done && plan.mode === 'slide' && toContact <= 0.1 + fall) {
-        sim.input('slide');
+      const fall = sim.grounded ? 0 : sim.y / config.crouch.slamSpeed;
+      if (!plan.done && plan.mode === 'crouch' && toContact <= 0.1 + fall) {
+        sim.input('crouch');
         plan.done = true;
       }
     }
