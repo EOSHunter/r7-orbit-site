@@ -495,3 +495,60 @@ test('without WebGL the game says so, in neutral words, and throws nothing', asy
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
   expect(problems).toEqual([]);
 });
+
+// atmosphere polish: the glow, the twinkle, the shooting stars and the planet's turn (src/game/runner/sky.ts). The sky's clock
+// and the shooting-star count come from the fixture's readout; ?comet=1 sends one 1.5 s after mount from a fixed sky seed.
+const skyClock = (page) => stat(page, 'sky');
+const cometText = (page) => page.locator('[data-stat="comets"]').innerText();
+
+test('a shooting star crosses on ?comet=1 and is gone again: no console errors, axe, no layout shift', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(60_000);
+  await page.addInitScript(() => {
+    window.__shift = 0;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.__shift += entry.value;
+    }).observe({ type: 'layout-shift' });
+  });
+  const problems = watchPage(page, baseURL);
+  await idle(page, '&comet=1');
+  const before = await page.evaluate(() => window.__shift);
+  await expect.poll(() => cometText(page), { timeout: 15_000, intervals: [50] }).toContain('flying');
+  expect(await stat(page, 'comets')).toBe(1);
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
+  await expect.poll(() => cometText(page), { timeout: 10_000 }).toBe('1');
+  expect(await page.evaluate(() => window.__shift)).toBe(before);
+  // The sky's clock runs in the idle scene (the twinkle, the glow's wave, the planet's turn) ...
+  const t = await skyClock(page);
+  await expect.poll(() => skyClock(page)).toBeGreaterThan(t + 0.5);
+  // ... and stands still while the game is paused (the tab hidden, the window blurred).
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await expect(game(page)).toHaveAttribute('data-runner-paused', 'true');
+  await page.waitForTimeout(400);
+  const paused = await skyClock(page);
+  await page.waitForTimeout(1000);
+  expect(await skyClock(page)).toBe(paused);
+  expect(problems).toEqual([]);
+});
+
+test('reduced motion: the sky is still (no twinkle, spin, wave or shooting star), and the game still plays', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(60_000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const problems = watchPage(page, baseURL);
+  await idle(page, '&comet=1');
+  await page.waitForTimeout(3500); // past the moment ?comet=1 would send one
+  expect(await skyClock(page)).toBe(0);
+  expect(await cometText(page)).toBe('0');
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await expect.poll(() => stat(page, 'distance')).toBeGreaterThan(5);
+  expect(await skyClock(page)).toBe(0);
+  expect(await cometText(page)).toBe('0');
+  expect(problems).toEqual([]);
+});
+// end atmosphere polish

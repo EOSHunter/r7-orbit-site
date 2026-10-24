@@ -444,8 +444,8 @@ textures are four canvases of at most 64 x 128 px (a soft glow, the lane dashes,
 - **The planet:** a low-poly sphere (320 facets) with latitude bands in `--surface-2`, `--text-3-app` and `--brass-deep`,
   shaded per facet by its own light (a small shader: one light, a terminator, a thin ivory limb), and a tilted ring system
   (ivory and faint brass bands). About a third of the view high, left of the vanishing point, its base under the horizon; in
-  a narrow view it shrinks to fit (`planetPlacement()`). It spins 4 degrees a minute.
-- **Stars:** 360 points, ivory at low brightness, no twinkle.
+  a narrow view it shrinks to fit (`planetPlacement()`). It turns slowly (see "Atmosphere").
+- **Stars:** 360 points, ivory at low brightness (a twinkle since the polish: "Atmosphere").
 - **The ring tunnel:** 18 flat brass rings 4.5 cm wide, one instanced draw, additive. They scroll with the world, fade in from
   150 m, fade out just before the camera, and are recycled to the far end (`slotZ()`). Each casts a faint band of light on the
   track under it.
@@ -487,6 +487,51 @@ frame: instances are written in place. Everything is disposed in `dispose()`.
 lights, `env.update(sim, alpha)` in place of the old ring scroll, `env.drawSky(camera)` before `renderer.render`, and
 `env.dispose()`. `View.info()` (optional) passes its numbers to `onStats` as `view`, for the fixture's readout. The scene's
 lights and fog are made only there (the step 1 ones were removed when steps 2a and 2b were merged).
+
+<!-- atmosphere polish -->
+## Atmosphere (polish, 2026-10-24)
+
+After playing step 2 the author asked for four things and nothing else changed: the tunnel rings glow, the stars twinkle, a
+shooting star now and then, and the planet turns slowly. The motion is pure maths in `sky.ts` (unit-tested in
+`sky.vitest.ts`); `environment.ts` draws it. No post-processing, no new colours (ivory and brass from `RUNNER_COLORS`).
+
+- **Ring glow.** Each brass hairline has a wider soft band round it (0.55 m each side, a gaussian across it from a 64 x 1
+  canvas), additive brass, one more instanced draw. Its strength (`ringGlow()`) is 0.13 of brass plus a travelling wave of up
+  to 0.29: a crest leaves the vanishing point every 4 s and runs towards the camera (72 m between crests). Rings near the camera
+  glow at 45% of the far ones; the glow fades out over the last 2.5 m above the ground so the ground does not cut it square;
+  it is depth-tested, so the rover and the obstacles hide it, and it dims after a crash with the rest. The hairline itself
+  brightens a little on a crest (`core`).
+- **Stars.** The same 360 stars plus 9 brighter, larger, round ones, drawn by a small shader: each has its own phase, a cycle
+  of 0.5 to 2.5 s and a swing of 12 to 38% (`twinkleFor()`), from one clock uniform. No loop over the stars in JavaScript. Every
+  cycle divides 60 s, so the shader's clock wraps at 60 s without a jump.
+- **Shooting stars.** One every 15 to 40 s (start to start, `CometClock`), crossing in 0.9 to 1.6 s: a thin ivory head and a
+  brass-tinted tail fading to nothing, on one reusable quad placed in device coordinates by its shader (a draw call only while
+  one flies). The path (`cometPath()`) starts high on one side and runs down at 8 to 24 degrees towards the middle; it stays
+  out of the middle third (the lanes and the obstacles), above the horizon, clear of the planet, and under the score on the
+  right. Never two at once, never after a crash or under reduced motion; the countdown holds while they are not allowed.
+  They use the sky's own random generator, never the course's: `RUNNER_CONFIG.render.atmosphere.seed` (0 = from the clock)
+  and `firstComet` (seconds; the fixture's `?comet=1` sets 1.5 s and seed 11).
+- **Planet.** The body turns once in 5 minutes, its rings once in 9 (`planetAngles()`); the tilt is unchanged. The ring
+  texture is now 256 x 64 with a gentle unevenness round the circle (about 20%), or the rings' turn could not be seen.
+
+**Clock.** All of it runs on `WorldMotion.time`: seconds of the sim's fixed steps, so it is frame-rate independent, shows in
+the idle scene, stops whenever the loop stops (a hidden tab, a blur, a pause), and stands still under
+`prefers-reduced-motion` (no twinkle, wave, spin or shooting star; the glow stays at its average brightness).
+
+**Budgets** (fixture, SwiftShader, 1280 x 720, seed 11): 15,398 triangles and 55 draw calls in the idle scene and early in a
+run, the same as before: the glow adds 3,456 triangles and a call, and drawing the additive tunnel rings and glow in one pass
+(`forceSinglePass`; three draws a transparent double-sided mesh twice) saves as much. 15,400 and 56 while a shooting star
+flies. 37 geometries and 8 textures (one more of each). Lazy chunk 666,929 B / 172,477 B gzipped (was 660,869 / 170,517:
++1.9 kB). Uncapped frame time on SwiftShader was the same within its noise (medians of 9 to 18 ms either way; a rough guide).
+
+**Tests.** `sky.vitest.ts`: the wave's range, period, direction and average; the glow's peak (at most 0.5) and its still
+value; the twinkle's phase, period and amplitude bounds and its seamless wrap; the planet's angles after t seconds; the comet
+clock's intervals, one at a time, its seed, the early first comet, no comet when not allowed, interpolation; the envelope;
+paths that keep out of the middle third, the planet and the horizon at three aspects. `tests/runner.spec.js`: `?comet=1`
+sends one across with no console error, axe passing and no layout shift; the sky's clock runs while idle and stops while
+paused; under reduced motion it stays at 0 and no comet flies while the game still plays. The fixture's readout shows the
+sky clock and the shooting stars.
+<!-- end atmosphere polish -->
 
 ## Tests
 

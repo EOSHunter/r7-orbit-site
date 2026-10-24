@@ -19,8 +19,6 @@ export const WORLD = {
   overDim: 0.45,
   /** One breath of the idle scene's brass pulse, seconds: --dur-orbit / 3, as the prompt's hairlines in runner.css. */
   pulsePeriod: 14 / 3,
-  /** The planet's spin, degrees per minute. */
-  planetSpin: 4,
   /**
    * The fog closes in to this (near, far) in the idle scene and after a crash, and opens to the config's fog in a run. The first
    * row of a course is 70 m ahead, so a closed fog keeps the idle scene free of obstacles, and a new course's rows come out of
@@ -106,7 +104,8 @@ export class WorldMotion {
   idle = 1;
   /** 1 while the fog is closed (idle scene, game over), 0 while it is open (a run), eased between. */
   veil = 1;
-  /** Seconds of motion: drives the pulse and the planet's spin; it stands still under reduced motion. */
+  /** Seconds of motion: drives the pulse and the sky (sky.ts: the twinkle, the glow's wave, the comets, the planet's turn); it
+   *  stands still under reduced motion. */
   time = 0;
 
   private phase: Phase = 'ready';
