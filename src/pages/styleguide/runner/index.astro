@@ -1,0 +1,242 @@
+---
+// Prototype for the 404 page's game (docs/RUNNER.md, step 1 of 4: the core, with placeholder shapes). The game is loaded with
+// a dynamic import on the first click, tap or key, so three.js is a lazy chunk and never in this page's first load. Under the
+// game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course). Not linked from
+// anywhere and kept out of search engines, like the rest of the styleguide.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import '../../../game/runner/runner.css';
+---
+
+<BaseLayout
+  title="Runner prototype"
+  description="A prototype of the endless runner for the 404 page, with placeholder shapes. Not part of the site."
+  noindex
+>
+  <section class="section" aria-labelledby="rn-h">
+    <div class="container">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1 class="t-h1" id="rn-h">
+        Runner prototype
+      </h1>
+      <p class="t-lead">The core of the 404 page's game, with placeholder shapes. Step 1 of 4.</p>
+
+      <div
+        class="rn-stage"
+        data-runner-host
+        tabindex="0"
+        role="application"
+        aria-label="Off course, an endless runner"
+        aria-describedby="rn-howto"
+      >
+        <div class="rn-poster" data-runner-poster>
+          <p class="rn-keys">Press space to play</p>
+          <p class="rn-touch">Tap to play</p>
+          <noscript>
+            <p>This game needs JavaScript.</p>
+          </noscript>
+        </div>
+      </div>
+
+      <div class="rn-below">
+        <div id="rn-howto" class="rn-howto">
+          <p>
+            Left and right arrows, or A and D, change lane. Up arrow, W or Space jumps. Down arrow or S slides. On a
+            touch screen, swipe left, right, up or down. Space or a tap starts and restarts.
+          </p>
+          <p>
+            Change lane at a slab marked 404, jump a low barrier, slide under a gate. Each brass dot adds 5 m to the
+            score.
+          </p>
+        </div>
+
+        <div class="rn-debug" data-runner-debug>
+          <p class="eyebrow">Debug</p>
+          <dl>
+            <div>
+              <dt>fps</dt>
+              <dd data-stat="fps">-</dd>
+            </div>
+            <div>
+              <dt>steps per frame</dt>
+              <dd data-stat="steps">-</dd>
+            </div>
+            <div>
+              <dt>speed</dt>
+              <dd data-stat="speed">-</dd>
+            </div>
+            <div>
+              <dt>distance</dt>
+              <dd data-stat="distance">-</dd>
+            </div>
+            <div>
+              <dt>lane</dt>
+              <dd data-stat="lane">-</dd>
+            </div>
+          </dl>
+          <button class="btn sm" type="button" data-runner-unmount hidden>
+            Unmount the game
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .rn-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-top: var(--s-6);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .rn-stage:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--r-lg);
+  }
+
+  .rn-poster {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    padding: var(--s-4);
+    text-align: center;
+    color: var(--text-2);
+    font-size: var(--fs-md);
+  }
+
+  .rn-poster p {
+    margin: 0;
+  }
+
+  .rn-touch {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .rn-keys {
+      display: none;
+    }
+
+    .rn-touch {
+      display: block;
+    }
+  }
+
+  .rn-below {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: var(--s-5);
+  }
+
+  .rn-howto {
+    max-width: 68ch;
+    color: var(--text-2);
+  }
+
+  .rn-howto p {
+    margin: 0 0 var(--s-3);
+  }
+
+  .rn-debug dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin: var(--s-2) 0 var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+
+  .rn-debug dl div {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .rn-debug dt {
+    color: var(--text-3);
+  }
+
+  .rn-debug dd {
+    margin: 0;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 64rem) {
+    .rn-below {
+      grid-template-columns: 1fr auto;
+    }
+  }
+</style>
+
+<script>
+  import type { RunnerHandle, RunnerStats } from '../../../game/runner/index';
+
+  const host = document.querySelector<HTMLElement>('[data-runner-host]');
+  const poster = document.querySelector<HTMLElement>('[data-runner-poster]');
+  const unmount = document.querySelector<HTMLButtonElement>('[data-runner-unmount]');
+  const stat = (name: string) => document.querySelector<HTMLElement>(`[data-stat="${name}"]`);
+  const out = {
+    fps: stat('fps'),
+    steps: stat('steps'),
+    speed: stat('speed'),
+    distance: stat('distance'),
+    lane: stat('lane'),
+  };
+
+  let handle: RunnerHandle | null = null;
+  let loading = false;
+  let shownAt = 0;
+
+  // The readout is drawn a few times a second at most: writing to the DOM every frame would cost more than the game.
+  const onStats = (s: RunnerStats) => {
+    const now = performance.now();
+    if (now - shownAt < 250) return;
+    shownAt = now;
+    if (out.fps) out.fps.textContent = s.fps.toFixed(0);
+    if (out.steps) out.steps.textContent = String(s.steps);
+    if (out.speed) out.speed.textContent = `${s.speed.toFixed(1)} m/s`;
+    if (out.distance) out.distance.textContent = `${s.distance.toFixed(1)} m`;
+    if (out.lane) out.lane.textContent = String(s.lane);
+  };
+
+  async function boot() {
+    if (!host || handle || loading) return;
+    loading = true;
+    try {
+      const { mountRunner } = await import('../../../game/runner/index');
+      const seed = Number(new URLSearchParams(location.search).get('seed'));
+      if (poster) poster.hidden = true;
+      handle = mountRunner(host, { seed: Number.isFinite(seed) && seed > 0 ? seed : undefined, onStats });
+      handle.start();
+      if (unmount) unmount.hidden = false;
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Until the game is loaded, the stage is a poster: Space, Enter, a click or a tap loads it and starts a run.
+  host?.addEventListener('keydown', (e) => {
+    if (handle || (e.key !== ' ' && e.key !== 'Enter')) return;
+    e.preventDefault();
+    boot();
+  });
+  host?.addEventListener('click', () => {
+    if (!handle) boot();
+  });
+
+  unmount?.addEventListener('click', () => {
+    handle?.destroy();
+    handle = null;
+    unmount.hidden = true;
+    if (poster) poster.hidden = false;
+    for (const el of Object.values(out)) if (el) el.textContent = '-';
+  });
+</script>
