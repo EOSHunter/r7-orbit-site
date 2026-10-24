@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RUNNER_TEXT, mountRunner, type RunnerDeps } from './index';
 import type { View } from './render';
+import type { RunnerSim } from './sim';
 
 class FakeNode extends EventTarget {
   className = '';
@@ -160,7 +161,9 @@ function setup() {
   return { doc, win, container, view, deps, host: container as unknown as HTMLElement };
 }
 
-const keydown = (key: string) => Object.assign(new Event('keydown', { cancelable: true }), { key, repeat: false });
+const keydown = (key: string, repeat = false) =>
+  Object.assign(new Event('keydown', { cancelable: true }), { key, repeat });
+const keyup = (key: string) => Object.assign(new Event('keyup', { cancelable: true }), { key, repeat: false });
 
 describe('mountRunner', () => {
   it('adds a canvas (role img, labelled), the HUD and a live region; focuses the container', () => {
@@ -273,5 +276,75 @@ describe('mountRunner', () => {
     game.start();
     game.destroy();
     expect(container.children).toEqual([]);
+  });
+
+  describe('hold to crouch', () => {
+    /** A run in progress with S held, and a way to read the sim the view is drawing. */
+    function holding(key = 's') {
+      const { container, host, doc, win, view, deps } = setup();
+      const game = mountRunner(host, { seed: 1 }, deps);
+      const sim = () => view.render.mock.calls.at(-1)![0] as RunnerSim;
+      game.start();
+      let t = 0;
+      const run = (ms: number) => {
+        for (const end = t + ms; t < end; t += 16) win.tick(t);
+      };
+      run(200);
+      container.dispatchEvent(keydown(key));
+      run(300);
+      return { container, doc, win, game, sim, run };
+    }
+
+    it('crouched while the key is held (key repeat changes nothing), standing after the keyup', () => {
+      const { container, sim, run } = holding('ArrowDown');
+      expect(sim().crouching).toBe(true);
+      for (let i = 0; i < 10; i++) {
+        container.dispatchEvent(keydown('ArrowDown', true));
+        run(100);
+      }
+      expect(sim().crouching).toBe(true);
+      expect(sim().crouch).toBe(1);
+      container.dispatchEvent(keyup('ArrowDown'));
+      run(300);
+      expect(sim().crouching).toBe(false);
+      expect(sim().crouch).toBe(0);
+    });
+
+    it('a blur, a hidden tab and a pause clear it, and a keyup lost meanwhile cannot leave the rover low', () => {
+      for (const clear of [
+        ({ win }: ReturnType<typeof holding>) => win.dispatchEvent(new Event('blur')),
+        ({ doc }: ReturnType<typeof holding>) => {
+          doc.visibilityState = 'hidden';
+          doc.dispatchEvent(new Event('visibilitychange'));
+        },
+        ({ game }: ReturnType<typeof holding>) => game.pause(),
+        ({ container }: ReturnType<typeof holding>) => container.dispatchEvent(new Event('blur')),
+      ]) {
+        const h = holding();
+        expect(h.sim().crouching).toBe(true);
+        clear(h);
+        h.game.resume();
+        h.run(400); // the keyup happened while away and was never heard
+        expect(h.sim().crouching).toBe(false);
+        expect(h.sim().crouch).toBe(0);
+        h.container.dispatchEvent(keyup('s')); // when it does arrive, nothing breaks
+        h.container.dispatchEvent(keydown('s'));
+        h.run(300);
+        expect(h.sim().crouching, 'the next press works').toBe(true);
+        h.game.destroy();
+      }
+    });
+
+    it('a crash and a restart clear it', () => {
+      const h = holding();
+      h.run(120_000);
+      expect(h.sim().phase).toBe('over');
+      expect(h.sim().crouchHeld).toBe(false);
+      h.run(500);
+      h.container.dispatchEvent(keydown(' '));
+      h.run(200);
+      expect(h.sim().phase).toBe('playing');
+      expect(h.sim().crouching).toBe(false);
+    });
   });
 });

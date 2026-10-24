@@ -143,6 +143,8 @@ test('every address the page uses for the game is root-absolute in the build', a
   const chunk = code.match(/`(\/_astro\/runner\.[\w-]+\.js)`/)?.[1];
   expect(chunk, 'the chunk is named by a root-absolute address').toBeTruthy();
   expect(existsSync(join(dist, chunk))).toBe(true);
+  // The chunk stands alone: a shared chunk hung off another page's script (the admin's, 5.9 MB) once made the 404 page's game fetch it.
+  expect(readFileSync(join(dist, chunk), 'utf8'), 'the game chunk imports no other chunk').not.toMatch(/^import[ {*]/);
   expect(code).not.toMatch(/import\(`\.\.?\//); // never a relative import of the game
   for (const src of html.match(/(?:src|href)="[^"]*_astro[^"]*"/g) ?? []) expect(src, src).toMatch(/="\//);
 });

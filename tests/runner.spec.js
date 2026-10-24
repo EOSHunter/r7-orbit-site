@@ -57,6 +57,7 @@ test('the game loads only when asked, with no console errors', async ({ page, ba
   const canvas = page.getByRole('img', { name: 'Endless runner game' });
   await expect(canvas).toBeVisible();
   await expect(page.locator('#rn-howto')).toContainText('Up arrow, W or Space jumps');
+  await expect(page.locator('#rn-howto')).toContainText('Hold S or Down to crouch');
   await expect(page.locator('[data-runner-live]')).toHaveAttribute('aria-live', 'polite');
   await page.waitForTimeout(500);
   expect(problems).toEqual([]);
@@ -130,6 +131,96 @@ test('arrows change lane; keys do not scroll the page while the game has focus',
   for (const key of ['Space', 'ArrowDown', 'ArrowUp', 'ArrowDown', 'Space']) await page.keyboard.press(key);
   expect(await page.evaluate(() => window.scrollY), 'the page did not scroll').toBe(y);
   await expect(host(page)).toBeFocused();
+});
+
+/** Sample the fixture's crouch readout (drawn four times a second) for `ms`, every 150 ms. */
+async function crouchSamples(page, ms) {
+  const out = [];
+  for (let t = 0; t < ms; t += 150) {
+    out.push(await stat(page, 'crouch'));
+    await page.waitForTimeout(150);
+  }
+  return out;
+}
+
+// Hold to crouch (docs/RUNNER.md, "Controls"): the rover stays low for exactly as long as the key is held. The first row is
+// far off at the start of a run, so a few seconds of holding is safe.
+for (const key of ['s', 'ArrowDown']) {
+  test(`hold ${key} for 2 s: crouched the whole time, standing after the release`, async ({ page }) => {
+    test.setTimeout(60_000);
+    await boot(page);
+    await page.keyboard.down(key);
+    // The crouch eases in over 60 ms of game time; the readout is drawn four times a second, and frames on SwiftShader are slow.
+    await expect.poll(() => stat(page, 'crouch'), { timeout: 5000 }).toBe(1);
+    const held = await crouchSamples(page, 2000);
+    expect(held, 'the crouch stayed at 1 while the key was held').toEqual(held.map(() => 1));
+    // Key repeat (the browser sends keydown again and again while a key is held) changes nothing.
+    await page.keyboard.down(key);
+    await page.keyboard.down(key);
+    expect(await crouchSamples(page, 450)).toEqual([1, 1, 1]);
+    await page.keyboard.up(key);
+    await expect.poll(() => stat(page, 'crouch'), { timeout: 3000 }).toBe(0);
+    await page.waitForTimeout(600);
+    expect(await stat(page, 'crouch')).toBe(0); // and it did not come back
+    await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  });
+}
+
+test('hold S, then lose focus: the rover stands up and the next press crouches again', async ({ page }) => {
+  test.setTimeout(60_000);
+  await boot(page);
+  await page.keyboard.down('s');
+  await page.waitForTimeout(500);
+  expect(await stat(page, 'crouch')).toBe(1);
+  await page.evaluate(() => window.dispatchEvent(new Event('blur'))); // the keyup would be lost
+  await expect(game(page)).toHaveAttribute('data-runner-paused', 'true');
+  await page.keyboard.up('s');
+  await page.keyboard.press('Space'); // resume
+  await expect(game(page)).toHaveAttribute('data-runner-paused', 'false');
+  await expect.poll(() => stat(page, 'crouch'), { timeout: 3000 }).toBe(0);
+  await page.keyboard.down('s');
+  await expect.poll(() => stat(page, 'crouch'), { timeout: 3000 }).toBe(1);
+  await page.keyboard.up('s');
+});
+
+test('touch: a swipe down crouches for as long as the finger stays down, and a lift or a cancel ends it', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await boot(page);
+  const touch = (type, dy, id = 5) =>
+    page.locator('[data-runner]').evaluate(
+      (el, [type, dy, id]) => {
+        const r = el.getBoundingClientRect();
+        el.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: id,
+            pointerType: 'touch',
+            isPrimary: true,
+            bubbles: true,
+            clientX: r.left + r.width / 2,
+            clientY: r.top + r.height / 2 + dy,
+          }),
+        );
+      },
+      [type, dy, id],
+    );
+  for (const ending of ['pointerup', 'pointercancel']) {
+    await touch('pointerdown', 0);
+    await touch('pointermove', 20);
+    await touch('pointermove', 70);
+    await expect.poll(() => stat(page, 'crouch'), { timeout: 5000 }).toBe(1);
+    const held = await crouchSamples(page, 2000);
+    expect(held, `${ending}: crouched while the finger was down`).toEqual(held.map(() => 1));
+    await touch(ending, 70);
+    await expect.poll(() => stat(page, 'crouch'), { timeout: 3000 }).toBe(0);
+  }
+  // A quick flick is a short crouch (at least the minimum), then standing.
+  await touch('pointerdown', 0);
+  await touch('pointermove', 60);
+  await touch('pointerup', 60);
+  await expect.poll(() => stat(page, 'crouch'), { timeout: 3000 }).toBe(0);
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
 });
 
 test('touch: synthetic swipes change lanes, a tap resumes after a pause', async ({ page }) => {
@@ -265,6 +356,28 @@ test('the scene stays within its budgets in the idle scene, a run and after a cr
   for (const c of [ready, playing, over]) expect(c.triangles).toBeLessThan(25_000);
 });
 
+// The wall with one opening (seed 3) and the sweeper (seed 1) start at 500 m and 1,000 m in a real run; ?all=1 lets them come
+// from the first row, so they are in view within the first seconds. Seed 2 is two walls in a row (the slalom).
+test('the wall and the sweeper are drawn within the triangle budget, with a clean console', async ({ page, baseURL }) => {
+  test.setTimeout(180_000);
+  const problems = watchPage(page, baseURL);
+  for (const seed of [3, 1, 2]) {
+    await page.goto(`${FIXTURE}?seed=${seed}&all=1`, { waitUntil: 'networkidle' });
+    await host(page).focus();
+    await page.keyboard.press('Space');
+    await expect(game(page)).toHaveAttribute('data-runner-state', 'playing', MOUNTED);
+    let most = 0;
+    // Nothing is pressed: the rover drives into the first obstacle, passing the rows after it only in the readout's range.
+    for (let i = 0; i < 400 && (await game(page).getAttribute('data-runner-state')) === 'playing'; i++) {
+      most = Math.max(most, await stat(page, 'triangles'));
+      await page.waitForTimeout(150);
+    }
+    expect(most, `seed ${seed}`).toBeGreaterThan(5000);
+    expect(most, `seed ${seed}`).toBeLessThan(25_000);
+  }
+  expect(problems).toEqual([]);
+});
+
 for (const variant of ['framed', 'blended']) {
   test(`the ${variant} variant: the page blend only where asked, no layout shift`, async ({ page }) => {
     // Shifts from the moment the game is asked for (the page's own font swap before it is not the game's).
@@ -382,3 +495,60 @@ test('without WebGL the game says so, in neutral words, and throws nothing', asy
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
   expect(problems).toEqual([]);
 });
+
+// atmosphere polish: the glow, the twinkle, the shooting stars and the planet's turn (src/game/runner/sky.ts). The sky's clock
+// and the shooting-star count come from the fixture's readout; ?comet=1 sends one 1.5 s after mount from a fixed sky seed.
+const skyClock = (page) => stat(page, 'sky');
+const cometText = (page) => page.locator('[data-stat="comets"]').innerText();
+
+test('a shooting star crosses on ?comet=1 and is gone again: no console errors, axe, no layout shift', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(60_000);
+  await page.addInitScript(() => {
+    window.__shift = 0;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.__shift += entry.value;
+    }).observe({ type: 'layout-shift' });
+  });
+  const problems = watchPage(page, baseURL);
+  await idle(page, '&comet=1');
+  const before = await page.evaluate(() => window.__shift);
+  await expect.poll(() => cometText(page), { timeout: 15_000, intervals: [50] }).toContain('flying');
+  expect(await stat(page, 'comets')).toBe(1);
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
+  await expect.poll(() => cometText(page), { timeout: 10_000 }).toBe('1');
+  expect(await page.evaluate(() => window.__shift)).toBe(before);
+  // The sky's clock runs in the idle scene (the twinkle, the glow's wave, the planet's turn) ...
+  const t = await skyClock(page);
+  await expect.poll(() => skyClock(page)).toBeGreaterThan(t + 0.5);
+  // ... and stands still while the game is paused (the tab hidden, the window blurred).
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await expect(game(page)).toHaveAttribute('data-runner-paused', 'true');
+  await page.waitForTimeout(400);
+  const paused = await skyClock(page);
+  await page.waitForTimeout(1000);
+  expect(await skyClock(page)).toBe(paused);
+  expect(problems).toEqual([]);
+});
+
+test('reduced motion: the sky is still (no twinkle, spin, wave or shooting star), and the game still plays', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(60_000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const problems = watchPage(page, baseURL);
+  await idle(page, '&comet=1');
+  await page.waitForTimeout(3500); // past the moment ?comet=1 would send one
+  expect(await skyClock(page)).toBe(0);
+  expect(await cometText(page)).toBe('0');
+  await page.keyboard.press('Space');
+  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await expect.poll(() => stat(page, 'distance')).toBeGreaterThan(5);
+  expect(await skyClock(page)).toBe(0);
+  expect(await cometText(page)).toBe('0');
+  expect(problems).toEqual([]);
+});
+// end atmosphere polish

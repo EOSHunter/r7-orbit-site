@@ -108,12 +108,13 @@ function play(
 }
 
 describe('ChaseRig', () => {
-  it('stays at a constant height and looks at a fixed point through a jump, a slide and lane changes', () => {
-    const actions: [number, 'jump' | 'right' | 'slide' | 'left'][] = [
+  it('stays at a constant height and looks at a fixed point through a jump, a held crouch and lane changes', () => {
+    const actions: [number, 'jump' | 'right' | 'crouch' | 'crouchEnd' | 'left'][] = [
       [0.2, 'jump'],
       [0.3, 'right'],
-      [1.2, 'slide'],
+      [1.2, 'crouch'],
       [1.3, 'right'],
+      [1.6, 'crouchEnd'],
       [2.0, 'jump'],
       [2.1, 'left'],
       [2.15, 'left'],
