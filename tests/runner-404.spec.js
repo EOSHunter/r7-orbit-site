@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { watchPage } from './helpers.js';
+import { restartRun, watchPage } from './helpers.js';
 
 // The endless runner on the 404 page (src/components/RunnerStage.astro, docs/RUNNER.md "On the 404 page"): a poster until the
 // first interaction, the game fetched then (and prefetched when idle and near), played with keys and touch, from any missing
@@ -218,9 +218,7 @@ test('Space on the button starts a run; a crash ends it; Space restarts; the bes
   await expect(page.locator('[data-runner-live]')).toHaveText(`Game over, score ${final}`);
   await expect(page.locator('.runner-prompt')).toHaveText('Press space to try again');
   expect(await page.evaluate(() => localStorage.getItem('r7-runner-best'))).toBe(String(final));
-  await page.waitForTimeout(500);
-  await page.keyboard.press('Space');
-  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await restartRun(page, game(page));
   expect(await score(page)).toBeLessThan(final);
 
   // A new visit: the best is still there, and the ready screen shows it.
@@ -291,8 +289,7 @@ test('keys: Escape pauses and Space resumes, Tab leaves, and Space scrolls the p
     window.scrollTo({ top: 0, behavior: 'instant' });
   });
   await page.keyboard.press('Space');
-  await page.waitForTimeout(400);
-  expect(await page.evaluate(() => window.scrollY), 'Space scrolled the page').toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.scrollY), { message: 'Space scrolled the page' }).toBeGreaterThan(0);
   await expect(game(page)).toHaveAttribute('data-runner-paused', 'true');
 });
 
