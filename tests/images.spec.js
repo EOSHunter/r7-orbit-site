@@ -65,6 +65,16 @@ test('an author photo drawn as an avatar is the 160px WebP copy, not the 800px o
   }
 });
 
+test('an agent avatar (a 256px PNG of about 57 kB) is served as a small WebP copy (LCP budget)', async ({ page }) => {
+  await page.goto('/authors/orion/');
+  const img = page.locator('.avatar.lg img');
+  await expect.poll(() => img.evaluate((el) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+  const url = await img.evaluate((el) => el.currentSrc);
+  expect(new URL(url).pathname).toMatch(/\.(160|256)w\.webp$/);
+  const size = await page.evaluate(async (u) => (await (await fetch(u)).arrayBuffer()).byteLength, url);
+  expect(size, 'the avatar is a few kB, not the 57 kB PNG').toBeLessThan(10_000);
+});
+
 test('a picture in the reading column reaches a phone at the column width (92vw), not a copy a size too big', async ({
   browser,
 }) => {

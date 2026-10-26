@@ -44,8 +44,11 @@ export const RECOMPRESS_ABOVE_BYTES = 300 * 1024;
  */
 export const VARIANT_WIDTHS = [160, 480, 720, 960, 1280];
 
-/** Pictures narrower than this (icons) get no copies: they are small already. */
-export const MIN_VARIANT_SOURCE_WIDTH = 480;
+/**
+ * Pictures narrower than this (icons) get no copies: they are small already. 240 lets a 256px author picture through: as a PNG
+ * it is about 57 kB for an 88px avatar, and every kilobyte fetched before the first paint counts against the LCP budget.
+ */
+export const MIN_VARIANT_SOURCE_WIDTH = 240;
 
 /** Formats that get copies (an SVG is drawn at any size as it is). */
 export const VARIANT_SOURCE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'avif'];

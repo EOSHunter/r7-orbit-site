@@ -106,8 +106,13 @@ describe('smaller copies (srcset)', () => {
     expect(variantWidths(480)).toEqual([160, 480]);
   });
 
-  it('makes none for an icon (narrower than 480px), not even the avatar-sized 160', () => {
-    expect(variantWidths(479)).toEqual([]);
+  it('gives a 256px author picture a 160 copy and one at its own width, so the avatar is not a 57 kB PNG', () => {
+    expect(variantWidths(256)).toEqual([160, 256]);
+    expect(variantWidths(240)).toEqual([160, 240]);
+  });
+
+  it('makes none for an icon (narrower than 240px), not even the avatar-sized 160', () => {
+    expect(variantWidths(239)).toEqual([]);
     expect(variantWidths(192)).toEqual([]);
     expect(variantWidths(160)).toEqual([]);
     expect(variantWidths(0)).toEqual([]);

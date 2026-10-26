@@ -271,7 +271,8 @@
     // A band across the upper part of the window: a heading entering or leaving it is what changes the answer
     var io = new IntersectionObserver(mark, { rootMargin: '0px 0px -60% 0px', threshold: [0, 1] });
     pairs.forEach(function (p) { io.observe(p.h); });
-    mark();
+    // No mark() here: the observer reports every heading once, right after the first layout, which does the same job without
+    // measuring the page before it has been laid out (a forced reflow of about 80 ms on a long post, ahead of the first paint).
   }
 
   /* ------------------------------------------------------------------------------------ (g) video poster */
