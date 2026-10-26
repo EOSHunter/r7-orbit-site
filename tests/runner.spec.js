@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { watchPage } from './helpers.js';
+import { restartRun, watchPage } from './helpers.js';
 
 // The runner prototype (src/pages/styleguide/runner/index.astro, docs/RUNNER.md): the game is loaded on the first key or tap,
 // played with the keyboard and with synthetic swipes, and checked for accessibility, scrolling and widths. WebGL runs on
@@ -83,9 +83,7 @@ test('keyboard: distance rises, a crash ends the run, the best is saved, Space r
   await expect(page.locator('.runner-best')).toHaveText(`Best ${String(final).padStart(5, '0')} m`);
   expect(await page.evaluate(() => localStorage.getItem('r7-runner-best'))).toBe(String(final));
 
-  await page.waitForTimeout(500); // past the restart delay
-  await page.keyboard.press('Space');
-  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await restartRun(page, game(page));
   expect(await score(page)).toBeLessThan(final);
   await expect(page.locator('[data-runner-live]')).toHaveText('');
 });
@@ -465,9 +463,7 @@ test('the rover model loads after the game, and a missing one leaves the stand-i
   await expect.poll(() => models.length).toBeGreaterThan(0);
   // The game goes on with the stand-in: it drives, crashes and restarts.
   await expect(game(page)).toHaveAttribute('data-runner-state', 'over', { timeout: 90_000 });
-  await page.waitForTimeout(500);
-  await page.keyboard.press('Space');
-  await expect(game(page)).toHaveAttribute('data-runner-state', 'playing');
+  await restartRun(page, game(page));
   // The only complaints are the 404 this test made: the response, the browser's console line about it, and the request
   // reported as aborted (the loader drops the body of a failed response).
   const expected = (p) =>
