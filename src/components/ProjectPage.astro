@@ -32,6 +32,7 @@ import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
 import { waitlist } from '../lib/waitlist-queries';
 import { isoDate, longDate, plainTitle, titleParts } from '../lib/text';
+import ImageZoom from './ImageZoom.astro';
 import '../styles/markdown.css';
 
 interface Props {
@@ -330,4 +331,6 @@ const path = `/projects/${post.id}/`;
       </section>
     )
   }
+
+  <ImageZoom />
 </BaseLayout>

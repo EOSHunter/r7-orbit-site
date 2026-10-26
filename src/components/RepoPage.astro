@@ -23,6 +23,7 @@ import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
 import { waitlist } from '../lib/waitlist-queries';
 import { longDate } from '../lib/text';
+import ImageZoom from './ImageZoom.astro';
 import '../styles/markdown.css';
 
 interface Props {
@@ -208,4 +209,6 @@ const author = (await getAuthorMap()).get(authorSlugOf(post))!;
       </section>
     )
   }
+
+  <ImageZoom />
 </BaseLayout>

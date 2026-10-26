@@ -474,6 +474,16 @@ body:has(.lightbox[open]) { overflow: hidden; }
 .lightbox-caption { margin: 0; padding: var(--s-3) var(--s-4) 0; font-size: var(--fs-sm); color: var(--text-2); }
 .lightbox-caption:empty { display: none; }
 .lightbox-prev .ico { transform: rotate(180deg); }
+/* A post's pictures open larger in a dialog (ImageZoom.astro, src/scripts/image-zoom.js wraps each in this button). The button
+   takes the picture's place without changing its size: full width in a figure or a cover, the picture's own width elsewhere. */
+.zoom-btn { display: block; width: fit-content; max-width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; border-radius: inherit; cursor: zoom-in; }
+.zoom-btn > img, .zoom-btn > picture > img { display: block; max-width: 100%; height: auto; }
+figure > .zoom-btn, .media > .zoom-btn { width: 100%; }
+figure > .zoom-btn > img, figure > .zoom-btn > picture > img { width: 100%; }
+.media > .zoom-btn { height: 100%; }
+.media > .zoom-btn > img { width: 100%; height: 100%; object-fit: cover; }
+.zoom-btn:focus-visible { outline-offset: calc(-1 * var(--s-1)); }
+.zoom-stage img { display: block; width: 100%; height: auto; max-height: calc(100dvh - var(--s-10)); object-fit: contain; }
 
 /* ---------------------------------------------------------------------------- Blog post and news item (ArticlePage) */
 .how-made { margin: 0; font-size: var(--fs-sm); color: var(--text-3); }

@@ -86,6 +86,7 @@ const routes = [
   { path: '/styleguide/nav/', noindex: true }, // fixture for tests/site-settings.spec.js: the nav with every label renamed
   { path: '/styleguide/imagery/', noindex: true }, // prototype: three directions for article imagery over the real covers (docs/IMAGE_STYLE.md)
   { path: '/styleguide/imagery/v2/', noindex: true }, // prototype, round 2: variety, the editor's picker, the brand in the words, agent cards
+  { path: '/styleguide/runner/', noindex: true }, // prototype for tests/runner.spec.js: the 404 page's game, mounted on the first key or tap (docs/RUNNER.md)
   // fixtures for tests/post-sections.spec.js: one post per kind written as sections (tests/fixtures/posts/), drawn by the real post pages
   ...KINDS.map((kind) => ({ path: `/styleguide/posts/${kind}/`, noindex: true })),
 ];

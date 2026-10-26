@@ -27,6 +27,7 @@ import { hasSections } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
 import { waitlist } from '../lib/waitlist-queries';
+import ImageZoom from './ImageZoom.astro';
 import '../styles/markdown.css';
 
 // content.config.ts builds the vlog schema through a helper that widens the extra fields; this is their real shape.
@@ -265,4 +266,6 @@ const breadcrumbs = JSON.stringify({
       </section>
     )
   }
+
+  <ImageZoom />
 </BaseLayout>

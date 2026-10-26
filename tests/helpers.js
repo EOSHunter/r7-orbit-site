@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 // Shared setup: the viewports the brief checks, and a watcher for page problems.
 
 export const viewports = [
@@ -6,6 +7,18 @@ export const viewports = [
 ];
 
 /** Collect console errors, page errors, failed requests, bad responses and third-party requests. */
+/**
+ * Restart a crashed runner game. The game ignores a restart for 0.35 s of game time after a crash, and on a slow runner
+ * (WebGL on SwiftShader) game time runs slower than the clock, so a fixed wait can end too soon: press Space again until
+ * the run is playing.
+ */
+export async function restartRun(page, game) {
+  await expect(async () => {
+    await page.keyboard.press('Space');
+    await expect(game).toHaveAttribute('data-runner-state', 'playing', { timeout: 1500 });
+  }).toPass({ timeout: 20_000, intervals: [250, 500, 1000] });
+}
+
 export function watchPage(page, baseURL) {
   const origin = new URL(baseURL).origin;
   const problems = [];

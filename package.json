@@ -20,11 +20,13 @@
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node --test \"src/**/*.test.ts\" && vitest run",
     "test:e2e": "playwright test",
-    "test:lighthouse": "node tests/lighthouse.mjs"
+    "test:lighthouse": "node tests/lighthouse.mjs",
+    "runner:bots": "node scripts/runner-bots.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.2",
-    "astro": "^7.3.5"
+    "astro": "^7.3.5",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
@@ -35,6 +37,7 @@
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.5",
     "@types/sanitize-html": "^2.16.2",
+    "@types/three": "^0.186.0",
     "decap-cms-app": "^3.16.3",
     "decap-server": "^3.11.3",
     "eslint": "^10.12.0",

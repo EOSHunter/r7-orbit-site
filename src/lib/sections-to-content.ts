@@ -140,3 +140,11 @@ export function sectionsHeadings(sections: readonly Section[]): SectionHeading[]
   });
   return out;
 }
+
+/**
+ * Whether an h2 comes before the block at `index` (a Heading block, or a `##` in a Markdown box). A block that draws headings of
+ * its own, the Team block's names, uses h3 under such a heading and h2 when there is none, so the page never skips a level.
+ */
+export function headingBefore(sections: readonly Section[], index: number): boolean {
+  return sectionsHeadings(sections.slice(0, Math.max(0, index))).some((h) => h.depth === 2);
+}

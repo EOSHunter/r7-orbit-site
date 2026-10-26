@@ -38,9 +38,13 @@
 .art-row .art-fig figcaption { flex: 1; }
 .art-row-caption { margin-top: var(--s-2); font-size: var(--fs-sm); color: var(--text-3); }
 
-/* Callout (colours come from .callout, .brass and .bad in components.css) */
+/* Callout (colours come from .callout, .brass and .bad in components.css). The label is a small eyebrow in the callout's
+   colour (brass, or the muted red of a warning); a note (info) is a brass rule beside ivory text rather than a box. */
 .art-callout { clear: both; font-size: var(--fs-md); line-height: 1.6; }
-.art-callout-title { margin: 0 0 var(--s-2); }
+.art-callout-title { margin: 0 0 var(--s-2); font: var(--fw-regular) var(--fs-2xs)/1.4 var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--brass); }
+.art-callout.bad .art-callout-title { color: inherit; }
+.art-callout .art-callout-title strong { color: inherit; font-weight: var(--fw-medium); }
+.art-callout[data-type="info"] { padding: var(--s-1) 0 var(--s-1) var(--s-5); border: 0; border-left: var(--bw) solid var(--brass); border-radius: 0; background: none; color: var(--text); }
 .art-callout-body > :first-child { margin-top: 0; }
 .art-callout-body > :last-child { margin-bottom: 0; }
 .art-callout-body > * + * { margin-top: var(--s-3); }

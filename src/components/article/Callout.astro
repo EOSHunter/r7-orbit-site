@@ -1,5 +1,6 @@
 ---
-// A boxed aside. `info` is a plain panel, `tip` is brass, `warn` uses the muted red of the "failed" status.
+// An aside. `info` is a brass rule beside the text, `tip` a brass panel, `warn` the muted red of the "failed" status.
+// The label is a small eyebrow; its full stop is for screen readers only (a pause before the text), not drawn.
 // Kinds are told apart by the label as well as the colour. Same classes as the `> [!NOTE]` Markdown syntax.
 import '../../styles/markdown.css';
 import '../../styles/article.css';
@@ -18,6 +19,6 @@ if (!(type in LABELS)) throw new Error(`Callout: type must be info, warn or tip,
 ---
 
 <div class={`${CLASSES[type]} art-callout`} role="note" data-type={type}>
-  <p class="art-callout-title"><strong>{title ?? LABELS[type]}.</strong></p>
+  <p class="art-callout-title"><strong>{title ?? LABELS[type]}</strong><span class="visually-hidden">.</span></p>
   <div class="art-callout-body"><slot /></div>
 </div>

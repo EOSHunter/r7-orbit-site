@@ -1,0 +1,344 @@
+---
+// Prototype for the 404 page's game (docs/RUNNER.md, step 1 of 4: the core, with placeholder shapes). The game is loaded with
+// a dynamic import on the first click, tap or key, so three.js is a lazy chunk and never in this page's first load. Under the
+// game, a debug readout that only this page has. Fixture for tests/runner.spec.js (?seed=N repeats a course; ?start=0 stops on
+// the ready screen; ?variant=blended shows the 404 page's blended style instead of the hairline frame; ?all=1 lets every
+// pattern and hazard appear from the first row, to look at the wall and the sweeper at once). Not linked from
+// anywhere and kept out of search engines, like the rest of the styleguide.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import '../../../game/runner/runner.css';
+---
+
+<BaseLayout
+  title="Runner prototype"
+  description="A prototype of the endless runner for the 404 page, with placeholder shapes. Not part of the site."
+  noindex
+>
+  <section class="section" aria-labelledby="rn-h">
+    <div class="container">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1 class="t-h1" id="rn-h">
+        Runner prototype
+      </h1>
+      <p class="t-lead">The core of the 404 page's game, with placeholder shapes. Step 1 of 4.</p>
+      <p class="rn-variants">
+        Style:{' '}
+        <a href="?variant=framed" data-variant-link="framed">
+          framed
+        </a>
+        <span aria-hidden="true">{' · '}</span>
+        <a href="?variant=blended" data-variant-link="blended">
+          blended into the page
+        </a>
+      </p>
+
+      <div
+        class="rn-stage"
+        data-runner-host
+        tabindex="0"
+        role="application"
+        aria-label="Off course, an endless runner"
+        aria-describedby="rn-howto"
+      >
+        <div class="rn-poster" data-runner-poster>
+          <p class="rn-keys">Press space to play</p>
+          <p class="rn-touch">Tap to play</p>
+          <noscript>
+            <p>This game needs JavaScript.</p>
+          </noscript>
+        </div>
+      </div>
+
+      <div class="rn-below">
+        <div id="rn-howto" class="rn-howto">
+          <p>
+            Left and right arrows, or A and D, change lane. Up arrow, W or Space jumps. Hold S or Down to crouch. On a
+            touch screen, swipe left, right or up; swipe down and keep your finger down to crouch. Space or a tap starts
+            and restarts.
+          </p>
+          <p>
+            Change lane at a slab marked 404, jump a low barrier, crouch under a gate. Each brass dot adds 5 m to the
+            score.
+          </p>
+        </div>
+
+        <div class="rn-debug" data-runner-debug>
+          <p class="eyebrow">Debug</p>
+          <dl>
+            <div>
+              <dt>fps</dt>
+              <dd data-stat="fps">-</dd>
+            </div>
+            <div>
+              <dt>steps per frame</dt>
+              <dd data-stat="steps">-</dd>
+            </div>
+            <div>
+              <dt>speed</dt>
+              <dd data-stat="speed">-</dd>
+            </div>
+            <div>
+              <dt>distance</dt>
+              <dd data-stat="distance">-</dd>
+            </div>
+            <div>
+              <dt>lane</dt>
+              <dd data-stat="lane">-</dd>
+            </div>
+            <div>
+              <dt>crouch</dt>
+              <dd data-stat="crouch">-</dd>
+            </div>
+            <div>
+              <dt>world scroll</dt>
+              <dd data-stat="scroll">-</dd>
+            </div>
+            <div>
+              <dt>triangles</dt>
+              <dd data-stat="triangles">-</dd>
+            </div>
+            <div>
+              <dt>draw calls</dt>
+              <dd data-stat="calls">-</dd>
+            </div>
+            <div>
+              <dt>geometries, textures</dt>
+              <dd data-stat="memory">-</dd>
+            </div>
+            {/* atmosphere polish */}
+            <div>
+              <dt>sky clock</dt>
+              <dd data-stat="sky">-</dd>
+            </div>
+            <div>
+              <dt>shooting stars</dt>
+              <dd data-stat="comets">-</dd>
+            </div>
+            {/* end atmosphere polish */}
+          </dl>
+          <button class="btn sm" type="button" data-runner-unmount hidden>
+            Unmount the game
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .rn-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-top: var(--s-6);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* The blended variant (the 404 page's style): no frame; the game fades into the page itself. */
+  .rn-stage[data-variant='blended'] {
+    border-color: transparent;
+    border-radius: 0;
+  }
+
+  .rn-variants {
+    margin: var(--s-3) 0 0;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+
+  .rn-variants [aria-current] {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .rn-stage:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--r-lg);
+  }
+
+  .rn-poster {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    padding: var(--s-4);
+    text-align: center;
+    color: var(--text-2);
+    font-size: var(--fs-md);
+  }
+
+  .rn-poster p {
+    margin: 0;
+  }
+
+  .rn-touch {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .rn-keys {
+      display: none;
+    }
+
+    .rn-touch {
+      display: block;
+    }
+  }
+
+  .rn-below {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: var(--s-5);
+  }
+
+  .rn-howto {
+    max-width: 68ch;
+    color: var(--text-2);
+  }
+
+  .rn-howto p {
+    margin: 0 0 var(--s-3);
+  }
+
+  .rn-debug dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin: var(--s-2) 0 var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+
+  .rn-debug dl div {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .rn-debug dt {
+    color: var(--text-3);
+  }
+
+  .rn-debug dd {
+    margin: 0;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 64rem) {
+    .rn-below {
+      grid-template-columns: 1fr auto;
+    }
+  }
+</style>
+
+<script>
+  import type { RunnerHandle, RunnerStats, RunnerVariant } from '../../../game/runner/index';
+
+  const host = document.querySelector<HTMLElement>('[data-runner-host]');
+  const poster = document.querySelector<HTMLElement>('[data-runner-poster]');
+  const unmount = document.querySelector<HTMLButtonElement>('[data-runner-unmount]');
+  const stat = (name: string) => document.querySelector<HTMLElement>(`[data-stat="${name}"]`);
+  const out = {
+    fps: stat('fps'),
+    steps: stat('steps'),
+    speed: stat('speed'),
+    distance: stat('distance'),
+    lane: stat('lane'),
+    crouch: stat('crouch'),
+    scroll: stat('scroll'),
+    triangles: stat('triangles'),
+    calls: stat('calls'),
+    memory: stat('memory'),
+    sky: stat('sky'), // atmosphere polish
+    comets: stat('comets'), // atmosphere polish
+  };
+
+  // ?variant=blended: the 404 page's style. The frame goes before the game loads, so the poster shows it too.
+  const variant: RunnerVariant =
+    new URLSearchParams(location.search).get('variant') === 'blended' ? 'blended' : 'framed';
+  if (host) host.dataset.variant = variant;
+  document.querySelector(`[data-variant-link="${variant}"]`)?.setAttribute('aria-current', 'page');
+
+  let handle: RunnerHandle | null = null;
+  let loading = false;
+  let shownAt = 0;
+
+  // The readout is drawn a few times a second at most: writing to the DOM every frame would cost more than the game.
+  const onStats = (s: RunnerStats) => {
+    const now = performance.now();
+    if (now - shownAt < 250) return;
+    shownAt = now;
+    if (out.fps) out.fps.textContent = s.fps.toFixed(0);
+    if (out.steps) out.steps.textContent = String(s.steps);
+    if (out.speed) out.speed.textContent = `${s.speed.toFixed(1)} m/s`;
+    if (out.distance) out.distance.textContent = `${s.distance.toFixed(1)} m`;
+    if (out.lane) out.lane.textContent = String(s.lane);
+    if (out.crouch) out.crouch.textContent = s.crouch.toFixed(2);
+    if (s.view) {
+      if (out.scroll) out.scroll.textContent = `${s.view.scroll.toFixed(2)} m`;
+      if (out.triangles) out.triangles.textContent = String(s.view.triangles);
+      if (out.calls) out.calls.textContent = String(s.view.calls);
+      if (out.memory) out.memory.textContent = `${s.view.geometries}, ${s.view.textures}`;
+      // atmosphere polish
+      if (out.sky) out.sky.textContent = `${s.view.skyTime.toFixed(2)} s`;
+      if (out.comets) out.comets.textContent = `${s.view.comets}${s.view.cometFlying ? ', flying' : ''}`;
+      // end atmosphere polish
+    }
+  };
+
+  async function boot() {
+    if (!host || handle || loading) return;
+    loading = true;
+    try {
+      const { mountRunner, withConfig } = await import('../../../game/runner/index');
+      const query = new URLSearchParams(location.search);
+      const seed = Number(query.get('seed'));
+      // ?all=1: every pattern and the new hazards from the first row (a fixture for the tests; the game never does this).
+      // atmosphere polish: ?comet=1 sends a shooting star 1.5 s after mount, from a fixed sky seed (the tests, a quick look).
+      // They combine: each adds its own part of the config.
+      const all = query.get('all') === '1';
+      const comet = query.get('comet') === '1';
+      const config =
+        all || comet
+          ? withConfig({
+              ...(all ? { generator: { tiers: { two: 0, three: 0 }, hazards: { wall: 0, sweeper: 0 } } } : {}),
+              ...(comet ? { render: { atmosphere: { seed: 11, firstComet: 1.5 } } } : {}),
+            })
+          : undefined;
+      if (poster) poster.hidden = true;
+      handle = mountRunner(host, {
+        seed: Number.isFinite(seed) && seed > 0 ? seed : undefined,
+        config,
+        variant,
+        onStats,
+      });
+      if (query.get('start') !== '0') handle.start();
+      if (unmount) unmount.hidden = false;
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Until the game is loaded, the stage is a poster: Space, Enter, a click or a tap loads it and starts a run.
+  host?.addEventListener('keydown', (e) => {
+    if (handle || (e.key !== ' ' && e.key !== 'Enter')) return;
+    e.preventDefault();
+    boot();
+  });
+  host?.addEventListener('click', () => {
+    if (!handle) boot();
+  });
+
+  unmount?.addEventListener('click', () => {
+    handle?.destroy();
+    handle = null;
+    unmount.hidden = true;
+    if (poster) poster.hidden = false;
+    for (const el of Object.values(out)) if (el) el.textContent = '-';
+  });
+</script>

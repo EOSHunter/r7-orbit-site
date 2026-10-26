@@ -1,0 +1,348 @@
+/* The 404 page's game stage (src/components/RunnerStage.astro, docs/RUNNER.md "On the 404 page"): a full-bleed block under the
+   page's buttons, with no frame, that holds its space before the game loads (no layout shift) and melts into the page.
+   Tokens only (CLAUDE.md, design rules). To move or resize the stage, change this file's .runner-stage rule. */
+
+/* Size: 16:9 on a wide screen, 3:4 on a phone so the track has room; never under 60% of the screen's height, never over 45rem
+   (720px), and never taller than the screen under the sticky header, so the whole stage can be in view at once. */
+.runner-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 60svh;
+  max-height: min(45rem, calc(100svh - var(--header-h) - var(--s-5)));
+  overflow: hidden;
+  background: var(--bg);
+  scroll-margin-top: 0; /* html's scroll-padding-top (site.css: header + s-5) already keeps it clear of the sticky header */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The page's own bottom padding (.lost in site.css) is empty: the stage's solid top edge starts inside it, so the buttons and
+   the scene read as one page without a gap of bare background between them. */
+.runner-stage {
+  margin-top: calc(var(--s-6) * -1);
+}
+
+@media (min-width: 900px) {
+  .runner-stage {
+    margin-top: calc(var(--s-7) * -1);
+  }
+}
+
+@media (max-width: 40rem) {
+  .runner-stage {
+    aspect-ratio: 3 / 4;
+  }
+}
+
+/* No JavaScript: no game, so no stage and no empty gap. */
+@media (scripting: none) {
+  .runner-stage {
+    display: none;
+  }
+}
+
+/* A keyboard focus ring, drawn inside the stage (the stage runs to the screen's edges, so an outside ring would be cut off). */
+.runner-stage:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: calc(var(--focus-offset) * -2);
+}
+
+/* Touch: a swipe inside the stage steers during a run and never scrolls the page; at the ready, paused and game-over
+   screens the page scrolls as usual (a vertical drag starting in the stage moves the page), and a double tap does not zoom. */
+.runner-stage .runner-canvas {
+  touch-action: pan-y pinch-zoom;
+}
+
+.runner-stage .runner[data-runner-state='playing'][data-runner-paused='false'] .runner-canvas {
+  touch-action: none;
+}
+
+/* The poster: the scene before the game loads, drawn in SVG with the same blend into the page as the game's own. */
+.runner-poster {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+.runner-poster[hidden] {
+  display: none;
+}
+
+.runner-poster svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* The same gradients as .runner-blend in runner.css, so the poster and the game fade into the page identically. */
+.runner-poster::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 82%, transparent) 7%,
+      color-mix(in srgb, var(--bg) 45%, transparent) 17%,
+      color-mix(in srgb, var(--bg) 12%, transparent) 27%,
+      transparent 36%
+    ),
+    linear-gradient(
+      to right,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 6%,
+      transparent 16%,
+      transparent 84%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 94%,
+      var(--bg) 100%
+    );
+}
+
+.rs-ring {
+  fill: none;
+  stroke: var(--brass);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-star {
+  fill: var(--text);
+}
+
+/* On a phone's tall, narrow crop the planet would show as a stray arc at the edge (the game's own planet shrinks to fit). */
+@media (max-width: 40rem) {
+  .rs-planet {
+    display: none;
+  }
+}
+
+.rs-planet-body {
+  fill: var(--surface-2);
+}
+
+.rs-planet-ring {
+  fill: none;
+  stroke: var(--line-brass);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-ground {
+  fill: var(--bg);
+}
+
+.rs-track {
+  fill: var(--surface-1);
+}
+
+.rs-haze-clear {
+  stop-color: var(--bg);
+  stop-opacity: 0;
+}
+
+.rs-haze-solid {
+  stop-color: var(--bg);
+  stop-opacity: 1;
+}
+
+.rs-glow-core {
+  stop-color: var(--brass-highlight);
+  stop-opacity: 0.9;
+}
+
+.rs-glow-edge {
+  stop-color: var(--brass);
+  stop-opacity: 0;
+}
+
+.rs-edge {
+  stroke: var(--text);
+  stroke-opacity: 0.32;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-edge-brass {
+  stroke: var(--brass);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-lane {
+  stroke: var(--text);
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+  stroke-dasharray: 12 16;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-pickup {
+  fill: var(--brass);
+}
+
+.rs-wheel {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-hull {
+  fill: var(--text-3-app);
+  stroke: var(--text-3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.rs-visor {
+  stroke: var(--bg);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.rs-mast {
+  stroke: var(--text-3);
+  stroke-width: 3;
+}
+
+.rs-beacon {
+  fill: var(--brass-highlight);
+}
+
+/* The play button: small mono capitals between two brass hairlines, in the place and the look of the game's own prompt
+   (.runner-prompt in runner.css), so the poster hands over to the game without a jump. It is a real button, over the whole
+   stage's click area, with a visible focus ring. */
+.runner-play {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(var(--s-3), 5%, var(--s-7));
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+  padding: var(--s-2) var(--s-4);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.runner-play:hover {
+  color: var(--text);
+}
+
+.runner-play:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.runner-play[hidden] {
+  display: none;
+}
+
+.runner-play::before,
+.runner-play::after {
+  content: '';
+  inline-size: var(--s-7);
+  block-size: var(--bw);
+  background: var(--line-brass);
+  /* --dur-orbit / 3: the game's own idle pulse (WORLD.pulsePeriod in world.ts) has the same period. */
+  animation: rs-breathe calc(var(--dur-orbit) / 3) ease-in-out infinite;
+}
+
+.runner-play::before {
+  transform-origin: right;
+}
+
+.runner-play::after {
+  transform-origin: left;
+}
+
+.runner-touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .runner-keys {
+    display: none;
+  }
+
+  .runner-touch {
+    display: inline;
+  }
+}
+
+/* While the game downloads, the hairlines pulse faster and the button waits. */
+.runner-stage[data-stage='loading'] .runner-play {
+  cursor: progress;
+}
+
+.runner-stage[data-stage='loading'] .runner-play::before,
+.runner-stage[data-stage='loading'] .runner-play::after {
+  animation-duration: calc(var(--dur-orbit) / 12);
+}
+
+@keyframes rs-breathe {
+  0%,
+  100% {
+    transform: scaleX(0.55);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* The game arrives over the poster in a fade. */
+.runner-stage .runner {
+  animation: rs-in var(--dur-slow) var(--ease) both;
+}
+
+@keyframes rs-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* The best score shows once there is one (the game draws 00000 before a first run). */
+.runner-stage:not([data-has-best='true']) .runner-best {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner-stage .runner {
+    animation: none;
+  }
+
+  .runner-play::before,
+  .runner-play::after,
+  .runner-stage[data-stage='loading'] .runner-play::before,
+  .runner-stage[data-stage='loading'] .runner-play::after {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}
