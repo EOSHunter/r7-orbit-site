@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { watchPage } from './helpers.js';
 
-// The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phase 1): the game loads only on Play,
-// draws into a running canvas with no console errors, and moves, jumps and pauses from the keyboard. Most tests play in the
+// The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phases 1 and 2): the game and the test
+// climb built in Blender load only on Play, draw into a running canvas with no console errors, and the agent moves, jumps and
+// pauses from the keyboard. ?level=code plays phase 1's boxes, and so does a page whose .glb failed to load. Most tests play in the
 // page (?lock=0&fullscreen=0); one plays as a visitor does, in full screen. WebGL runs on SwiftShader (software), as in
 // runner.spec.js.
 
@@ -43,6 +44,7 @@ test('Play loads the game; the canvas runs with no console errors', async ({ pag
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
   expect(scripts.length, 'the game chunk was requested on Play').toBeGreaterThan(before);
+  await expect(page.locator('[data-stat="level"]')).toHaveText('test climb (Blender)');
 
   const canvas = page.getByRole('img', { name: 'R7: Ascent, a climbing game' });
   await expect(canvas).toBeVisible();
@@ -103,6 +105,38 @@ test('the keyboard moves, jumps and pauses', async ({ page }) => {
   await expect(game(page)).toHaveAttribute('data-ascent-paused', 'false');
   await expect.poll(() => stat(page, 'time')).toBeGreaterThan(t);
   expect(await stat(page, 'jumps')).toBe(1);
+});
+
+test('the level from Blender loads only on Play; ?level=code plays the boxes in code without it', async ({
+  page,
+  baseURL,
+}) => {
+  const problems = watchPage(page, baseURL);
+  const levels = [];
+  page.on('request', (r) => r.url().endsWith('.glb') && levels.push(r.url()));
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
+  expect(levels, 'nothing heavy before Play').toEqual([]);
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  expect(levels).toHaveLength(1);
+  expect(levels[0]).toMatch(/\/_astro\/test-climb\.[\w-]+\.glb$/);
+
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0&level=code`, { waitUntil: 'networkidle' });
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(page.locator('[data-stat="level"]')).toHaveText('grey boxes (code)');
+  expect(levels).toHaveLength(1);
+  await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
+  expect(problems).toEqual([]);
+});
+
+test('a level that fails to load falls back to the boxes in code, and the game still plays', async ({ page }) => {
+  await page.route('**/*.glb', (route) => route.fulfill({ status: 404, body: '' }));
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(page.locator('[data-stat="level"]')).toContainText('the test climb did not load');
+  await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
 });
 
 test('the page and the running game pass axe; the page does not scroll sideways at 375 px', async ({ page }) => {

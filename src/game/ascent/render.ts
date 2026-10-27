@@ -1,10 +1,12 @@
-// The Three.js view: grey boxes, the capsule agent, its blob shadow and the goal ring, drawn from the sim and the camera
-// (docs/ASCENT.md, "How it looks"). It only READS them; nothing in the game's logic depends on this file. Phase 1 draws the
-// level from code; phase 2 swaps the boxes for models from Blender, with the same colours.
+// The Three.js view: the level, the capsule agent, its blob shadow and the goal ring, drawn from the sim and the camera
+// (docs/ASCENT.md, "How it looks"). It only READS them; nothing in the game's logic depends on this file. A level made in
+// Blender (gltf-level.ts) is drawn from its scenery meshes and its GOAL; phase 1's level in code, from its boxes and a ring
+// made here. Both look the same.
 //
 // The look, "blueprint noir": the blocks are unlit and shaded by tone alone (tops lightest, then the sides, the two pairs of
 // sides a step apart, so a block's shape reads without lights), with thin ivory edge lines over them; fog fades both into the
-// background. Brass is the visor and the ring only. Every colour comes from the tokens (colors.ts).
+// background. Brass is the visor and the ring only. Every colour comes from the tokens (colors.ts): a Blender mesh's own
+// material is swapped for the tones of its name (LEVEL_MATERIALS).
 //
 // three.js is imported from its ES sources (`three/src/Three.js`, one of the package's exports), not from `three`: imported by
 // the same name as the runner's, the bundler moves three.js into a chunk the two games share, and the 404 page's idle prefetch
@@ -19,6 +21,7 @@ import {
   CylinderGeometry,
   Color,
   DirectionalLight,
+  EdgesGeometry,
   Float32BufferAttribute,
   Fog,
   Group,
@@ -31,12 +34,14 @@ import {
   SRGBColorSpace,
   Scene,
   TorusGeometry,
+  Vector3,
   WebGLRenderer,
   type Material,
 } from 'three/src/Three.js';
 import type { OrbitCamera } from './camera';
-import type { Rgb, SceneColors } from './colors';
+import { LEVEL_MATERIALS, type Rgb, type SceneColors } from './colors';
 import { ASCENT_CONFIG, type AscentConfig } from './config';
+import type { LevelModel, SceneryMesh } from './gltf-level';
 import type { Level, LevelBox } from './level';
 import type { AscentSim } from './sim';
 
@@ -59,6 +64,8 @@ export interface View {
 export interface ViewOptions {
   colors: SceneColors;
   level: Level;
+  /** The level's meshes, when it was made in Blender; without it the level's boxes are drawn. */
+  model?: LevelModel | null;
   config?: AscentConfig;
   /** Hold the goal ring still. */
   reducedMotion?: boolean;
@@ -191,6 +198,60 @@ function levelGeometry(boxes: readonly LevelBox[], colors: SceneColors) {
   return { faces, lines };
 }
 
+/** Edges between faces that meet at a sharper angle than this are drawn (a round mesh's facets are not; its rims are). */
+const EDGE_ANGLE = 30;
+
+/**
+ * Every scenery mesh of a Blender level in world space, as one mesh with a colour per face (its material's tones, mixed by
+ * the way the face points) and one set of edge lines: two draw calls for the whole level, like the boxes above.
+ */
+function sceneryGeometry(scenery: readonly SceneryMesh[], colors: SceneColors) {
+  const pos: number[] = [];
+  const col: number[] = [];
+  const edges: number[] = [];
+  const a = new Vector3();
+  const b = new Vector3();
+  const c = new Vector3();
+  const n = new Vector3();
+  for (const { mesh, material } of scenery) {
+    const tones = LEVEL_MATERIALS[material];
+    const [top, sideX, sideZ, bottom] = [tones.top, tones.sideX, tones.sideZ, tones.bottom].map((t) =>
+      toColor(colors[t]),
+    );
+    const tris = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
+    tris.applyMatrix4(mesh.matrixWorld);
+    const p = tris.getAttribute('position');
+    for (let i = 0; i + 2 < p.count; i += 3) {
+      a.fromBufferAttribute(p, i);
+      b.fromBufferAttribute(p, i + 1);
+      c.fromBufferAttribute(p, i + 2);
+      n.subVectors(c, b).cross(a.clone().sub(b)).normalize();
+      const w = [Math.abs(n.x), Math.abs(n.z), Math.max(n.y, 0), Math.max(-n.y, 0)];
+      const sum = w[0] + w[1] + w[2] + w[3] || 1;
+      const r = (sideX.r * w[0] + sideZ.r * w[1] + top.r * w[2] + bottom.r * w[3]) / sum;
+      const g = (sideX.g * w[0] + sideZ.g * w[1] + top.g * w[2] + bottom.g * w[3]) / sum;
+      const bl = (sideX.b * w[0] + sideZ.b * w[1] + top.b * w[2] + bottom.b * w[3]) / sum;
+      for (const v of [a, b, c]) {
+        pos.push(v.x, v.y, v.z);
+        col.push(r, g, bl);
+      }
+    }
+    tris.dispose();
+    if (tones.edges) {
+      const lines = new EdgesGeometry(mesh.geometry, EDGE_ANGLE);
+      lines.applyMatrix4(mesh.matrixWorld);
+      edges.push(...(lines.getAttribute('position').array as Float32Array));
+      lines.dispose();
+    }
+  }
+  const faces = new BufferGeometry();
+  faces.setAttribute('position', new Float32BufferAttribute(pos, 3));
+  faces.setAttribute('color', new Float32BufferAttribute(col, 3));
+  const lines = new BufferGeometry();
+  lines.setAttribute('position', new Float32BufferAttribute(edges, 3));
+  return { faces, lines };
+}
+
 /** The view, drawing into `canvas`; null when no WebGL context can be made (the caller shows the fallback). */
 export function createView(canvas: HTMLCanvasElement, options: ViewOptions): View | null {
   if (!hasWebGL(canvas.ownerDocument)) return null;
@@ -216,7 +277,8 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   const camera = new PerspectiveCamera(r.fov, 16 / 9, 0.05, r.fog.far + 30);
 
   // The level: tone-shaded faces pushed back a little so the edge lines on them never flicker.
-  const { faces, lines } = levelGeometry(level.boxes, colors);
+  const model = options.model ?? null;
+  const { faces, lines } = model ? sceneryGeometry(model.scenery, colors) : levelGeometry(level.boxes, colors);
   const blocks = new Mesh(
     geo(faces),
     mat(
@@ -272,13 +334,19 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   shadow.rotation.x = -Math.PI / 2;
   scene.add(shadow);
 
-  // The goal ring: brass, tilted like the ring in the logo, turning slowly.
+  // The goal ring: brass, tilted like the ring in the logo, turning slowly about the vertical through its middle. From
+  // Blender, its GOAL mesh keeps its tilt and size; in code, a ring is made here.
   const ring = new Group();
-  const torus = new Mesh(
-    geo(new TorusGeometry(2.2, 0.07, 8, 72)),
-    mat(new MeshBasicMaterial({ color: toColor(colors.brass) })),
-  );
-  torus.rotation.x = Math.PI / 2 - 0.42;
+  const brass = mat(new MeshBasicMaterial({ color: toColor(colors.brass) }));
+  const torus = model?.goal
+    ? new Mesh(geo(model.goal.geometry), brass)
+    : new Mesh(geo(new TorusGeometry(2.2, 0.07, 8, 72)), brass);
+  if (model?.goal) {
+    model.goal.updateWorldMatrix(true, false);
+    model.goal.matrixWorld.decompose(new Vector3(), torus.quaternion, torus.scale);
+  } else {
+    torus.rotation.x = Math.PI / 2 - 0.42;
+  }
   ring.add(torus);
   ring.position.set(level.goal.x, level.goal.y, level.goal.z);
   scene.add(ring);

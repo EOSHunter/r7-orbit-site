@@ -32,6 +32,49 @@ function runnerChunkUrl() {
       const ref = this.emitFile({ type: 'chunk', id: RUNNER_ENTRY });
       return `export default import.meta.ROLLUP_FILE_URL_${ref};`;
     },
+    // The prefetch fetches that one file, so the game must be all in it: a chunk it imports (three.js split out and shared
+    // with another page's game, say) would only load on the first interaction. Stop the build rather than ship that.
+    generateBundle(_options, bundle) {
+      if (!build || this.environment?.name !== 'client') return;
+      const entry = RUNNER_ENTRY.replaceAll('\\', '/');
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk' || chunk.facadeModuleId?.replaceAll('\\', '/') !== entry) continue;
+        if (chunk.imports.length) {
+          this.error(
+            `The runner's chunk ${chunk.fileName} imports ${chunk.imports.join(', ')}; the 404 page's prefetch needs it whole`,
+          );
+        }
+      }
+    },
+  };
+}
+
+// R7: Ascent has its own copy of three.js (docs/DECISIONS.md, "R7: Ascent, phase 2"). Two games importing `three` by the
+// same name would have it split into a chunk they share, which the runner's prefetch above would not fetch. So every import
+// of `three` from src/game/ascent/ resolves to three's ES sources (three/src/Three.js, which the runner never loads), and
+// each three/examples module Ascent imports (GLTFLoader and what it imports) is loaded as a copy of its own, marked with a
+// query, whose `three` resolves the same way. The runner's chunk stays what it was; a visitor who plays both games
+// downloads three.js twice.
+const ASCENT_DIR = fileURLToPath(new URL('./src/game/ascent/', import.meta.url)).replaceAll('\\', '/');
+const THREE_SRC = fileURLToPath(new URL('./node_modules/three/src/Three.js', import.meta.url)).replaceAll('\\', '/');
+const ASCENT_COPY = '?ascent-three';
+function ascentOwnThree() {
+  return {
+    name: 'ascent-own-three',
+    enforce: 'pre',
+    async resolveId(source, importer, options) {
+      if (!importer) return null;
+      const copy = importer.endsWith(ASCENT_COPY);
+      const from = importer.replaceAll('\\', '/').replace(ASCENT_COPY, '');
+      if (!copy && !from.startsWith(ASCENT_DIR)) return null;
+      if (source === 'three') return THREE_SRC;
+      if (!copy && !/^three\/(examples|addons)\//.test(source)) return null;
+      const resolved = await this.resolve(source, from, { ...options, skipSelf: true });
+      if (!resolved || resolved.external) return resolved;
+      return /\/node_modules\/three\/examples\//.test(resolved.id.replaceAll('\\', '/'))
+        ? resolved.id + ASCENT_COPY
+        : resolved;
+    },
   };
 }
 
@@ -53,6 +96,6 @@ export default defineConfig({
     }),
   },
   // No modulepreload helper: it is an extra request on every page, and search.js is the only dynamic import.
-  vite: { build: { modulePreload: false, assetsInlineLimit: 16384 }, plugins: [runnerChunkUrl()] },
+  vite: { build: { modulePreload: false, assetsInlineLimit: 16384 }, plugins: [runnerChunkUrl(), ascentOwnThree()] },
   devToolbar: { enabled: false },
 });

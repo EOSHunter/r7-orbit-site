@@ -6,7 +6,9 @@ The plan for a game on the site: a 3D climbing game in the style of *Only Up!*. 
 unlinked styleguide route before it has a public page.
 
 **Where it is:** phase 1, the feel prototype, is built at `/styleguide/ascent/` (noindex, unlinked, like the rest of the
-styleguide) and waits for the author to play it (below, "Phase 1: Feel prototype"). Nothing else is built yet.
+styleguide) and waits for the author to play it (below, "Phase 1: Feel prototype"). Phase 2 has started with the Blender
+pipeline: the page now plays a short test climb built by a Blender script (below, "Phase 2"). Touch controls, the HUD, saving
+and assist mode are not built yet.
 
 ## The pitch
 
@@ -37,7 +39,8 @@ comes from tone, as the design system asks (`CLAUDE.md` design rule 5).
 - **Colours come from the tokens, read at runtime.** The game reads each colour it uses from `tokens.css` with
   `getComputedStyle` when it mounts (`src/game/ascent/colors.ts`), so there are no hex values in the game code and a token
   change reaches the game without an edit. (The runner copies its colours into `config.ts` instead; Ascent does not.) Blender
-  files use a few named materials (`obsidian`, `obsidian-light`, `brass`, `ivory`); the game swaps each for its token colour.
+  files use a few named materials (`obsidian`, `obsidian-dark`, `brass`, `ivory`: `LEVEL_MATERIALS` in `colors.ts`); the
+  game swaps each for its token colours, shading each face by the way it points (tops lightest), as below.
 - **Edge lines are drawn by the game** (Three.js `EdgesGeometry` over each mesh), not modelled.
 - **Type in the HUD:** JetBrains Mono for numbers (altitude, time), Inter for labels, as on the rest of the site.
 - **The character:** a small capsule-shaped "agent" in ivory with a brass visor. Simple to animate and reads well from
@@ -107,18 +110,26 @@ in Node, apart from a read-only Three.js view.
 | `config.ts` | every tunable number: the fixed step, movement, jump, coyote time, jump buffer, gravity, the agent's box, the camera, the fall height that respawns, the render limits |
 | `collision.ts` | box-only collision: axis-aligned boxes (later: rotated about the vertical axis only), the agent's box moved one axis at a time against them, what it stands on |
 | `sim.ts` | `AscentSim`: one fixed step of movement, jumping (coyote time, buffer), gravity, landing, falling and respawning, the altitude |
-| `level.ts` | the course as data: a list of boxes and a spawn point. Phase 1 lays it out in code; phase 2 reads it from a `.glb` |
+| `level.ts` | the course as data: a list of boxes, a spawn point, the route and the goal. `PROTOTYPE_LEVEL` is phase 1's, laid out in code; `levelFromObjects` makes one from a Blender level's objects, with the rules below |
+| `gltf-level.ts` | a level made in Blender, read with `GLTFLoader`: its `Level`, its scenery meshes and its `GOAL` (`LevelModel`) |
 | `clock.ts` | the fixed-step clock (the runner's, 1/120 s, with an accumulator and interpolation) |
 | `input.ts` | keys and the mouse to a move vector, jump presses and a look delta, relative to the camera |
 | `camera.ts` | the third-person orbit camera: yaw and pitch from the look input, a spring on the follow, pulled in when a box is in the way |
-| `colors.ts` | the scene's colours, read from the tokens at runtime |
+| `colors.ts` | the scene's colours, read from the tokens at runtime; the material names a level may use and their tones |
 | `render.ts` | the Three.js view: reads the sim, draws the scene; `createView()` is null without WebGL |
 | `gesture.ts` | full screen and the pointer lock, asked for inside the click or key press that starts or resumes the climb; small and free of three.js, so the page's Play button can use it before the game has loaded |
-| `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup |
+| `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup; `loadTestClimb()` |
 | `ascent.css` | the HUD's styles, tokens only; imported by the page that hosts the game |
 
 `index.ts` is reached only through a dynamic `import()`, so three.js and the game are a lazy chunk loaded on Play and never in
 a page's first load. Unit tests sit beside the code as `*.vitest.ts`.
+
+**Ascent's own copy of three.js.** The runner (on the 404 page) and Ascent both use three.js. Imported by the same name, the
+bundler would move three.js into a chunk the two games share, and the 404 page's idle prefetch, which fetches the runner's
+chunk alone, would stop fetching it. So Ascent imports three.js from its ES sources (`three/src/Three.js`), and a small Vite
+plugin in `astro.config.mjs` (`ascentOwnThree`) makes `GLTFLoader` do the same: every `three/examples` module Ascent imports
+is loaded as a copy of its own, whose `three` is the ES sources too. Each game's chunk carries its own three.js; a visitor
+who plays both downloads it twice. The build stops if the runner's chunk ever imports another chunk (`runnerChunkUrl`).
 
 ## Art pipeline: Blender to Three.js
 
@@ -135,9 +146,10 @@ open Blender. This is the runner's pipeline (`tools/runner/build_rover.py`) at a
    the game (`CLAUDE.md`: generated images need the author's approval, one by one). Approved previews are kept in
    `docs/ascent-concepts/`, as the rover's are in `docs/runner-concepts/`.
 3. **Export:** glTF binary (`.glb`), +Y up, 1 Blender unit = 1 metre, custom properties included (they arrive in Three.js as
-   `userData`). No textures, UVs, Draco or meshopt (no decoder in the chunk).
-4. **Load:** Three.js `GLTFLoader` (part of `three`, already in the runner's chunk; not another dependency). Each file is a
-   Vite asset (`?url`, hashed, cached for a year by `_headers`), like `rover.glb`.
+   `userData`). No textures, UVs, normals, Draco or meshopt (no decoder in the chunk); the game works out each face's shading
+   from its corners.
+4. **Load:** Three.js `GLTFLoader` (part of `three`; not another dependency), in Ascent's own copy of three.js ("Code"
+   above). Each file is a Vite asset (`?url`, hashed, cached for a year by `_headers`), like `rover.glb`.
 
 ### Blender is the level editor
 
@@ -146,24 +158,32 @@ The climb is laid out in Blender. Game objects are marked by name or by custom p
 | In Blender | In the game |
 |---|---|
 | Any mesh | Scenery |
-| A box named `COL_…` | An invisible collision box |
-| An empty named `SPAWN` | Where the climb starts |
+| A box named `COL_…` | An invisible collision box. Axis-aligned: never rotated (a quarter turn about Z is allowed) |
+| … with custom property `route` = n | The n-th block of the climb (1, 2, 3 … with no gaps): the fairness test walks them in order |
+| … with custom property `ground` | The floor |
+| An empty named `SPAWN` | Where the climb starts; the agent faces the empty's +Y (turn it about Z to turn the agent) |
 | Custom property `beacon` | An assist-mode checkpoint |
 | Custom property `fan`, with `strength` | An updraft |
 | Custom property `mover`, with a path and `speed` | A drifting block |
 | Custom property `crumble`, with `delay` | A plate that breaks after you stand on it |
-| An object named `GOAL` | The orbit ring; touching it finishes the run |
+| An object named `GOAL` | The orbit ring, turned about the vertical through its origin; touching it finishes the run (phase 3) |
+| A material named `obsidian`, `obsidian-dark`, `brass` or `ivory` | The token tones the mesh is drawn in. Any other name stops the level from loading |
 
-**Collision is boxes only**, written for the game (no physics engine; one would add hundreds of kB). Boxes may be rotated
-about the vertical axis but not tilted. That keeps collision fast and predictable, and suits the blocky look. Scenery can be
-any shape; only the `COL_` boxes count for standing and bumping.
+**Collision is boxes only**, written for the game (no physics engine; one would add hundreds of kB). Boxes may later be
+rotated about the vertical axis (`collision.ts` does not support that yet) but never tilted. That keeps collision fast and
+predictable, and suits the blocky look. Scenery can be any shape; only the `COL_` boxes count for standing and bumping, so a
+round mug gets a square box a little inside it.
+
+`levelFromObjects` (`level.ts`) checks a level file as it loads and stops with a message naming the object: no `SPAWN` or
+`GOAL` (or two), a turned or flat `COL_` box, a route number missing, repeated or not whole. A box's corners are snapped to
+0.1 mm, because the file's float32 can leave two faces that meet in Blender a hair inside each other.
 
 ### Files
 
 | Path | What | In git |
 |---|---|---|
 | `tools/ascent/` | The Blender Python scripts: the source of every model and zone | Yes |
-| `tools/ascent/out/` | `.blend` files and preview renders the scripts produce, for looking around and for approval | No (rebuilt from the scripts; ignored when the first script lands) |
+| `tools/ascent/out/` | `.blend` files and preview renders the scripts produce, for looking around and for approval | No (rebuilt from the scripts; in `.gitignore`) |
 | `docs/ascent-concepts/` | The approved preview renders | Yes |
 | `src/game/ascent/assets/` | Exported `.glb` files the game loads (where the runner keeps `rover.glb`) | **Yes**, so the site build (and Cloudflare) never needs Blender |
 | `src/game/ascent/` | Game code (TypeScript) | Yes |
@@ -176,9 +196,9 @@ Rebuilding models needs Blender installed. Building the site does not.
 | What | Target |
 |---|---|
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
-| Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, **143 kB gzipped** (three.js is nearly all of it; `GLTFLoader` will add about 25 kB in phase 2, as it did for the runner) |
+| Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, **171 kB gzipped** (three.js is nearly all of it) |
 | The character `.glb` | < 150 kB |
-| Each zone `.glb` | < 500 kB, loaded as the player nears it |
+| Each zone `.glb` | < 500 kB, loaded as the player nears it. The test climb is 52 kB (11 kB gzipped), 1,892 triangles of scenery and ring (the ring is 1,152 of them) |
 
 If the `.glb` files outgrow these, a build step with `gltfpack` (mesh compression) can shrink them. It is a dev dependency,
 so ask first.
@@ -254,10 +274,33 @@ browser refuses the lock, "Click to look around with the mouse" shows in the mid
 - [ ] HUD (altitude, time, zone altimeter) and pause menu
 - [ ] Save and resume; settings
 - [ ] Assist mode and beacons
-- [ ] The Blender pipeline: one script in `tools/ascent/`, export, `GLTFLoader`, collision and markers read from
+- [x] The Blender pipeline: one script in `tools/ascent/`, export, `GLTFLoader`, collision and markers read from
       `userData`, materials swapped for token colours
 
 **Done when:** a short test climb built in Blender plays on desktop and a phone, and survives a reload.
+
+**What was built (the pipeline, 2026-10-27).** `tools/ascent/build_test_climb.py` builds the test climb from numbers in the
+script and exports `src/game/ascent/assets/test-climb.glb`:
+
+```
+"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" -b --factory-startup -P tools/ascent/build_test_climb.py
+"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" -b --factory-startup -P tools/ascent/build_test_climb.py -- --preview
+```
+
+The second also writes three stills (`test-climb-start.png`, `-overview.png`, `-top.png`) and `test-climb.blend` to
+`tools/ascent/out/`. The stills are close to the game's look (each face in its tone, ivory edges, obsidian background) but
+have no fog. They wait for the author's approval; none is in `docs/ascent-concepts/` yet.
+
+The climb is a giant workshop desk at the agent's scale: two books on the floor, a stool, a chair turned round (its seat,
+then the top of its back, a 0.4 m beam), the desk top at 6 m, a keyboard, a mug, two upright books, the top edge of the
+monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the ring above. 13 jumps, 36 scenery meshes,
+30 `COL_` boxes. The agent starts where phase 1's did (0, 0, 10 in the game), facing the desk.
+
+`/styleguide/ascent/` loads it on Play, after the game's chunk; the debug readout says which level is playing.
+`?level=code` plays phase 1's boxes, and so does a page whose `.glb` failed to load (the readout says why). In the tests:
+`level.vitest.ts` runs the fairness checks on both levels, the test climb read from the committed file through
+`gltf-level.ts`; `gltf-level.vitest.ts` covers the file rules and walks the sim into the first book's side and onto it; and
+`tests/ascent.spec.js` checks that the `.glb` loads only on Play, `?level=code` and the fallback.
 
 ### Phase 3: The full climb
 

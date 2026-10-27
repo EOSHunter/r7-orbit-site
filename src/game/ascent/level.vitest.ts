@@ -1,9 +1,23 @@
-// The prototype course is climbable with the jump in config.ts: every step of the route is within reach, with a margin, and
-// nothing overlaps. A change to the jump (or to the course) that breaks a step fails here, naming it.
+// Both levels are climbable with the jump in config.ts: every step of the route is within reach, with a margin, and nothing
+// overlaps. A change to the jump, to the course in code, or to the Blender script (rebuilt into the .glb) that breaks a step
+// fails here, naming it. The test climb is read from the committed .glb through the game's own loader (gltf-level.ts).
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { ASCENT_CONFIG, jumpReach } from './config';
 import { groundBelow, overlaps } from './collision';
-import { PROTOTYPE_LEVEL as level, type LevelBox } from './level';
+import { parseLevelModel } from './gltf-level';
+import { PROTOTYPE_LEVEL, type Level, type LevelBox } from './level';
+
+const glb = await readFile(new URL('./assets/test-climb.glb', import.meta.url));
+const testClimb = await parseLevelModel(
+  glb.buffer.slice(glb.byteOffset, glb.byteOffset + glb.byteLength),
+  'test-climb.glb',
+);
+
+const LEVELS: [string, Level][] = [
+  ['the prototype course (code)', PROTOTYPE_LEVEL],
+  ['the test climb (Blender)', testClimb.level],
+];
 
 /** The shortest distance across the ground between two boxes' footprints (0 when they overlap seen from above). */
 function gap(a: LevelBox, b: LevelBox): number {
@@ -17,7 +31,7 @@ const MARGIN = 0.8;
 /** The highest step up, as a share of the jump's height: the feet need to clear the edge with room to spare. */
 const MAX_RISE = 0.8;
 
-describe('the prototype course', () => {
+describe.each(LEVELS)('%s', (_name, level) => {
   const route = level.route.map((i) => level.boxes[i]);
 
   it('starts on the ground, clear of every block', () => {
@@ -27,7 +41,8 @@ describe('the prototype course', () => {
   it('has no two solids overlapping', () => {
     for (let i = 0; i < level.boxes.length; i++) {
       for (let j = i + 1; j < level.boxes.length; j++) {
-        expect(overlaps(level.boxes[i], level.boxes[j]), `boxes ${i} and ${j}`).toBe(false);
+        const [a, b] = [level.boxes[i], level.boxes[j]];
+        expect(overlaps(a, b), `boxes ${a.name ?? i} and ${b.name ?? j}`).toBe(false);
       }
     }
   });
@@ -37,7 +52,7 @@ describe('the prototype course', () => {
       const from = route[i - 1];
       const to = route[i];
       const rise = to.max.y - from.max.y;
-      const name = `step ${i} (to block ${level.route[i]})`;
+      const name = `step ${i} (to ${to.name ?? `block ${level.route[i]}`})`;
       expect(rise, `${name}: rise`).toBeLessThanOrEqual(ASCENT_CONFIG.jump.height * MAX_RISE);
       expect(gap(from, to), `${name}: gap`).toBeLessThanOrEqual(jumpReach(rise) * MARGIN);
     }

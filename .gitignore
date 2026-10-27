@@ -18,3 +18,6 @@ playwright-report/
 
 # the waitlist export (npm run waitlist:export): people's addresses, never in git
 waitlist.csv
+
+# R7: Ascent: what the Blender scripts write besides the .glb files (.blend files, preview renders)
+tools/ascent/out/
