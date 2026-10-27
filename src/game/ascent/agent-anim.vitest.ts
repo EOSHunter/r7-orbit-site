@@ -13,6 +13,7 @@ const FLAT: Level = {
   boxes: [{ kind: 'ground', min: { x: -200, y: -1, z: -200 }, max: { x: 200, y: 0, z: 200 } }],
   route: [],
   goal: { x: 0, y: 50, z: 0 },
+  beacons: [],
 };
 
 const A = ASCENT_CONFIG.animation;

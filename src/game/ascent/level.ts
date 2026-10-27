@@ -24,7 +24,23 @@ export interface Level {
   route: number[];
   /** The middle of the goal ring (drawn only in phase 1: touching it does nothing yet). */
   goal: Vec3;
+  /** Assist mode's checkpoints, in climbing order: where the agent's feet go when it returns to one. */
+  beacons: Vec3[];
+  /** The climb's zones, bottom to top (the HUD's altimeter); a level without them is one zone from the start to the goal. */
+  zones?: LevelZone[];
 }
+
+export interface LevelZone {
+  n: number;
+  title: string;
+  /** Heights (metres, the feet) where it starts and ends. */
+  base: number;
+  top: number;
+}
+
+/** A level's zones, or one zone from the start to the goal when it has none. */
+export const zonesOf = (level: Level): LevelZone[] =>
+  level.zones?.length ? level.zones : [{ n: 1, title: '', base: level.spawn.y, top: level.goal.y }];
 
 /** A block `w` wide (x) and `d` deep (z), its top face at `top`, `h` thick. */
 function block(x: number, top: number, z: number, w: number, d: number, h = 0.6): LevelBox {
@@ -83,6 +99,12 @@ export const PROTOTYPE_LEVEL: Level = {
   boxes: [GROUND, ...ROUTE, ...SCENERY],
   route: ROUTE.map((_, i) => i + 1),
   goal: { x: -4.5, y: 22, z: 2 },
+  // On the first wide step, the first beam's far end and the beam across (assist mode).
+  beacons: [
+    { x: 0, y: 1.6, z: 2 },
+    { x: 8.5, y: 5.2, z: -13.5 },
+    { x: 2.5, y: 13.2, z: 2.6 },
+  ],
 };
 
 /** An object of a level file as the loader saw it, in world space (metres, +Y up). */
@@ -105,6 +127,7 @@ export const LEVEL_NAMES = {
   collision: 'COL_',
   spawn: 'SPAWN',
   goal: 'GOAL',
+  beacon: 'BEACON_',
   route: 'route',
   ground: 'ground',
 } as const;
@@ -191,11 +214,24 @@ export function levelFromObjects(objects: readonly LevelObject[], source = 'the 
   }
   if (route.length < 2) fail('its route has fewer than two blocks');
 
+  // Beacons (BEACON_<n>, custom property beacon = n): in order of n, which need not start at 1 (a zone's first beacon
+  // carries on from the zone below's).
+  const beacons = objects
+    .filter((o) => o.name.startsWith(LEVEL_NAMES.beacon))
+    .map((o) => {
+      const n = o.userData.beacon;
+      if (typeof n !== 'number' || !Number.isInteger(n)) fail(`${o.name} has beacon ${String(n)}`);
+      return { n: n as number, at: { ...o.position } };
+    })
+    .sort((a, b) => a.n - b.n)
+    .map((b) => b.at);
+
   return {
     spawn: { ...spawn.position },
     spawnYaw: yawOf(spawn.rotation),
     boxes,
     route,
     goal: { ...goal.position },
+    beacons,
   };
 }

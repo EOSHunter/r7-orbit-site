@@ -4,16 +4,22 @@
 // stays synchronous; without them the game plays phase 1's level in code, as phase 1's capsule.
 //
 // The host supplies the container: positioned (the game fills it), focusable (tabindex="0"), with an accessible name and its
-// instructions as text (aria-describedby). The game adds its canvas, the altitude, a message and a live region inside it,
-// and destroy() removes all of it, every listener, the animation frame, the observer and the WebGL context.
+// instructions as text (aria-describedby). The game adds its canvas, the HUD, a message with the menu, the touch controls and
+// a live region inside it, and destroy() removes all of it, every listener, the animation frame, the observer and the WebGL
+// context.
 //
 // Time: the rAF timestamp drives a fixed-step clock (clock.ts); the camera follows on the frame's real time. The game pauses
-// when the tab is hidden, the window loses focus, focus leaves the game, Escape is pressed, the pointer lock is let go, or
-// full screen ends.
+// when the tab is hidden, the window loses focus, focus leaves the game, Escape (or the touch pause button) is pressed, the
+// pointer lock is let go, full screen ends, or a phone turns upright.
 //
 // Full screen and the pointer lock belong to the container (gesture.ts): the host asks for them in its Play click, before
 // this module has loaded, and the game asks again on the click or Space that resumes. Paused, the game stays in full screen;
 // Escape again (the browser's own key for it) leaves it.
+//
+// The HUD (docs/ASCENT.md, "HUD"): the altitude, the best, the falls and the zone top left, the time top right, an altimeter
+// down the left edge (a tick per zone, a brass marker for where the agent is), and the controls hint for the first minute.
+// Paused, the message holds the menu: resume, restart, assist mode, settings, leave. The settings (settings.ts) and the climb
+// in progress (save.ts) are kept in the browser; a saved climb is offered back on the ready screen.
 
 import { loadAgentModel, type AgentModel } from './agent';
 import { OrbitCamera } from './camera';
@@ -23,10 +29,21 @@ import { ASCENT_CONFIG, type AscentConfig } from './config';
 import { enterPlay, leavePlay } from './gesture';
 import { createInput, moveVector, turnInput } from './input';
 import { loadLevelModel, type LevelModel } from './gltf-level';
-import { PROTOTYPE_LEVEL, type Level } from './level';
+import { PROTOTYPE_LEVEL, zonesOf, type Level } from './level';
 import { createView, type View, type ViewInfo, type ViewOptions } from './render';
+import { clearSave, formatTime, loadSave, writeSave, type AscentSave } from './save';
+import {
+  SENSITIVITY_RANGE,
+  loadSettings,
+  reducesMotion,
+  saveSettings,
+  storage,
+  type AscentSettings,
+  type MotionSetting,
+} from './settings';
 import { AscentSim } from './sim';
 import { ASCENT_TEXT } from './text';
+import { createTouchControls } from './touch';
 import agentUrl from './assets/agent.glb?url';
 import testClimbUrl from './assets/test-climb.glb?url';
 
@@ -63,6 +80,8 @@ export interface AscentStats {
   falls: number;
   jumps: number;
   time: number;
+  assist: boolean;
+  checkpoint: number | null;
   cameraYaw: number;
   cameraPitch: number;
   cameraDistance: number;
@@ -76,12 +95,18 @@ export interface AscentOptions {
   level?: Level;
   /** The robot (loadAgent); without it the capsule stands in. */
   agent?: AgentModel | null;
+  /** The level's name in a saved climb (a save is only offered back on the same level). Default: none, nothing is saved. */
+  saveAs?: string | null;
   /** Move keyboard focus to the container on mount (default true). */
   focus?: boolean;
   /** Ask for pointer lock when a climb starts or resumes, and on a click (default true). Without it, drag to look. */
   pointerLock?: boolean;
   /** Put the container in full screen when a climb starts or resumes (default false: the host decides). */
   fullscreen?: boolean;
+  /** Show the touch controls from the start (default: when the device's main pointer is coarse, or on the first touch). */
+  touch?: boolean;
+  /** The menu's Leave: the host takes the game away (without it, the menu has no Leave). */
+  onLeave?: () => void;
   /** Called after every frame (the prototype page's debug readout and its tests). */
   onStats?: (stats: AscentStats) => void;
 }
@@ -101,6 +126,11 @@ export interface AscentDeps {
   createView: (canvas: HTMLCanvasElement, options: ViewOptions) => View | null;
 }
 
+/** Save the climb this often while playing (and on every pause). */
+const SAVE_EVERY = 5;
+/** Touch looks this much faster than the mouse at the same setting (a thumb travels less than a mouse). */
+const TOUCH_LOOK = 1.8;
+
 export function mountAscent(
   container: HTMLElement,
   options: AscentOptions = {},
@@ -112,6 +142,8 @@ export function mountAscent(
   const doc = container.ownerDocument;
   const win = doc.defaultView;
   if (!win) throw new Error('mountAscent: the container is not in a window');
+  const store = storage(win);
+  const saveAs = options.saveAs ?? null;
 
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) => {
     const node = doc.createElement(tag);
@@ -128,14 +160,16 @@ export function mountAscent(
   root.append(canvas);
   container.append(root);
 
-  const reducedMotion = win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  let settings: AscentSettings = loadSettings(store);
+  const systemMotion = win.matchMedia?.('(prefers-reduced-motion: reduce)');
+  const reduce = () => reducesMotion(settings, systemMotion?.matches ?? false);
   const view = deps.createView(canvas, {
     colors: readTokenColors(root),
     level,
     model,
     agent: options.agent ?? null,
     config: cfg,
-    reducedMotion,
+    reducedMotion: reduce,
   });
   if (!view) {
     canvas.remove();
@@ -145,7 +179,10 @@ export function mountAscent(
     return { start: noop, pause: noop, resume: noop, restart: noop, destroy: () => root.remove() };
   }
 
-  // The altitude, best and falls (top left), the message (middle), the controls hint (bottom), a live region for falls.
+  // ---- the HUD ----------------------------------------------------------------------------------------------------------
+  // The altitude, best, falls and zone (top left), the time (top right), the altimeter (left edge), the message (middle), the
+  // controls hint (bottom), a live region for falls.
+  const zones = zonesOf(level);
   const hud = el('div', 'ascent-hud');
   const altLine = el('p', 'ascent-alt');
   const altValue = el('span', undefined, '0');
@@ -156,11 +193,93 @@ export function mountAscent(
   const fallsLine = el('p', 'ascent-sub', `${ASCENT_TEXT.falls} `);
   const fallsValue = el('span', undefined, '0');
   fallsLine.append(fallsValue);
-  hud.append(altLine, bestLine, fallsLine);
+  const zoneLine = el('p', 'ascent-sub ascent-zone');
+  hud.append(altLine, bestLine, fallsLine, zoneLine);
+  const timeLine = el('p', 'ascent-time');
+  const timeValue = el('span', undefined, '0:00');
+  timeLine.append(el('span', 'visually-hidden', `${ASCENT_TEXT.time} `), timeValue);
+  // The altimeter: a line down the left edge, a tick where each zone starts, the brass marker at the agent's height.
+  const bottom = zones[0].base;
+  const height = Math.max(1, zones[zones.length - 1].top - bottom);
+  const altimeter = el('div', 'ascent-altimeter');
+  altimeter.setAttribute('aria-hidden', 'true');
+  for (const z of zones.slice(1)) {
+    const tick = el('span', 'ascent-altimeter-tick');
+    tick.style.bottom = `${((z.base - bottom) / height) * 100}%`;
+    altimeter.append(tick);
+  }
+  const marker = el('span', 'ascent-altimeter-marker');
+  altimeter.append(marker);
+
+  // ---- the message and the menu -----------------------------------------------------------------------------------------
   const message = el('div', 'ascent-message');
   const title = el('p', 'ascent-title', ASCENT_TEXT.title);
   const prompt = el('p', 'ascent-prompt', ASCENT_TEXT.play);
-  message.append(title, prompt);
+  const menu = el('div', 'ascent-menu');
+  menu.setAttribute('role', 'group');
+  menu.setAttribute('aria-label', ASCENT_TEXT.menuLabel);
+  const button = (text: string, cls = 'btn') => {
+    const b = el('button', cls, text);
+    b.type = 'button';
+    return b;
+  };
+  const continueButton = button(ASCENT_TEXT.continueClimb, 'btn solid');
+  const newClimbButton = button(ASCENT_TEXT.newClimb);
+  const resumeButton = button(ASCENT_TEXT.resume, 'btn solid');
+  const restartButton = button(ASCENT_TEXT.restart);
+  const assistButton = button(ASCENT_TEXT.assist);
+  assistButton.setAttribute('aria-pressed', 'false');
+  const settingsButton = button(ASCENT_TEXT.settings);
+  settingsButton.setAttribute('aria-expanded', 'false');
+  const leaveButton = button(ASCENT_TEXT.leave, 'btn quiet');
+  const assistNote = el('p', 'ascent-note', ASCENT_TEXT.assistNote);
+  menu.append(continueButton, newClimbButton, resumeButton, restartButton, assistButton, settingsButton, leaveButton);
+
+  // The settings: look speed, invert, motion.
+  const panel = el('div', 'ascent-settings');
+  panel.setAttribute('role', 'group');
+  panel.setAttribute('aria-label', ASCENT_TEXT.settingsLabel);
+  panel.hidden = true;
+  const uid = `ascent-${Math.random().toString(36).slice(2, 8)}`;
+  const speedField = el('div', 'field');
+  const speedLabel = el('label', undefined, ASCENT_TEXT.sensitivity);
+  speedLabel.htmlFor = `${uid}-speed`;
+  const speed = el('input', 'ascent-range');
+  speed.type = 'range';
+  speed.id = `${uid}-speed`;
+  speed.min = String(SENSITIVITY_RANGE.min);
+  speed.max = String(SENSITIVITY_RANGE.max);
+  speed.step = String(SENSITIVITY_RANGE.step);
+  const speedOut = el('output', 'ascent-range-value');
+  speedOut.htmlFor.add(speed.id);
+  speedField.append(speedLabel, speed, speedOut);
+  const invertLabel = el('label', 'ascent-check');
+  const invert = el('input');
+  invert.type = 'checkbox';
+  invertLabel.append(invert, ` ${ASCENT_TEXT.invertY}`);
+  const motionField = el('div', 'field');
+  const motionLabel = el('p', 'ascent-field-label', ASCENT_TEXT.motion);
+  motionLabel.id = `${uid}-motion`;
+  const motionSeg = el('div', 'seg');
+  motionSeg.setAttribute('role', 'group');
+  motionSeg.setAttribute('aria-labelledby', motionLabel.id);
+  const motionButtons = (
+    [
+      ['system', ASCENT_TEXT.motionSystem],
+      ['reduce', ASCENT_TEXT.motionReduce],
+      ['full', ASCENT_TEXT.motionFull],
+    ] as [MotionSetting, string][]
+  ).map(([value, text]) => {
+    const b = button(text, '');
+    b.dataset.motion = value;
+    motionSeg.append(b);
+    return b;
+  });
+  motionField.append(motionLabel, motionSeg);
+  const backButton = button(ASCENT_TEXT.back);
+  panel.append(speedField, invertLabel, motionField, backButton);
+  message.append(title, prompt, menu, assistNote, panel);
+
   const hint = el('p', 'ascent-hint', ASCENT_TEXT.hint);
   // Playing without the pointer lock (refused, or let go without pausing): say how to get it, rather than leave the mouse
   // doing nothing.
@@ -168,8 +287,33 @@ export function mountAscent(
   const live = el('p', 'visually-hidden');
   live.setAttribute('aria-live', 'polite');
   live.setAttribute('data-ascent-live', '');
-  root.append(hud, message, hint, lookHint, live);
+  root.append(hud, timeLine, altimeter, message, hint, lookHint, live);
 
+  const showSettings = (open: boolean) => {
+    panel.hidden = !open;
+    menu.hidden = open;
+    assistNote.hidden = open || menu.hidden;
+    settingsButton.setAttribute('aria-expanded', String(open));
+    (open ? speed : settingsButton).focus({ preventScroll: true });
+  };
+  const drawSettings = () => {
+    speed.value = String(settings.sensitivity);
+    speedOut.textContent = `${settings.sensitivity.toFixed(1)}×`;
+    invert.checked = settings.invertY;
+    for (const b of motionButtons) {
+      const on = b.dataset.motion === settings.motion;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+  };
+  const setSettings = (next: Partial<AscentSettings>) => {
+    settings = { ...settings, ...next };
+    saveSettings(store, settings);
+    drawSettings();
+  };
+  drawSettings();
+
+  // ---- the sim, the camera, the clock -----------------------------------------------------------------------------------
   const sim = new AscentSim(level, cfg);
   const rig = new OrbitCamera(level.spawnYaw, cfg);
   rig.snap(sim.pos, level.boxes);
@@ -183,7 +327,23 @@ export function mountAscent(
   let lastSteps = 0;
   let seenTeleports = sim.teleports;
   let lastAlpha = 0;
-  const shown = { alt: -1, best: -1, falls: -1, state: '', paused: false, locked: false, full: false };
+  let savedAt = 0;
+  let confirmRestart = false;
+  const shown = {
+    alt: -1,
+    best: -1,
+    falls: -1,
+    time: -1,
+    zone: '',
+    state: '',
+    paused: false,
+    locked: false,
+    full: false,
+    touch: false,
+  };
+
+  // A climb saved earlier, offered back on the ready screen.
+  let saved: AscentSave | null = saveAs ? loadSave(store, saveAs) : null;
 
   const locked = () => doc.pointerLockElement === container;
   const full = () => doc.fullscreenElement === container;
@@ -195,19 +355,75 @@ export function mountAscent(
     if (locked()) doc.exitPointerLock?.();
   };
 
+  const save = () => {
+    if (!saveAs || state !== 'playing') return;
+    writeSave(store, {
+      v: 1,
+      level: saveAs,
+      pos: { ...sim.pos },
+      yaw: sim.yaw,
+      time: sim.time,
+      best: sim.best,
+      falls: sim.falls,
+      jumps: sim.jumps,
+      assist: sim.assist,
+      assisted: sim.assisted,
+      checkpoint: sim.checkpoint,
+      savedAt: Date.now(),
+    });
+    savedAt = sim.time;
+  };
+
+  const zoneAt = (y: number) => {
+    let z = zones[0];
+    for (const candidate of zones) if (y >= candidate.base) z = candidate;
+    return z;
+  };
+
+  const drawMenu = () => {
+    const ready = state === 'ready';
+    const isPaused = state === 'playing' && paused;
+    continueButton.hidden = !(ready && saved);
+    newClimbButton.hidden = !(ready && saved);
+    for (const b of [resumeButton, restartButton, assistButton, settingsButton]) b.hidden = !isPaused;
+    leaveButton.hidden = !(isPaused && options.onLeave);
+    menu.hidden = !(ready ? saved : isPaused) || !panel.hidden;
+    assistNote.hidden = !isPaused || menu.hidden;
+    assistButton.setAttribute('aria-pressed', String(sim.assist));
+    restartButton.textContent = confirmRestart ? ASCENT_TEXT.restartConfirm : ASCENT_TEXT.restart;
+    if (ready && saved) {
+      continueButton.textContent = `${ASCENT_TEXT.continueClimb} · ${Math.round(saved.best)} m · ${formatTime(saved.time)}`;
+    }
+  };
+
   const updateHud = () => {
     const alt = Math.max(0, Math.round(sim.altitude));
     if (alt !== shown.alt) altValue.textContent = String((shown.alt = alt));
     const best = Math.round(sim.best);
     if (best !== shown.best) bestValue.textContent = String((shown.best = best));
     if (sim.falls !== shown.falls) fallsValue.textContent = String((shown.falls = sim.falls));
+    const seconds = Math.floor(sim.time);
+    if (seconds !== shown.time) timeValue.textContent = formatTime((shown.time = seconds));
+    const zone = zoneAt(sim.pos.y);
+    if (zone.title !== shown.zone) zoneLine.textContent = shown.zone = zone.title;
+    marker.style.bottom = `${Math.min(100, Math.max(0, ((sim.pos.y - bottom) / height) * 100))}%`;
     const isLocked = locked();
     const isFull = full();
-    if (state === shown.state && paused === shown.paused && isLocked === shown.locked && isFull === shown.full) return;
+    const touch = touchControls.shown;
+    if (
+      state === shown.state &&
+      paused === shown.paused &&
+      isLocked === shown.locked &&
+      isFull === shown.full &&
+      touch === shown.touch
+    ) {
+      return;
+    }
     shown.state = state;
     shown.paused = paused;
     shown.locked = isLocked;
     shown.full = isFull;
+    shown.touch = touch;
     root.dataset.ascentState = state;
     root.dataset.ascentPaused = String(paused);
     root.dataset.ascentLocked = String(isLocked);
@@ -215,8 +431,22 @@ export function mountAscent(
     message.hidden = state === 'playing' && !paused;
     title.hidden = state === 'playing';
     prompt.textContent =
-      state !== 'playing' ? ASCENT_TEXT.play : isFull ? ASCENT_TEXT.pausedFullscreen : ASCENT_TEXT.paused;
-    lookHint.hidden = !(wantsLock && state === 'playing' && !paused && !isLocked);
+      state !== 'playing'
+        ? touch
+          ? ASCENT_TEXT.playTouch
+          : ASCENT_TEXT.play
+        : touch
+          ? ASCENT_TEXT.pausedTouch
+          : isFull
+            ? ASCENT_TEXT.pausedFullscreen
+            : ASCENT_TEXT.paused;
+    hint.textContent = touch ? ASCENT_TEXT.hintTouch : ASCENT_TEXT.hint;
+    lookHint.hidden = touch || !(wantsLock && state === 'playing' && !paused && !isLocked);
+    if (!paused) {
+      confirmRestart = false;
+      if (!panel.hidden) showSettings(false);
+    }
+    drawMenu();
   };
 
   const frame = (now: number) => {
@@ -225,16 +455,18 @@ export function mountAscent(
     const tick = clock.advance(now);
     if (state === 'playing') {
       rig.turn(turnInput(input.held), tick.delta);
-      const move = moveVector(input.held, rig.yaw);
+      const move = moveVector(input.held, rig.yaw, touchControls.stick);
       sim.setMove(move.x, move.z);
       for (let i = 0; i < tick.steps; i++) sim.step();
       if (sim.teleports !== seenTeleports) {
         seenTeleports = sim.teleports;
-        rig.yaw = level.spawnYaw;
+        const toBeacon = sim.assist && sim.checkpoint !== null;
+        if (!toBeacon) rig.yaw = level.spawnYaw;
         rig.snap(sim.pos, level.boxes);
-        live.textContent = ASCENT_TEXT.fell;
+        live.textContent = toBeacon ? ASCENT_TEXT.fellToBeacon : ASCENT_TEXT.fell;
       }
       rig.update(sim.lerpPos(tick.alpha), tick.delta, level.boxes);
+      if (sim.time - savedAt >= SAVE_EVERY) save();
     }
     lastSteps = tick.steps;
     lastAlpha = tick.alpha;
@@ -265,6 +497,8 @@ export function mountAscent(
         falls: sim.falls,
         jumps: sim.jumps,
         time: sim.time,
+        assist: sim.assist,
+        checkpoint: sim.checkpoint,
         cameraYaw: rig.yaw,
         cameraPitch: rig.pitch,
         cameraDistance: rig.distance,
@@ -281,22 +515,45 @@ export function mountAscent(
   const pause = () => {
     if (destroyed || paused || state !== 'playing') return;
     input.release();
+    touchControls.release();
     sim.release();
     paused = true;
+    save();
     exitLock();
     if (raf) win.cancelAnimationFrame(raf);
     raf = 0;
     updateHud();
+    // Keyboard users land on Resume; a mouse that clicks the game resumes too.
+    if (!touchControls.shown) resumeButton.focus({ preventScroll: true });
   };
 
   const resume = () => {
     if (destroyed || !paused) return;
     paused = false;
     input.release();
+    touchControls.release();
     sim.release();
     clock.reset();
     lastFrame = null;
-    grab();
+    if (!touchControls.shown) grab();
+    else enterPlay(container, { lock: false, fullscreen: gesture.fullscreen });
+    container.focus({ preventScroll: true });
+    updateHud();
+    schedule();
+  };
+
+  const begin = (from: AscentSave | null) => {
+    if (from) sim.restore(from);
+    seenTeleports = sim.teleports;
+    rig.yaw = from ? from.yaw : level.spawnYaw;
+    rig.snap(sim.pos, level.boxes);
+    savedAt = sim.time;
+    saved = null;
+    state = 'playing';
+    clock.reset();
+    if (!touchControls.shown) grab();
+    else enterPlay(container, { lock: false, fullscreen: gesture.fullscreen });
+    container.focus({ preventScroll: true });
     updateHud();
     schedule();
   };
@@ -304,44 +561,109 @@ export function mountAscent(
   const start = () => {
     if (destroyed) return;
     if (state === 'playing') return resume();
-    state = 'playing';
-    clock.reset();
-    grab();
+    begin(saved);
+  };
+
+  const restart = () => {
+    if (destroyed) return;
+    sim.restart();
+    seenTeleports = sim.teleports;
+    rig.yaw = level.spawnYaw;
+    rig.pitch = cfg.camera.pitch.start;
+    rig.snap(sim.pos, level.boxes);
+    savedAt = 0;
+    confirmRestart = false;
+    clearSave(store);
     updateHud();
-    schedule();
+  };
+
+  const look = (dx: number, dy: number, scale = 1) => {
+    if (state !== 'playing' || paused) return;
+    const k = settings.sensitivity * scale;
+    rig.look(dx * k, (settings.invertY ? -dy : dy) * k);
+  };
+
+  const onJump = (down: boolean) => {
+    if (destroyed) return;
+    if (state !== 'playing') {
+      if (down) start();
+      return;
+    }
+    if (paused) {
+      if (down) resume();
+      return;
+    }
+    if (down) sim.jumpPress();
+    else sim.jumpRelease();
   };
 
   const input = createInput(container, canvas, locked, {
-    onJump: (down) => {
-      if (destroyed) return;
-      if (state !== 'playing') {
-        if (down) start();
-        return;
-      }
-      if (paused) {
-        if (down) resume();
-        return;
-      }
-      if (down) sim.jumpPress();
-      else sim.jumpRelease();
-    },
-    onLook: (dx, dy) => {
-      if (state === 'playing' && !paused) rig.look(dx, dy);
-    },
+    onJump,
+    onLook: (dx, dy) => look(dx, dy),
     onPause: () => pause(),
-    onPointerDown: () => {
+    onPointerDown: (e) => {
       container.focus({ preventScroll: true });
+      if (e.pointerType === 'touch') {
+        touchControls.show();
+        if (state !== 'playing') start();
+        else if (paused) resume();
+        return;
+      }
       if (state !== 'playing') start();
       else if (paused) resume();
       else grab();
     },
   });
 
+  const coarse = win.matchMedia?.('(pointer: coarse)').matches ?? false;
+  const touchControls = createTouchControls(
+    root,
+    canvas,
+    {
+      onJump,
+      onLook: (dx, dy) => look(dx, dy, TOUCH_LOOK),
+      onPause: () => pause(),
+      onShow: () => updateHud(),
+    },
+    { show: options.touch ?? coarse },
+  );
+
+  // ---- the menu's buttons -----------------------------------------------------------------------------------------------
+  const onMenu = (event: Event) => {
+    const b = (event.target as Element | null)?.closest('button');
+    if (!b) return;
+    if (b === continueButton) begin(saved);
+    else if (b === newClimbButton) {
+      clearSave(store);
+      saved = null;
+      begin(null);
+    } else if (b === resumeButton) resume();
+    else if (b === restartButton) {
+      if (!confirmRestart) {
+        confirmRestart = true;
+        drawMenu();
+        return;
+      }
+      restart();
+      resume();
+    } else if (b === assistButton) {
+      sim.setAssist(!sim.assist);
+      drawMenu();
+    } else if (b === settingsButton) showSettings(true);
+    else if (b === leaveButton) {
+      save();
+      options.onLeave?.();
+    } else if (b === backButton) showSettings(false);
+    else if (b.dataset.motion) setSettings({ motion: b.dataset.motion as MotionSetting });
+  };
+  const onSpeed = () => setSettings({ sensitivity: Number(speed.value) });
+  const onInvert = () => setSettings({ invertY: invert.checked });
+
   const resize = () => {
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const coarse = win.matchMedia?.('(pointer: coarse)').matches ?? false;
-    const cap = coarse ? cfg.render.maxPixelRatioTouch : cfg.render.maxPixelRatio;
+    const coarseNow = win.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const cap = coarseNow ? cfg.render.maxPixelRatioTouch : cfg.render.maxPixelRatio;
     view.resize(width, height, Math.min(win.devicePixelRatio || 1, cap));
     view.render(sim, lastAlpha, rig, (win.performance?.now() ?? 0) / 1000); // resizing clears the canvas: draw at once
   };
@@ -350,7 +672,10 @@ export function mountAscent(
 
   const onVisibility = () => {
     clock.reset();
-    if (doc.visibilityState === 'hidden') pause();
+    if (doc.visibilityState === 'hidden') {
+      pause();
+      save();
+    }
   };
   const onBlur = () => pause();
   const onFocusOut = (event: Event) => {
@@ -371,18 +696,31 @@ export function mountAscent(
   const onFullscreenChange = () => {
     const now = full();
     if (wasFull && !now) pause();
-    if (now && !wasFull && state === 'playing' && !paused) enterPlay(container, { lock: wantsLock, fullscreen: false });
+    if (now && !wasFull && state === 'playing' && !paused && !touchControls.shown) {
+      enterPlay(container, { lock: wantsLock, fullscreen: false });
+    }
     wasFull = now;
     updateHud();
     resize();
   };
+  // A phone turned upright mid-climb pauses (the prompt asks to turn it back).
+  const portrait = win.matchMedia?.('(orientation: portrait)');
+  const onOrientation = () => {
+    if (portrait?.matches && touchControls.shown) pause();
+  };
+  const onPageHide = () => save();
   const listeners: [EventTarget, string, EventListener][] = [
     [doc, 'visibilitychange', onVisibility],
     [doc, 'pointerlockchange', onLockChange],
     [doc, 'fullscreenchange', onFullscreenChange],
     [win, 'blur', onBlur],
+    [win, 'pagehide', onPageHide],
     [container, 'focusout', onFocusOut],
+    [message, 'click', onMenu],
+    [speed, 'input', onSpeed],
+    [invert, 'change', onInvert],
   ];
+  if (portrait) listeners.push([portrait, 'change', onOrientation]);
   if (!observer) listeners.push([win, 'resize', resize]);
   for (const [target, type, fn] of listeners) target.addEventListener(type, fn);
 
@@ -396,22 +734,16 @@ export function mountAscent(
     start,
     pause,
     resume,
-    restart() {
-      if (destroyed) return;
-      sim.restart();
-      seenTeleports = sim.teleports;
-      rig.yaw = level.spawnYaw;
-      rig.pitch = cfg.camera.pitch.start;
-      rig.snap(sim.pos, level.boxes);
-      updateHud();
-    },
+    restart,
     destroy() {
       if (destroyed) return;
+      save();
       destroyed = true;
       if (raf) win.cancelAnimationFrame(raf);
       raf = 0;
       leavePlay(container);
       input.destroy();
+      touchControls.destroy();
       for (const [target, type, fn] of listeners) target.removeEventListener(type, fn);
       observer?.disconnect();
       view.dispose();

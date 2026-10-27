@@ -8,7 +8,8 @@ unlinked styleguide route before it has a public page.
 **Where it is:** phase 1, the feel prototype, is built at `/styleguide/ascent/` (noindex, unlinked, like the rest of the
 styleguide) and waits for the author to play it (below, "Phase 1: Feel prototype"). Phase 2 has started with the Blender
 pipeline: the page now plays a short test climb built by a Blender script, as the robot agent the author chose, also built in
-Blender and animated in code (below, "Phase 2"). Touch controls, the HUD, saving and assist mode are not built yet.
+Blender and animated in code, with the HUD, the pause menu and its settings, save and resume, assist mode and touch controls
+(below, "Phase 2").
 
 ## The pitch
 
@@ -127,6 +128,9 @@ in Node, apart from a read-only Three.js view.
 | `camera.ts` | the third-person orbit camera: yaw and pitch from the look input, a spring on the follow, pulled in when a box is in the way |
 | `colors.ts` | the scene's colours, read from the tokens at runtime; the material names a level may use and their tones |
 | `render.ts` | the Three.js view: reads the sim, draws the scene (the agent through `agent.ts`); `createView()` is null without WebGL |
+| `settings.ts` | the player's settings (look speed, invert, reduced motion: as the system asks, always or never), kept in the browser (`r7-ascent-settings`); parsing pure |
+| `save.ts` | the climb in progress, kept in the browser (`r7-ascent-save`) and offered back; a versioned format checked field by field; the time as m:ss |
+| `touch.ts` | the touch controls: a stick under the left thumb, a look drag on the right half, Jump and Pause buttons, the "turn your phone sideways" prompt; `stickVector` pure |
 | `gesture.ts` | full screen and the pointer lock, asked for inside the click or key press that starts or resumes the climb; small and free of three.js, so the page's Play button can use it before the game has loaded |
 | `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup; `loadTestClimb()` and `loadAgent()` |
 | `ascent.css` | the HUD's styles, tokens only; imported by the page that hosts the game |
@@ -280,10 +284,10 @@ browser refuses the lock, "Click to look around with the mouse" shows in the mid
 
 ### Phase 2: Phone, HUD, save
 
-- [ ] Touch controls and the portrait prompt
-- [ ] HUD (altitude, time, zone altimeter) and pause menu
-- [ ] Save and resume; settings
-- [ ] Assist mode and beacons
+- [x] Touch controls and the portrait prompt
+- [x] HUD (altitude, time, zone altimeter) and pause menu
+- [x] Save and resume; settings (volume waits for sound, which is "Later")
+- [x] Assist mode and beacons
 - [x] The Blender pipeline: one script in `tools/ascent/`, export, `GLTFLoader`, collision and markers read from
       `userData`, materials swapped for token colours
 
@@ -311,6 +315,35 @@ monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the
 `level.vitest.ts` runs the fairness checks on both levels, the test climb read from the committed file through
 `gltf-level.ts`; `gltf-level.vitest.ts` covers the file rules and walks the sim into the first book's side and onto it; and
 `tests/ascent.spec.js` checks that the `.glb` loads only on Play, `?level=code` and the fallback.
+
+**The rest of phase 2 (2026-10-27).** The author asked for it before phase 3, since the finish needs the timer and the public
+page is meant for phones too.
+
+- **HUD.** Top left: the altitude, the best, the falls and the zone's name. Top right: the time (m:ss). Down the left edge,
+  the altimeter: a hairline, a tick where each zone starts and a brass marker for the agent (a level without zones is one
+  zone from the start to the goal). The controls hint shows for the first minute.
+- **Pause menu.** Escape (or the touch Pause button) pauses; the message then holds real buttons: Resume (focused, so
+  Space or Enter resumes), Restart (pressed twice: "Restart from the floor?"), Assist mode (a toggle), Settings and Leave
+  (only when the host gives `onLeave`). A click on the game around the menu still resumes. Keys pressed on the menu's own
+  controls are theirs (Space presses the button; it does not jump).
+- **Settings** (`settings.ts`): look speed (0.4 to 2.5 times), invert looking up and down, and motion (as the system asks,
+  reduced, or full). They apply at once and are kept in `r7-ascent-settings`. Reduced motion is read every frame.
+- **Save and resume** (`save.ts`): the climb (position, facing, time, best, falls, jumps, assist mode, checkpoint) is saved
+  every 5 s of play, on every pause, when the tab hides or the page goes, and when the game is taken away. A host names the
+  level (`saveAs`); a save is offered back only on the same level, as "Continue · 44 m · 5:12" beside "New climb" on the ready
+  screen. Restart clears it. Every read and write is in try/catch, and a save that is old, for another level or broken is
+  ignored.
+- **Assist mode** (off by default: hardcore). Beacons are `BEACON_<n>` empties in a level file (three on phase 1's course);
+  standing at one makes it the checkpoint. In assist mode a beacon shows as a brass ring with a brass diamond over it, the
+  checkpoint larger, and a fall of 6 m below the checkpoint, or off the world, puts the agent back on it ("You fell. Back to
+  your last beacon."). Turning it on marks the climb as assisted for the finish, until a restart with it off.
+- **Touch** (`touch.ts`): shown from the start on a device whose main pointer is coarse, or on the first touch. A stick
+  appears under the left thumb (a small push walks, full push runs), a drag on the right half looks (1.8 times the mouse's
+  speed at the same setting), Jump bottom right, Pause top right. Upright on a phone, the game pauses and asks to be turned
+  sideways. Touch never asks for the pointer lock.
+
+Tests: `settings.vitest.ts` (settings, the save format, the stick), more in `input.vitest.ts` and `sim.vitest.ts` (assist
+mode, restore), and three in `tests/ascent.spec.js` (the menu, assist and settings; saving and Continue; touch).
 
 **The robot agent (2026-10-27).** The author asked for a character with more to it than "just a pill", and approved a robot
 from renders (the second round: the first read as flat). `tools/ascent/build_agent.py` builds it and exports

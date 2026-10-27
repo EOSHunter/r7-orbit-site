@@ -200,9 +200,113 @@ test('Play goes full screen in the same click; leaving full screen pauses; a cli
   await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'false');
   await expect(page.locator('.ascent-prompt')).toHaveText('Paused. Click or press Space to continue');
 
-  await page.locator('.ascent-canvas').click();
+  // A click on the game (away from the menu in the middle) resumes.
+  await page.locator('.ascent-canvas').click({ position: { x: 24, y: 24 } });
   await expect(game(page)).toHaveAttribute('data-ascent-paused', 'false');
   await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'true');
   await page.waitForTimeout(300);
+  expect(problems).toEqual([]);
+});
+
+test('the HUD counts the time; the pause menu turns on assist mode and keeps the settings', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(90_000);
+  const problems = watchPage(page, baseURL);
+  await boot(page);
+  await expect(page.locator('.ascent-time')).toHaveText(/\d+:\d\d/);
+  await expect(page.locator('.ascent-altimeter-marker')).toHaveCount(1);
+
+  await host(page).press('Escape');
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
+  const menu = page.getByRole('group', { name: 'Game menu' });
+  await expect(menu.getByRole('button', { name: 'Resume' })).toBeFocused();
+
+  const assist = menu.getByRole('button', { name: 'Assist mode' });
+  await assist.click();
+  await expect(assist).toHaveAttribute('aria-pressed', 'true');
+
+  await menu.getByRole('button', { name: 'Settings' }).click();
+  const settings = page.getByRole('group', { name: 'Settings' });
+  await settings.getByRole('button', { name: 'Reduced' }).click();
+  await expect(settings.getByRole('button', { name: 'Reduced' })).toHaveAttribute('aria-pressed', 'true');
+  await settings.getByLabel('Invert looking up and down').check();
+  expect(JSON.parse(await page.evaluate(() => localStorage.getItem('r7-ascent-settings')))).toMatchObject({
+    motion: 'reduce',
+    invertY: true,
+  });
+  // Space on a button presses it; it does not jump or resume.
+  await settings.getByRole('button', { name: 'Back' }).focus();
+  await page.keyboard.press('Space');
+  await expect(menu.getByRole('button', { name: 'Settings' })).toBeFocused();
+  expect(await stat(page, 'jumps')).toBe(0);
+
+  await menu.getByRole('button', { name: 'Resume' }).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'false');
+  // The readout runs with the frames, which stop while paused.
+  await expect(page.locator('[data-stat="assist"]')).toHaveText(/^on/, MOUNTED);
+  expect(problems).toEqual([]);
+});
+
+test('a climb in progress is saved, and offered back as Continue', async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  await page.keyboard.down('KeyW');
+  await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(8);
+  await page.keyboard.up('KeyW');
+  await expect.poll(() => page.locator('[data-stat="grounded"]').innerText()).toBe('yes');
+  await host(page).press('Escape');
+  const saved = JSON.parse(await page.evaluate(() => localStorage.getItem('r7-ascent-save')));
+  expect(saved).toMatchObject({ v: 1, level: 'test-climb' });
+
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0&start=0`, { waitUntil: 'networkidle' });
+  await play(page).click();
+  const resume = page.getByRole('button', { name: /^Continue · \d+ m · \d+:\d\d$/ });
+  await expect(resume).toBeVisible(MOUNTED);
+  await expect(page.getByRole('button', { name: 'New climb' })).toBeVisible();
+  await resume.click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing');
+  await expect.poll(async () => (await position(page))[2], MOUNTED).toBeCloseTo(saved.pos.z, 1);
+});
+
+test('touch: a stick on the left moves, Jump jumps, Pause pauses', async ({ page, baseURL }) => {
+  test.setTimeout(90_000);
+  const problems = watchPage(page, baseURL);
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0&touch=1`, { waitUntil: 'networkidle' });
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(game(page)).toHaveAttribute('data-ascent-touch', 'true');
+  await expect(page.locator('.ascent-hint')).toHaveText(/Left thumb to move/);
+  await expect.poll(() => page.locator('[data-stat="grounded"]').innerText(), MOUNTED).toBe('yes');
+  const [, , z0] = await position(page);
+
+  // A thumb down on the left half, pushed up: forward, away from the camera.
+  await page.evaluate(() => {
+    const c = document.querySelector('.ascent-canvas');
+    const r = c.getBoundingClientRect();
+    const at = (type, dy) =>
+      c.dispatchEvent(
+        new PointerEvent(type, {
+          pointerId: 7,
+          pointerType: 'touch',
+          clientX: r.left + r.width * 0.2,
+          clientY: r.top + r.height * 0.7 + dy,
+          bubbles: true,
+        }),
+      );
+    at('pointerdown', 0);
+    at('pointermove', -80);
+  });
+  await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(z0 - 1);
+
+  const jump = page.getByRole('button', { name: 'Jump' });
+  await jump.dispatchEvent('pointerdown', { pointerId: 8, pointerType: 'touch' });
+  await expect.poll(() => stat(page, 'jumps')).toBe(1);
+  await jump.dispatchEvent('pointerup', { pointerId: 8, pointerType: 'touch' });
+
+  await page.getByRole('button', { name: 'Pause' }).dispatchEvent('pointerdown', { pointerType: 'touch' });
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
+  await expect(page.locator('.ascent-prompt')).toHaveText('Paused');
   expect(problems).toEqual([]);
 });
