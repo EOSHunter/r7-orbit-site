@@ -54,6 +54,14 @@ export const ASCENT_CONFIG = {
    */
   assist: { radius: 1.3, height: 0.6, drop: 6 },
 
+  /** An updraft never lifts faster than this (m/s); its push is the fan's own (the level file's `strength`). */
+  fan: { maxRise: 9 },
+  /** A crumbling box is back this long after it broke (s); while it waits to break it shakes this far (m, drawing only). */
+  crumble: { back: 4, shake: 0.035 },
+  /** The ring counts as touched within this distance of its tube (m): a little more than the agent's half width, so a
+   * jump that brushes it counts. */
+  finish: { reach: 0.45 },
+
   camera: {
     /** Distance from the look point to the camera, when nothing is in the way. */
     distance: 6,
@@ -85,6 +93,8 @@ export const ASCENT_CONFIG = {
     shadow: { radius: 0.42, fadeHeight: 12 },
     /** The goal ring above the top of the course: one turn takes this long (it stands still under reduced motion). */
     ringTurn: 24,
+    /** A fan's updraft is drawn as short ivory streaks rising through it: how many, how long, how fast, how bright. */
+    fanStreaks: { count: 10, length: 0.7, speed: 4, opacity: 0.35 },
     /** Device pixel ratio cap: a mouse device, and a touch device (bigger screens with smaller dots). */
     maxPixelRatio: 2,
     maxPixelRatioTouch: 1.5,

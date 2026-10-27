@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ASCENT_CONFIG, jumpPhysics, jumpReach } from './config';
 import type { Level } from './level';
-import { AscentSim } from './sim';
+import { AscentSim, ringDistance } from './sim';
 
 const cfg = ASCENT_CONFIG;
 const dt = cfg.step;
@@ -319,5 +319,107 @@ describe('assist mode', () => {
     expect([sim.time, sim.best, sim.falls, sim.jumps]).toEqual([90, 12, 2, 30]);
     expect(sim.checkpoint).toBeNull();
     expect(sim.teleports).toBe(before + 1);
+  });
+});
+
+describe("the climb's moving parts", () => {
+  const floor = { kind: 'ground' as const, min: { x: -50, y: -1, z: -50 }, max: { x: 50, y: 0, z: 50 } };
+  const at = (x: number, top: number, z: number, w = 2, h = 0.5) => ({
+    kind: 'block' as const,
+    min: { x: x - w / 2, y: top - h, z: z - w / 2 },
+    max: { x: x + w / 2, y: top, z: z + w / 2 },
+  });
+  const base = { spawnYaw: 0, route: [1, 2], goal: { x: 0, y: 50, z: 0 }, beacons: [] };
+
+  it('a fan lifts the agent standing on it up its updraft, and no higher than its top speed carries', () => {
+    const level: Level = { ...base, spawn: { x: 0, y: 1, z: 0 }, boxes: [floor, at(0, 1, 0), at(10, 1, 10)] };
+    level.fans = [{ box: 1, height: 5, strength: 42 }];
+    const sim = new AscentSim(level);
+    let top = 0;
+    run(sim, 2.5, (s) => (top = Math.max(top, s.pos.y)));
+    expect(top).toBeGreaterThan(1 + 5);
+    expect(top).toBeLessThan(1 + 5 + cfg.fan.maxRise ** 2 / (2 * jumpPhysics().gravity) + 0.5);
+  });
+
+  it('a drifting block carries the agent standing on it, and comes back on time', () => {
+    const level: Level = { ...base, spawn: { x: 0, y: 1, z: 0 }, boxes: [floor, at(0, 1, 0, 3), at(20, 1, 20)] };
+    level.movers = [{ box: 1, offset: { x: 4, y: 0, z: 0 }, period: 4 }];
+    const sim = new AscentSim(level);
+    run(sim, 2); // half a period: at the far end
+    expect(sim.solids[1].min.x).toBeCloseTo(-1.5 + 4, 2);
+    expect(sim.pos.x).toBeCloseTo(4, 1);
+    expect(sim.grounded).toBe(true);
+    run(sim, 2); // back where it started, the agent still on it
+    expect(sim.solids[1].min.x).toBeCloseTo(-1.5, 2);
+    expect(sim.pos.x).toBeCloseTo(0, 1);
+  });
+
+  it('a drifting block pushes an agent in its way aside, never through it', () => {
+    const level: Level = { ...base, spawn: { x: 3, y: 0, z: 0 }, boxes: [floor, at(0, 1.5, 0, 2, 1.5), at(20, 1, 20)] };
+    level.movers = [{ box: 1, offset: { x: 4, y: 0, z: 0 }, period: 4 }];
+    const sim = new AscentSim(level);
+    run(sim, 2, (s) => {
+      const b = s.solids[1];
+      const inside = s.pos.x + 0.28 > b.min.x + 0.01 && s.pos.x - 0.28 < b.max.x - 0.01 && s.pos.y < b.max.y;
+      expect(inside).toBe(false);
+    });
+  });
+
+  it('a crumbling block breaks after its delay once stood on, and comes back later', () => {
+    const level: Level = { ...base, spawn: { x: 0, y: 4, z: 0 }, boxes: [floor, at(0, 4, 0), at(20, 1, 20)] };
+    level.crumbles = [{ box: 1, delay: 0.7 }];
+    const sim = new AscentSim(level);
+    run(sim, 0.5);
+    expect(sim.crumbles[0].touched).not.toBeNull();
+    expect(sim.pos.y).toBeCloseTo(4, 3);
+    run(sim, 0.5);
+    expect(sim.crumbles[0].broke).not.toBeNull();
+    run(sim, 1.5);
+    expect(sim.pos.y).toBeCloseTo(0, 3); // fell to the floor
+    run(sim, cfg.crumble.back);
+    expect(sim.crumbles[0].broke).toBeNull();
+  });
+
+  it('touching the ring finishes the climb and stops the clock', () => {
+    // A ring lying flat (no rotation) whose tube passes 1.4 m above a block's top.
+    const level: Level = {
+      ...base,
+      spawn: { x: 0, y: 1, z: 0 },
+      boxes: [floor, at(0, 1, 0, 4), at(20, 1, 20)],
+      ring: { centre: { x: 3, y: 2.6, z: 0 }, radius: 3, tube: 0.1, rotation: { x: 0, y: 0, z: 0, w: 1 } },
+    };
+    const sim = new AscentSim(level);
+    run(sim, 0.3);
+    expect(sim.finished).toBe(false);
+    sim.jumpPress();
+    run(sim, 0.4);
+    expect(sim.finished).toBe(true);
+    const t = sim.time;
+    run(sim, 1);
+    expect(sim.time).toBe(t);
+    sim.restart();
+    expect(sim.finished).toBe(false);
+  });
+
+  it("measures the distance to the ring tube in the ring's own frame", () => {
+    const flat = { centre: { x: 0, y: 0, z: 0 }, radius: 5, tube: 0.2, rotation: { x: 0, y: 0, z: 0, w: 1 } };
+    expect(ringDistance({ x: 5, y: 0, z: 0 }, flat)).toBeCloseTo(0, 9);
+    expect(ringDistance({ x: 0, y: 0, z: 0 }, flat)).toBeCloseTo(5, 9);
+    // Turned a quarter about X, the ring stands up: (0, 5, 0) is on it.
+    const s = Math.SQRT1_2;
+    expect(ringDistance({ x: 0, y: 5, z: 0 }, { ...flat, rotation: { x: s, y: 0, z: 0, w: s } })).toBeCloseTo(0, 6);
+  });
+
+  it('a bigger level keeps what was there and adds the rest', () => {
+    const small: Level = { ...base, spawn: { x: 0, y: 1, z: 0 }, boxes: [floor, at(0, 1, 0, 3), at(20, 1, 20)] };
+    small.movers = [{ box: 1, offset: { x: 4, y: 0, z: 0 }, period: 4 }];
+    const sim = new AscentSim(small);
+    run(sim, 1);
+    const x = sim.solids[1].min.x;
+    const big: Level = { ...small, boxes: [...small.boxes, at(0, 30, 0)], crumbles: [{ box: 3, delay: 1 }] };
+    sim.setLevel(big);
+    expect(sim.solids).toHaveLength(4);
+    expect(sim.solids[1].min.x).toBeCloseTo(x, 6);
+    expect(sim.crumbles).toHaveLength(1);
   });
 });

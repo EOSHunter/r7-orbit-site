@@ -1,9 +1,10 @@
 ---
-// Prototype of R7: Ascent (docs/ASCENT.md, phases 1 and 2 of 4). The test climb and the robot agent built in Blender
+// Prototype of R7: Ascent (docs/ASCENT.md, phases 1 to 3 of 4). The full climb and the robot agent built in Blender
 // (tools/ascent/; a capsule stands in if the robot does not load), a third-person camera, the HUD, the pause menu (settings,
-// assist mode), save and resume, and touch controls; the feel's numbers are in src/game/ascent/config.ts. The game and its
-// level are loaded when Play is pressed, so three.js is a lazy chunk and never in this page's first load. ?level=code plays
-// phase 1's grey boxes instead, laid out in code (and so does a failed level load, which the debug readout says). Under the
+// assist mode), save and resume, touch controls, and the finish at the ring; the feel's numbers are in
+// src/game/ascent/config.ts. The game and its first two zones are loaded when Play is pressed, so three.js is a lazy chunk and
+// never in this page's first load; the other zones load as the agent nears them. ?level=test plays phase 2's test climb;
+// ?level=code plays phase 1's grey boxes, laid out in code (and so does a failed level load, which the debug readout says). Under the
 // game, a debug readout that only this page has. Play puts the stage in full screen and locks the mouse to it, in the click
 // itself (game/ascent/gesture.ts): the browser allows neither once the click is over, and the game takes a moment to load.
 // Fixture for tests/ascent.spec.js (?lock=0 never asks for pointer lock; ?fullscreen=0 plays in the page; ?start=0 stops on
@@ -15,6 +16,7 @@ import '../../../game/ascent/ascent.css';
 
 const stats = [
   ['level', 'level'],
+  ['zones', 'zones loaded'],
   ['agent', 'agent'],
   ['animation', 'animation'],
   ['fps', 'fps'],
@@ -39,7 +41,7 @@ const stats = [
 
 <BaseLayout
   title="Ascent prototype"
-  description="A prototype of R7: Ascent, a 3D climbing game, with a test climb. Not part of the site."
+  description="A prototype of R7: Ascent, a 3D climbing game: the full climb from the workshop to orbit. Not part of the site."
   noindex
 >
   <section class="section" aria-labelledby="as-h">
@@ -49,8 +51,8 @@ const stats = [
         Ascent prototype
       </h1>
       <p class="t-lead">
-        The prototype of {ASCENT_TEXT.title}: a short test climb built in Blender, to judge how moving and jumping feel.
-        Phase 2 of 4.
+        The prototype of {ASCENT_TEXT.title}: the full climb, from the workshop floor to the brass ring in orbit, built
+        in Blender. Phase 3 of 4.
       </p>
 
       <div
@@ -75,10 +77,11 @@ const stats = [
       <div class="as-below">
         <div id="as-howto" class="as-howto">
           <p>
-            Climb the desk to the brass ring. Play fills the screen and the mouse looks around. W, A, S and D or the
-            arrow keys move, relative to the camera. Space jumps: hold it for a full jump, tap it for a short hop. Q and
-            E turn the camera from the keyboard. Escape pauses; Escape again leaves full screen. Fall off the world and
-            you go back to the start.
+            Climb from the workshop floor to the brass ring in orbit. Play fills the screen and the mouse looks around.
+            W, A, S and D or the arrow keys move, relative to the camera. Space jumps: hold it for a full jump, tap it
+            for a short hop. Q and E turn the camera from the keyboard. Escape pauses; Escape again leaves full screen.
+            Fans blow you up, some blocks drift and some break a moment after you land on them. A fall lands you
+            wherever you land; assist mode, in the pause menu, adds beacons to come back to.
           </p>
           <p>
             A jump still counts just after you step off an edge, and a jump pressed just before you land happens when
@@ -203,7 +206,7 @@ const stats = [
 </style>
 
 <script>
-  import type { AgentModel, AscentHandle, AscentStats, LevelModel } from '../../../game/ascent/index';
+  import type { AgentModel, AscentHandle, AscentStats, Climb, LevelModel } from '../../../game/ascent/index';
   import { enterPlay } from '../../../game/ascent/gesture';
 
   const host = document.querySelector<HTMLElement>('[data-ascent-host]');
@@ -224,7 +227,8 @@ const stats = [
     pointerLock: query.get('lock') !== '0',
     fullscreen: query.get('fullscreen') !== '0',
     start: query.get('start') !== '0',
-    level: query.get('level') === 'code' ? 'code' : 'blender',
+    level: (['code', 'test'].includes(query.get('level') ?? '') ? query.get('level') : 'climb') as
+      'climb' | 'test' | 'code',
     touch: query.get('touch') === '1' ? true : undefined,
   };
   let handle: AscentHandle | null = null;
@@ -254,35 +258,49 @@ const stats = [
     show('triangles', String(s.view.triangles));
     show('calls', String(s.view.calls));
     show('animation', s.view.animation);
+    show('zones', s.zones ? `${s.zones} of 5` : '-');
   };
 
   async function boot() {
     if (!host || handle || loading) return;
     loading = true;
     try {
-      const { mountAscent, loadTestClimb, loadAgent } = await import('../../../game/ascent/index');
+      const { mountAscent, loadClimb, loadTestClimb, loadAgent, CLIMB_SAVE_NAME } =
+        await import('../../../game/ascent/index');
       const reason = (error: unknown) => (error instanceof Error ? error.message : String(error));
       // The level and the robot load side by side; either may fail on its own and the game still plays.
       const [level, robot] = await Promise.allSettled([
-        options.level === 'blender' ? loadTestClimb() : Promise.resolve(null),
+        options.level === 'climb' ? loadClimb() : options.level === 'test' ? loadTestClimb() : Promise.resolve(null),
         loadAgent(),
       ]);
+      let climb: Climb | null = null;
       let model: LevelModel | null = null;
-      if (options.level !== 'blender') show('level', 'grey boxes (code)');
-      else if (level.status === 'fulfilled') {
-        model = level.value;
-        show('level', 'test climb (Blender)');
-      } else show('level', `grey boxes (the test climb did not load: ${reason(level.reason)})`);
+      let saveAs = 'code';
+      const name = options.level === 'climb' ? 'the climb' : 'the test climb';
+      if (options.level === 'code') show('level', 'grey boxes (code)');
+      else if (level.status === 'fulfilled' && level.value) {
+        if (options.level === 'climb') {
+          climb = level.value as Climb;
+          saveAs = CLIMB_SAVE_NAME;
+        } else {
+          model = level.value as LevelModel;
+          saveAs = 'test-climb';
+        }
+        show('level', `${name} (Blender)`);
+      } else {
+        show('level', `grey boxes (${name} did not load: ${level.status === 'rejected' ? reason(level.reason) : ''})`);
+      }
       let agent: AgentModel | null = null;
       if (robot.status === 'fulfilled') {
         agent = robot.value;
         show('agent', 'robot (Blender)');
       } else show('agent', `capsule (the robot did not load: ${reason(robot.reason)})`);
       handle = mountAscent(host, {
+        climb,
         model,
         agent,
-        // The climb is saved per level, so the boxes in code and the climb from Blender never resume each other's.
-        saveAs: model ? 'test-climb' : 'code',
+        // Each level is saved under its own name, so the levels never resume each other's climbs.
+        saveAs,
         pointerLock: options.pointerLock,
         fullscreen: options.fullscreen,
         touch: options.touch,

@@ -1,7 +1,12 @@
 // A level made in Blender (tools/ascent/, docs/ASCENT.md "Blender is the level editor"), read from its .glb with three.js's
-// GLTFLoader: the COL_ boxes, SPAWN and GOAL become a Level (levelFromObjects, level.ts) for the sim, and every other mesh is
-// scenery for the view, which draws it in the token colours of its material's name (LEVEL_MATERIALS, colors.ts). A material
-// the game does not know is an error, so a typo in a Blender script fails the unit test that loads the file.
+// GLTFLoader: the COL_ boxes, SPAWN, GOAL, BEACON_ and ZONE_ objects become a LevelPart (partFromObjects, level.ts) for the
+// sim, and every other mesh is scenery for the view, which draws it in the token colours of its material's name
+// (LEVEL_MATERIALS, colors.ts). Scenery named after a drifting or crumbling box (COL_<name>: <name> and <name>__...) is kept
+// apart, so the view can move it with its box. A material the game does not know is an error, so a typo in a Blender script
+// fails the unit test that loads the file.
+//
+// A whole level in one file (the test climb) is a LevelModel; one zone of the climb is a PartModel, and the climb joins them
+// (index.ts, loadClimb).
 //
 // three.js comes from its ES sources here as in render.ts, and so does the GLTFLoader's own `three` (astro.config.mjs,
 // ascentOwnThree): Ascent's chunk carries its own copy, and the runner's chunk is left whole for the 404 page's prefetch.
@@ -9,7 +14,7 @@
 import { Box3, type Mesh, type Object3D } from 'three/src/Three.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { isLevelMaterial, type LevelMaterial } from './colors';
-import { LEVEL_NAMES, levelFromObjects, type Level, type LevelObject } from './level';
+import { LEVEL_NAMES, joinParts, partFromObjects, type Level, type LevelObject, type LevelPart } from './level';
 
 /** A piece of scenery: a mesh (placed in the world by its matrixWorld) and the material it is drawn in. */
 export interface SceneryMesh {
@@ -17,13 +22,23 @@ export interface SceneryMesh {
   material: LevelMaterial;
 }
 
-/** A level and what the view draws for it. */
+/** One level file and what the view draws for it. */
+export interface PartModel {
+  part: LevelPart;
+  /** Every mesh that stays where it is: not a collision box, the goal, or a moving box's scenery. */
+  scenery: SceneryMesh[];
+  /** The scenery of each drifting or crumbling box, by the box's index in `part.boxes`. */
+  moving: Map<number, SceneryMesh[]>;
+  /** The goal ring's mesh, when the file has GOAL (the view turns it about the vertical through `goal`). */
+  goal: Mesh | null;
+  /** Where it came from, for messages. */
+  source: string;
+}
+
+/** A whole level and what the view draws for it: its parts (one for a level in one file), joined. */
 export interface LevelModel {
   level: Level;
-  /** Every mesh but the collision boxes and the goal. */
-  scenery: SceneryMesh[];
-  /** The goal ring's mesh (the view turns it about the vertical through `level.goal`). */
-  goal: Mesh | null;
+  parts: PartModel[];
   /** Where it came from, for messages. */
   source: string;
 }
@@ -35,11 +50,11 @@ const materialName = (mesh: Mesh): string => {
   return m?.name ?? '';
 };
 
-/** The model of an already-parsed glTF scene. */
-export function levelModelFromScene(root: Object3D, source: string): LevelModel {
+/** The part in an already-parsed glTF scene. */
+export function partModelFromScene(root: Object3D, source: string): PartModel {
   root.updateMatrixWorld(true);
   const objects: LevelObject[] = [];
-  const scenery: SceneryMesh[] = [];
+  const meshes: Mesh[] = [];
   let goal: Mesh | null = null;
   const box = new Box3();
   root.traverse((o) => {
@@ -61,26 +76,64 @@ export function levelModelFromScene(root: Object3D, source: string): LevelModel 
       goal = o;
       return;
     }
-    const name = materialName(o);
+    meshes.push(o);
+  });
+  const part = partFromObjects(objects, source);
+
+  // The scenery that goes with each drifting or crumbling box: <name> and <name>__... for COL_<name>.
+  const owners = new Map<string, number>();
+  for (const i of [...part.movers.map((m) => m.box), ...part.crumbles.map((c) => c.box)]) {
+    const name = part.boxes[i].name;
+    if (name) owners.set(name.slice(LEVEL_NAMES.collision.length), i);
+  }
+  const scenery: SceneryMesh[] = [];
+  const moving = new Map<number, SceneryMesh[]>();
+  for (const mesh of meshes) {
+    const name = materialName(mesh);
     if (!isLevelMaterial(name)) {
       throw new Error(
-        `R7: Ascent could not use ${source}: ${o.name} has the material "${name}", which the game does not know`,
+        `R7: Ascent could not use ${source}: ${mesh.name} has the material "${name}", which the game does not know`,
       );
     }
-    scenery.push({ mesh: o, material: name });
-  });
-  return { level: levelFromObjects(objects, source), scenery, goal, source };
+    const owner = owners.get(mesh.name.split('__')[0]);
+    const item = { mesh, material: name };
+    if (owner === undefined) scenery.push(item);
+    else moving.set(owner, [...(moving.get(owner) ?? []), item]);
+  }
+  return { part, scenery, moving, goal, source };
 }
 
-/** The model in a .glb file's bytes. */
-export async function parseLevelModel(data: ArrayBuffer, source = 'the level file'): Promise<LevelModel> {
+/** The part in a .glb file's bytes. */
+export async function parsePartModel(data: ArrayBuffer, source = 'the level file'): Promise<PartModel> {
   const gltf = await new GLTFLoader().parseAsync(data, '');
-  return levelModelFromScene(gltf.scene, source);
+  return partModelFromScene(gltf.scene, source);
 }
 
-/** The model of the .glb at `url`. Rejects when it cannot be fetched or used. */
-export async function loadLevelModel(url: string): Promise<LevelModel> {
+/** The part in the .glb at `url`. Rejects when it cannot be fetched or used. */
+export async function loadPartModel(url: string): Promise<PartModel> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`R7: Ascent could not load ${url} (${response.status})`);
-  return parseLevelModel(await response.arrayBuffer(), url);
+  return parsePartModel(await response.arrayBuffer(), url);
+}
+
+/** A whole level in one file: its part must have its own SPAWN and GOAL. */
+export function levelModelFromPart(model: PartModel): LevelModel {
+  const { part, source } = model;
+  if (!part.spawn) throw new Error(`R7: Ascent could not use ${source}: it has no SPAWN`);
+  if (!part.goal) throw new Error(`R7: Ascent could not use ${source}: it has no GOAL`);
+  return { level: joinParts([part], undefined, source), parts: [model], source };
+}
+
+/** The model of an already-parsed glTF scene of a whole level. */
+export const levelModelFromScene = (root: Object3D, source: string): LevelModel =>
+  levelModelFromPart(partModelFromScene(root, source));
+
+/** The model in a .glb file's bytes, a whole level. */
+export async function parseLevelModel(data: ArrayBuffer, source = 'the level file'): Promise<LevelModel> {
+  return levelModelFromPart(await parsePartModel(data, source));
+}
+
+/** The model of the .glb at `url`, a whole level. Rejects when it cannot be fetched or used. */
+export async function loadLevelModel(url: string): Promise<LevelModel> {
+  return levelModelFromPart(await loadPartModel(url));
 }

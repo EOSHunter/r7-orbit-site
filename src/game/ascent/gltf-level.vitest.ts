@@ -117,13 +117,13 @@ describe('the test climb (assets/test-climb.glb)', async () => {
     expect(model.level.spawn.y).toBeCloseTo(0);
     expect(model.level.spawn.z).toBeCloseTo(10);
     expect(model.level.spawnYaw).toBeCloseTo(0);
-    expect(model.goal?.name).toBe('GOAL');
+    expect(model.parts[0].goal?.name).toBe('GOAL');
     expect(model.level.boxes.filter((b) => b.kind === 'ground')).toHaveLength(1);
   });
 
   it('has scenery in known materials, and no collision box or goal among it', () => {
-    expect(model.scenery.length).toBeGreaterThan(10);
-    for (const { mesh, material } of model.scenery) {
+    expect(model.parts[0].scenery.length).toBeGreaterThan(10);
+    for (const { mesh, material } of model.parts[0].scenery) {
       expect(Object.keys(LEVEL_MATERIALS)).toContain(material);
       expect(mesh.name.startsWith('COL_') || mesh.name === 'GOAL').toBe(false);
     }

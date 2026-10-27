@@ -1,0 +1,44 @@
+{
+  "zones": [
+    {
+      "n": 1,
+      "title": "Workshop",
+      "base": 0.0,
+      "top": 70,
+      "file": "zone-1.glb"
+    },
+    {
+      "n": 2,
+      "title": "Server stack",
+      "base": 70.58,
+      "top": 150,
+      "file": "zone-2.glb"
+    },
+    {
+      "n": 3,
+      "title": "Cloud",
+      "base": 150.54,
+      "top": 228,
+      "file": "zone-3.glb"
+    },
+    {
+      "n": 4,
+      "title": "Upper air",
+      "base": 228.78,
+      "top": 300,
+      "file": "zone-4.glb"
+    },
+    {
+      "n": 5,
+      "title": "Orbit",
+      "base": 300.77,
+      "top": 355.53,
+      "file": "zone-5.glb"
+    }
+  ],
+  "goal": {
+    "x": -2.5246,
+    "y": 350.5284,
+    "z": 14.8181
+  }
+}

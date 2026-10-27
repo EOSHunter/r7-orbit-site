@@ -351,3 +351,46 @@
     display: grid;
   }
 }
+
+/* The finish: the time, falls and jumps as a short list, then the note and the host's credits. */
+.ascent-finish {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  max-width: 24rem;
+  pointer-events: auto;
+}
+
+.ascent-finish[hidden] {
+  display: none;
+}
+
+.ascent-finish-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-5);
+  margin: 0;
+}
+
+.ascent-finish-stats dt {
+  font: var(--fs-2xs) var(--font-ui);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.ascent-finish-stats dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.ascent-credits {
+  display: grid;
+  gap: var(--s-1);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
