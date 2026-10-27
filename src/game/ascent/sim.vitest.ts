@@ -381,12 +381,12 @@ describe("the climb's moving parts", () => {
   });
 
   it('touching the ring finishes the climb and stops the clock', () => {
-    // A ring lying flat (no rotation) whose tube passes 1.4 m above a block's top.
+    // A ring lying flat (no rotation) whose tube passes 1.9 m above a block's top: out of reach standing, in reach jumping.
     const level: Level = {
       ...base,
       spawn: { x: 0, y: 1, z: 0 },
       boxes: [floor, at(0, 1, 0, 4), at(20, 1, 20)],
-      ring: { centre: { x: 3, y: 2.6, z: 0 }, radius: 3, tube: 0.1, rotation: { x: 0, y: 0, z: 0, w: 1 } },
+      ring: { centre: { x: 3, y: 2.9, z: 0 }, radius: 3, tube: 0.1, rotation: { x: 0, y: 0, z: 0, w: 1 } },
     };
     const sim = new AscentSim(level);
     run(sim, 0.3);
