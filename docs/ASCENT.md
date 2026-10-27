@@ -96,9 +96,18 @@ The setting is computing gear, so it fits the site's subject without real brands
 - **Phone controls:** a virtual stick on the left, drag on the right half to look, a jump button. Portrait shows a "turn your
   phone sideways" prompt
 
+### Sound (built 2026-10-27, after the author's first full climb: "incredibly silent")
+
+Made in code with Web Audio (`audio.ts`): no audio files, nothing fetched. `sound-events.ts` (pure, unit-tested) reads the
+sim each frame and says what to play: a jump, a landing as loud as it was hard, footsteps (one each 0.85 m run, feet
+alternating), a fall back to the start or a beacon, a beacon touched, a panel creaking while it waits and cracking when it
+breaks, a fan's updraft catching the agent, and a rising chord at the finish. Under them, each zone has a bed of sound,
+mixed by height (12 m either side of a zone's start): the workshop's room tone, the server stack's fan drone and mains hum
+with an odd beep, the cloud's wind, the upper air's thinner wind over a rumble, and orbit's quiet two-note pad. Volume and
+mute are in Settings (`r7-ascent-settings`); the sound is quiet while paused and closed when the game is taken away.
+
 ### Later (not committed)
 
-- Sound, generated in code with Web Audio (no audio files)
 - Gamepad support
 - A speedrun split timer per zone
 - A shareable result line ("I reached 812 m in 14:32"), copied as text
@@ -318,6 +327,10 @@ monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the
 `level.vitest.ts` runs the fairness checks on both levels, the test climb read from the committed file through
 `gltf-level.ts`; `gltf-level.vitest.ts` covers the file rules and walks the sim into the first book's side and onto it; and
 `tests/ascent.spec.js` checks that the `.glb` loads only on Play, `?level=code` and the fallback.
+
+**The finish screen** (2026-10-27, after the author's first climb: the text was too small in full screen). The HUD and the
+finish screen size their text by the stage's width (`cqw`), between token sizes; the finish is a solid panel over a darker
+scrim, with a large Climb again.
 
 **The rest of phase 2 (2026-10-27).** The author asked for it before phase 3, since the finish needs the timer and the public
 page is meant for phones too.

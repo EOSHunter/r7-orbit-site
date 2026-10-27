@@ -36,14 +36,17 @@ const broken = new Proxy({} as Storage, {
 describe('settings', () => {
   it('keeps what is valid and puts the default in place of anything else', () => {
     expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS);
-    expect(parseSettings({ sensitivity: 1.5, invertY: true, motion: 'reduce' })).toEqual({
+    expect(parseSettings({ sensitivity: 1.5, invertY: true, motion: 'reduce', volume: 0.3, muted: true })).toEqual({
       sensitivity: 1.5,
       invertY: true,
       motion: 'reduce',
+      volume: 0.3,
+      muted: true,
     });
-    expect(parseSettings({ sensitivity: 99, invertY: 'yes', motion: 'wild' })).toEqual({
+    expect(parseSettings({ sensitivity: 99, invertY: 'yes', motion: 'wild', volume: 7, muted: 'no' })).toEqual({
       ...DEFAULT_SETTINGS,
       sensitivity: SENSITIVITY_RANGE.max,
+      volume: 1,
     });
     expect(parseSettings({ sensitivity: Number.NaN }).sensitivity).toBe(DEFAULT_SETTINGS.sensitivity);
   });
@@ -57,9 +60,13 @@ describe('settings', () => {
 
   it('round-trips through storage, and falls back to the defaults when storage fails', () => {
     const store = memory();
-    saveSettings(store, { sensitivity: 0.8, invertY: true, motion: 'full' });
-    expect(JSON.parse(store.getItem(SETTINGS_KEY) ?? '')).toEqual({ sensitivity: 0.8, invertY: true, motion: 'full' });
-    expect(loadSettings(store)).toEqual({ sensitivity: 0.8, invertY: true, motion: 'full' });
+    saveSettings(store, { ...DEFAULT_SETTINGS, sensitivity: 0.8, invertY: true, motion: 'full' });
+    expect(JSON.parse(store.getItem(SETTINGS_KEY) ?? '')).toMatchObject({
+      sensitivity: 0.8,
+      invertY: true,
+      motion: 'full',
+    });
+    expect(loadSettings(store)).toEqual({ ...DEFAULT_SETTINGS, sensitivity: 0.8, invertY: true, motion: 'full' });
     store.setItem(SETTINGS_KEY, '{not json');
     expect(loadSettings(store)).toEqual(DEFAULT_SETTINGS);
     expect(loadSettings(broken)).toEqual(DEFAULT_SETTINGS);

@@ -45,6 +45,8 @@ import {
 import { AscentSim } from './sim';
 import { ASCENT_TEXT } from './text';
 import { createTouchControls } from './touch';
+import { createAudio, type AudioEngine } from './audio';
+import { SoundTracker, ambienceMix } from './sound-events';
 import agentUrl from './assets/agent.glb?url';
 import testClimbUrl from './assets/test-climb.glb?url';
 
@@ -133,6 +135,8 @@ export interface AscentHandle {
 /** What mountAscent builds on; a test can replace the view (no WebGL in Node). */
 export interface AscentDeps {
   createView: (canvas: HTMLCanvasElement, options: ViewOptions) => View | null;
+  /** The sound (audio.ts); a test can leave it out. */
+  createAudio?: (win: Window) => AudioEngine | null;
 }
 
 /** Save the climb this often while playing (and on every pause). */
@@ -143,7 +147,7 @@ const TOUCH_LOOK = 1.8;
 export function mountAscent(
   container: HTMLElement,
   options: AscentOptions = {},
-  deps: AscentDeps = { createView },
+  deps: AscentDeps = { createView, createAudio },
 ): AscentHandle {
   const cfg = options.config ?? ASCENT_CONFIG;
   const climb = options.climb ?? null;
@@ -190,6 +194,11 @@ export function mountAscent(
     const noop = () => {};
     return { start: noop, pause: noop, resume: noop, restart: noop, destroy: () => root.remove() };
   }
+
+  // The sound: made now (after the Play click, so the browser lets it play), quiet while paused, closed on destroy.
+  const audio = (deps.createAudio ?? createAudio)(win);
+  const sounds = new SoundTracker();
+  audio?.setVolume(settings.volume, settings.muted);
 
   // ---- the HUD ----------------------------------------------------------------------------------------------------------
   // The altitude, best, falls and zone (top left), the time (top right), the altimeter (left edge), the message (middle), the
@@ -265,6 +274,22 @@ export function mountAscent(
   const speedOut = el('output', 'ascent-range-value');
   speedOut.htmlFor.add(speed.id);
   speedField.append(speedLabel, speed, speedOut);
+  const volumeField = el('div', 'field');
+  const volumeLabel = el('label', undefined, ASCENT_TEXT.volume);
+  volumeLabel.htmlFor = `${uid}-volume`;
+  const volume = el('input', 'ascent-range');
+  volume.type = 'range';
+  volume.id = `${uid}-volume`;
+  volume.min = '0';
+  volume.max = '1';
+  volume.step = '0.05';
+  const volumeOut = el('output', 'ascent-range-value');
+  volumeOut.htmlFor.add(volume.id);
+  volumeField.append(volumeLabel, volume, volumeOut);
+  const muteLabel = el('label', 'ascent-check');
+  const mute = el('input');
+  mute.type = 'checkbox';
+  muteLabel.append(mute, ` ${ASCENT_TEXT.mute}`);
   const invertLabel = el('label', 'ascent-check');
   const invert = el('input');
   invert.type = 'checkbox';
@@ -289,7 +314,7 @@ export function mountAscent(
   });
   motionField.append(motionLabel, motionSeg);
   const backButton = button(ASCENT_TEXT.back);
-  panel.append(speedField, invertLabel, motionField, backButton);
+  panel.append(speedField, invertLabel, motionField, volumeField, muteLabel, backButton);
   // The finish: the time, the falls, whether assist mode was used, the host's credits.
   const finishBox = el('div', 'ascent-finish');
   finishBox.hidden = true;
@@ -312,7 +337,7 @@ export function mountAscent(
     for (const line of options.credits) credits.append(el('p', undefined, line));
     finishBox.append(credits);
   }
-  const againButton = button(ASCENT_TEXT.climbAgain, 'btn solid');
+  const againButton = button(ASCENT_TEXT.climbAgain, 'btn solid lg');
   menu.prepend(againButton);
   message.append(title, prompt, finishBox, menu, assistNote, panel);
 
@@ -336,6 +361,10 @@ export function mountAscent(
     speed.value = String(settings.sensitivity);
     speedOut.textContent = `${settings.sensitivity.toFixed(1)}×`;
     invert.checked = settings.invertY;
+    volume.value = String(settings.volume);
+    volumeOut.textContent = `${Math.round(settings.volume * 100)}%`;
+    mute.checked = settings.muted;
+    audio?.setVolume(settings.volume, settings.muted);
     for (const b of motionButtons) {
       const on = b.dataset.motion === settings.motion;
       b.classList.toggle('on', on);
@@ -521,6 +550,29 @@ export function mountAscent(
     }
     lastFrame = now;
     view.render(sim, tick.alpha, rig, now / 1000);
+    if (audio && (state === 'playing' || state === 'finished')) {
+      const crumbles = sim.crumbles;
+      for (const e of sounds.update(
+        {
+          grounded: sim.grounded,
+          speed: Math.hypot(sim.vel.x, sim.vel.z),
+          vy: sim.vel.y,
+          jumps: sim.jumps,
+          landings: sim.landings,
+          teleports: sim.teleports,
+          checkpoint: sim.checkpoint,
+          lifted: sim.lifted,
+          shaking: crumbles.filter((c) => c.touched !== null).length,
+          broken: crumbles.filter((c) => c.broke !== null).length,
+          finished: sim.finished,
+        },
+        tick.delta,
+      )) {
+        audio.play(e);
+      }
+      audio.setMix(ambienceMix(sim.pos.y, zones));
+      audio.tick();
+    }
     updateHud();
     if (options.onStats) {
       options.onStats({
@@ -565,6 +617,8 @@ export function mountAscent(
     touchControls.release();
     sim.release();
     paused = true;
+    audio?.suspend();
+    sounds.reset();
     save();
     exitLock();
     if (raf) win.cancelAnimationFrame(raf);
@@ -577,6 +631,7 @@ export function mountAscent(
   const resume = () => {
     if (destroyed || !paused) return;
     paused = false;
+    audio?.resume();
     input.release();
     touchControls.release();
     sim.release();
@@ -659,6 +714,8 @@ export function mountAscent(
     savedAt = sim.time;
     saved = null;
     state = 'playing';
+    audio?.resume();
+    sounds.reset();
     clock.reset();
     if (!touchControls.shown) grab();
     else enterPlay(container, { lock: false, fullscreen: gesture.fullscreen });
@@ -771,6 +828,8 @@ export function mountAscent(
   };
   const onSpeed = () => setSettings({ sensitivity: Number(speed.value) });
   const onInvert = () => setSettings({ invertY: invert.checked });
+  const onVolume = () => setSettings({ volume: Number(volume.value), muted: false });
+  const onMute = () => setSettings({ muted: mute.checked });
 
   const resize = () => {
     const width = container.clientWidth;
@@ -832,6 +891,8 @@ export function mountAscent(
     [message, 'click', onMenu],
     [speed, 'input', onSpeed],
     [invert, 'change', onInvert],
+    [volume, 'input', onVolume],
+    [mute, 'change', onMute],
   ];
   if (portrait) listeners.push([portrait, 'change', onOrientation]);
   if (!observer) listeners.push([win, 'resize', resize]);
@@ -860,6 +921,7 @@ export function mountAscent(
       for (const [target, type, fn] of listeners) target.removeEventListener(type, fn);
       observer?.disconnect();
       view.dispose();
+      audio?.dispose();
       root.remove();
     },
   };

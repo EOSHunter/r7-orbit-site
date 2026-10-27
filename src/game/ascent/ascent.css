@@ -394,3 +394,65 @@
   font-size: var(--fs-xs);
   color: var(--text-2);
 }
+
+/* Text that grows with the stage: in full screen on a wide monitor, the fixed sizes above read as tiny. The stage is a size
+   container (.ascent), so cqw is a share of its width; each size has the token floor it never goes under, and a ceiling. */
+.ascent-alt {
+  font-size: clamp(var(--fs-xl), 2.4cqw, var(--fs-4xl));
+}
+
+.ascent-sub {
+  font-size: clamp(var(--fs-2xs), 0.85cqw, var(--fs-sm));
+}
+
+.ascent-time {
+  font-size: clamp(var(--fs-lg), 1.9cqw, var(--fs-3xl));
+}
+
+.ascent-prompt {
+  font-size: clamp(var(--fs-md), 1.4cqw, var(--fs-xl));
+}
+
+/* The finish: a solid panel over a darker scrim, so the climb behind it never shows through the words. */
+.ascent[data-ascent-state='finished'] .ascent-message {
+  background: var(--scrim-strong);
+}
+
+.ascent[data-ascent-state='finished'] .ascent-title {
+  font-size: clamp(var(--fs-2xl), 5cqw, var(--fs-5xl));
+}
+
+.ascent-finish {
+  max-width: min(100%, 44rem);
+  gap: var(--s-5);
+  padding: clamp(var(--s-5), 2.5cqw, var(--s-8));
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+}
+
+.ascent-finish-stats {
+  gap: clamp(var(--s-5), 3cqw, var(--s-9));
+}
+
+.ascent-finish-stats dt {
+  font-size: clamp(var(--fs-2xs), 0.9cqw, var(--fs-sm));
+}
+
+.ascent-finish-stats dd {
+  font-size: clamp(var(--fs-2xl), 3.4cqw, var(--fs-5xl));
+}
+
+.ascent-finish .ascent-note {
+  font-size: clamp(var(--fs-sm), 1.1cqw, var(--fs-lg));
+  color: var(--text-2);
+}
+
+.ascent-credits {
+  gap: var(--s-2);
+  font-size: clamp(var(--fs-sm), 1.05cqw, var(--fs-md));
+}
+
+.ascent[data-ascent-state='finished'] .ascent-menu {
+  width: min(100%, 22rem);
+}

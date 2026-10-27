@@ -1,5 +1,5 @@
-// The player's settings (docs/ASCENT.md, "Settings"): how fast the camera turns, whether looking up and down is inverted, and
-// reduced motion. Kept in the browser (localStorage `r7-ascent-settings`, beside the save); every read and write is wrapped in
+// The player's settings (docs/ASCENT.md, "Settings"): how fast the camera turns, whether looking up and down is inverted,
+// reduced motion, and the sound's volume and mute. Kept in the browser (localStorage `r7-ascent-settings`, beside the save); every read and write is wrapped in
 // try/catch, and the game works the same without storage. The parsing is pure (unit-tested): anything unknown or out of range
 // falls back to the default, so an old or hand-edited value never breaks the game.
 
@@ -12,11 +12,20 @@ export interface AscentSettings {
   invertY: boolean;
   /** Reduced motion: as the system asks, always, or never. */
   motion: MotionSetting;
+  /** The sound's volume, 0 to 1, and whether it is muted. */
+  volume: number;
+  muted: boolean;
 }
 
 export const SETTINGS_KEY = 'r7-ascent-settings';
 export const SENSITIVITY_RANGE = { min: 0.4, max: 2.5, step: 0.1 } as const;
-export const DEFAULT_SETTINGS: AscentSettings = { sensitivity: 1, invertY: false, motion: 'system' };
+export const DEFAULT_SETTINGS: AscentSettings = {
+  sensitivity: 1,
+  invertY: false,
+  motion: 'system',
+  volume: 0.7,
+  muted: false,
+};
 
 const MOTIONS: readonly MotionSetting[] = ['system', 'reduce', 'full'];
 
@@ -32,6 +41,8 @@ export function parseSettings(raw: unknown): AscentSettings {
   if (typeof r.motion === 'string' && (MOTIONS as readonly string[]).includes(r.motion)) {
     out.motion = r.motion as MotionSetting;
   }
+  if (typeof r.volume === 'number' && Number.isFinite(r.volume)) out.volume = Math.min(1, Math.max(0, r.volume));
+  if (typeof r.muted === 'boolean') out.muted = r.muted;
   return out;
 }
 

@@ -49,6 +49,8 @@ export const ASCENT_TEXT = {
   motionSystem: 'As the system asks',
   motionReduce: 'Reduced',
   motionFull: 'Full',
+  volume: 'Volume',
+  mute: 'Mute the sound',
 
   // Touch
   jump: 'Jump',
