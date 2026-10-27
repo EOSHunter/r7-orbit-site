@@ -28,6 +28,40 @@ export interface Level {
   beacons: Vec3[];
   /** The climb's zones, bottom to top (the HUD's altimeter); a level without them is one zone from the start to the goal. */
   zones?: LevelZone[];
+  /** Boxes that blow the agent up, drift, or break (indexes into `boxes`); a level without them has none. */
+  fans?: LevelFan[];
+  movers?: LevelMover[];
+  crumbles?: LevelCrumble[];
+  /** The goal ring's shape, when it is known (touching it finishes the climb); without it the goal is drawn only. */
+  ring?: LevelRing;
+}
+
+/** An updraft over the top of `boxes[box]`, `height` metres high, pushing up at `strength` m/s². */
+export interface LevelFan {
+  box: number;
+  height: number;
+  strength: number;
+}
+
+/** `boxes[box]` drifts to `offset` from where it is and back, smoothly, once every `period` seconds. */
+export interface LevelMover {
+  box: number;
+  offset: Vec3;
+  period: number;
+}
+
+/** `boxes[box]` breaks `delay` seconds after the agent first stands on it (and comes back later: config.crumble). */
+export interface LevelCrumble {
+  box: number;
+  delay: number;
+}
+
+/** The ring round `centre`, `radius` to the middle of its tube, `tube` thick, turned by `rotation` from lying flat (XZ). */
+export interface LevelRing {
+  centre: Vec3;
+  radius: number;
+  tube: number;
+  rotation: { x: number; y: number; z: number; w: number };
 }
 
 export interface LevelZone {
@@ -128,6 +162,7 @@ export const LEVEL_NAMES = {
   spawn: 'SPAWN',
   goal: 'GOAL',
   beacon: 'BEACON_',
+  zone: 'ZONE_',
   route: 'route',
   ground: 'ground',
 } as const;
@@ -171,48 +206,94 @@ export function isAxisAligned(rotation: LevelObject['rotation'], tolerance = 1e-
   return Math.abs(quarter - Math.round(quarter)) < tolerance;
 }
 
+/** One level file's share of a level: what it holds of a Level's parts (a zone of the climb may hold no start or goal). */
+export interface LevelPart {
+  spawn?: { at: Vec3; yaw: number };
+  goal?: Vec3;
+  ring?: LevelRing;
+  zone?: LevelZone;
+  boxes: LevelBox[];
+  route: number[];
+  beacons: Vec3[];
+  fans: LevelFan[];
+  movers: LevelMover[];
+  crumbles: LevelCrumble[];
+}
+
+/** Blender's axes to the game's: the glTF exporter turns positions, but not custom properties. (x, y, z) to (x, z, -y). */
+const fromBlender = (x: number, y: number, z: number): Vec3 => ({ x, y: z, z: -y });
+
+const finite = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
 /**
- * A Level from a level file's objects: each COL_ box becomes a solid (the floor when it has `ground`, the n-th block of the
- * route when it has `route` = n), its corners on a 0.1 mm grid (LEVEL_GRID); SPAWN gives the start and the way the agent faces, GOAL the middle of the ring. Throws an
- * error that names the object for anything the game cannot use: no SPAWN or GOAL, a collision box that is turned or tilted
- * (collision is axis-aligned boxes only), a route number missing, repeated or not a whole number. Everything else is scenery,
- * which the view draws and the sim never sees.
+ * A level file's objects as a part of a level. Each COL_ box becomes a solid (the floor when it has `ground`, the n-th block
+ * of the file's route when it has `route` = n, and a fan, a drifting box or a crumbling one by its `fan`, `mover` or
+ * `crumble`), its corners on a 0.1 mm grid (LEVEL_GRID). SPAWN gives the start and the way the agent faces; GOAL the middle of
+ * the ring (and its shape, from ring_radius and ring_tube); BEACON_<n> assist mode's checkpoints; ZONE_<n> the zone's name and
+ * heights. Throws an error that names the object for anything the game cannot use: two SPAWNs or GOALs, a collision box that
+ * is turned or tilted (collision is axis-aligned boxes only), a route number missing, repeated or not a whole number, a fan,
+ * drift or crumble without its numbers. Everything else is scenery, which the view draws and the sim never sees.
  */
-export function levelFromObjects(objects: readonly LevelObject[], source = 'the level'): Level {
+export function partFromObjects(objects: readonly LevelObject[], source = 'the level'): LevelPart {
   const fail = (why: string): never => {
     throw new Error(`R7: Ascent could not use ${source}: ${why}`);
   };
-  const named = (name: string) => {
+  const single = (name: string) => {
     const found = objects.filter((o) => o.name === name);
-    if (found.length !== 1) fail(found.length ? `it has ${found.length} objects named ${name}` : `it has no ${name}`);
+    if (found.length > 1) fail(`it has ${found.length} objects named ${name}`);
     return found[0];
   };
-  const spawn = named(LEVEL_NAMES.spawn);
-  const goal = named(LEVEL_NAMES.goal);
+  const spawn = single(LEVEL_NAMES.spawn);
+  const goal = single(LEVEL_NAMES.goal);
 
   const boxes: LevelBox[] = [];
+  const fans: LevelFan[] = [];
+  const movers: LevelMover[] = [];
+  const crumbles: LevelCrumble[] = [];
   const byStep = new Map<number, number>();
   for (const o of objects) {
     if (!o.name.startsWith(LEVEL_NAMES.collision)) continue;
     if (!isAxisAligned(o.rotation)) fail(`${o.name} is turned or tilted; collision boxes must be axis-aligned`);
     if (!(o.max.x > o.min.x && o.max.y > o.min.y && o.max.z > o.min.z)) fail(`${o.name} has no size`);
-    const ground = Boolean(o.userData[LEVEL_NAMES.ground]);
-    boxes.push({ kind: ground ? 'ground' : 'block', name: o.name, min: snap(o.min), max: snap(o.max) });
-    const step = o.userData[LEVEL_NAMES.route];
+    const d = o.userData;
+    const index = boxes.length;
+    boxes.push({ kind: d[LEVEL_NAMES.ground] ? 'ground' : 'block', name: o.name, min: snap(o.min), max: snap(o.max) });
+    if (d.fan !== undefined) {
+      const height = finite(d.fan);
+      const strength = finite(d.strength);
+      if (height === null || height <= 0 || strength === null)
+        fail(`${o.name} is a fan without a height and a strength`);
+      fans.push({ box: index, height: height as number, strength: strength as number });
+    }
+    if (d.mover !== undefined) {
+      const [mx, my, mz, period] = [d.move_x ?? 0, d.move_y ?? 0, d.move_z ?? 0, d.period].map(finite);
+      if (mx === null || my === null || mz === null || period === null || period <= 0) {
+        fail(`${o.name} drifts without move_x, move_y, move_z and a period`);
+      }
+      movers.push({
+        box: index,
+        offset: fromBlender(mx as number, my as number, mz as number),
+        period: period as number,
+      });
+    }
+    if (d.crumble !== undefined) {
+      const delay = finite(d.crumble);
+      if (delay === null || delay < 0) fail(`${o.name} has crumble ${String(d.crumble)}`);
+      crumbles.push({ box: index, delay: delay as number });
+    }
+    const step = d[LEVEL_NAMES.route];
     if (step === undefined) continue;
     if (typeof step !== 'number' || !Number.isInteger(step) || step < 1) fail(`${o.name} has route ${String(step)}`);
     const n = step as number;
     if (byStep.has(n)) fail(`route ${n} is on two boxes`);
-    byStep.set(n, boxes.length - 1);
+    byStep.set(n, index);
   }
-  if (!boxes.length) fail('it has no COL_ boxes');
   const route: number[] = [];
   for (let n = 1; n <= byStep.size; n++) {
     const i = byStep.get(n);
     if (i === undefined) fail(`route ${n} is missing (the route runs 1, 2, 3 ... with no gaps)`);
     route.push(i as number);
   }
-  if (route.length < 2) fail('its route has fewer than two blocks');
 
   // Beacons (BEACON_<n>, custom property beacon = n): in order of n, which need not start at 1 (a zone's first beacon
   // carries on from the zone below's).
@@ -226,12 +307,96 @@ export function levelFromObjects(objects: readonly LevelObject[], source = 'the 
     .sort((a, b) => a.n - b.n)
     .map((b) => b.at);
 
+  let zone: LevelZone | undefined;
+  const zoneObject = objects.find((o) => o.name.startsWith(LEVEL_NAMES.zone));
+  if (zoneObject) {
+    const d = zoneObject.userData;
+    const [n, base, top] = [d.zone, d.base, d.top].map(finite);
+    if (n === null || base === null || top === null || typeof d.title !== 'string') {
+      fail(`${zoneObject.name} needs zone, title, base and top`);
+    }
+    zone = { n: n as number, title: d.title as string, base: base as number, top: top as number };
+  }
+
+  let ring: LevelRing | undefined;
+  if (goal) {
+    const radius = finite(goal.userData.ring_radius);
+    const tube = finite(goal.userData.ring_tube);
+    if (radius !== null && tube !== null) {
+      ring = { centre: { ...goal.position }, radius, tube, rotation: { ...goal.rotation } };
+    }
+  }
+
   return {
-    spawn: { ...spawn.position },
-    spawnYaw: yawOf(spawn.rotation),
+    ...(spawn ? { spawn: { at: { ...spawn.position }, yaw: yawOf(spawn.rotation) } } : {}),
+    ...(goal ? { goal: { ...goal.position } } : {}),
+    ...(ring ? { ring } : {}),
+    ...(zone ? { zone } : {}),
     boxes,
     route,
-    goal: { ...goal.position },
     beacons,
+    fans,
+    movers,
+    crumbles,
   };
+}
+
+/**
+ * One level from its parts, bottom to top: the boxes one after another (each part's fans, drifts, crumbles and route moved
+ * along by the boxes before it), the beacons in order, the start from the part that has SPAWN, the goal from the part that
+ * has GOAL or else `goal` (a climb whose top has not loaded yet still knows where it is going). Throws when no part has a
+ * start, nothing gives a goal, or the route has fewer than two blocks.
+ */
+export function joinParts(parts: readonly LevelPart[], goal?: Vec3, source = 'the level'): Level {
+  const fail = (why: string): never => {
+    throw new Error(`R7: Ascent could not use ${source}: ${why}`);
+  };
+  const boxes: LevelBox[] = [];
+  const route: number[] = [];
+  const beacons: Vec3[] = [];
+  const fans: LevelFan[] = [];
+  const movers: LevelMover[] = [];
+  const crumbles: LevelCrumble[] = [];
+  const zones: LevelZone[] = [];
+  let spawn: LevelPart['spawn'];
+  let goalAt = goal;
+  let ring: LevelRing | undefined;
+  for (const part of parts) {
+    const at = boxes.length;
+    boxes.push(...part.boxes);
+    route.push(...part.route.map((i) => i + at));
+    beacons.push(...part.beacons);
+    fans.push(...part.fans.map((f) => ({ ...f, box: f.box + at })));
+    movers.push(...part.movers.map((m) => ({ ...m, box: m.box + at })));
+    crumbles.push(...part.crumbles.map((c) => ({ ...c, box: c.box + at })));
+    if (part.zone) zones.push(part.zone);
+    spawn ??= part.spawn;
+    if (part.goal) goalAt = part.goal;
+    ring ??= part.ring;
+  }
+  if (!spawn) return fail('it has no SPAWN');
+  if (!goalAt) return fail('it has no GOAL');
+  if (!boxes.length) fail('it has no COL_ boxes');
+  if (route.length < 2) fail('its route has fewer than two blocks');
+  return {
+    spawn: { ...spawn.at },
+    spawnYaw: spawn.yaw,
+    boxes,
+    route,
+    goal: { ...goalAt },
+    beacons,
+    ...(zones.length ? { zones } : {}),
+    fans,
+    movers,
+    crumbles,
+    ...(ring ? { ring } : {}),
+  };
+}
+
+/** A Level from one level file's objects (a whole level, such as the test climb): it must have its own SPAWN and GOAL. */
+export function levelFromObjects(objects: readonly LevelObject[], source = 'the level'): Level {
+  const part = partFromObjects(objects, source);
+  if (!part.spawn) throw new Error(`R7: Ascent could not use ${source}: it has no SPAWN`);
+  if (!part.goal) throw new Error(`R7: Ascent could not use ${source}: it has no GOAL`);
+  return joinParts([part], undefined, source);
 }

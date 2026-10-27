@@ -39,7 +39,8 @@ import type { AgentAnimation } from './agent-anim';
 import type { OrbitCamera } from './camera';
 import { LEVEL_MATERIALS, type Rgb, type SceneColors } from './colors';
 import { ASCENT_CONFIG, type AscentConfig } from './config';
-import type { LevelModel, SceneryMesh } from './gltf-level';
+import type { LevelModel, PartModel, SceneryMesh } from './gltf-level';
+import type { Vec3 } from './collision';
 import type { Level, LevelBox } from './level';
 import type { AscentSim } from './sim';
 
@@ -57,6 +58,8 @@ export interface View {
   resize(width: number, height: number, pixelRatio: number): void;
   /** Draw the sim `alpha` of the way from its previous step to its current one, from the camera; `time` in seconds. */
   render(sim: AscentSim, alpha: number, camera: OrbitCamera, time: number): void;
+  /** Draw a part of the level that has just loaded (a zone of the climb); its boxes start at `firstBox` in the level. */
+  addPart(part: PartModel, firstBox: number): void;
   /** Free every geometry, material and the WebGL context. */
   dispose(): void;
   info(): ViewInfo;
@@ -281,18 +284,52 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
 
   // The level: tone-shaded faces pushed back a little so the edge lines on them never flicker.
   const model = options.model ?? null;
-  const { faces, lines } = model ? sceneryGeometry(model.scenery, colors) : levelGeometry(level.boxes, colors);
-  const blocks = new Mesh(
-    geo(faces),
-    mat(
-      new MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
-    ),
+  const faceMaterial = mat(
+    new MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
   );
-  const edges = new LineSegments(
-    geo(lines),
-    mat(new LineBasicMaterial({ color: toColor(colors.ivory), transparent: true, opacity: r.edgeOpacity })),
+  const lineMaterial = mat(
+    new LineBasicMaterial({ color: toColor(colors.ivory), transparent: true, opacity: r.edgeOpacity }),
   );
-  scene.add(blocks, edges);
+  /** Faces and their edge lines as one group: the merged scenery of a part, or one moving box's. */
+  const drawn = ({ faces, lines }: { faces: BufferGeometry; lines: BufferGeometry }) => {
+    const group = new Group();
+    group.add(new Mesh(geo(faces), faceMaterial), new LineSegments(geo(lines), lineMaterial));
+    return group;
+  };
+  if (!model) scene.add(drawn(levelGeometry(level.boxes, colors)));
+
+  // Each drifting or crumbling box's scenery, by the box's index in the level, with where the box starts.
+  const moving = new Map<number, { group: Group; rest: Vec3 }>();
+  // Each fan's streaks: short ivory lines rising through its updraft, so a fan reads as one before it is tried.
+  const streakMaterial = mat(
+    new LineBasicMaterial({ color: toColor(colors.ivory), transparent: true, opacity: r.fanStreaks.opacity }),
+  );
+  const streaks: { box: number; height: number; lines: LineSegments; seeds: number[] }[] = [];
+
+  /** A part's scenery, moving boxes, beacons, fans and goal; its boxes start at `firstBox` in the level. */
+  const addPart = (part: PartModel, firstBox: number) => {
+    scene.add(drawn(sceneryGeometry(part.scenery, colors)));
+    for (const [i, items] of part.moving) {
+      const group = drawn(sceneryGeometry(items, colors));
+      scene.add(group);
+      moving.set(firstBox + i, { group, rest: { ...part.part.boxes[i].min } });
+    }
+    for (const b of part.part.beacons) beacons.push(addBeacon(b));
+    for (const f of part.part.fans) {
+      const n = r.fanStreaks.count;
+      const seeds = Array.from(
+        { length: n * 3 },
+        (_, k) => (Math.sin((firstBox + f.box) * 12.9898 + k * 78.233) + 1) / 2,
+      );
+      const g = geo(new BufferGeometry());
+      g.setAttribute('position', new Float32BufferAttribute(new Float32Array(n * 6), 3));
+      const lines = new LineSegments(g, streakMaterial);
+      lines.frustumCulled = false;
+      scene.add(lines);
+      streaks.push({ box: firstBox + f.box, height: f.height, lines, seeds });
+    }
+    if (part.goal) setRing(part.goal, part.part.goal ?? level.goal);
+  };
 
   // The agent: the robot when its model loaded, else the capsule; with its own light (agent.ts).
   const agent = createAgentView({ colors, model: options.agent, config: cfg, reducedMotion: options.reducedMotion });
@@ -317,27 +354,31 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   scene.add(shadow);
 
   // The goal ring: brass, tilted like the ring in the logo, turning slowly about the vertical through its middle. From
-  // Blender, its GOAL mesh keeps its tilt and size; in code, a ring is made here.
+  // Blender, its GOAL mesh keeps its tilt and size (and a climb draws it once its top zone has loaded); in code, a ring is
+  // made here.
   const ring = new Group();
   const brass = mat(new MeshBasicMaterial({ color: toColor(colors.brass) }));
-  const torus = model?.goal
-    ? new Mesh(geo(model.goal.geometry), brass)
-    : new Mesh(geo(new TorusGeometry(2.2, 0.07, 8, 72)), brass);
-  if (model?.goal) {
-    model.goal.updateWorldMatrix(true, false);
-    model.goal.matrixWorld.decompose(new Vector3(), torus.quaternion, torus.scale);
-  } else {
-    torus.rotation.x = Math.PI / 2 - 0.42;
-  }
-  ring.add(torus);
-  ring.position.set(level.goal.x, level.goal.y, level.goal.z);
   scene.add(ring);
+  function setRing(goal: Mesh, at: Vec3) {
+    const torus = new Mesh(geo(goal.geometry), brass);
+    goal.updateWorldMatrix(true, false);
+    goal.matrixWorld.decompose(new Vector3(), torus.quaternion, torus.scale);
+    ring.clear();
+    ring.add(torus);
+    ring.position.set(at.x, at.y, at.z);
+  }
+  if (!model) {
+    const torus = new Mesh(geo(new TorusGeometry(2.2, 0.07, 8, 72)), brass);
+    torus.rotation.x = Math.PI / 2 - 0.42;
+    ring.add(torus);
+    ring.position.set(level.goal.x, level.goal.y, level.goal.z);
+  }
 
   // The beacons (assist mode's checkpoints): a brass ring on the block and a small brass diamond over it. Brass is for the
   // goal, the visor and these alone (docs/ASCENT.md, "How it looks").
   const beaconRing = geo(new TorusGeometry(0.5, 0.035, 6, 32));
   const beaconMark = geo(new OctahedronGeometry(0.13));
-  const beacons = level.beacons.map((b) => {
+  function addBeacon(b: Vec3) {
     const group = new Group();
     const flat = new Mesh(beaconRing, brass);
     flat.rotation.x = Math.PI / 2;
@@ -349,7 +390,17 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
     group.visible = false;
     scene.add(group);
     return group;
-  });
+  }
+  const beacons: Group[] = model ? [] : level.beacons.map(addBeacon);
+
+  // A level from Blender: each of its parts (one for the test climb, the zones loaded so far for the climb).
+  if (model) {
+    let first = 0;
+    for (const p of model.parts) {
+      addPart(p, first);
+      first += p.part.boxes.length;
+    }
+  }
 
   return {
     resize(w, h, pixelRatio) {
@@ -383,10 +434,54 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
         beacons[i].scale.setScalar(i === sim.checkpoint ? 1.35 : 1);
       }
 
+      // Moving boxes: drawn where the sim has them. A crumbling one shakes while it waits to break, drops away when it
+      // does, and is back in its place when it comes back.
+      const still = options.reducedMotion?.() ?? false;
+      for (const [i, { group, rest }] of moving) {
+        const b = sim.solids[i];
+        if (!b) continue;
+        group.position.set(b.min.x - rest.x, b.min.y - rest.y, b.min.z - rest.z);
+        group.visible = true;
+      }
+      const crumbles = sim.level.crumbles ?? [];
+      for (let k = 0; k < crumbles.length; k++) {
+        const m = moving.get(crumbles[k].box);
+        const state = sim.crumbles[k];
+        if (!m || !state) continue;
+        if (state.broke !== null) {
+          const t = sim.time - state.broke;
+          m.group.position.y -= 0.5 * 30 * t * t;
+          m.group.visible = t < 1.2;
+        } else if (state.touched !== null && !still) {
+          const a = cfg.crumble.shake;
+          m.group.position.x += Math.sin(time * 71) * a;
+          m.group.position.z += Math.cos(time * 53) * a;
+        }
+      }
+
+      // Fan streaks rise through the updraft (they stand still under reduced motion).
+      for (const s of streaks) {
+        const b = sim.solids[s.box];
+        if (!b) continue;
+        const p = s.lines.geometry.getAttribute('position') as Float32BufferAttribute;
+        const n = p.count / 2;
+        const len = r.fanStreaks.length;
+        for (let k = 0; k < n; k++) {
+          const x = b.min.x + (b.max.x - b.min.x) * (0.15 + 0.7 * s.seeds[k * 3]);
+          const z = b.min.z + (b.max.z - b.min.z) * (0.15 + 0.7 * s.seeds[k * 3 + 1]);
+          const run = s.height - len;
+          const y = b.max.y + ((s.seeds[k * 3 + 2] * run + (still ? 0 : time * r.fanStreaks.speed)) % run);
+          p.setXYZ(k * 2, x, y, z);
+          p.setXYZ(k * 2 + 1, x, y + len, z);
+        }
+        p.needsUpdate = true;
+      }
+
       camera.position.set(cam.position.x, cam.position.y, cam.position.z);
       camera.lookAt(cam.target.x, cam.target.y, cam.target.z);
       renderer.render(scene, camera);
     },
+    addPart,
     info: () => ({
       triangles: renderer.info.render.triangles,
       calls: renderer.info.render.calls,
