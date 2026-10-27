@@ -1,0 +1,125 @@
+/* R7: Ascent's own words over the canvas: the altitude, the message, the controls hint and the WebGL fallback
+   (src/game/ascent/index.ts). Not global: only a page that hosts the game imports this file. The host's container must be
+   positioned; the game fills it. Tokens only (CLAUDE.md, design rules). */
+
+.ascent {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  container: ascent / size;
+}
+
+.ascent-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* a drag looks around instead of scrolling the page */
+  cursor: grab;
+}
+
+.ascent[data-ascent-locked='true'] .ascent-canvas {
+  cursor: none;
+}
+
+.ascent p {
+  margin: 0;
+}
+
+/* The altitude, top left, in mono; the best and the falls under it, smaller and dimmer. A soft scrim, not a box. */
+.ascent-hud {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  display: grid;
+  justify-items: start;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-3);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--bg) 65%, transparent), transparent);
+  pointer-events: none;
+}
+
+.ascent-alt {
+  font-size: var(--fs-xl);
+  color: var(--text);
+}
+
+.ascent-sub {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* The message: the title and the prompt, over a scrim, before the climb and while paused. */
+.ascent-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  text-align: center;
+  background: var(--scrim);
+  pointer-events: none;
+}
+
+.ascent-title {
+  font-family: var(--font-display);
+  font-size: clamp(var(--fs-xl), 9cqw, var(--fs-3xl));
+  line-height: var(--lh-tight);
+  color: var(--text);
+}
+
+.ascent-prompt {
+  font-size: var(--fs-md);
+  color: var(--text-2);
+}
+
+/* The controls, along the bottom: shown when the climb starts, then gone after a few seconds. */
+.ascent-hint {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  left: var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--text-2);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ascent[data-ascent-state='playing'] .ascent-hint {
+  opacity: 1;
+  animation: ascent-hint-out var(--dur-slow) var(--ease) 12s forwards;
+}
+
+@keyframes ascent-hint-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* A small stage has no room for the hint over the climb: the page lists the controls. */
+@container ascent (max-width: 32rem) {
+  .ascent-hint {
+    display: none;
+  }
+}
+
+.ascent-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+}

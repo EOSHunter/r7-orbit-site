@@ -5,8 +5,8 @@ The plan for a game on the site: a 3D climbing game in the style of *Only Up!*. 
 404 page's runner (`docs/RUNNER.md`): the same code layout, the same Blender-script pipeline, and a first prototype at an
 unlinked styleguide route before it has a public page.
 
-**Where it is:** phase 1, the feel prototype, at `/styleguide/ascent/` (noindex, unlinked, like the rest of the
-styleguide). Nothing else is built yet.
+**Where it is:** phase 1, the feel prototype, is built at `/styleguide/ascent/` (noindex, unlinked, like the rest of the
+styleguide) and waits for the author to play it (below, "Phase 1: Feel prototype"). Nothing else is built yet.
 
 ## The pitch
 
@@ -175,7 +175,7 @@ Rebuilding models needs Blender installed. Building the site does not.
 | What | Target |
 |---|---|
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
-| Three.js and the game code, loaded on Play | About 150 kB gzipped (the runner's chunk with `GLTFLoader` is 165 kB; measured for Ascent in phase 1) |
+| Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, **143 kB gzipped** (three.js is nearly all of it; `GLTFLoader` will add about 25 kB in phase 2, as it did for the runner) |
 | The character `.glb` | < 150 kB |
 | Each zone `.glb` | < 500 kB, loaded as the player nears it |
 
@@ -208,17 +208,37 @@ so ask first.
 ### Phase 1: Feel prototype
 
 - [x] `three` is already a runtime dependency (the runner's); no new package
-- [ ] `/styleguide/ascent/` with the Play button; Three.js loaded only on Play
-- [ ] Grey boxes laid out in code (no Blender yet), the capsule agent, third-person camera
-- [ ] Movement and jumping with coyote time and jump buffering; box collision
-- [ ] Falling and respawning; a rough altitude readout
-- [ ] Desktop controls
-- [ ] Unit tests for the pure parts (collision, movement, input, clock)
-- [ ] `/styleguide/ascent/` in `tests/routes.js`, and a Playwright test that presses Play and checks for a running canvas
+- [x] `/styleguide/ascent/` with the Play button; Three.js loaded only on Play
+- [x] Grey boxes laid out in code (no Blender yet), the capsule agent, third-person camera
+- [x] Movement and jumping with coyote time and jump buffering; box collision
+- [x] Falling and respawning; a rough altitude readout
+- [x] Desktop controls
+- [x] Unit tests for the pure parts (collision, movement, input, clock)
+- [x] `/styleguide/ascent/` in `tests/routes.js`, and a Playwright test that presses Play and checks for a running canvas
       with no console errors
 
 **Done when:** the author has played it and is happy with how moving and jumping feel. This phase decides whether the game
 is fun, so tune it (`src/game/ascent/config.ts`) before building more.
+
+**What was built.** `src/game/ascent/` as in "Code" above; `level.ts` lays out a test climb of about 19 m round a tower (22
+jumps: wide steps, two beams, a run of small blocks, 1.2 m steps up), with the goal ring above the top (drawn only: touching it
+does nothing yet). The page has a debug readout (position, speeds, on the ground, coyote and buffer time left, camera), a
+Restart button and a Full screen button. Its URL options, for the tests: `?lock=0` never asks for pointer lock, `?start=0`
+stops on the ready screen. The starting numbers (all in `config.ts`):
+
+| | |
+| --- | --- |
+| Run | 6 m/s; 0.1 s to top speed, 0.09 s to stop on the ground; gentle steering in the air (24 m/s²), almost no slowing |
+| Jump | 1.6 m in 0.38 s to the top when Space is held; a tap is a short hop (gravity 2.6 times stronger once Space is let go while rising); the fall is 1.4 times heavier than the rise; 32 m/s at most |
+| Forgiveness | coyote time 0.1 s, jump buffer 0.12 s; no double jump |
+| Reach | about 4.2 m across on a level jump, 3.5 m onto a block 1 m higher (`jumpReach`); `level.vitest.ts` keeps every step of the route within 80% of it and at most 1.28 m up |
+| Agent | a box 0.56 m wide and 1.2 m tall (the capsule drawn is a little wider) |
+| Camera | 6 m behind a look point 1.3 m above the feet, starting 0.32 rad above it; mouse 0.0024 rad per pixel; Q and E turn it at 2.4 rad/s; it comes in front of a block at once and eases back out (0.25 s) |
+| Falling | below -18 m: back to the start, a fall counted. "Best" is the highest the agent has stood, not the top of a jump |
+
+The keys are read by their place (`KeyboardEvent.code`), so WASD is the same four keys on any layout. Q and E were added so the
+game can be played with the keyboard alone (the plan's accessibility goal). Escape pauses, and so does letting go of the
+pointer lock, the tab hiding, the window losing focus and focus leaving the game.
 
 ### Phase 2: Phone, HUD, save
 

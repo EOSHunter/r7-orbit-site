@@ -1,0 +1,280 @@
+---
+// Prototype of R7: Ascent (docs/ASCENT.md, phase 1 of 4: the feel prototype). Grey boxes, the capsule agent and a third-person
+// camera, to judge how moving and jumping feel; the numbers are in src/game/ascent/config.ts. The game is loaded with a
+// dynamic import when Play is pressed, so three.js is a lazy chunk and never in this page's first load. Under the game, a
+// debug readout that only this page has. Fixture for tests/ascent.spec.js (?lock=0 never asks for pointer lock; ?start=0
+// stops on the ready screen). Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { ASCENT_TEXT } from '../../../game/ascent/text';
+import '../../../game/ascent/ascent.css';
+
+const stats = [
+  ['fps', 'fps'],
+  ['steps', 'steps per frame'],
+  ['altitude', 'altitude'],
+  ['position', 'position'],
+  ['speed', 'speed'],
+  ['vy', 'vertical speed'],
+  ['grounded', 'on the ground'],
+  ['coyote', 'coyote left'],
+  ['buffer', 'jump buffer left'],
+  ['jumps', 'jumps'],
+  ['falls', 'falls'],
+  ['time', 'time'],
+  ['camera', 'camera yaw, pitch, distance'],
+  ['locked', 'pointer locked'],
+  ['triangles', 'triangles'],
+  ['calls', 'draw calls'],
+];
+---
+
+<BaseLayout
+  title="Ascent prototype"
+  description="A feel prototype of R7: Ascent, a 3D climbing game, with grey boxes. Not part of the site."
+  noindex
+>
+  <section class="section" aria-labelledby="as-h">
+    <div class="container">
+      <p class="eyebrow brass">Not part of the site</p>
+      <h1 class="t-h1" id="as-h">
+        Ascent prototype
+      </h1>
+      <p class="t-lead">
+        The feel prototype of {ASCENT_TEXT.title}: grey boxes, to judge how moving and jumping feel. Phase 1 of 4.
+      </p>
+
+      <div
+        class="as-stage"
+        data-ascent-host
+        tabindex="0"
+        role="application"
+        aria-label={`${ASCENT_TEXT.title}, a climbing game`}
+        aria-describedby="as-howto"
+      >
+        <div class="as-poster" data-ascent-poster>
+          <button class="btn solid lg" type="button" data-ascent-play>
+            Play
+          </button>
+          <p class="as-needs">Needs a keyboard and a mouse, and WebGL.</p>
+          <noscript>
+            <p>This game needs JavaScript.</p>
+          </noscript>
+        </div>
+      </div>
+
+      <div class="as-below">
+        <div id="as-howto" class="as-howto">
+          <p>
+            Climb the blocks to the brass ring. W, A, S and D or the arrow keys move, relative to the camera. Space
+            jumps: hold it for a full jump, tap it for a short hop. Click the game to look around with the mouse (or
+            drag with a button held); Q and E turn the camera from the keyboard. Escape pauses. Fall off the world and
+            you go back to the start.
+          </p>
+          <p>
+            A jump still counts just after you step off an edge, and a jump pressed just before you land happens when
+            you land.
+          </p>
+        </div>
+
+        <div class="as-debug" data-ascent-debug>
+          <p class="eyebrow">Debug</p>
+          <dl>
+            {stats.map(([key, label]) => (
+              <div>
+                <dt>{label}</dt>
+                <dd data-stat={key}>-</dd>
+              </div>
+            ))}
+          </dl>
+          <div class="as-actions">
+            <button class="btn sm" type="button" data-ascent-restart hidden>
+              Restart
+            </button>
+            <button class="btn sm" type="button" data-ascent-fullscreen hidden>
+              Full screen
+            </button>
+            <button class="btn sm" type="button" data-ascent-unmount hidden>
+              Unmount the game
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .as-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 16rem;
+    margin-top: var(--s-6);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+
+  .as-stage:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .as-stage:fullscreen {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .as-poster {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--s-3);
+    padding: var(--s-4);
+    text-align: center;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+
+  .as-poster p {
+    margin: 0;
+  }
+
+  .as-below {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: var(--s-5);
+  }
+
+  .as-howto {
+    max-width: 68ch;
+    color: var(--text-2);
+  }
+
+  .as-howto p {
+    margin: 0 0 var(--s-3);
+  }
+
+  .as-debug dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin: var(--s-2) 0 var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+
+  .as-debug dl div {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .as-debug dt {
+    color: var(--text-3);
+  }
+
+  .as-debug dd {
+    margin: 0;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .as-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  @media (min-width: 64rem) {
+    .as-below {
+      grid-template-columns: 1fr 26rem;
+    }
+  }
+</style>
+
+<script>
+  import type { AscentHandle, AscentStats } from '../../../game/ascent/index';
+
+  const host = document.querySelector<HTMLElement>('[data-ascent-host]');
+  const poster = document.querySelector<HTMLElement>('[data-ascent-poster]');
+  const play = document.querySelector<HTMLButtonElement>('[data-ascent-play]');
+  const restart = document.querySelector<HTMLButtonElement>('[data-ascent-restart]');
+  const fullscreen = document.querySelector<HTMLButtonElement>('[data-ascent-fullscreen]');
+  const unmount = document.querySelector<HTMLButtonElement>('[data-ascent-unmount]');
+  const out = new Map(
+    [...document.querySelectorAll<HTMLElement>('[data-stat]')].map((el) => [el.dataset.stat ?? '', el]),
+  );
+  const show = (key: string, text: string) => {
+    const el = out.get(key);
+    if (el) el.textContent = text;
+  };
+
+  let handle: AscentHandle | null = null;
+  let loading = false;
+  let shownAt = 0;
+
+  // The readout is drawn a few times a second at most: writing to the DOM every frame would cost more than the game.
+  const onStats = (s: AscentStats) => {
+    const now = performance.now();
+    if (now - shownAt < 200) return;
+    shownAt = now;
+    show('fps', s.fps.toFixed(0));
+    show('steps', String(s.steps));
+    show('altitude', `${s.altitude.toFixed(2)} m (best ${s.best.toFixed(1)})`);
+    show('position', `${s.x.toFixed(2)}, ${s.y.toFixed(2)}, ${s.z.toFixed(2)}`);
+    show('speed', `${s.speed.toFixed(2)} m/s`);
+    show('vy', `${s.vy.toFixed(2)} m/s`);
+    show('grounded', s.grounded ? 'yes' : 'no');
+    show('coyote', `${s.coyote.toFixed(3)} s`);
+    show('buffer', `${s.buffer.toFixed(3)} s`);
+    show('jumps', String(s.jumps));
+    show('falls', String(s.falls));
+    show('time', `${s.time.toFixed(1)} s`);
+    show('camera', `${s.cameraYaw.toFixed(2)}, ${s.cameraPitch.toFixed(2)}, ${s.cameraDistance.toFixed(2)}`);
+    show('locked', s.locked ? 'yes' : 'no');
+    show('triangles', String(s.view.triangles));
+    show('calls', String(s.view.calls));
+  };
+
+  async function boot() {
+    if (!host || handle || loading) return;
+    loading = true;
+    try {
+      const { mountAscent } = await import('../../../game/ascent/index');
+      const query = new URLSearchParams(location.search);
+      if (poster) poster.hidden = true;
+      handle = mountAscent(host, { pointerLock: query.get('lock') !== '0', onStats });
+      if (query.get('start') !== '0') handle.start();
+      for (const b of [restart, fullscreen, unmount]) if (b) b.hidden = false;
+      if (fullscreen && !host.requestFullscreen) fullscreen.hidden = true;
+    } finally {
+      loading = false;
+    }
+  }
+
+  play?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    boot();
+  });
+
+  restart?.addEventListener('click', () => {
+    handle?.restart();
+    host?.focus();
+  });
+
+  fullscreen?.addEventListener('click', () => {
+    host?.requestFullscreen?.().catch(() => {});
+    host?.focus();
+  });
+
+  unmount?.addEventListener('click', () => {
+    handle?.destroy();
+    handle = null;
+    for (const b of [restart, fullscreen, unmount]) if (b) b.hidden = true;
+    if (poster) poster.hidden = false;
+    for (const el of out.values()) el.textContent = '-';
+  });
+</script>
