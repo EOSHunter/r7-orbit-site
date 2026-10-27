@@ -123,3 +123,18 @@
   text-align: center;
   color: var(--text-2);
 }
+
+/* Playing without the pointer lock: a quiet prompt in the middle, until a click gets it. */
+.ascent-look {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-sm);
+  background: var(--scrim-strong);
+  color: var(--on-scrim);
+  font-size: var(--fs-sm);
+  text-align: center;
+  pointer-events: none;
+}

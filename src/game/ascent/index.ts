@@ -6,12 +6,18 @@
 // and destroy() removes all of it, every listener, the animation frame, the observer and the WebGL context.
 //
 // Time: the rAF timestamp drives a fixed-step clock (clock.ts); the camera follows on the frame's real time. The game pauses
-// when the tab is hidden, the window loses focus, focus leaves the game, Escape is pressed, or the pointer lock is let go.
+// when the tab is hidden, the window loses focus, focus leaves the game, Escape is pressed, the pointer lock is let go, or
+// full screen ends.
+//
+// Full screen and the pointer lock belong to the container (gesture.ts): the host asks for them in its Play click, before
+// this module has loaded, and the game asks again on the click or Space that resumes. Paused, the game stays in full screen;
+// Escape again (the browser's own key for it) leaves it.
 
 import { OrbitCamera } from './camera';
 import { FixedStepClock } from './clock';
 import { readTokenColors } from './colors';
 import { ASCENT_CONFIG, type AscentConfig } from './config';
+import { enterPlay, leavePlay } from './gesture';
 import { createInput, moveVector, turnInput } from './input';
 import { PROTOTYPE_LEVEL, type Level } from './level';
 import { createView, type View, type ViewInfo, type ViewOptions } from './render';
@@ -58,6 +64,8 @@ export interface AscentOptions {
   focus?: boolean;
   /** Ask for pointer lock when a climb starts or resumes, and on a click (default true). Without it, drag to look. */
   pointerLock?: boolean;
+  /** Put the container in full screen when a climb starts or resumes (default false: the host decides). */
+  fullscreen?: boolean;
   /** Called after every frame (the prototype page's debug readout and its tests). */
   onStats?: (stats: AscentStats) => void;
 }
@@ -130,10 +138,13 @@ export function mountAscent(
   const prompt = el('p', 'ascent-prompt', ASCENT_TEXT.play);
   message.append(title, prompt);
   const hint = el('p', 'ascent-hint', ASCENT_TEXT.hint);
+  // Playing without the pointer lock (refused, or let go without pausing): say how to get it, rather than leave the mouse
+  // doing nothing.
+  const lookHint = el('p', 'ascent-look', ASCENT_TEXT.clickToLook);
   const live = el('p', 'visually-hidden');
   live.setAttribute('aria-live', 'polite');
   live.setAttribute('data-ascent-live', '');
-  root.append(hud, message, hint, live);
+  root.append(hud, message, hint, lookHint, live);
 
   const sim = new AscentSim(level, cfg);
   const rig = new OrbitCamera(level.spawnYaw, cfg);
@@ -148,20 +159,14 @@ export function mountAscent(
   let lastSteps = 0;
   let seenTeleports = sim.teleports;
   let lastAlpha = 0;
-  const shown = { alt: -1, best: -1, falls: -1, state: '', paused: false, locked: false };
+  const shown = { alt: -1, best: -1, falls: -1, state: '', paused: false, locked: false, full: false };
 
-  const locked = () => doc.pointerLockElement === canvas;
+  const locked = () => doc.pointerLockElement === container;
+  const full = () => doc.fullscreenElement === container;
   const wantsLock = options.pointerLock !== false;
-  const requestLock = () => {
-    if (!wantsLock || locked() || !canvas.requestPointerLock) return;
-    try {
-      // A promise in current browsers: refused locks (too soon after Escape, a sandboxed frame) are expected, not errors.
-      const p = canvas.requestPointerLock() as unknown;
-      if (p instanceof Promise) p.catch(() => {});
-    } catch {
-      // Older browsers throw instead; dragging still looks around.
-    }
-  };
+  const gesture = { lock: wantsLock, fullscreen: options.fullscreen === true };
+  /** Full screen and the lock, as far as the browser grants them now (only during a click or a key press). */
+  const grab = () => enterPlay(container, gesture);
   const exitLock = () => {
     if (locked()) doc.exitPointerLock?.();
   };
@@ -173,16 +178,21 @@ export function mountAscent(
     if (best !== shown.best) bestValue.textContent = String((shown.best = best));
     if (sim.falls !== shown.falls) fallsValue.textContent = String((shown.falls = sim.falls));
     const isLocked = locked();
-    if (state === shown.state && paused === shown.paused && isLocked === shown.locked) return;
+    const isFull = full();
+    if (state === shown.state && paused === shown.paused && isLocked === shown.locked && isFull === shown.full) return;
     shown.state = state;
     shown.paused = paused;
     shown.locked = isLocked;
+    shown.full = isFull;
     root.dataset.ascentState = state;
     root.dataset.ascentPaused = String(paused);
     root.dataset.ascentLocked = String(isLocked);
+    root.dataset.ascentFullscreen = String(isFull);
     message.hidden = state === 'playing' && !paused;
     title.hidden = state === 'playing';
-    prompt.textContent = state === 'playing' ? ASCENT_TEXT.paused : ASCENT_TEXT.play;
+    prompt.textContent =
+      state !== 'playing' ? ASCENT_TEXT.play : isFull ? ASCENT_TEXT.pausedFullscreen : ASCENT_TEXT.paused;
+    lookHint.hidden = !(wantsLock && state === 'playing' && !paused && !isLocked);
   };
 
   const frame = (now: number) => {
@@ -262,7 +272,7 @@ export function mountAscent(
     sim.release();
     clock.reset();
     lastFrame = null;
-    requestLock();
+    grab();
     updateHud();
     schedule();
   };
@@ -272,7 +282,7 @@ export function mountAscent(
     if (state === 'playing') return resume();
     state = 'playing';
     clock.reset();
-    requestLock();
+    grab();
     updateHud();
     schedule();
   };
@@ -299,7 +309,7 @@ export function mountAscent(
       container.focus({ preventScroll: true });
       if (state !== 'playing') start();
       else if (paused) resume();
-      else requestLock();
+      else grab();
     },
   });
 
@@ -323,17 +333,29 @@ export function mountAscent(
     const next = (event as FocusEvent).relatedTarget as Node | null;
     if (!(next && container.contains(next)) && !locked()) pause();
   };
-  // The browser lets go of the lock on Escape (the key itself never reaches the page then): that is a pause.
-  let wasLocked = false;
+  // The browser lets go of the lock on Escape (the key itself never reaches the page then): that is a pause. So is leaving
+  // full screen. Entering it may let a lock that the click could not get through now (some browsers allow one in full screen).
+  // The host may have taken both before this module loaded (its Play click): start from what the document says.
+  let wasLocked = locked();
   const onLockChange = () => {
     const now = locked();
     if (wasLocked && !now) pause();
     wasLocked = now;
     updateHud();
   };
+  let wasFull = full();
+  const onFullscreenChange = () => {
+    const now = full();
+    if (wasFull && !now) pause();
+    if (now && !wasFull && state === 'playing' && !paused) enterPlay(container, { lock: wantsLock, fullscreen: false });
+    wasFull = now;
+    updateHud();
+    resize();
+  };
   const listeners: [EventTarget, string, EventListener][] = [
     [doc, 'visibilitychange', onVisibility],
     [doc, 'pointerlockchange', onLockChange],
+    [doc, 'fullscreenchange', onFullscreenChange],
     [win, 'blur', onBlur],
     [container, 'focusout', onFocusOut],
   ];
@@ -364,7 +386,7 @@ export function mountAscent(
       destroyed = true;
       if (raf) win.cancelAnimationFrame(raf);
       raf = 0;
-      exitLock();
+      leavePlay(container);
       input.destroy();
       for (const [target, type, fn] of listeners) target.removeEventListener(type, fn);
       observer?.disconnect();

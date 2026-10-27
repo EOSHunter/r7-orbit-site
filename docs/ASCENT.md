@@ -80,7 +80,7 @@ The setting is computing gear, so it fits the site's subject without real brands
   as such on the finish screen
 - **Settings:** look sensitivity, invert look, reduced motion (no camera bob or screen shake; on by default when the system
   asks for reduced motion), volume
-- **Desktop controls:** WASD or arrow keys to move, Space to jump, mouse to look (pointer lock after a click), Esc to pause
+- **Desktop controls:** WASD or arrow keys to move, Space to jump, mouse to look (Play goes full screen and locks the mouse), Esc to pause
 - **Phone controls:** a virtual stick on the left, drag on the right half to look, a jump button. Portrait shows a "turn your
   phone sideways" prompt
 
@@ -113,7 +113,8 @@ in Node, apart from a read-only Three.js view.
 | `camera.ts` | the third-person orbit camera: yaw and pitch from the look input, a spring on the follow, pulled in when a box is in the way |
 | `colors.ts` | the scene's colours, read from the tokens at runtime |
 | `render.ts` | the Three.js view: reads the sim, draws the scene; `createView()` is null without WebGL |
-| `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock, resize, cleanup |
+| `gesture.ts` | full screen and the pointer lock, asked for inside the click or key press that starts or resumes the climb; small and free of three.js, so the page's Play button can use it before the game has loaded |
+| `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup |
 | `ascent.css` | the HUD's styles, tokens only; imported by the page that hosts the game |
 
 `index.ts` is reached only through a dynamic `import()`, so three.js and the game are a lazy chunk loaded on Play and never in
@@ -222,9 +223,9 @@ is fun, so tune it (`src/game/ascent/config.ts`) before building more.
 
 **What was built.** `src/game/ascent/` as in "Code" above; `level.ts` lays out a test climb of about 19 m round a tower (22
 jumps: wide steps, two beams, a run of small blocks, 1.2 m steps up), with the goal ring above the top (drawn only: touching it
-does nothing yet). The page has a debug readout (position, speeds, on the ground, coyote and buffer time left, camera), a
-Restart button and a Full screen button. Its URL options, for the tests: `?lock=0` never asks for pointer lock, `?start=0`
-stops on the ready screen. The starting numbers (all in `config.ts`):
+does nothing yet). The page has a debug readout (position, speeds, on the ground, coyote and buffer time left, camera) and a
+Restart button. Its URL options, for the tests: `?lock=0` never asks for pointer lock, `?fullscreen=0` plays in the page,
+`?start=0` stops on the ready screen. The starting numbers (all in `config.ts`):
 
 | | |
 | --- | --- |
@@ -238,7 +239,14 @@ stops on the ready screen. The starting numbers (all in `config.ts`):
 
 The keys are read by their place (`KeyboardEvent.code`), so WASD is the same four keys on any layout. Q and E were added so the
 game can be played with the keyboard alone (the plan's accessibility goal). Escape pauses, and so does letting go of the
-pointer lock, the tab hiding, the window losing focus and focus leaving the game.
+pointer lock, leaving full screen, the tab hiding, the window losing focus and focus leaving the game.
+
+**Full screen and the mouse** (after the author's first play: in a box on the page, the mouse did not stay locked). Play puts
+the stage in full screen and locks the mouse to it in the click itself (`gesture.ts`), because browsers allow neither once
+the click is over and the game takes a moment to load; a click or Space that resumes asks again. The lock is on the whole
+stage, not the canvas. Escape lets go of the mouse and pauses, still in full screen; Escape again leaves full screen. If the
+browser refuses the lock, "Click to look around with the mouse" shows in the middle of the game until a click gets it
+(dragging still works).
 
 ### Phase 2: Phone, HUD, save
 

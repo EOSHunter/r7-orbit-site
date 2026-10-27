@@ -3,8 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { watchPage } from './helpers.js';
 
 // The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phase 1): the game loads only on Play,
-// draws into a running canvas with no console errors, and moves, jumps and pauses from the keyboard. ?lock=0 keeps pointer
-// lock out of it (headless Chromium has no real mouse to lock). WebGL runs on SwiftShader (software), as in runner.spec.js.
+// draws into a running canvas with no console errors, and moves, jumps and pauses from the keyboard. Most tests play in the
+// page (?lock=0&fullscreen=0); one plays as a visitor does, in full screen. WebGL runs on SwiftShader (software), as in
+// runner.spec.js.
 
 const FIXTURE = '/styleguide/ascent/';
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -24,7 +25,7 @@ const stat = async (page, name) => parseFloat(await page.locator(`[data-stat="${
 const position = async (page) => (await page.locator('[data-stat="position"]').innerText()).split(',').map(Number);
 
 async function boot(page) {
-  await page.goto(`${FIXTURE}?lock=0`, { waitUntil: 'networkidle' });
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
   await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
@@ -34,7 +35,7 @@ test('Play loads the game; the canvas runs with no console errors', async ({ pag
   const problems = watchPage(page, baseURL);
   const scripts = [];
   page.on('request', (r) => r.resourceType() === 'script' && scripts.push(r.url()));
-  await page.goto(`${FIXTURE}?lock=0`, { waitUntil: 'networkidle' });
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
   const before = scripts.length;
   await expect(game(page)).toHaveCount(0);
   await expect(play(page)).toBeVisible();
@@ -106,7 +107,7 @@ test('the keyboard moves, jumps and pauses', async ({ page }) => {
 
 test('the page and the running game pass axe; the page does not scroll sideways at 375 px', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
-  await page.goto(`${FIXTURE}?lock=0`, { waitUntil: 'networkidle' });
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
@@ -123,10 +124,36 @@ test('without WebGL the game says so and draws no canvas', async ({ page, baseUR
       return type === 'webgl2' || type === 'webgl' ? null : original.call(this, type, ...rest);
     };
   });
-  await page.goto(`${FIXTURE}?lock=0`, { waitUntil: 'networkidle' });
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'unsupported', MOUNTED);
   await expect(game(page)).toContainText('This game needs WebGL.');
   await expect(page.locator('.ascent-canvas')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test('Play goes full screen in the same click; leaving full screen pauses; a click comes back', async ({
+  page,
+  baseURL,
+}) => {
+  const problems = watchPage(page, baseURL);
+  await page.goto(FIXTURE, { waitUntil: 'networkidle' });
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'true');
+  expect(await page.evaluate(() => document.fullscreenElement?.hasAttribute('data-ascent-host'))).toBe(true);
+  // The mouse is either locked to the game, or the game says how to lock it: never a mouse that silently does nothing.
+  const locked = (await game(page).getAttribute('data-ascent-locked')) === 'true';
+  await expect(page.locator('.ascent-look')).toBeVisible({ visible: !locked });
+
+  await page.evaluate(() => document.exitFullscreen());
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
+  await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'false');
+  await expect(page.locator('.ascent-prompt')).toHaveText('Paused. Click or press Space to continue');
+
+  await page.locator('.ascent-canvas').click();
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'false');
+  await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'true');
+  await page.waitForTimeout(300);
   expect(problems).toEqual([]);
 });
