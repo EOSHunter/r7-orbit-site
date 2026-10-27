@@ -1,5 +1,7 @@
 // mountAscent: puts the game in a container and takes it out again. This module is the lazy chunk: a page imports it with a
-// dynamic import() when Play is pressed, so three.js is never in a page's main bundle (docs/ASCENT.md, "Code").
+// dynamic import() when Play is pressed, so three.js is never in a page's main bundle (docs/ASCENT.md, "Code"). The level is
+// the host's to load first (loadTestClimb, the test climb built in Blender), so mounting stays synchronous; without one the
+// game plays phase 1's level in code.
 //
 // The host supplies the container: positioned (the game fills it), focusable (tabindex="0"), with an accessible name and its
 // instructions as text (aria-describedby). The game adds its canvas, the altitude, a message and a live region inside it,
@@ -19,12 +21,18 @@ import { readTokenColors } from './colors';
 import { ASCENT_CONFIG, type AscentConfig } from './config';
 import { enterPlay, leavePlay } from './gesture';
 import { createInput, moveVector, turnInput } from './input';
+import { loadLevelModel, type LevelModel } from './gltf-level';
 import { PROTOTYPE_LEVEL, type Level } from './level';
 import { createView, type View, type ViewInfo, type ViewOptions } from './render';
 import { AscentSim } from './sim';
 import { ASCENT_TEXT } from './text';
+import testClimbUrl from './assets/test-climb.glb?url';
 
 export { ASCENT_TEXT };
+export type { LevelModel };
+
+/** The test climb built in Blender (tools/ascent/build_test_climb.py). Rejects when it cannot be loaded or used. */
+export const loadTestClimb = (): Promise<LevelModel> => loadLevelModel(testClimbUrl);
 export { withConfig } from './config';
 
 export type AscentState = 'ready' | 'playing' | 'unsupported';
@@ -59,6 +67,8 @@ export interface AscentStats {
 
 export interface AscentOptions {
   config?: AscentConfig;
+  /** A level made in Blender (loadTestClimb): its level and its meshes. Wins over `level`. */
+  model?: LevelModel | null;
   level?: Level;
   /** Move keyboard focus to the container on mount (default true). */
   focus?: boolean;
@@ -91,7 +101,8 @@ export function mountAscent(
   deps: AscentDeps = { createView },
 ): AscentHandle {
   const cfg = options.config ?? ASCENT_CONFIG;
-  const level = options.level ?? PROTOTYPE_LEVEL;
+  const model = options.model ?? null;
+  const level = model?.level ?? options.level ?? PROTOTYPE_LEVEL;
   const doc = container.ownerDocument;
   const win = doc.defaultView;
   if (!win) throw new Error('mountAscent: the container is not in a window');
@@ -112,7 +123,7 @@ export function mountAscent(
   container.append(root);
 
   const reducedMotion = win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-  const view = deps.createView(canvas, { colors: readTokenColors(root), level, config: cfg, reducedMotion });
+  const view = deps.createView(canvas, { colors: readTokenColors(root), level, model, config: cfg, reducedMotion });
   if (!view) {
     canvas.remove();
     root.dataset.ascentState = 'unsupported';

@@ -23,6 +23,29 @@ export const SCENE_TOKENS = {
 
 export type SceneColorName = keyof typeof SCENE_TOKENS;
 
+/**
+ * The materials a level made in Blender may use, and the tones each one's faces take in the game: tops, sides facing ±X,
+ * sides facing ±Z, undersides (a face at an angle mixes them by how much it faces each way). Blender's own colours are never
+ * used; the names are the contract (tools/ascent/, docs/ASCENT.md "How it looks").
+ */
+export const LEVEL_MATERIALS = {
+  /** Anything to climb on or look at: the phase 1 blocks' tones. */
+  obsidian: { top: 'face3', sideX: 'face2', sideZ: 'face1', bottom: 'shadow', edges: true },
+  /** The floor: a step darker than the blocks on it. */
+  'obsidian-dark': { top: 'face2', sideX: 'face1', sideZ: 'face1', bottom: 'shadow', edges: true },
+  /** The one accent: the goal ring (and later the beacons). */
+  brass: { top: 'brass', sideX: 'brass', sideZ: 'brass', bottom: 'brass', edges: false },
+  /** Small ivory details. */
+  ivory: { top: 'ivory', sideX: 'ivory', sideZ: 'ivory', bottom: 'ivory', edges: false },
+} as const satisfies Record<
+  string,
+  { top: SceneColorName; sideX: SceneColorName; sideZ: SceneColorName; bottom: SceneColorName; edges: boolean }
+>;
+
+export type LevelMaterial = keyof typeof LEVEL_MATERIALS;
+
+export const isLevelMaterial = (name: string): name is LevelMaterial => Object.hasOwn(LEVEL_MATERIALS, name);
+
 /** A colour as sRGB channels from 0 to 1. */
 export interface Rgb {
   r: number;

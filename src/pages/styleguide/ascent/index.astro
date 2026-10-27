@@ -1,7 +1,8 @@
 ---
-// Prototype of R7: Ascent (docs/ASCENT.md, phase 1 of 4: the feel prototype). Grey boxes, the capsule agent and a third-person
-// camera, to judge how moving and jumping feel; the numbers are in src/game/ascent/config.ts. The game is loaded with a
-// dynamic import when Play is pressed, so three.js is a lazy chunk and never in this page's first load. Under the game, a
+// Prototype of R7: Ascent (docs/ASCENT.md, phases 1 and 2 of 4). The test climb built in Blender (tools/ascent/), the capsule
+// agent and a third-person camera; the feel's numbers are in src/game/ascent/config.ts. The game and its level are loaded when
+// Play is pressed, so three.js is a lazy chunk and never in this page's first load. ?level=code plays phase 1's grey boxes
+// instead, laid out in code (and so does a failed level load, which the debug readout says). Under the game, a
 // debug readout that only this page has. Play puts the stage in full screen and locks the mouse to it, in the click itself
 // (game/ascent/gesture.ts): the browser allows neither once the click is over, and the game takes a moment to load. Fixture
 // for tests/ascent.spec.js (?lock=0 never asks for pointer lock; ?fullscreen=0 plays in the page; ?start=0 stops on the
@@ -11,6 +12,7 @@ import { ASCENT_TEXT } from '../../../game/ascent/text';
 import '../../../game/ascent/ascent.css';
 
 const stats = [
+  ['level', 'level'],
   ['fps', 'fps'],
   ['steps', 'steps per frame'],
   ['altitude', 'altitude'],
@@ -32,7 +34,7 @@ const stats = [
 
 <BaseLayout
   title="Ascent prototype"
-  description="A feel prototype of R7: Ascent, a 3D climbing game, with grey boxes. Not part of the site."
+  description="A prototype of R7: Ascent, a 3D climbing game, with a test climb. Not part of the site."
   noindex
 >
   <section class="section" aria-labelledby="as-h">
@@ -42,7 +44,8 @@ const stats = [
         Ascent prototype
       </h1>
       <p class="t-lead">
-        The feel prototype of {ASCENT_TEXT.title}: grey boxes, to judge how moving and jumping feel. Phase 1 of 4.
+        The prototype of {ASCENT_TEXT.title}: a short test climb built in Blender, to judge how moving and jumping feel.
+        Phase 2 of 4.
       </p>
 
       <div
@@ -67,7 +70,7 @@ const stats = [
       <div class="as-below">
         <div id="as-howto" class="as-howto">
           <p>
-            Climb the blocks to the brass ring. Play fills the screen and the mouse looks around. W, A, S and D or the
+            Climb the desk to the brass ring. Play fills the screen and the mouse looks around. W, A, S and D or the
             arrow keys move, relative to the camera. Space jumps: hold it for a full jump, tap it for a short hop. Q and
             E turn the camera from the keyboard. Escape pauses; Escape again leaves full screen. Fall off the world and
             you go back to the start.
@@ -195,7 +198,7 @@ const stats = [
 </style>
 
 <script>
-  import type { AscentHandle, AscentStats } from '../../../game/ascent/index';
+  import type { AscentHandle, AscentStats, LevelModel } from '../../../game/ascent/index';
   import { enterPlay } from '../../../game/ascent/gesture';
 
   const host = document.querySelector<HTMLElement>('[data-ascent-host]');
@@ -216,6 +219,7 @@ const stats = [
     pointerLock: query.get('lock') !== '0',
     fullscreen: query.get('fullscreen') !== '0',
     start: query.get('start') !== '0',
+    level: query.get('level') === 'code' ? 'code' : 'blender',
   };
   let handle: AscentHandle | null = null;
   let loading = false;
@@ -248,8 +252,24 @@ const stats = [
     if (!host || handle || loading) return;
     loading = true;
     try {
-      const { mountAscent } = await import('../../../game/ascent/index');
-      handle = mountAscent(host, { pointerLock: options.pointerLock, fullscreen: options.fullscreen, onStats });
+      const { mountAscent, loadTestClimb } = await import('../../../game/ascent/index');
+      let model: LevelModel | null = null;
+      if (options.level === 'blender') {
+        try {
+          model = await loadTestClimb();
+          show('level', 'test climb (Blender)');
+        } catch (error) {
+          show('level', `grey boxes (the test climb did not load: ${error instanceof Error ? error.message : error})`);
+        }
+      } else {
+        show('level', 'grey boxes (code)');
+      }
+      handle = mountAscent(host, {
+        model,
+        pointerLock: options.pointerLock,
+        fullscreen: options.fullscreen,
+        onStats,
+      });
       if (options.start) handle.start();
       for (const b of [restart, unmount]) if (b) b.hidden = false;
     } finally {
@@ -276,6 +296,6 @@ const stats = [
     handle = null;
     for (const b of [restart, unmount]) if (b) b.hidden = true;
     if (poster) poster.hidden = false;
-    for (const el of out.values()) el.textContent = '-';
+    for (const [key, el] of out) if (key !== 'level') el.textContent = '-';
   });
 </script>
