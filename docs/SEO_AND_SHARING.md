@@ -12,7 +12,7 @@ What makes the site findable and makes a shared link look good. All of this is c
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
+<!-- <link rel="manifest" href="/site.webmanifest"> is not in the HTML: src/scripts/site.js adds it a second after load -->
 
 <meta property="og:type" content="article">             <!-- website for home/archives -->
 <meta property="og:site_name" content="{Site name}">
@@ -26,6 +26,8 @@ What makes the site findable and makes a shared link look good. All of this is c
 <meta property="article:tag" content="evals">
 <meta name="twitter:card" content="summary_large_image">
 ```
+
+The manifest link is added by script, a second after `load`, on purpose: it is only for "add to home screen", and linked from the head Chrome fetches it and its 192 px icon (14 kB) while the first screen is being painted, which counts against the LCP budget (docs/DECISIONS.md, "LCP on the author pages and long posts"). After that the head holds `<link rel="manifest" href="/site.webmanifest">` like any other page; with JavaScript off there is none.
 
 Rules: title ≤ 60 characters (so it isn't cut in results); description ≤ 155; **absolute** URLs in canonical and OG; strip the `*italic*` markers from titles everywhere outside the page body.
 

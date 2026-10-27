@@ -10,7 +10,6 @@ inputs: sha256:309a0876f67b765b
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="R7 Orbit · Mission Control for AI Agents">
@@ -97,7 +96,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Latest">
@@ -185,7 +183,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="News">
@@ -272,7 +269,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Blog">
@@ -359,7 +355,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Vlogs">
@@ -446,7 +441,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Projects">
@@ -534,7 +528,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Repos">
@@ -621,7 +614,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Apps">
@@ -708,7 +700,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Tags">
@@ -795,7 +786,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="About">
@@ -882,7 +872,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Privacy">
@@ -970,7 +959,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Search">
@@ -1056,7 +1044,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Hunter Newton">
@@ -1144,7 +1131,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Page not found">
@@ -1230,7 +1216,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="How I built a browser game with R7 Orbit">
@@ -1318,7 +1303,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="video.other">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Building a browser game with AI agents">
@@ -1411,7 +1395,6 @@ document.documentElement.classList.add('js');
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="R7 Orbit">
 <meta property="og:title" content="Vesper Drift, a browser space game">

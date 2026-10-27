@@ -83,7 +83,7 @@ const { canonical, imageUrl } = seo;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    {/* <link rel="manifest"> is added by src/scripts/site.js a second after load: docs/SEO_AND_SHARING.md, "Head tags" */}
 
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={site.name} />

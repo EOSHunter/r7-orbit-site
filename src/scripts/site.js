@@ -7,6 +7,7 @@
     (f) table of contents       .toc a[href^="#"]        highlights the heading you are reading
     (g) video poster            [data-player]            loads an iframe on click when data-embed is set
     (h) search loader           [data-search-open], "/"   loads search.js (the dialog and /search/ page) on first use
+    (i) web app manifest        <head>                   links /site.webmanifest a second after load (nothing on the page needs it)
 
   Every piece does nothing if its markup is not on the page, and every piece survives missing storage or clipboard.
 */
@@ -350,4 +351,17 @@
     document.addEventListener('click', onSearchClick);
     document.addEventListener('keydown', onSearchKey);
   }
+
+  /* ------------------------------------------------------------------------------------ (i) web app manifest */
+  // The manifest only serves "add to home screen". Linked from the head, Chrome fetches it, and its 192 px icon, while the page
+  // is still being painted (14 kB that count against the LCP budget); linked a second after load it costs the first paint nothing.
+  function addManifest() {
+    if ($('link[rel="manifest"]')) return;
+    var link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = '/site.webmanifest';
+    document.head.appendChild(link);
+  }
+  function afterLoad() { window.setTimeout(addManifest, 1000); }
+  if (document.readyState === 'complete') afterLoad(); else window.addEventListener('load', afterLoad, { once: true });
 })();
