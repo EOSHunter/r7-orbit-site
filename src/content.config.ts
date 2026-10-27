@@ -253,7 +253,7 @@ const posts = {
             path: [orphan],
             message: `${orphan} needs playUrl: it only shows on a playable project`,
           });
-      } else if (data.playUrl.startsWith('/') && data.playMode !== 'link') {
+      } else if (typeof data.playUrl === 'string' && data.playUrl.startsWith('/') && data.playMode !== 'link') {
         // A page of this site is opened, not embedded in another page of it.
         ctx.addIssue({
           code: 'custom',
