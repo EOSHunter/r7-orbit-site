@@ -419,7 +419,7 @@ the room above it. The same Blender gives the same files. 451 steps:
 | 2 Server stack | 71 m | 75 | rack units, heat sinks and cable trays round a column of racks | 7 fans, each lifting about 5 m to a block beside it |
 | 3 Cloud | 151 m | 109 | soft data blocks in open air, more far out for depth | 27 drifting blocks (3 to 5.5 m, every 4.5 to 6.5 s) |
 | 4 Upper air | 229 m | 93 | solar panels, girders, an antenna mast with a satellite | 31 crumbling panels (0.7 s), thin beams |
-| 5 Orbit | 301 m | 56 | shards | all of them; the ring at 351 m |
+| 5 Orbit | 301 m | 56 | shards | drifting blocks, crumbling panels and beams together (no fans); the ring at 351 m |
 
 `level.vitest.ts`'s rules, for the whole climb (`climb.vitest.ts`, the files read through the game's own loader): every step
 within reach (from a drifting block's far end; up a fan's updraft), each step higher than the last, nothing overlapping
@@ -442,12 +442,20 @@ A first climb with a few hardcore falls lands around 17 to 22 minutes. The numbe
 
 ### Phase 4: Polish and the public page
 
-- [ ] Look pass (fog, edge lines). The agent's animations are built (phase 2, "The robot agent")
-- [ ] The public page and its `tests/routes.js` entry (smoke, axe, budgets and Lighthouse cover the page before Play)
-- [ ] The `/apps/` entry, through the add-content skill
-- [ ] Unit tests for the save format
-- [ ] `CLAUDE.md` and the README updated (paths, commands)
+- [ ] Look pass (fog, edge lines): waits for the author's own climb. The agent's animations are built (phase 2, "The robot agent")
+- [x] The public page and its `tests/routes.js` entry (smoke, axe, budgets and Lighthouse cover the page before Play)
+- [x] The `/apps/` entry, through the add-content skill: `src/content/projects/r7-ascent.md`, written by Kepler, `draft: true` until the author publishes it
+- [x] Unit tests for the save format (`settings.vitest.ts`, phase 2)
+- [x] `CLAUDE.md` updated (paths); the README has no game section to change
 - [ ] Page copy, reviewed by the author
+
+**What was built (2026-10-27).** `/ascent/` (`src/pages/ascent/index.astro`): an ordinary page of the site with the game's
+stage and a Play button; its words are `src/content/pages/ascent.md`, a page with a fixed frame like Privacy (edited in /admin,
+Pages): a Lead above the game, how to play and the zones below it, and a last Text block as the credits, shown again on the
+finish screen (`{author.name}` prints the author's name from Site settings). Play goes full screen and locks the mouse in
+the click, then loads the game, the climb's first zones and the robot. Not in the main nav. The project page
+`src/content/projects/r7-ascent.md` (by Kepler, a draft) lists it on `/apps/` once published: a project's `playUrl` may now be
+a page of this site, which opens in the same tab (`playMode: link`; `docs/CONTENT_MODEL.md`).
 
 **Done when:** the site's definition of done holds (`CLAUDE.md`), including 320–1480 px and no console errors.
 
@@ -455,5 +463,5 @@ A first climb with a few hardcore falls lands around 17 to 22 minutes. The numbe
 
 | Question | Recommendation |
 |---|---|
-| The public URL | `/ascent/`, a page of this site. A playable project's `playUrl` today must be a full `https://` address and was made for games on their own host (`docs/CONTENT_MODEL.md`, "Playable projects"), so how an on-site game joins `/apps/` is decided with the URL |
-| Link in the main nav, or on the hub? | Not in the nav at first. List it on `/apps/` and link it from a project post; add it to the nav when the author is happy with it |
+| The public URL | Decided (2026-10-27): `/ascent/`. A project's `playUrl` may be a page of this site, so the game joins `/apps/` through its project page |
+| Link in the main nav, or on the hub? | Decided (2026-10-27): not in the nav; on `/apps/` (once the project page is published) and linked from it. The nav is the author's to change in Site settings |

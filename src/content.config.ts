@@ -15,7 +15,8 @@ import { sitePageFields } from './lib/site-pages';
 // Every collection reads its front matter through `frontMatter`: a blank optional field (`cover: ''`, `seoTitle: ''`, `poster:`),
 // which is what the admin writes for a box the author cleared, is not set, and an alt text without its picture is dropped
 // (src/lib/front-matter.ts). A real picture still needs its alt key: `missingAlt` fails the build with a readable message.
-const frontMatter = <T extends z.ZodType>(shape: z.ZodRawShape, schema: T) => z.preprocess(normaliseFrontMatter(shape), schema);
+const frontMatter = <T extends z.ZodType>(shape: z.ZodRawShape, schema: T) =>
+  z.preprocess(normaliseFrontMatter(shape), schema);
 
 const slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'use lowercase words joined with hyphens, e.g. "ai-agents"');
 const ownerName = z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'use the form "owner/name"');
@@ -56,7 +57,9 @@ const common = {
   sections: sectionsSchema,
 };
 
-type ImageHelper = Parameters<Extract<Parameters<typeof defineCollection>[0]['schema'], (...args: never[]) => unknown>>[0]['image'];
+type ImageHelper = Parameters<
+  Extract<Parameters<typeof defineCollection>[0]['schema'], (...args: never[]) => unknown>
+>[0]['image'];
 
 function collection(
   dir: string,
@@ -131,7 +134,12 @@ const authors = defineCollection({
         .superRefine((data, ctx) => {
           if (data.kind !== 'agent') return;
           for (const key of ['name', 'bio'] as const) {
-            if (!data[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required for an agent (only a person is read from site.json)` });
+            if (!data[key])
+              ctx.addIssue({
+                code: 'custom',
+                path: [key],
+                message: `${key} is required for an agent (only a person is read from site.json)`,
+              });
           }
         }),
     ),
@@ -184,14 +192,16 @@ const posts = {
         ctx.addIssue({
           code: 'custom',
           path: ['transcriptText'],
-          message: 'transcriptText is for a vlog written with sections. With a Markdown body, put the transcript under a "## Transcript" heading in the body and set transcript: true',
+          message:
+            'transcriptText is for a vlog written with sections. With a Markdown body, put the transcript under a "## Transcript" heading in the body and set transcript: true',
         });
       }
       if (data.transcript === true && blocks) {
         ctx.addIssue({
           code: 'custom',
           path: ['transcript'],
-          message: 'transcript: true labels the "## Transcript" part of a Markdown body. A vlog written with sections keeps its transcript in transcriptText',
+          message:
+            'transcript: true labels the "## Transcript" part of a Markdown body. A vlog written with sections keeps its transcript in transcriptText',
         });
       }
     },
@@ -209,8 +219,13 @@ const posts = {
       role: z.string().optional(),
       gallery: z.array(z.object({ src: z.string(), alt: z.string(), caption: z.string().optional() })).default([]),
       timeline: z.array(z.object({ date: isoDate, text: z.string() })).default([]),
-      // Playable projects (a game or an app hosted on its own address). All optional: without playUrl nothing changes.
-      playUrl: z.url({ protocol: /^https$/, error: 'use a full https:// address' }).optional(),
+      // Playable projects (a game or an app on its own address, or a page of this site). All optional: without playUrl
+      // nothing changes.
+      playUrl: z
+        .union([z.url({ protocol: /^https$/ }), z.string().regex(/^\/(?!\/)[a-z0-9/-]*$/)], {
+          error: 'use a full https:// address, or a page of this site such as /ascent/',
+        })
+        .optional(),
       playMode: z.enum(['embed', 'link']).default('embed'),
       playAspect: z
         .string()
@@ -232,7 +247,19 @@ const posts = {
           (data.playNote ? 'playNote' : undefined) ??
           (data.order !== undefined ? 'order' : undefined) ??
           (data.appType !== undefined ? 'appType' : undefined);
-        if (orphan) ctx.addIssue({ code: 'custom', path: [orphan], message: `${orphan} needs playUrl: it only shows on a playable project` });
+        if (orphan)
+          ctx.addIssue({
+            code: 'custom',
+            path: [orphan],
+            message: `${orphan} needs playUrl: it only shows on a playable project`,
+          });
+      } else if (data.playUrl.startsWith('/') && data.playMode !== 'link') {
+        // A page of this site is opened, not embedded in another page of it.
+        ctx.addIssue({
+          code: 'custom',
+          path: ['playMode'],
+          message: 'a playUrl on this site opens as a link: add playMode: link',
+        });
       }
     },
   ),

@@ -36,7 +36,10 @@ function pagesIn(dir) {
 const secondPages = ['latest', ...KINDS].filter((dir) => existsSync(join(dist, dir, 'page', '2', 'index.html')));
 
 /** The post pages checked, per kind: `/blog/some-post/`. Empty when nothing is published. */
-const postPaths = (kind) => pagesIn(kind).slice(0, PER_GROUP).map((slug) => `/${kind}/${slug}/`);
+const postPaths = (kind) =>
+  pagesIn(kind)
+    .slice(0, PER_GROUP)
+    .map((slug) => `/${kind}/${slug}/`);
 
 /** Blog posts and news items: the pages built from ArticlePage (hero, table of contents, share row, prev/next). */
 export const articlePaths = [...postPaths('blog'), ...postPaths('news')];
@@ -64,12 +67,17 @@ const routes = [
   ...secondPages.map((dir) => ({ path: `/${dir}/page/2/` })),
   listing('/apps/'), // noindex while no app is published (empty state); the layout variants are tested on /styleguide/apps/
   listing('/tags/'),
-  ...pagesIn('tags').slice(0, PER_GROUP).map((tag) => ({ path: `/tags/${tag}/` })),
+  ...pagesIn('tags')
+    .slice(0, PER_GROUP)
+    .map((tag) => ({ path: `/tags/${tag}/` })),
   // Every author page in dist/. One with no posts (Parallax, which writes notes, not posts, or a writing agent before its
   // first post) is noindex and out of the sitemap while it has none, so like a listing it is read from the build.
-  ...pagesIn('authors').reverse().map((slug) => listing(`/authors/${slug}/`)),
+  ...pagesIn('authors')
+    .reverse()
+    .map((slug) => listing(`/authors/${slug}/`)),
   { path: '/about/' },
   { path: '/privacy/' },
+  { path: '/ascent/' }, // R7: Ascent, the game (docs/ASCENT.md); the game itself is tested on /styleguide/ascent/
   { path: '/search/', noindex: true },
   // Built only while the waitlist is shown (on in Site settings, or a WAITLIST_PREVIEW=1 build): tests/waitlist.spec.js.
   ...(existsSync(join(dist, 'waitlist', 'remove', 'index.html')) ? [{ path: '/waitlist/remove/', noindex: true }] : []),
@@ -87,7 +95,7 @@ const routes = [
   { path: '/styleguide/imagery/', noindex: true }, // prototype: three directions for article imagery over the real covers (docs/IMAGE_STYLE.md)
   { path: '/styleguide/imagery/v2/', noindex: true }, // prototype, round 2: variety, the editor's picker, the brand in the words, agent cards
   { path: '/styleguide/runner/', noindex: true }, // prototype for tests/runner.spec.js: the 404 page's game, mounted on the first key or tap (docs/RUNNER.md)
-  { path: '/styleguide/ascent/', noindex: true }, // prototype for tests/ascent.spec.js: R7: Ascent's feel prototype, mounted on Play (docs/ASCENT.md)
+  { path: '/styleguide/ascent/', noindex: true }, // prototype for tests/ascent.spec.js: R7: Ascent with a debug readout, mounted on Play (docs/ASCENT.md)
   // fixtures for tests/post-sections.spec.js: one post per kind written as sections (tests/fixtures/posts/), drawn by the real post pages
   ...KINDS.map((kind) => ({ path: `/styleguide/posts/${kind}/`, noindex: true })),
 ];
