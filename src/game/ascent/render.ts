@@ -25,6 +25,7 @@ import {
   LineSegments,
   Mesh,
   MeshBasicMaterial,
+  OctahedronGeometry,
   PerspectiveCamera,
   SRGBColorSpace,
   Scene,
@@ -69,8 +70,8 @@ export interface ViewOptions {
   /** The agent's model (loadAgent); without it the capsule stands in. */
   agent?: AgentModel | null;
   config?: AscentConfig;
-  /** Hold the goal ring still, and leave out the agent's bob, squash and sway. */
-  reducedMotion?: boolean;
+  /** Hold the goal ring still, and leave out the agent's bob, squash and sway (asked each frame: the player can change it). */
+  reducedMotion?: () => boolean;
 }
 
 /** Whether this browser can give a WebGL 2 context (three.js needs one). Asked on a throwaway canvas, then released. */
@@ -332,6 +333,24 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   ring.position.set(level.goal.x, level.goal.y, level.goal.z);
   scene.add(ring);
 
+  // The beacons (assist mode's checkpoints): a brass ring on the block and a small brass diamond over it. Brass is for the
+  // goal, the visor and these alone (docs/ASCENT.md, "How it looks").
+  const beaconRing = geo(new TorusGeometry(0.5, 0.035, 6, 32));
+  const beaconMark = geo(new OctahedronGeometry(0.13));
+  const beacons = level.beacons.map((b) => {
+    const group = new Group();
+    const flat = new Mesh(beaconRing, brass);
+    flat.rotation.x = Math.PI / 2;
+    flat.position.y = 0.04;
+    const mark = new Mesh(beaconMark, brass);
+    mark.position.y = 1.9;
+    group.add(flat, mark);
+    group.position.set(b.x, b.y, b.z);
+    group.visible = false;
+    scene.add(group);
+    return group;
+  });
+
   return {
     resize(w, h, pixelRatio) {
       renderer.setPixelRatio(pixelRatio);
@@ -356,7 +375,13 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
         (shadow.material as MeshBasicMaterial).opacity = 0.9 * fade;
       }
 
-      if (!options.reducedMotion) ring.rotation.y = ((time % r.ringTurn) / r.ringTurn) * Math.PI * 2;
+      if (!options.reducedMotion?.()) ring.rotation.y = ((time % r.ringTurn) / r.ringTurn) * Math.PI * 2;
+
+      // Assist mode's beacons: shown only in assist mode, the checkpoint larger.
+      for (let i = 0; i < beacons.length; i++) {
+        beacons[i].visible = sim.assist;
+        beacons[i].scale.setScalar(i === sim.checkpoint ? 1.35 : 1);
+      }
 
       camera.position.set(cam.position.x, cam.position.y, cam.position.z);
       camera.lookAt(cam.target.x, cam.target.y, cam.target.z);

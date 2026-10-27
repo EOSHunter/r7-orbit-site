@@ -5,7 +5,8 @@
 // Space and the arrows would scroll the page, so their default is prevented then. Key repeat is ignored: holding Space is one
 // jump. The mouse looks around while the pointer is locked (after a click on the game), or while a button is held and dragged.
 // release() forgets every held key (the host calls it on pause, blur and when the tab hides: a keyup that happens while the
-// page is not listening is never heard, and a key must never stay held).
+// page is not listening is never heard, and a key must never stay held). Keys pressed on the game's own buttons and fields
+// (the pause menu) are theirs: Space on Restart presses Restart, it does not jump. Touch pointers are left to touch.ts.
 
 export type Action = 'forward' | 'back' | 'left' | 'right' | 'jump' | 'turnLeft' | 'turnRight' | 'pause';
 
@@ -43,14 +44,19 @@ export function preventsDefault(code: string): boolean {
 }
 
 /**
- * Where the held keys steer, in world space (x, z), at most 1 long, for a camera turned `yaw` radians about +Y (0 looks
- * towards -Z). Forward is away from the camera; right is the screen's right.
+ * Where the held keys (and a touch stick: x right, y forward) steer, in world space (x, z), at most 1 long, for a camera
+ * turned `yaw` radians about +Y (0 looks towards -Z). Forward is away from the camera; right is the screen's right. The keys
+ * are full speed; a stick pushed part way is slower.
  */
-export function moveVector(held: ReadonlySet<Action>, yaw: number): { x: number; z: number } {
-  const ahead = (held.has('forward') ? 1 : 0) - (held.has('back') ? 1 : 0);
-  const side = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
+export function moveVector(
+  held: ReadonlySet<Action>,
+  yaw: number,
+  stick: { x: number; y: number } = { x: 0, y: 0 },
+): { x: number; z: number } {
+  const ahead = (held.has('forward') ? 1 : 0) - (held.has('back') ? 1 : 0) + stick.y;
+  const side = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0) + stick.x;
   if (!ahead && !side) return { x: 0, z: 0 };
-  const len = Math.hypot(ahead, side);
+  const len = Math.max(1, Math.hypot(ahead, side));
   const sin = Math.sin(yaw);
   const cos = Math.cos(yaw);
   // forward = (-sin, -cos), right = (cos, -sin)
@@ -95,9 +101,16 @@ export function createInput(
   let drag: { id: number; x: number; y: number } | null = null;
   const doc = (pointerTarget as Node).ownerDocument ?? null;
 
+  // A key typed on one of the game's buttons or fields belongs to it (Escape still pauses).
+  const onControl = (e: Event) => {
+    const t = e.target as Element | null;
+    return !!t && t !== keyTarget && !!t.closest?.('button, input, select, textarea, a');
+  };
+
   const onKeyDown = (event: Event) => {
     const e = event as KeyboardEvent;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (onControl(e) && e.code !== 'Escape') return;
     const action = keyAction(e.code);
     if (!action) return;
     if (preventsDefault(e.code)) e.preventDefault();
@@ -120,6 +133,7 @@ export function createInput(
   const onPointerDown = (event: Event) => {
     const e = event as PointerEvent;
     handlers.onPointerDown?.(e);
+    if (e.pointerType === 'touch') return; // touch.ts: a stick on the left, a look drag on the right
     if (!locked()) drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
   };
 

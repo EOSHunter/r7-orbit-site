@@ -50,6 +50,14 @@ describe('moveVector', () => {
     expect(moveVector(held('forward', 'back'), 0)).toEqual({ x: 0, z: 0 });
   });
 
+  it('a touch stick steers with the keys, slower when pushed part way, never faster than 1', () => {
+    const half = moveVector(held(), 0, { x: 0, y: 0.5 });
+    expect(half.z).toBeCloseTo(-0.5, 9);
+    const both = moveVector(held('forward'), 0, { x: 1, y: 1 });
+    expect(Math.hypot(both.x, both.z)).toBeCloseTo(1, 9);
+    expect(moveVector(held(), 0, { x: 0, y: 0 })).toEqual({ x: 0, z: 0 });
+  });
+
   it('Q turns left, E right, both cancel', () => {
     expect(turnInput(held('turnLeft'))).toBe(1);
     expect(turnInput(held('turnRight'))).toBe(-1);
@@ -102,6 +110,32 @@ describe('createInput', () => {
     input.destroy();
     keys.dispatchEvent(key('keydown', 'KeyD'));
     expect(input.held.size).toBe(0);
+  });
+
+  it("leaves keys on the game's own buttons to them, except Escape", () => {
+    const { keys, calls, input } = setup();
+    // A key pressed on a button inside the game (the target closest() finds a button).
+    const control = { closest: (sel: string) => (sel.includes('button') ? control : null) };
+    const ev = (type: string, code: string) => {
+      const e = key(type, code);
+      Object.defineProperty(e, 'target', { value: control });
+      return e;
+    };
+    keys.dispatchEvent(ev('keydown', 'Space'));
+    keys.dispatchEvent(ev('keydown', 'KeyW'));
+    expect(calls.onJump).not.toHaveBeenCalled();
+    expect(input.held.size).toBe(0);
+    keys.dispatchEvent(ev('keydown', 'Escape'));
+    expect(calls.onPause).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a touch to the touch controls (it does not drag the camera)', () => {
+    const { pointer, calls } = setup(false);
+    const ptr = (type: string, x: number, y: number) =>
+      Object.assign(new Event(type), { pointerId: 2, pointerType: 'touch', clientX: x, clientY: y });
+    pointer.dispatchEvent(ptr('pointerdown', 10, 10));
+    pointer.dispatchEvent(ptr('pointermove', 40, 10));
+    expect(calls.onLook).not.toHaveBeenCalled();
   });
 
   it('a drag with a button held looks around when the pointer is not locked', () => {

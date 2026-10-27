@@ -152,8 +152,8 @@ export interface AgentViewOptions {
   colors: SceneColors;
   model?: AgentModel | null;
   config?: AscentConfig;
-  /** Leave out the bob, the squash and stretch and the antenna's sway. */
-  reducedMotion?: boolean;
+  /** Leave out the bob, the squash and stretch and the antenna's sway (asked each frame: the player can change it). */
+  reducedMotion?: () => boolean;
 }
 
 /** A token colour (sRGB, 0-1) as a three.js colour in its linear working space. */
@@ -257,7 +257,7 @@ export function createAgentView(options: AgentViewOptions): AgentView {
   const restY = new Map<Object3D, number>();
   for (const part of parts.values()) restY.set(part, part.position.y);
   const animator = new AgentAnimator(cfg);
-  const reducedMotion = options.reducedMotion ?? false;
+  const reducedMotion = options.reducedMotion ?? (() => false);
 
   const pose = (p: AgentPose) => {
     const w = 1 / Math.sqrt(p.squash);
@@ -302,7 +302,7 @@ export function createAgentView(options: AgentViewOptions): AgentView {
             teleports: sim.teleports,
           },
           dt,
-          reducedMotion,
+          reducedMotion(),
         ),
       );
       for (const { sun, yaw, pitch } of suns) {

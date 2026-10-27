@@ -1,12 +1,14 @@
 ---
 // Prototype of R7: Ascent (docs/ASCENT.md, phases 1 and 2 of 4). The test climb and the robot agent built in Blender
-// (tools/ascent/; a capsule stands in if the robot does not load) and a third-person camera; the feel's numbers are in src/game/ascent/config.ts. The game and its level are loaded when
-// Play is pressed, so three.js is a lazy chunk and never in this page's first load. ?level=code plays phase 1's grey boxes
-// instead, laid out in code (and so does a failed level load, which the debug readout says). Under the game, a
-// debug readout that only this page has. Play puts the stage in full screen and locks the mouse to it, in the click itself
-// (game/ascent/gesture.ts): the browser allows neither once the click is over, and the game takes a moment to load. Fixture
-// for tests/ascent.spec.js (?lock=0 never asks for pointer lock; ?fullscreen=0 plays in the page; ?start=0 stops on the
-// ready screen). Not linked from anywhere and kept out of search engines, like the rest of the styleguide.
+// (tools/ascent/; a capsule stands in if the robot does not load), a third-person camera, the HUD, the pause menu (settings,
+// assist mode), save and resume, and touch controls; the feel's numbers are in src/game/ascent/config.ts. The game and its
+// level are loaded when Play is pressed, so three.js is a lazy chunk and never in this page's first load. ?level=code plays
+// phase 1's grey boxes instead, laid out in code (and so does a failed level load, which the debug readout says). Under the
+// game, a debug readout that only this page has. Play puts the stage in full screen and locks the mouse to it, in the click
+// itself (game/ascent/gesture.ts): the browser allows neither once the click is over, and the game takes a moment to load.
+// Fixture for tests/ascent.spec.js (?lock=0 never asks for pointer lock; ?fullscreen=0 plays in the page; ?start=0 stops on
+// the ready screen; ?touch=1 shows the touch controls from the start). Not linked from anywhere and kept out of search
+// engines, like the rest of the styleguide.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { ASCENT_TEXT } from '../../../game/ascent/text';
 import '../../../game/ascent/ascent.css';
@@ -29,6 +31,7 @@ const stats = [
   ['time', 'time'],
   ['camera', 'camera yaw, pitch, distance'],
   ['locked', 'pointer locked'],
+  ['assist', 'assist mode, checkpoint'],
   ['triangles', 'triangles'],
   ['calls', 'draw calls'],
 ];
@@ -62,7 +65,7 @@ const stats = [
           <button class="btn solid lg" type="button" data-ascent-play>
             Play
           </button>
-          <p class="as-needs">Needs a keyboard and a mouse, and WebGL.</p>
+          <p class="as-needs">Needs a keyboard and a mouse, or a touch screen, and WebGL.</p>
           <noscript>
             <p>This game needs JavaScript.</p>
           </noscript>
@@ -222,6 +225,7 @@ const stats = [
     fullscreen: query.get('fullscreen') !== '0',
     start: query.get('start') !== '0',
     level: query.get('level') === 'code' ? 'code' : 'blender',
+    touch: query.get('touch') === '1' ? true : undefined,
   };
   let handle: AscentHandle | null = null;
   let loading = false;
@@ -246,6 +250,7 @@ const stats = [
     show('time', `${s.time.toFixed(1)} s`);
     show('camera', `${s.cameraYaw.toFixed(2)}, ${s.cameraPitch.toFixed(2)}, ${s.cameraDistance.toFixed(2)}`);
     show('locked', s.locked ? 'yes' : 'no');
+    show('assist', `${s.assist ? 'on' : 'off'}, ${s.checkpoint === null ? 'none' : `beacon ${s.checkpoint + 1}`}`);
     show('triangles', String(s.view.triangles));
     show('calls', String(s.view.calls));
     show('animation', s.view.animation);
@@ -276,8 +281,12 @@ const stats = [
       handle = mountAscent(host, {
         model,
         agent,
+        // The climb is saved per level, so the boxes in code and the climb from Blender never resume each other's.
+        saveAs: model ? 'test-climb' : 'code',
         pointerLock: options.pointerLock,
         fullscreen: options.fullscreen,
+        touch: options.touch,
+        onLeave: () => leave(),
         onStats,
       });
       if (options.start) handle.start();
@@ -301,11 +310,14 @@ const stats = [
     host?.focus();
   });
 
-  unmount?.addEventListener('click', () => {
+  // The menu's Leave and the Unmount button: the game is taken away and the poster comes back.
+  function leave() {
     handle?.destroy();
     handle = null;
     for (const b of [restart, unmount]) if (b) b.hidden = true;
     if (poster) poster.hidden = false;
     for (const [key, el] of out) if (key !== 'level' && key !== 'agent') el.textContent = '-';
-  });
+  }
+
+  unmount?.addEventListener('click', leave);
 </script>

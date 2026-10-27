@@ -45,8 +45,14 @@ export const ASCENT_CONFIG = {
     maxFall: 32,
   },
 
-  /** Falling below this height (metres, feet) puts the agent back at the start. Hardcore: no checkpoints in phase 1. */
+  /** Falling below this height (metres, feet) puts the agent back at the start, or at its checkpoint in assist mode. */
   killY: -18,
+
+  /**
+   * Assist mode (off by default: hardcore): touching a beacon makes it the checkpoint, and falling this far below it puts the
+   * agent back on it. A beacon counts as touched when the agent stands within `radius` of it across and `height` of it up.
+   */
+  assist: { radius: 1.3, height: 0.6, drop: 6 },
 
   camera: {
     /** Distance from the look point to the camera, when nothing is in the way. */
