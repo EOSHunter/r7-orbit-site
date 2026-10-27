@@ -7,8 +7,9 @@ unlinked styleguide route before it has a public page.
 
 **Where it is:** phase 1, the feel prototype, is built at `/styleguide/ascent/` (noindex, unlinked, like the rest of the
 styleguide) and waits for the author to play it (below, "Phase 1: Feel prototype"). Phase 2 has started with the Blender
-pipeline: the page now plays a short test climb built by a Blender script (below, "Phase 2"). Touch controls, the HUD, saving
-and assist mode are not built yet.
+pipeline: the page now plays a short test climb built by a Blender script, as the robot agent the author chose, also built in
+Blender and animated in code, with the HUD, the pause menu and its settings, save and resume, assist mode and touch controls
+(below, "Phase 2").
 
 ## The pitch
 
@@ -43,8 +44,16 @@ comes from tone, as the design system asks (`CLAUDE.md` design rule 5).
   game swaps each for its token colours, shading each face by the way it points (tops lightest), as below.
 - **Edge lines are drawn by the game** (Three.js `EdgesGeometry` over each mesh), not modelled.
 - **Type in the HUD:** JetBrains Mono for numbers (altitude, time), Inter for labels, as on the rest of the site.
-- **The character:** a small capsule-shaped "agent" in ivory with a brass visor. Simple to animate and reads well from
-  behind.
+- **The character:** a small robot climber, 1.2 m tall in game units, that reads like a clean designer toy rather than a
+  realistic robot (decided 2026-10-27; the approved renders are in `docs/ascent-concepts/`). A rounded, slightly boxy ivory
+  head with one wide brass visor band across the front, the only brass on it; a short antenna with a ball on top; a compact
+  ivory torso with a raised chest plate and an obsidian battery pack on its back, outlined in edge lines (the camera sees it
+  from behind most of the time, so the back carries character, with a raised hatch on the back of the head too); dark joints
+  at the shoulders and the waist; short dark legs in chunky ivory boots; stubby ivory arms. It is the one lit, smooth-shaded
+  thing in the scene: an ivory ambient and a key, a fill and a rim light that turn with the camera, so its faces, sides and
+  outline always come out in different tones (`render.agentLight` in `config.ts`). Its animation ("Phase 2" below) is
+  drawn from the sim's state and never changes the motion; the collision box stays 0.56 by 1.2 m, and the robot fits it seen
+  from behind.
 
 ### HUD
 
@@ -112,13 +121,18 @@ in Node, apart from a read-only Three.js view.
 | `sim.ts` | `AscentSim`: one fixed step of movement, jumping (coyote time, buffer), gravity, landing, falling and respawning, the altitude |
 | `level.ts` | the course as data: a list of boxes, a spawn point, the route and the goal. `PROTOTYPE_LEVEL` is phase 1's, laid out in code; `levelFromObjects` makes one from a Blender level's objects, with the rules below |
 | `gltf-level.ts` | a level made in Blender, read with `GLTFLoader`: its `Level`, its scenery meshes and its `GOAL` (`LevelModel`) |
+| `agent.ts` | the robot from `assets/agent.glb`: loaded and checked (`AgentModel`: its parts and materials), drawn lit in token colours with edge lines on its obsidian parts, posed each frame, and its light, which turns with the camera; the capsule when there is no model |
+| `agent-anim.ts` | the robot's animation as numbers: which animation the sim's state calls for (`chooseAnimation`: idle, run, jump, fall, land) and each frame's pose (`AgentAnimator`); pure, unit-tested |
 | `clock.ts` | the fixed-step clock (the runner's, 1/120 s, with an accumulator and interpolation) |
 | `input.ts` | keys and the mouse to a move vector, jump presses and a look delta, relative to the camera |
 | `camera.ts` | the third-person orbit camera: yaw and pitch from the look input, a spring on the follow, pulled in when a box is in the way |
 | `colors.ts` | the scene's colours, read from the tokens at runtime; the material names a level may use and their tones |
-| `render.ts` | the Three.js view: reads the sim, draws the scene; `createView()` is null without WebGL |
+| `render.ts` | the Three.js view: reads the sim, draws the scene (the agent through `agent.ts`); `createView()` is null without WebGL |
+| `settings.ts` | the player's settings (look speed, invert, reduced motion: as the system asks, always or never), kept in the browser (`r7-ascent-settings`); parsing pure |
+| `save.ts` | the climb in progress, kept in the browser (`r7-ascent-save`) and offered back; a versioned format checked field by field; the time as m:ss |
+| `touch.ts` | the touch controls: a stick under the left thumb, a look drag on the right half, Jump and Pause buttons, the "turn your phone sideways" prompt; `stickVector` pure |
 | `gesture.ts` | full screen and the pointer lock, asked for inside the click or key press that starts or resumes the climb; small and free of three.js, so the page's Play button can use it before the game has loaded |
-| `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup; `loadTestClimb()` |
+| `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup; `loadTestClimb()` and `loadAgent()` |
 | `ascent.css` | the HUD's styles, tokens only; imported by the page that hosts the game |
 
 `index.ts` is reached only through a dynamic `import()`, so three.js and the game are a lazy chunk loaded on Play and never in
@@ -184,8 +198,8 @@ round mug gets a square box a little inside it.
 |---|---|---|
 | `tools/ascent/` | The Blender Python scripts: the source of every model and zone | Yes |
 | `tools/ascent/out/` | `.blend` files and preview renders the scripts produce, for looking around and for approval | No (rebuilt from the scripts; in `.gitignore`) |
-| `docs/ascent-concepts/` | The approved preview renders | Yes |
-| `src/game/ascent/assets/` | Exported `.glb` files the game loads (where the runner keeps `rover.glb`) | **Yes**, so the site build (and Cloudflare) never needs Blender |
+| `docs/ascent-concepts/` | The approved preview renders (the robot agent's so far) | Yes |
+| `src/game/ascent/assets/` | Exported `.glb` files the game loads (where the runner keeps `rover.glb`): `test-climb.glb` and `agent.glb` | **Yes**, so the site build (and Cloudflare) never needs Blender |
 | `src/game/ascent/` | Game code (TypeScript) | Yes |
 | `src/pages/styleguide/ascent/` | The prototype page (phases 1 to 3) | Yes |
 
@@ -196,8 +210,8 @@ Rebuilding models needs Blender installed. Building the site does not.
 | What | Target |
 |---|---|
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
-| Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, **171 kB gzipped** (three.js is nearly all of it) |
-| The character `.glb` | < 150 kB |
+| Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, 171 kB gzipped; with the robot agent and its animation, 670 kB, **173 kB gzipped** (three.js is nearly all of it) |
+| The character `.glb` | < 150 kB. The robot is 115 kB, 28 kB gzipped (5,608 triangles; the normals make up much of it, for the smooth shading) |
 | Each zone `.glb` | < 500 kB, loaded as the player nears it. The test climb is 52 kB (11 kB gzipped), 1,892 triangles of scenery and ring (the ring is 1,152 of them) |
 
 If the `.glb` files outgrow these, a build step with `gltfpack` (mesh compression) can shrink them. It is a dev dependency,
@@ -270,10 +284,10 @@ browser refuses the lock, "Click to look around with the mouse" shows in the mid
 
 ### Phase 2: Phone, HUD, save
 
-- [ ] Touch controls and the portrait prompt
-- [ ] HUD (altitude, time, zone altimeter) and pause menu
-- [ ] Save and resume; settings
-- [ ] Assist mode and beacons
+- [x] Touch controls and the portrait prompt
+- [x] HUD (altitude, time, zone altimeter) and pause menu
+- [x] Save and resume; settings (volume waits for sound, which is "Later")
+- [x] Assist mode and beacons
 - [x] The Blender pipeline: one script in `tools/ascent/`, export, `GLTFLoader`, collision and markers read from
       `userData`, materials swapped for token colours
 
@@ -302,6 +316,74 @@ monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the
 `gltf-level.ts`; `gltf-level.vitest.ts` covers the file rules and walks the sim into the first book's side and onto it; and
 `tests/ascent.spec.js` checks that the `.glb` loads only on Play, `?level=code` and the fallback.
 
+**The rest of phase 2 (2026-10-27).** The author asked for it before phase 3, since the finish needs the timer and the public
+page is meant for phones too.
+
+- **HUD.** Top left: the altitude, the best, the falls and the zone's name. Top right: the time (m:ss). Down the left edge,
+  the altimeter: a hairline, a tick where each zone starts and a brass marker for the agent (a level without zones is one
+  zone from the start to the goal). The controls hint shows for the first minute.
+- **Pause menu.** Escape (or the touch Pause button) pauses; the message then holds real buttons: Resume (focused, so
+  Space or Enter resumes), Restart (pressed twice: "Restart from the floor?"), Assist mode (a toggle), Settings and Leave
+  (only when the host gives `onLeave`). A click on the game around the menu still resumes. Keys pressed on the menu's own
+  controls are theirs (Space presses the button; it does not jump).
+- **Settings** (`settings.ts`): look speed (0.4 to 2.5 times), invert looking up and down, and motion (as the system asks,
+  reduced, or full). They apply at once and are kept in `r7-ascent-settings`. Reduced motion is read every frame.
+- **Save and resume** (`save.ts`): the climb (position, facing, time, best, falls, jumps, assist mode, checkpoint) is saved
+  every 5 s of play, on every pause, when the tab hides or the page goes, and when the game is taken away. A host names the
+  level (`saveAs`); a save is offered back only on the same level, as "Continue · 44 m · 5:12" beside "New climb" on the ready
+  screen. Restart clears it. Every read and write is in try/catch, and a save that is old, for another level or broken is
+  ignored.
+- **Assist mode** (off by default: hardcore). Beacons are `BEACON_<n>` empties in a level file (three on phase 1's course);
+  standing at one makes it the checkpoint. In assist mode a beacon shows as a brass ring with a brass diamond over it, the
+  checkpoint larger, and a fall of 6 m below the checkpoint, or off the world, puts the agent back on it ("You fell. Back to
+  your last beacon."). Turning it on marks the climb as assisted for the finish, until a restart with it off.
+- **Touch** (`touch.ts`): shown from the start on a device whose main pointer is coarse, or on the first touch. A stick
+  appears under the left thumb (a small push walks, full push runs), a drag on the right half looks (1.8 times the mouse's
+  speed at the same setting), Jump bottom right, Pause top right. Upright on a phone, the game pauses and asks to be turned
+  sideways. Touch never asks for the pointer lock.
+
+Tests: `settings.vitest.ts` (settings, the save format, the stick), more in `input.vitest.ts` and `sim.vitest.ts` (assist
+mode, restore), and three in `tests/ascent.spec.js` (the menu, assist and settings; saving and Continue; touch).
+
+**The robot agent (2026-10-27).** The author asked for a character with more to it than "just a pill", and approved a robot
+from renders (the second round: the first read as flat). `tools/ascent/build_agent.py` builds it and exports
+`src/game/ascent/assets/agent.glb`:
+
+```
+"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" -b --factory-startup -P tools/ascent/build_agent.py
+"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" -b --factory-startup -P tools/ascent/build_agent.py -- --preview
+```
+
+The second also renders, to `tools/ascent/out/`, the robot from behind at the game camera's angle (full frame and cropped),
+from the front three-quarter view and in silhouette, lit with the game's numbers; `-- --preview --variants` adds the two
+variations the author chose between (B, a rounder head; C, a wide flat head). The script stops if the robot no longer fits
+the agent's box (0.56 m wide, 1.2 m tall).
+
+Its parts are separate nodes with their pivots where they turn (`agent` at the feet, `body` at the hips, `head` at the neck,
+the arms at the shoulders, the legs at the hips, the antenna at its foot): the names are the contract with `agent.ts`, as
+`COL_` and `SPAWN` are for a level. The animation is code, like the runner's rover, not Blender actions: it reacts to the sim
+from frame to frame and stays a few hundred lines. `agent-anim.ts` chooses idle, run, jump, fall or land from the sim's
+state, and makes the pose:
+
+| | |
+| --- | --- |
+| idle | a slow bob, the arms swaying a little |
+| run | the legs swing with the distance covered (one stride every 1.7 m), the arms against them, a bob on each step, a lean into the run |
+| jump | a crouch that springs into a stretch, then arms up and legs tucked while rising |
+| fall | arms out to the sides, legs reaching down |
+| land | a squash as deep as the landing was hard, springing back; the arms catch the weight |
+
+The jump leaves the ground on the key press, as before (the feel does not change), so the crouch is drawn in the first
+0.07 s of the rise. The antenna sways on a spring, flicked by each take-off, landing and footfall. Under reduced motion the
+bob, the squash and stretch and the antenna's sway are left out; the legs and arms still show running and jumping. Every
+number is in `config.ts` (`animation`).
+
+The page loads the robot beside the level on Play. If it does not load, the capsule stands in and the readout says why; the
+readout also shows the animation playing. Tests: `agent-anim.vitest.ts` (the choice and the pose through a run, a jump and a
+landing, driven by the sim; reduced motion), `agent.vitest.ts` (the committed file: its parts, materials, size, fit in the
+box and facing; the checks on a model; the view; the light's aim), and `tests/ascent.spec.js` (both files load on Play, the
+readout runs through idle, run and jump or fall, and the capsule when the files fail).
+
 ### Phase 3: The full climb
 
 - [ ] The five zones, scripted in Blender, each approved from renders
@@ -314,7 +396,7 @@ monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the
 
 ### Phase 4: Polish and the public page
 
-- [ ] Look pass (fog, edge lines, the agent's animations)
+- [ ] Look pass (fog, edge lines). The agent's animations are built (phase 2, "The robot agent")
 - [ ] The public page and its `tests/routes.js` entry (smoke, axe, budgets and Lighthouse cover the page before Play)
 - [ ] The `/apps/` entry, through the add-content skill
 - [ ] Unit tests for the save format
@@ -329,4 +411,3 @@ monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the
 |---|---|
 | The public URL | `/ascent/`, a page of this site. A playable project's `playUrl` today must be a full `https://` address and was made for games on their own host (`docs/CONTENT_MODEL.md`, "Playable projects"), so how an on-site game joins `/apps/` is decided with the URL |
 | Link in the main nav, or on the hub? | Not in the nav at first. List it on `/apps/` and link it from a project post; add it to the nav when the author is happy with it |
-| The character | The ivory capsule with a brass visor described above; confirm once renders exist |

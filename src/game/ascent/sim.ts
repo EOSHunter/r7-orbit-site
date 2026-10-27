@@ -7,7 +7,8 @@
 // - jump buffering: a jump pressed shortly before landing happens on landing;
 // - variable height: letting go of Space while rising cuts the jump short; holding it gives the full height;
 // - a heavier fall than rise, so the arc lands where the eye expects.
-// Falling below config.killY puts the agent back at the start (hardcore: no checkpoints yet).
+// Falling below config.killY puts the agent back at the start. Hardcore by default; in assist mode (setAssist), touching a
+// beacon makes it the checkpoint, and a fall of config.assist.drop below it, or off the world, puts the agent back on it.
 
 import { ASCENT_CONFIG, jumpPhysics, type AscentConfig } from './config';
 import { groundBelow, moveAgent, type Box, type Vec3 } from './collision';
@@ -48,6 +49,10 @@ export class AscentSim {
   falls = 0;
   /** Goes up by one whenever the agent is moved without travelling (a respawn): the camera snaps instead of sweeping. */
   teleports = 0;
+  /** Assist mode now; whether it was on at any time this climb (the finish says so); the beacon to return to. */
+  assist = false;
+  assisted = false;
+  checkpoint: number | null = null;
   private move = { x: 0, z: 0 };
 
   constructor(level: Level, cfg: AscentConfig = ASCENT_CONFIG) {
@@ -91,8 +96,16 @@ export class AscentSim {
     this.buffer = 0;
   }
 
-  /** Back to the start: position, speed, time and the best height. */
+  /** Assist mode on or off. Turning it on marks the climb as assisted. */
+  setAssist(on: boolean): void {
+    this.assist = on;
+    if (on) this.assisted = true;
+  }
+
+  /** Back to the start: position, speed, time and the best height; the checkpoint is forgotten. */
   restart(): void {
+    this.checkpoint = null;
+    this.assisted = this.assist;
     this.respawn();
     this.time = 0;
     this.best = 0;
@@ -178,11 +191,57 @@ export class AscentSim {
       this.yaw = wrapAngle(this.yaw + Math.max(-turn, Math.min(turn, diff)));
     }
 
-    if (this.pos.y < this.cfg.killY) {
+    if (this.grounded) this.touchBeacons();
+    const back = this.assist && this.checkpoint !== null ? this.level.beacons[this.checkpoint] : null;
+    if (this.pos.y < this.cfg.killY || (back && this.pos.y < back.y - this.cfg.assist.drop)) {
       this.falls++;
       this.respawn();
     }
     if (this.grounded) this.best = Math.max(this.best, this.altitude);
+  }
+
+  /** A climb in progress, put back as it was saved (save.ts); the camera snaps to it. */
+  restore(s: {
+    pos: Vec3;
+    yaw: number;
+    time: number;
+    best: number;
+    falls: number;
+    jumps: number;
+    assist: boolean;
+    assisted: boolean;
+    checkpoint: number | null;
+  }): void {
+    this.pos = { ...s.pos };
+    this.prev = { ...s.pos };
+    this.vel = { x: 0, y: 0, z: 0 };
+    this.yaw = this.prevYaw = s.yaw;
+    this.time = s.time;
+    this.best = s.best;
+    this.falls = s.falls;
+    this.jumps = s.jumps;
+    this.assist = s.assist;
+    this.assisted = s.assisted;
+    this.checkpoint = s.checkpoint !== null && s.checkpoint < this.level.beacons.length ? s.checkpoint : null;
+    this.grounded = false;
+    this.coyote = 0;
+    this.buffer = 0;
+    this.rising = false;
+    this.teleports++;
+  }
+
+  /** Standing at a beacon makes it the checkpoint (the last one touched counts, in assist mode or not). */
+  private touchBeacons(): void {
+    const { radius, height } = this.cfg.assist;
+    const beacons = this.level.beacons;
+    for (let i = 0; i < beacons.length; i++) {
+      const b = beacons[i];
+      if (Math.abs(this.pos.y - b.y) > height) continue;
+      if (Math.hypot(this.pos.x - b.x, this.pos.z - b.z) <= radius) {
+        this.checkpoint = i;
+        return;
+      }
+    }
   }
 
   /** The agent's feet `alpha` of the way from the last step to this one (0 to 1). */
@@ -201,10 +260,12 @@ export class AscentSim {
   }
 
   private respawn(): void {
-    this.pos = { ...this.level.spawn };
-    this.prev = { ...this.level.spawn };
+    const back = this.assist && this.checkpoint !== null ? this.level.beacons[this.checkpoint] : null;
+    const at = back ?? this.level.spawn;
+    this.pos = { ...at };
+    this.prev = { ...at };
     this.vel = { x: 0, y: 0, z: 0 };
-    this.yaw = this.prevYaw = this.level.spawnYaw;
+    this.yaw = this.prevYaw = back ? this.yaw : this.level.spawnYaw;
     this.grounded = false;
     this.coyote = 0;
     this.buffer = 0;

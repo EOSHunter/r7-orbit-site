@@ -17,6 +17,7 @@ const LEDGE: Level = {
   ],
   route: [1],
   goal: { x: 0, y: 10, z: 0 },
+  beacons: [],
 };
 
 const FLAT: Level = { ...LEDGE, spawn: { x: 0, y: 0, z: 0 }, boxes: [LEDGE.boxes[0]] };
@@ -236,5 +237,87 @@ describe('interpolation', () => {
     run(sim, 0.3);
     const mid = sim.lerpPos(0.5);
     expect(mid.x).toBeCloseTo((sim.prev.x + sim.pos.x) / 2, 9);
+  });
+});
+
+describe('assist mode', () => {
+  /** A high ledge with a beacon on it, the floor 12 m below. */
+  const HIGH: Level = {
+    spawn: { x: 0, y: 0, z: 6 },
+    spawnYaw: 0,
+    boxes: [
+      { kind: 'ground', min: { x: -50, y: -1, z: -50 }, max: { x: 50, y: 0, z: 50 } },
+      { kind: 'block', min: { x: -3, y: 11, z: -3 }, max: { x: 3, y: 12, z: 3 } },
+    ],
+    route: [1],
+    goal: { x: 0, y: 20, z: 0 },
+    beacons: [{ x: 0, y: 12, z: 0 }],
+  };
+  /** Put the agent on the ledge's beacon, then walk it off the edge to the floor. */
+  function fallFromLedge(assist: boolean) {
+    const sim = new AscentSim(HIGH);
+    sim.setAssist(assist);
+    sim.restore({
+      pos: { x: 0, y: 12, z: 0 },
+      yaw: 0,
+      time: 0,
+      best: 0,
+      falls: 0,
+      jumps: 0,
+      assist,
+      assisted: assist,
+      checkpoint: null,
+    });
+    run(sim, 0.2);
+    expect(sim.checkpoint).toBe(0);
+    sim.setMove(1, 0);
+    const teleports = sim.teleports;
+    // Let go once it is put back, so it does not walk off again.
+    run(sim, 3, (s) => s.teleports !== teleports && s.setMove(0, 0));
+    return sim;
+  }
+
+  it('hardcore (the default): a fall from the beacon lands on the floor, and nothing brings it back', () => {
+    const sim = fallFromLedge(false);
+    expect(sim.pos.y).toBeCloseTo(0, 3);
+    expect(sim.falls).toBe(0);
+  });
+
+  it('on: falling too far below the last beacon touched puts the agent back on it, a fall counted', () => {
+    const sim = fallFromLedge(true);
+    expect(sim.falls).toBe(1);
+    expect(sim.pos.y).toBeGreaterThan(cfg.assist.drop);
+    expect(sim.assisted).toBe(true);
+  });
+
+  it('turning it on marks the climb as assisted until a restart with it off', () => {
+    const sim = new AscentSim(HIGH);
+    expect(sim.assisted).toBe(false);
+    sim.setAssist(true);
+    sim.setAssist(false);
+    expect(sim.assisted).toBe(true);
+    sim.restart();
+    expect(sim.assisted).toBe(false);
+    expect(sim.checkpoint).toBeNull();
+  });
+
+  it('restores a saved climb, dropping a checkpoint the level does not have', () => {
+    const sim = new AscentSim(HIGH);
+    const before = sim.teleports;
+    sim.restore({
+      pos: { x: 2, y: 12, z: 1 },
+      yaw: 1,
+      time: 90,
+      best: 12,
+      falls: 2,
+      jumps: 30,
+      assist: true,
+      assisted: true,
+      checkpoint: 7,
+    });
+    expect(sim.pos).toEqual({ x: 2, y: 12, z: 1 });
+    expect([sim.time, sim.best, sim.falls, sim.jumps]).toEqual([90, 12, 2, 30]);
+    expect(sim.checkpoint).toBeNull();
+    expect(sim.teleports).toBe(before + 1);
   });
 });
