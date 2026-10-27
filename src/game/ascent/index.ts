@@ -1,7 +1,7 @@
 // mountAscent: puts the game in a container and takes it out again. This module is the lazy chunk: a page imports it with a
-// dynamic import() when Play is pressed, so three.js is never in a page's main bundle (docs/ASCENT.md, "Code"). The level is
-// the host's to load first (loadTestClimb, the test climb built in Blender), so mounting stays synchronous; without one the
-// game plays phase 1's level in code.
+// dynamic import() when Play is pressed, so three.js is never in a page's main bundle (docs/ASCENT.md, "Code"). The level and
+// the agent are the host's to load first, side by side (loadTestClimb and loadAgent, both built in Blender), so mounting
+// stays synchronous; without them the game plays phase 1's level in code, as phase 1's capsule.
 //
 // The host supplies the container: positioned (the game fills it), focusable (tabindex="0"), with an accessible name and its
 // instructions as text (aria-describedby). The game adds its canvas, the altitude, a message and a live region inside it,
@@ -15,6 +15,7 @@
 // this module has loaded, and the game asks again on the click or Space that resumes. Paused, the game stays in full screen;
 // Escape again (the browser's own key for it) leaves it.
 
+import { loadAgentModel, type AgentModel } from './agent';
 import { OrbitCamera } from './camera';
 import { FixedStepClock } from './clock';
 import { readTokenColors } from './colors';
@@ -26,13 +27,16 @@ import { PROTOTYPE_LEVEL, type Level } from './level';
 import { createView, type View, type ViewInfo, type ViewOptions } from './render';
 import { AscentSim } from './sim';
 import { ASCENT_TEXT } from './text';
+import agentUrl from './assets/agent.glb?url';
 import testClimbUrl from './assets/test-climb.glb?url';
 
 export { ASCENT_TEXT };
-export type { LevelModel };
+export type { AgentModel, LevelModel };
 
 /** The test climb built in Blender (tools/ascent/build_test_climb.py). Rejects when it cannot be loaded or used. */
 export const loadTestClimb = (): Promise<LevelModel> => loadLevelModel(testClimbUrl);
+/** The robot built in Blender (tools/ascent/build_agent.py). Rejects when it cannot be loaded or used. */
+export const loadAgent = (): Promise<AgentModel> => loadAgentModel(agentUrl);
 export { withConfig } from './config';
 
 export type AscentState = 'ready' | 'playing' | 'unsupported';
@@ -70,6 +74,8 @@ export interface AscentOptions {
   /** A level made in Blender (loadTestClimb): its level and its meshes. Wins over `level`. */
   model?: LevelModel | null;
   level?: Level;
+  /** The robot (loadAgent); without it the capsule stands in. */
+  agent?: AgentModel | null;
   /** Move keyboard focus to the container on mount (default true). */
   focus?: boolean;
   /** Ask for pointer lock when a climb starts or resumes, and on a click (default true). Without it, drag to look. */
@@ -123,7 +129,14 @@ export function mountAscent(
   container.append(root);
 
   const reducedMotion = win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-  const view = deps.createView(canvas, { colors: readTokenColors(root), level, model, config: cfg, reducedMotion });
+  const view = deps.createView(canvas, {
+    colors: readTokenColors(root),
+    level,
+    model,
+    agent: options.agent ?? null,
+    config: cfg,
+    reducedMotion,
+  });
   if (!view) {
     canvas.remove();
     root.dataset.ascentState = 'unsupported';

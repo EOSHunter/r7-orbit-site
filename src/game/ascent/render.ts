@@ -1,12 +1,12 @@
-// The Three.js view: the level, the capsule agent, its blob shadow and the goal ring, drawn from the sim and the camera
+// The Three.js view: the level, the agent (agent.ts), its blob shadow and the goal ring, drawn from the sim and the camera
 // (docs/ASCENT.md, "How it looks"). It only READS them; nothing in the game's logic depends on this file. A level made in
 // Blender (gltf-level.ts) is drawn from its scenery meshes and its GOAL; phase 1's level in code, from its boxes and a ring
 // made here. Both look the same.
 //
 // The look, "blueprint noir": the blocks are unlit and shaded by tone alone (tops lightest, then the sides, the two pairs of
 // sides a step apart, so a block's shape reads without lights), with thin ivory edge lines over them; fog fades both into the
-// background. Brass is the visor and the ring only. Every colour comes from the tokens (colors.ts): a Blender mesh's own
-// material is swapped for the tones of its name (LEVEL_MATERIALS).
+// background. Brass is the agent's visor and the ring only. Every colour comes from the tokens (colors.ts): a Blender mesh's
+// own material is swapped for the tones of its name (LEVEL_MATERIALS). The agent is the one lit thing; its light is its own.
 //
 // three.js is imported from its ES sources (`three/src/Three.js`, one of the package's exports), not from `three`: imported by
 // the same name as the runner's, the bundler moves three.js into a chunk the two games share, and the 404 page's idle prefetch
@@ -14,13 +14,9 @@
 // runner's chunk is what it was (docs/DECISIONS.md, "R7: Ascent, phase 1").
 
 import {
-  AmbientLight,
   BufferGeometry,
-  CapsuleGeometry,
   CircleGeometry,
-  CylinderGeometry,
   Color,
-  DirectionalLight,
   EdgesGeometry,
   Float32BufferAttribute,
   Fog,
@@ -29,7 +25,6 @@ import {
   LineSegments,
   Mesh,
   MeshBasicMaterial,
-  MeshLambertMaterial,
   PerspectiveCamera,
   SRGBColorSpace,
   Scene,
@@ -38,6 +33,8 @@ import {
   WebGLRenderer,
   type Material,
 } from 'three/src/Three.js';
+import { createAgentView, type AgentModel } from './agent';
+import type { AgentAnimation } from './agent-anim';
 import type { OrbitCamera } from './camera';
 import { LEVEL_MATERIALS, type Rgb, type SceneColors } from './colors';
 import { ASCENT_CONFIG, type AscentConfig } from './config';
@@ -49,6 +46,9 @@ export interface ViewInfo {
   triangles: number;
   calls: number;
   geometries: number;
+  /** What is drawn as the agent, and its animation this frame. */
+  agent: 'robot' | 'capsule';
+  animation: AgentAnimation;
 }
 
 export interface View {
@@ -66,8 +66,10 @@ export interface ViewOptions {
   level: Level;
   /** The level's meshes, when it was made in Blender; without it the level's boxes are drawn. */
   model?: LevelModel | null;
+  /** The agent's model (loadAgent); without it the capsule stands in. */
+  agent?: AgentModel | null;
   config?: AscentConfig;
-  /** Hold the goal ring still. */
+  /** Hold the goal ring still, and leave out the agent's bob, squash and sway. */
   reducedMotion?: boolean;
 }
 
@@ -291,31 +293,10 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   );
   scene.add(blocks, edges);
 
-  // The agent: an ivory capsule with a brass visor, lit (it is the one rounded thing, and the light shows its form). The
-  // group's origin is at its feet; the visor is a curved band round the front of the head (-Z, the way it faces at yaw 0).
-  const { width, height } = cfg.agent;
-  const radius = (width / 2) * 1.08;
-  const agent = new Group();
-  const body = new Mesh(
-    geo(new CapsuleGeometry(radius, height - 2 * radius, 6, 18)),
-    mat(new MeshLambertMaterial({ color: toColor(colors.ivory) })),
-  );
-  body.position.y = height / 2;
-  // CylinderGeometry measures its angle from +Z towards +X, so a band centred on π faces -Z.
-  const visorArc = 1.9;
-  const visor = new Mesh(
-    geo(
-      new CylinderGeometry(radius * 1.04, radius * 1.04, height * 0.13, 20, 1, true, Math.PI - visorArc / 2, visorArc),
-    ),
-    mat(new MeshBasicMaterial({ color: toColor(colors.brass) })),
-  );
-  visor.position.y = height * 0.74;
-  agent.add(body, visor);
-  scene.add(agent);
-  scene.add(new AmbientLight(toColor(colors.ivory), 0.55));
-  const sun = new DirectionalLight(toColor(colors.ivory), 0.9);
-  sun.position.set(-0.5, 1, 0.35);
-  scene.add(sun);
+  // The agent: the robot when its model loaded, else the capsule; with its own light (agent.ts).
+  const agent = createAgentView({ colors, model: options.agent, config: cfg, reducedMotion: options.reducedMotion });
+  scene.add(agent.object);
+  let lastTime: number | null = null;
 
   // The blob shadow: a dark disc on whatever is under the agent, fading with the height, so a landing spot is always clear.
   const shadow = new Mesh(
@@ -360,8 +341,8 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
     },
     render(sim, alpha, cam, time) {
       const feet = sim.lerpPos(alpha);
-      agent.position.set(feet.x, feet.y, feet.z);
-      agent.rotation.y = sim.lerpYaw(alpha);
+      agent.update(sim, alpha, lastTime === null ? 0 : time - lastTime, cam.position);
+      lastTime = time;
 
       const ground = sim.groundUnder(feet);
       if (ground === null) {
@@ -385,8 +366,11 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
       triangles: renderer.info.render.triangles,
       calls: renderer.info.render.calls,
       geometries: renderer.info.memory.geometries,
+      agent: agent.kind,
+      animation: agent.pose.animation,
     }),
     dispose() {
+      agent.dispose();
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();
       renderer.dispose();

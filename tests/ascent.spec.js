@@ -2,9 +2,10 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { watchPage } from './helpers.js';
 
-// The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phases 1 and 2): the game and the test
-// climb built in Blender load only on Play, draw into a running canvas with no console errors, and the agent moves, jumps and
-// pauses from the keyboard. ?level=code plays phase 1's boxes, and so does a page whose .glb failed to load. Most tests play in the
+// The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phases 1 and 2): the game, the test
+// climb and the robot built in Blender load only on Play, draw into a running canvas with no console errors, and the robot
+// moves, jumps, animates and pauses from the keyboard. ?level=code plays phase 1's boxes, and so does a page whose level
+// failed to load; a robot that failed to load is drawn as phase 1's capsule. Most tests play in the
 // page (?lock=0&fullscreen=0); one plays as a visitor does, in full screen. WebGL runs on SwiftShader (software), as in
 // runner.spec.js.
 
@@ -45,6 +46,7 @@ test('Play loads the game; the canvas runs with no console errors', async ({ pag
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
   expect(scripts.length, 'the game chunk was requested on Play').toBeGreaterThan(before);
   await expect(page.locator('[data-stat="level"]')).toHaveText('test climb (Blender)');
+  await expect(page.locator('[data-stat="agent"]')).toHaveText('robot (Blender)');
 
   const canvas = page.getByRole('img', { name: 'R7: Ascent, a climbing game' });
   await expect(canvas).toBeVisible();
@@ -79,18 +81,23 @@ test('the keyboard moves, jumps and pauses', async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
   await expect.poll(() => page.locator('[data-stat="grounded"]').innerText()).toBe('yes');
+  await expect.poll(() => page.locator('[data-stat="animation"]').innerText()).toBe('idle');
   const [x0, , z0] = await position(page);
 
-  // W runs away from the camera (towards -Z at the start).
+  // W runs away from the camera (towards -Z at the start), and the robot runs.
   await page.keyboard.down('KeyW');
+  await expect.poll(() => page.locator('[data-stat="animation"]').innerText(), MOUNTED).toBe('run');
   await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(z0 - 1);
   await page.keyboard.up('KeyW');
   const [x1] = await position(page);
   expect(Math.abs(x1 - x0)).toBeLessThan(0.5);
 
-  // Space jumps: one jump, and the agent leaves the ground.
+  // Space jumps: one jump, the agent leaves the ground, and the robot jumps or falls until it lands.
   await page.keyboard.down('Space');
   await expect.poll(() => stat(page, 'jumps')).toBe(1);
+  await expect
+    .poll(() => page.locator('[data-stat="animation"]').innerText(), { intervals: [50] })
+    .toMatch(/^(jump|fall)$/);
   await page.keyboard.up('Space');
   await expect.poll(() => page.locator('[data-stat="grounded"]').innerText()).toBe('yes');
 
@@ -107,35 +114,43 @@ test('the keyboard moves, jumps and pauses', async ({ page }) => {
   expect(await stat(page, 'jumps')).toBe(1);
 });
 
-test('the level from Blender loads only on Play; ?level=code plays the boxes in code without it', async ({
+test('the level and the robot from Blender load only on Play; ?level=code plays the boxes in code without the level', async ({
   page,
   baseURL,
 }) => {
   const problems = watchPage(page, baseURL);
-  const levels = [];
-  page.on('request', (r) => r.url().endsWith('.glb') && levels.push(r.url()));
+  const files = [];
+  page.on('request', (r) => r.url().endsWith('.glb') && files.push(r.url()));
   await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
-  expect(levels, 'nothing heavy before Play').toEqual([]);
+  expect(files, 'nothing heavy before Play').toEqual([]);
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
-  expect(levels).toHaveLength(1);
-  expect(levels[0]).toMatch(/\/_astro\/test-climb\.[\w-]+\.glb$/);
+  expect(files).toHaveLength(2);
+  expect(files.some((u) => /\/_astro\/test-climb\.[\w-]+\.glb$/.test(u))).toBe(true);
+  expect(files.some((u) => /\/_astro\/agent\.[\w-]+\.glb$/.test(u))).toBe(true);
 
   await page.goto(`${FIXTURE}?lock=0&fullscreen=0&level=code`, { waitUntil: 'networkidle' });
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
   await expect(page.locator('[data-stat="level"]')).toHaveText('grey boxes (code)');
-  expect(levels).toHaveLength(1);
+  await expect(page.locator('[data-stat="agent"]')).toHaveText('robot (Blender)');
+  expect(
+    files.filter((u) => u.includes('test-climb')),
+    'the level is not fetched',
+  ).toHaveLength(1);
   await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
   expect(problems).toEqual([]);
 });
 
-test('a level that fails to load falls back to the boxes in code, and the game still plays', async ({ page }) => {
+test('a level and a robot that fail to load fall back to the boxes and the capsule, and the game still plays', async ({
+  page,
+}) => {
   await page.route('**/*.glb', (route) => route.fulfill({ status: 404, body: '' }));
   await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
   await expect(page.locator('[data-stat="level"]')).toContainText('the test climb did not load');
+  await expect(page.locator('[data-stat="agent"]')).toContainText('capsule (the robot did not load');
   await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
 });
 

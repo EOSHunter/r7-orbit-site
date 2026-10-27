@@ -82,6 +82,68 @@ export const ASCENT_CONFIG = {
     /** Device pixel ratio cap: a mouse device, and a touch device (bigger screens with smaller dots). */
     maxPixelRatio: 2,
     maxPixelRatioTouch: 1.5,
+    /**
+     * The light on the agent (the one lit thing; the level is shaded by tone). Each number is the share of a part's colour it
+     * gives a face square to it: an ambient on every face, then a key, a fill and a rim that turn with the camera (yaw in
+     * degrees from the camera's side of the agent, positive to the camera's left; pitch in degrees up from level), so the
+     * agent's faces, sides and outline come out in different tones whichever way the player looks. The same numbers light
+     * the previews in tools/ascent/build_agent.py.
+     */
+    agentLight: {
+      ambient: 0.1,
+      key: { share: 0.9, yaw: -60, pitch: 35 },
+      fill: { share: 0.2, yaw: 90, pitch: 0 },
+      rim: { share: 0.6, yaw: 165, pitch: 25 },
+      /** Brass also glows by this share of its colour, so the visor stays brass in shade. */
+      brassGlow: 0.15,
+    },
+  },
+
+  /**
+   * The agent's animation (agent-anim.ts): drawing only, it never changes the motion. Metres, radians, seconds. Under reduced
+   * motion the bob, the squash and stretch and the antenna's sway are left out; the legs and arms still show running and
+   * jumping.
+   */
+  animation: {
+    /** Faster than this across the ground (m/s) it runs; slower, it stands. */
+    runSpeed: 0.6,
+    /** Metres covered in one full stride (both legs) at any speed. */
+    stride: 1.7,
+    /** At top speed: how far the legs and the arms swing either way, the bob, the forward lean. */
+    legSwing: 0.75,
+    armSwing: 0.85,
+    runBob: 0.035,
+    runLean: 0.14,
+    /** Standing: a slow bob (metres, cycles per second) and the arms' sway. */
+    idleBob: 0.008,
+    idleRate: 0.5,
+    idleSway: 0.05,
+    /** The crouch at take-off: how far it squashes and for how long, then the stretch it springs into (1/s). */
+    crouch: 0.2,
+    crouchTime: 0.07,
+    stretchKick: 3.2,
+    /** Rising: arms up and forward, legs tucked (one a little more than the other). */
+    jumpArms: 2.3,
+    jumpLegs: [0.95, 0.55],
+    /** Falling: arms out to the sides and a little forward, legs reaching down. */
+    fallArmsOut: 1.05,
+    fallArms: 0.35,
+    fallLegs: [0.15, -0.1],
+    /** A little taller rising fast, a little shorter falling fast (share of its height at take-off speed). */
+    airStretch: 0.06,
+    /** Landing: the squash at the hardest landing (share of its height), the fall speed that counts as hardest, how long the
+     * landing pose lasts. */
+    landSquash: 0.26,
+    landHard: 16,
+    landTime: 0.18,
+    /** The squash and stretch spring and the antenna's spring: stiffness (1/s²) and damping ratio (1: no overshoot). */
+    squashSpring: { stiffness: 260, damping: 0.38 },
+    antennaSpring: { stiffness: 170, damping: 0.22 },
+    /** How hard a take-off, a landing and each running step flick the antenna (rad/s). */
+    antennaKick: 4,
+    /** How fast each limb eases to its new pose (1/s): between poses, and while running. */
+    blend: 14,
+    runBlend: 26,
   },
 };
 

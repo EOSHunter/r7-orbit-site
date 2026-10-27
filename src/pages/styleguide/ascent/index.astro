@@ -1,6 +1,6 @@
 ---
-// Prototype of R7: Ascent (docs/ASCENT.md, phases 1 and 2 of 4). The test climb built in Blender (tools/ascent/), the capsule
-// agent and a third-person camera; the feel's numbers are in src/game/ascent/config.ts. The game and its level are loaded when
+// Prototype of R7: Ascent (docs/ASCENT.md, phases 1 and 2 of 4). The test climb and the robot agent built in Blender
+// (tools/ascent/; a capsule stands in if the robot does not load) and a third-person camera; the feel's numbers are in src/game/ascent/config.ts. The game and its level are loaded when
 // Play is pressed, so three.js is a lazy chunk and never in this page's first load. ?level=code plays phase 1's grey boxes
 // instead, laid out in code (and so does a failed level load, which the debug readout says). Under the game, a
 // debug readout that only this page has. Play puts the stage in full screen and locks the mouse to it, in the click itself
@@ -13,6 +13,8 @@ import '../../../game/ascent/ascent.css';
 
 const stats = [
   ['level', 'level'],
+  ['agent', 'agent'],
+  ['animation', 'animation'],
   ['fps', 'fps'],
   ['steps', 'steps per frame'],
   ['altitude', 'altitude'],
@@ -198,7 +200,7 @@ const stats = [
 </style>
 
 <script>
-  import type { AscentHandle, AscentStats, LevelModel } from '../../../game/ascent/index';
+  import type { AgentModel, AscentHandle, AscentStats, LevelModel } from '../../../game/ascent/index';
   import { enterPlay } from '../../../game/ascent/gesture';
 
   const host = document.querySelector<HTMLElement>('[data-ascent-host]');
@@ -246,26 +248,34 @@ const stats = [
     show('locked', s.locked ? 'yes' : 'no');
     show('triangles', String(s.view.triangles));
     show('calls', String(s.view.calls));
+    show('animation', s.view.animation);
   };
 
   async function boot() {
     if (!host || handle || loading) return;
     loading = true;
     try {
-      const { mountAscent, loadTestClimb } = await import('../../../game/ascent/index');
+      const { mountAscent, loadTestClimb, loadAgent } = await import('../../../game/ascent/index');
+      const reason = (error: unknown) => (error instanceof Error ? error.message : String(error));
+      // The level and the robot load side by side; either may fail on its own and the game still plays.
+      const [level, robot] = await Promise.allSettled([
+        options.level === 'blender' ? loadTestClimb() : Promise.resolve(null),
+        loadAgent(),
+      ]);
       let model: LevelModel | null = null;
-      if (options.level === 'blender') {
-        try {
-          model = await loadTestClimb();
-          show('level', 'test climb (Blender)');
-        } catch (error) {
-          show('level', `grey boxes (the test climb did not load: ${error instanceof Error ? error.message : error})`);
-        }
-      } else {
-        show('level', 'grey boxes (code)');
-      }
+      if (options.level !== 'blender') show('level', 'grey boxes (code)');
+      else if (level.status === 'fulfilled') {
+        model = level.value;
+        show('level', 'test climb (Blender)');
+      } else show('level', `grey boxes (the test climb did not load: ${reason(level.reason)})`);
+      let agent: AgentModel | null = null;
+      if (robot.status === 'fulfilled') {
+        agent = robot.value;
+        show('agent', 'robot (Blender)');
+      } else show('agent', `capsule (the robot did not load: ${reason(robot.reason)})`);
       handle = mountAscent(host, {
         model,
+        agent,
         pointerLock: options.pointerLock,
         fullscreen: options.fullscreen,
         onStats,
@@ -296,6 +306,6 @@ const stats = [
     handle = null;
     for (const b of [restart, unmount]) if (b) b.hidden = true;
     if (poster) poster.hidden = false;
-    for (const [key, el] of out) if (key !== 'level') el.textContent = '-';
+    for (const [key, el] of out) if (key !== 'level' && key !== 'agent') el.textContent = '-';
   });
 </script>
