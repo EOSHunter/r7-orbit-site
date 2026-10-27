@@ -18,6 +18,18 @@ test.use({ launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-s
 // One test at a time in this file: each runs WebGL on the CPU, and several at once starve each other into timeouts.
 test.describe.configure({ mode: 'default' });
 
+// The mouse lock is always refused in these tests. On Windows, Chromium locks the mouse with ClipCursor, which holds the real
+// cursor of whoever is using the machine inside the test browser's invisible window, even headless. A refusal is what the
+// game already expects from some browsers (gesture.ts swallows it, and the game says to click to look around), so every test
+// keeps its meaning.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    Element.prototype.requestPointerLock = function () {
+      return Promise.reject(new DOMException('The mouse lock is turned off in the tests', 'NotAllowedError'));
+    };
+  });
+});
+
 const host = (page) => page.locator('[data-ascent-host]');
 const game = (page) => page.locator('[data-ascent]');
 const play = (page) => page.getByRole('button', { name: 'Play', exact: true });
@@ -378,5 +390,34 @@ test('touching the ring finishes the climb: the finish screen, and Climb again',
   await again.click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing');
   await expect.poll(async () => (await position(page))[1], MOUNTED).toBeLessThan(1);
+  expect(problems).toEqual([]);
+});
+
+test('the public page /ascent/: the game in full screen on Play, the credits with the name from Site settings', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(90_000);
+  const problems = watchPage(page, baseURL);
+  const site = JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8'));
+  const glbs = [];
+  page.on('request', (r) => r.url().endsWith('.glb') && glbs.push(r.url()));
+  await page.goto('/ascent/', { waitUntil: 'networkidle' });
+  await expect(page.locator('h1')).toHaveCount(1);
+  // The credits (the page's last Text block) print the author's name through {author.name}.
+  await expect(page.locator('#ascent-howto')).toContainText(site.author.name);
+  await expect(page.locator('#ascent-howto')).not.toContainText('{author.name}');
+  expect(glbs, 'nothing heavy before Play').toEqual([]);
+
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'true');
+  expect(glbs.filter((u) => u.includes('/zone-'))).toHaveLength(2);
+  await page.evaluate(() => document.exitFullscreen());
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
+  await expect(page.getByRole('button', { name: 'Leave' })).toBeVisible();
+  await page.getByRole('button', { name: 'Leave' }).click();
+  await expect(game(page)).toHaveCount(0);
+  await expect(play(page)).toBeFocused();
   expect(problems).toEqual([]);
 });

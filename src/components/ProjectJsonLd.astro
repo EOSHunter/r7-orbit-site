@@ -49,7 +49,7 @@ const main: Record<string, unknown> =
         name: plainTitle(p.name),
         description: p.description,
         mainEntityOfPage: pageUrl,
-        ...(p.playUrl || p.liveUrl ? { url: p.playUrl ?? p.liveUrl } : {}),
+        ...(p.playUrl || p.liveUrl ? { url: absoluteUrl((p.playUrl ?? p.liveUrl) as string, base) } : {}),
         ...(playable ? { applicationCategory: playable.category, operatingSystem: 'Web browser' } : {}),
         ...(sameAs.length ? { sameAs } : {}),
       }

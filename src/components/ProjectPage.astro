@@ -26,7 +26,7 @@ import { loadGitHubRepo } from '../lib/github';
 import { toAppCards } from '../lib/app-cards';
 import { APP_TYPES } from '../lib/app-types';
 import { APPS_PATH, typeOf } from '../lib/apps';
-import { isPlayable } from '../lib/play';
+import { isPlayable, playsOnSite } from '../lib/play';
 import { SIZES, publicSrcset } from '../lib/media-srcset';
 import { hasSections } from '../lib/sections-to-content';
 import { headTitleFor } from '../lib/seo';
@@ -59,7 +59,9 @@ const showWaitlist = post.data.waitlist && waitlist.show;
 
 // Source: this site's repo page when there is one, else the repo URL, else the GitHub address of `repo`.
 const repoName = data.repo?.toLowerCase();
-const repoPage = repoName ? repos.find((r) => (r.entry.data as unknown as RepoData).repo.toLowerCase() === repoName) : undefined;
+const repoPage = repoName
+  ? repos.find((r) => (r.entry.data as unknown as RepoData).repo.toLowerCase() === repoName)
+  : undefined;
 const githubUrl = data.repoUrl ?? (data.repo ? `https://github.com/${data.repo}` : undefined);
 const source = repoPage
   ? { href: `/repos/${repoPage.id}/`, external: false }
@@ -78,6 +80,8 @@ const timeline = [...data.timeline].sort((a, b) => b.date.getTime() - a.date.get
 
 const playable = isPlayable(data);
 const embedded = playable && data.playMode !== 'link';
+// A page of this site (/ascent/) opens in the same tab.
+const onSite = Boolean(data.playUrl && playsOnSite(data.playUrl));
 const playProps = data.playUrl
   ? {
       playUrl: data.playUrl,
@@ -125,8 +129,12 @@ const path = `/projects/${post.id}/`;
   <div class="container">
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <ol>
-        <li><a href="/">Home</a></li>
-        <li><a href="/projects/">Projects</a></li>
+        <li>
+          <a href="/">Home</a>
+        </li>
+        <li>
+          <a href="/projects/">Projects</a>
+        </li>
         <li aria-current="page">{plainTitle(data.title)}</li>
       </ol>
     </nav>
@@ -134,156 +142,200 @@ const path = `/projects/${post.id}/`;
     <header class="project-head">
       {/* A playable project's result in search reads as its type (src/scripts/search.js); one Pagefind meta key per element. */}
       <p class="eyebrow" data-pagefind-meta={appType ? `kind:${APP_TYPES[appType].label}` : undefined}>
-        <span class="kind" data-pagefind-meta={appType ? `kindIcon:${APP_TYPES[appType].icon}` : undefined}><Icon name="project" />Project</span>
+        <span class="kind" data-pagefind-meta={appType ? `kindIcon:${APP_TYPES[appType].icon}` : undefined}>
+          <Icon name="project" />
+          Project
+        </span>
         {playable && <PlayableBadge />}
         <PreviewBadge post={post} />
       </p>
       <h1>{titleParts(data.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
       <p class="t-lead">{data.summary}</p>
-      <p class="post-author"><AuthorByline author={author} /></p>
-      <p class="status-line"><StatusMark status={data.status} /></p>
-      {
-        data.stack.length > 0 && (
-          <div class="cluster" aria-label="Built with">
-            {data.stack.map((item) => (
-              <span class="chip mono">{item}</span>
-            ))}
-          </div>
-        )
-      }
-      {
-        (playable || data.liveUrl || source) && (
-          <div class="cluster actions">
-            {playable && (
-              <a class="btn solid" href={embedded ? '#play' : data.playUrl} target={embedded ? undefined : '_blank'} rel={embedded ? undefined : 'noopener'}>
-                <Icon name="play" />Play
-              </a>
-            )}
-            {data.liveUrl && (
-              <a class={playable ? 'btn' : 'btn solid'} href={data.liveUrl} rel="noopener">
-                Live site<Icon name="external" />
-              </a>
-            )}
-            {source && (
-              <a class={playable || data.liveUrl ? 'btn' : 'btn solid'} href={source.href} rel={source.external ? 'noopener' : undefined}>
-                <Icon name="github" />Source repo{source.external && <Icon name="external" />}
-              </a>
-            )}
-          </div>
-        )
-      }
+      <p class="post-author">
+        <AuthorByline author={author} />
+      </p>
+      <p class="status-line">
+        <StatusMark status={data.status} />
+      </p>
+      {data.stack.length > 0 && (
+        <div class="cluster" aria-label="Built with">
+          {data.stack.map((item) => (
+            <span class="chip mono">{item}</span>
+          ))}
+        </div>
+      )}
+      {(playable || data.liveUrl || source) && (
+        <div class="cluster actions">
+          {playable && (
+            <a
+              class="btn solid"
+              href={embedded ? '#play' : data.playUrl}
+              target={embedded || onSite ? undefined : '_blank'}
+              rel={embedded || onSite ? undefined : 'noopener'}
+            >
+              <Icon name="play" />
+              Play
+            </a>
+          )}
+          {data.liveUrl && (
+            <a class={playable ? 'btn' : 'btn solid'} href={data.liveUrl} rel="noopener">
+              Live site
+              <Icon name="external" />
+            </a>
+          )}
+          {source && (
+            <a
+              class={playable || data.liveUrl ? 'btn' : 'btn solid'}
+              href={source.href}
+              rel={source.external ? 'noopener' : undefined}
+            >
+              <Icon name="github" />
+              Source repo{source.external && <Icon name="external" />}
+            </a>
+          )}
+        </div>
+      )}
     </header>
 
-    {
-      !embedded && (
-        <div class="media framed">
-          {cover ? <img src={cover} srcset={coverSrcset} sizes={coverSrcset && SIZES.page} alt={data.coverAlt ?? ''} width="1280" height="720" decoding="async" /> : <MediaPlaceholder />}
-        </div>
-      )
-    }
-    {
-      playProps && (
-        <div id="play">
-          <PlayPanel {...playProps} />
-        </div>
-      )
-    }
+    {!embedded && (
+      <div class="media framed">
+        {cover ? (
+          <img
+            src={cover}
+            srcset={coverSrcset}
+            sizes={coverSrcset && SIZES.page}
+            alt={data.coverAlt ?? ''}
+            width="1280"
+            height="720"
+            decoding="async"
+          />
+        ) : (
+          <MediaPlaceholder />
+        )}
+      </div>
+    )}
+    {playProps && (
+      <div id="play">
+        <PlayPanel {...playProps} />
+      </div>
+    )}
 
     <div class="split">
       <div>
-        {
-          hasBody && (
-            <section class="block" aria-label="Write-up">
-              {sections ? (
-                <Sections sections={sections} source={post.entry.filePath ?? `projects/${post.id}`} layout="column" headingIds />
-              ) : (
-                Content && (
-                  <div class="prose">
-                    <Content />
-                  </div>
-                )
-              )}
-            </section>
-          )
-        }
+        {hasBody && (
+          <section class="block" aria-label="Write-up">
+            {sections ? (
+              <Sections
+                sections={sections}
+                source={post.entry.filePath ?? `projects/${post.id}`}
+                layout="column"
+                headingIds
+              />
+            ) : (
+              Content && (
+                <div class="prose">
+                  <Content />
+                </div>
+              )
+            )}
+          </section>
+        )}
 
-        {
-          shots.length > 0 && (
-            <section class="block" aria-labelledby="shots-h">
-              <h2 class="section-title" id="shots-h">Screenshots</h2>
-              <Gallery shots={shots} label={`${plainTitle(data.title)} screenshots`} />
-            </section>
-          )
-        }
+        {shots.length > 0 && (
+          <section class="block" aria-labelledby="shots-h">
+            <h2 class="section-title" id="shots-h">
+              Screenshots
+            </h2>
+            <Gallery shots={shots} label={`${plainTitle(data.title)} screenshots`} />
+          </section>
+        )}
 
-        {
-          timeline.length > 0 && (
-            <section class="block" aria-labelledby="changelog-h">
-              <h2 class="section-title" id="changelog-h">Changelog</h2>
-              <ol class="timeline">
-                {timeline.map((item) => (
-                  <li>
-                    <time datetime={isoDate(item.date)}>{isoDate(item.date)}</time>
-                    <p>{item.text}</p>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )
-        }
-
+        {timeline.length > 0 && (
+          <section class="block" aria-labelledby="changelog-h">
+            <h2 class="section-title" id="changelog-h">
+              Changelog
+            </h2>
+            <ol class="timeline">
+              {timeline.map((item) => (
+                <li>
+                  <time datetime={isoDate(item.date)}>{isoDate(item.date)}</time>
+                  <p>{item.text}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
       </div>
 
       <aside class="sticky" aria-label="Project facts">
         <div class="facts">
           <h2 class="eyebrow">Facts</h2>
           <dl>
-            <div><dt>Status</dt><dd><StatusMark status={data.status} /></dd></div>
-            {
-              data.started && (
-                <div><dt>Started</dt><dd class="mono"><time datetime={isoDate(data.started)}>{longDate(data.started)}</time></dd></div>
-              )
-            }
-            {
-              data.shipped && (
-                <div><dt>Shipped</dt><dd class="mono"><time datetime={isoDate(data.shipped)}>{longDate(data.shipped)}</time></dd></div>
-              )
-            }
-            {data.role && <div><dt>Role</dt><dd>{data.role}</dd></div>}
-            {
-              data.stack.length > 0 && (
-                <div>
-                  <dt>Stack</dt>
-                  <dd>
-                    <div class="cluster">
-                      {data.stack.map((item) => (
-                        <span class="chip mono">{item}</span>
-                      ))}
-                    </div>
-                  </dd>
-                </div>
-              )
-            }
-            {license && <div><dt>License</dt><dd>{license}</dd></div>}
-            {
-              (data.liveUrl || source) && (
-                <div>
-                  <dt>Links</dt>
-                  <dd class="facts-links">
-                    {data.liveUrl && (
-                      <a href={data.liveUrl} rel="noopener">
-                        Live site<Icon name="external" small />
-                      </a>
-                    )}
-                    {source && (
-                      <a href={source.href} rel={source.external ? 'noopener' : undefined}>
-                        Source repo<Icon name={source.external ? 'external' : 'arrow'} small />
-                      </a>
-                    )}
-                  </dd>
-                </div>
-              )
-            }
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <StatusMark status={data.status} />
+              </dd>
+            </div>
+            {data.started && (
+              <div>
+                <dt>Started</dt>
+                <dd class="mono">
+                  <time datetime={isoDate(data.started)}>{longDate(data.started)}</time>
+                </dd>
+              </div>
+            )}
+            {data.shipped && (
+              <div>
+                <dt>Shipped</dt>
+                <dd class="mono">
+                  <time datetime={isoDate(data.shipped)}>{longDate(data.shipped)}</time>
+                </dd>
+              </div>
+            )}
+            {data.role && (
+              <div>
+                <dt>Role</dt>
+                <dd>{data.role}</dd>
+              </div>
+            )}
+            {data.stack.length > 0 && (
+              <div>
+                <dt>Stack</dt>
+                <dd>
+                  <div class="cluster">
+                    {data.stack.map((item) => (
+                      <span class="chip mono">{item}</span>
+                    ))}
+                  </div>
+                </dd>
+              </div>
+            )}
+            {license && (
+              <div>
+                <dt>License</dt>
+                <dd>{license}</dd>
+              </div>
+            )}
+            {(data.liveUrl || source) && (
+              <div>
+                <dt>Links</dt>
+                <dd class="facts-links">
+                  {data.liveUrl && (
+                    <a href={data.liveUrl} rel="noopener">
+                      Live site
+                      <Icon name="external" small />
+                    </a>
+                  )}
+                  {source && (
+                    <a href={source.href} rel={source.external ? 'noopener' : undefined}>
+                      Source repo
+                      <Icon name={source.external ? 'external' : 'arrow'} small />
+                    </a>
+                  )}
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
       </aside>
@@ -292,45 +344,45 @@ const path = `/projects/${post.id}/`;
 
   {showWaitlist && <WaitlistForm variant="band" source="other" />}
 
-  {
-    related.length > 0 && (
-      <section class="section ruled" aria-labelledby="related-h">
-        <div class="container">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Writing about it</p>
-              <h2 class="section-title" id="related-h">Related posts</h2>
-            </div>
-          </div>
-          <div class="grid-cards">
-            {related.map((item) => (
-              <PostCard post={toCard(item)} />
-            ))}
+  {related.length > 0 && (
+    <section class="section ruled" aria-labelledby="related-h">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Writing about it</p>
+            <h2 class="section-title" id="related-h">
+              Related posts
+            </h2>
           </div>
         </div>
-      </section>
-    )
-  }
+        <div class="grid-cards">
+          {related.map((item) => (
+            <PostCard post={toCard(item)} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 
-  {
-    playable && (
-      <section class="section ruled" aria-labelledby="more-apps-h" data-more-apps>
-        <div class="container">
-          <div class:list={['section-head', moreApps.length === 0 && 'flush']}>
-            <div>
-              <p class="eyebrow">Play in the browser</p>
-              <h2 class="section-title" id="more-apps-h">More apps</h2>
-            </div>
-            <a class="more-link" href={APPS_PATH}>
-              All apps
-              <Icon name="arrow" />
-            </a>
+  {playable && (
+    <section class="section ruled" aria-labelledby="more-apps-h" data-more-apps>
+      <div class="container">
+        <div class:list={['section-head', moreApps.length === 0 && 'flush']}>
+          <div>
+            <p class="eyebrow">Play in the browser</p>
+            <h2 class="section-title" id="more-apps-h">
+              More apps
+            </h2>
           </div>
-          {moreApps.length > 0 && <AppGrid apps={moreApps} level={3} />}
+          <a class="more-link" href={APPS_PATH}>
+            All apps
+            <Icon name="arrow" />
+          </a>
         </div>
-      </section>
-    )
-  }
+        {moreApps.length > 0 && <AppGrid apps={moreApps} level={3} />}
+      </div>
+    </section>
+  )}
 
   <ImageZoom />
 </BaseLayout>

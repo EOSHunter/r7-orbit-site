@@ -77,8 +77,15 @@ const SEO_TITLE_MAX = seoTitleMax(site.name);
 const SUBTITLE_PATTERN: [string, string] = ['^.{1,140}$', '140 characters at most'];
 const SUMMARY_PATTERN: [string, string] = ['^.{1,180}$', 'Required, one line, 180 characters at most'];
 const URL_PATTERN: [string, string] = ['^https?://\\S+$', 'A full address, starting with https://'];
-const OWNER_NAME_PATTERN: [string, string] = ['^[\\w.-]+/[\\w.-]+$', 'Use the form owner/name, e.g. EOSHunter/r7-orbit-site'];
-const HTTPS_URL_PATTERN: [string, string] = ['^https://\\S+$', 'A full address starting with https://'];
+const OWNER_NAME_PATTERN: [string, string] = [
+  '^[\\w.-]+/[\\w.-]+$',
+  'Use the form owner/name, e.g. EOSHunter/r7-orbit-site',
+];
+/** A play address: another site (https) or a page of this one (/ascent/). */
+const PLAY_URL_PATTERN: [string, string] = [
+  '^(https://\\S+|/(?!/)[a-z0-9/-]*)$',
+  'A full address starting with https://, or a page of this site such as /ascent/',
+];
 const PLAY_ASPECT_PATTERN: [string, string] = ['^[1-9]\\d{0,2}:[1-9]\\d{0,2}$', 'Use width:height, e.g. 16:9 or 4:3'];
 const PLAY_NOTE_PATTERN: [string, string] = ['^.{1,120}$', '120 characters at most'];
 const YOUTUBE_ID_PATTERN: [string, string] = [
@@ -110,7 +117,16 @@ const repoField = (name: string, label: string, hint: string, required: boolean)
 
 // `media_library` carries the upload size limit (src/lib/media-rules.mjs), which Decap only reads on the widget.
 const imageField = (name: string, label: string, hint: string, extra: Record<string, unknown> = {}) =>
-  field({ name, label, widget: 'image', choose_url: false, required: false, hint, media_library: IMAGE_LIBRARY, ...extra });
+  field({
+    name,
+    label,
+    widget: 'image',
+    choose_url: false,
+    required: false,
+    hint,
+    media_library: IMAGE_LIBRARY,
+    ...extra,
+  });
 
 // ---- Fields every collection has (the `common` block of the schema) -----------------------------------------------
 
@@ -275,7 +291,10 @@ const SECTIONS_HINT =
 
 /** The `sections` list of a post. `kind` is the folder its pictures are uploaded to (public/media/<kind>/). */
 const postSections = (kind: string) =>
-  field({ ...(sectionsField({ label: 'Sections', hint: SECTIONS_HINT }) as unknown as Record<string, unknown>), ...mediaFolders(kind) });
+  field({
+    ...(sectionsField({ label: 'Sections', hint: SECTIONS_HINT }) as unknown as Record<string, unknown>),
+    ...mediaFolders(kind),
+  });
 
 // A vlog written as sections has no Markdown body to hold its transcript, so it has its own box (shown folded under the video).
 const transcriptText = field({
@@ -464,8 +483,8 @@ const playFields: CmsField[] = [
     label: 'Play URL',
     widget: 'string',
     required: false,
-    pattern: HTTPS_URL_PATTERN,
-    hint: 'Where the game or app runs, e.g. https://vesper.r7orbit.io/. Setting it makes this a Playable project: a Play section on the page, a Playable badge on cards, and a card on the Apps page. https only. To embed it, its origin must be listed in frame-src in public/_headers.',
+    pattern: PLAY_URL_PATTERN,
+    hint: 'Where the game or app runs, e.g. https://vesper.r7orbit.io/, or a page of this site such as /ascent/ (then set Play mode to link). Setting it makes this a Playable project: a Play section on the page, a Playable badge on cards, and a card on the Apps page. To embed it, its origin must be listed in frame-src in public/_headers.',
   }),
   field({
     name: 'appType',
@@ -784,7 +803,13 @@ const authorFields: CmsField[] = [
     required: false,
     hint: 'Required for an agent. Leave empty for a person: the name comes from site.json.',
   }),
-  field({ name: 'subtitle', label: 'Subtitle', widget: 'string', required: false, pattern: ['^.{1,60}$', '60 characters at most'] }),
+  field({
+    name: 'subtitle',
+    label: 'Subtitle',
+    widget: 'string',
+    required: false,
+    pattern: ['^.{1,60}$', '60 characters at most'],
+  }),
   field({
     name: 'bio',
     label: 'Bio',

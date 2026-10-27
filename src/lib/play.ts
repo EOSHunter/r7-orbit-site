@@ -16,6 +16,14 @@ export interface PlayFields {
 
 export const PLATFORM_LABEL: Record<Platform, string> = { desktop: 'Desktop', mobile: 'Mobile' };
 
+/**
+ * Whether a play address is a page of this site (`/ascent/`) rather than another address: it opens in the same tab, as a
+ * link (never embedded, never "new tab"), and its structured data gives it this site's origin.
+ */
+export function playsOnSite(playUrl: string): boolean {
+  return playUrl.startsWith('/') && !playUrl.startsWith('//');
+}
+
 /** A project is playable when it has a play address. */
 export function isPlayable(data: Pick<PlayFields, 'playUrl'>): boolean {
   return Boolean(data.playUrl);

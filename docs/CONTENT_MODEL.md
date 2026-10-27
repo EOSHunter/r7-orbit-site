@@ -146,7 +146,7 @@ Body: the written notes, links and resources mentioned in the video (Markdown, o
 | `role` | string | no | "Solo", "Design + code", etc. |
 | `gallery` | `{ src, alt, caption? }[]` | no | Screenshots |
 | `timeline` | `{ date, text }[]` | no | Short changelog entries |
-| `playUrl` | https URL | no | Makes the project **playable** (see below). Anything but `https://` fails the build |
+| `playUrl` | https URL, or a page of this site | no | Makes the project **playable** (see below). A full `https://` address, or a page of this site starting with one `/` (`/ascent/`), which needs `playMode: link`. Anything else fails the build |
 | `playMode` | `'embed' | 'link'` | no | Default `embed`. `link` shows only a button that opens the game in a new tab |
 | `playAspect` | string `w:h` | no | Default `16:9`. The shape of the game frame, e.g. `4:3`. Embed only |
 | `controls` | `{ key, action }[]` | no | The controls legend under the game, e.g. `{ key: 'Space', action: 'Fire' }` |
@@ -159,7 +159,7 @@ Body: the written notes, links and resources mentioned in the video (Markdown, o
 
 **Types (`appType`).** The allowed values are defined once, in `APP_TYPES` (`src/lib/app-types.ts`): each type's label ("Game", "App"), plural for the filter ("Games", "Apps"), icon, button word ("Play", "Open") and structured data. The schema, the editor's **Type** menu, the filter on `/apps/`, the cards, the search label and the JSON-LD all read that list, so adding a type (say `tool`) is one line there; this page lists the values that exist when it was written, `APP_TYPES` is the authority. Vesper Drift is `appType: game`.
 
-**Playable projects.** A project with a `playUrl` is a game or an app people use in the browser, hosted on its own address (a separate static site, e.g. `https://vesper.r7orbit.io/`). The address is data: it lives in the project's front matter, not in code. What changes:
+**Playable projects.** A project with a `playUrl` is a game or an app people use in the browser, hosted on its own address (a separate static site, e.g. `https://vesper.r7orbit.io/`) or on a page of this site (`/ascent/`, R7: Ascent). The address is data: it lives in the project's front matter, not in code. A page of this site is always `playMode: link` and opens in the same tab (no new tab, no external icon, nothing to frame). What changes:
 
 - The page gets a **Play** section in place of the cover image: a click-to-load facade (the cover as poster, a Play button). Nothing is requested from the game until the button is pressed, so the iframe and the game's download stay out of the page load. Then a sandboxed iframe (`sandbox="allow-scripts allow-same-origin allow-pointer-lock"`, `allow="fullscreen; gamepad; autoplay"`) replaces it, keyboard focus moves into it, and a Fullscreen button appears. An "Open in a new tab" link, the controls legend, the note and the platform labels sit around it. Without JavaScript the facade is hidden and a plain link to the game takes its place. With `playMode: link` there is no facade and no iframe, only the Play button (a link that opens a new tab), plus the note, platforms and controls.
 - It is listed on the **Apps hub** (`/apps/`, `docs/PAGES.md`): a card with the cover as poster, its type chip (icon and label), summary, `platforms`, a primary button (**Play** for a game, **Open** for an app; to this page's Play section, or straight to `playUrl` in a new tab with `playMode: link`) and a **Details** link. Only published entries are listed (`draft` and a future `date` apply as everywhere), sorted by `order`, then newest first; with two or more types published, a filter by type sits above them. There is no `apps` collection: the hub is every project with a `playUrl`. A **More apps** strip on this page lists up to three others (of any type) and links back to the hub.
@@ -242,17 +242,18 @@ The words in these files were moved from code unchanged (`KINDS` in `src/lib/lis
 
 The settings tokens of the next section work in these files too: `home.md` writes the hero's eyebrow and lead and its description as `{site.tagline}` and `{site.description}`, and `latest.md` its description as `{site.description}`, so the tagline and description stay in Site settings. `loadSitePage` (`src/lib/site-pages-queries.ts`) fills them; a unit test checks that no page file types a settings value out.
 
-### Pages with a fixed frame: privacy, 404, search
+### Pages with a fixed frame: privacy, 404, search, ascent
 
-`src/content/pages/privacy.md`, `404.md` and `search.md` hold the **words** of those pages; the frame (eyebrow, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
+`src/content/pages/privacy.md`, `404.md`, `search.md` and `ascent.md` (the game page, `/ascent/`) hold the **words** of those pages; the frame (eyebrow, search box, 404 orbit and buttons) stays in `src/pages/*.astro`. Same fields as About: `title` is the `h1`, `seoTitle` the browser title ("Privacy", "Page not found", "Search"), `description` the meta description. Where each block lands is fixed per page (`src/lib/page-copy.ts`):
 
 | Page | Blocks |
 |---|---|
 | `privacy.md` | Leading `lead` under the heading; the rest in one `.prose` column; a `text` block at the very end as small print ("Last updated ...") |
 | `404.md` | Leading `lead` under the heading; anything else after it, above the search box |
 | `search.md` | Every block is the note shown only without JavaScript (inside `<noscript>`, `text` paragraphs as `.search-note`) |
+| `ascent.md` | Leading `lead` under the heading, above the game; the rest below it in one `.prose` column; a `text` block at the very end is the credits: small print on the page, and the same lines, one per line, on the game's finish screen |
 
-**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
+**Settings tokens.** Any text, in any of these files, may hold `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.name}`; the build replaces them with the values in `src/data/site.json`. Use them instead of typing a value the settings own: An unknown `{x.y}` fails the build with the file and block. Values are inserted as written, into Markdown.
 
 **The waitlist lines.** A block whose text starts with `{if waitlist on}` is shown only while the live site shows the waitlist (Site settings → Waitlist on, with a site key); `{if waitlist off}`, only while it does not. For the Privacy page's paragraph about the waitlist (`docs/WAITLIST.md`, "Privacy"); the wording is the author's.
 

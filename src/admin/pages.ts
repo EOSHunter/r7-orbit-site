@@ -48,7 +48,15 @@ const TOKENS_HINT =
   'Write {site.name}, {site.tagline} or {site.description} to print that site setting: it changes when the setting does.';
 
 /** The page fields of a fixed-frame page: About's, with hints for this page. */
-const framedPageFields = ({ title, seoTitle, sections }: { title: string; seoTitle: string; sections: string }): CmsField[] => [
+const framedPageFields = ({
+  title,
+  seoTitle,
+  sections,
+}: {
+  title: string;
+  seoTitle: string;
+  sections: string;
+}): CmsField[] => [
   field({ ...(aboutFields[0] as object), hint: `${title} Put one phrase in *asterisks* for the italic brass accent.` }),
   field({ ...(aboutFields[1] as object), hint: `${seoTitle} Max ${SEO_TITLE_MAX} characters.` }),
   field({ ...(aboutFields[2] as object), hint: `${(aboutFields[2] as { hint: string }).hint} ${TOKENS_HINT}` }),
@@ -76,6 +84,17 @@ const framedPageFiles = [
       seoTitle: 'The name in the browser tab, e.g. Page not found.',
       sections:
         'Where the blocks go: a Lead paragraph sits under the heading; any other block follows it, above the search box. The orbit, the search box and the two buttons are fixed. This page is never in search results.',
+    }),
+  },
+  {
+    name: 'ascent',
+    label: 'R7: Ascent (the game page)',
+    file: 'src/content/pages/ascent.md',
+    fields: framedPageFields({
+      title: 'The big heading of /ascent/.',
+      seoTitle: 'The name in browser tabs and search results, e.g. R7: Ascent.',
+      sections:
+        'Where the blocks go: a Lead paragraph at the top sits under the heading, above the game; the rest follows the game, one column of text. A Text block at the very end is the credits: small print on the page, and the same lines on the screen a player sees on reaching the ring. Write {author.name} to print your name from Site settings.',
     }),
   },
   {

@@ -1,8 +1,8 @@
-// The pages that keep a fixed frame around blocks from src/content/pages/: privacy, 404 and search (docs/PAGES.md,
+// The pages that keep a fixed frame around blocks from src/content/pages/: privacy, 404, search and the game's page, ascent (docs/PAGES.md,
 // docs/CONTENT_MODEL.md "Pages"). Their words are blocks of the shared library, edited in /admin; their frame (the eyebrow, the
 // search box, the orbit) stays code. This module is what those pages do with the blocks before drawing them:
 //
-// - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}` and
+// - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.name}` and
 //   `{newsletter.provider}` in any text are replaced with the values of src/data/site.json, so changing the name in the settings changes the privacy page. An unknown `{x.y}` stops the
 //   build, so a typo never reaches the page as braces.
 // - The newsletter switch, kept only so the Privacy page (whose words are the author's to change) still builds: there is no newsletter
@@ -22,6 +22,8 @@ export interface PageSettings {
   siteName: string;
   siteTagline: string;
   siteDescription: string;
+  /** The author's name (Site settings > Author). */
+  authorName?: string;
   newsletterProvider: string;
   newsletterConnected: boolean;
   /** The live site shows the waitlist forms (src/lib/waitlist.ts, `waitlistState` without dev or preview). */
@@ -32,6 +34,7 @@ interface SiteLike {
   name: string;
   tagline: string;
   description: string;
+  author?: { name?: string };
   waitlist?: { enabled?: boolean; turnstileSiteKey?: string };
 }
 
@@ -41,6 +44,7 @@ export function pageSettingsOf(site: SiteLike): PageSettings {
     siteName: site.name,
     siteTagline: site.tagline,
     siteDescription: site.description,
+    authorName: site.author?.name ?? '',
     newsletterProvider: '',
     newsletterConnected: false,
     waitlistOn: Boolean(site.waitlist?.enabled && site.waitlist.turnstileSiteKey?.trim()),
@@ -51,6 +55,7 @@ const TOKENS: Record<string, (s: PageSettings) => string> = {
   'site.name': (s) => s.siteName,
   'site.tagline': (s) => s.siteTagline,
   'site.description': (s) => s.siteDescription,
+  'author.name': (s) => s.authorName ?? '',
   'newsletter.provider': (s) => s.newsletterProvider,
 };
 
@@ -149,6 +154,31 @@ export function privacySlots(sections: readonly Section[]) {
   const { lead, rest } = splitLead(sections);
   const last = rest.at(-1);
   return last?.type === 'text' ? { lead, body: rest.slice(0, -1), after: [last] } : { lead, body: rest, after: [] };
+}
+
+/**
+ * /ascent/: the Lead under the heading, above the game; the rest below it, one reading column; a Text block at the very end
+ * is the credits, set as small print and shown again, line by line, on the game's finish screen.
+ */
+export function ascentSlots(sections: readonly Section[]) {
+  const { lead, rest } = splitLead(sections);
+  const last = rest.at(-1);
+  if (last?.type !== 'text') return { lead, body: rest, credits: [] as Section[], creditLines: [] as string[] };
+  return { lead, body: rest.slice(0, -1), credits: [last], creditLines: creditLines(last.text) };
+}
+
+/** A credits block's text as plain lines (Markdown's emphasis and links reduced to their words), empty lines dropped. */
+export function creditLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/[*_`]/g, '')
+        .replace(/^\s*[-+]\s+/, '')
+        .trim(),
+    )
+    .filter(Boolean);
 }
 
 /** /404.html: the Lead under the heading; any other block follows it, above the search box. */

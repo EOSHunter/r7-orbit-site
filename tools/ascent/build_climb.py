@@ -13,7 +13,7 @@
 #   2 server stack   rack units, heat sinks and cable trays round a column of racks          fans that blow you up
 #   3 cloud          soft data blocks in open air                                            blocks that drift
 #   4 upper air      solar panels, girders and satellites round an antenna mast              plates that crumble, thin beams
-#   5 orbit          shards rising to the brass ring                                         all of them; touch the ring
+#   5 orbit          shards rising to the brass ring                                         drifts, crumbles, beams; the ring
 #
 # The contract with the game (level.ts, gltf-level.ts), on top of build_test_climb.py's (COL_ boxes, route, ground, SPAWN,
 # GOAL, the four material names):
