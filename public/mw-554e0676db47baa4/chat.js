@@ -21,7 +21,7 @@
     var movies = api.movies(), gens = api.gens, gname = api.gname, fmtLen = api.fmtLen;
     var watched = movies.filter(function (m) { return m.watched; });
     var todo = movies.filter(function (m) { return !m.watched; });
-    var withLen = watched.filter(function (m) { return m.runtime > 0; });
+    var withLen = watched.filter(function (m) { return m.runtime > 0 && m.kind !== 'show'; });
     var mins = withLen.reduce(function (s, m) { return s + m.runtime; }, 0);
     var rated = watched.filter(function (m) { return m.rating > 0; });
     var avg = rated.length ? (rated.reduce(function (s, m) { return s + m.rating; }, 0) / rated.length).toFixed(2) : 'n/a';
@@ -32,6 +32,11 @@
     var adders = Object.keys(who).map(function (n) { return n + ' ' + who[n]; }).join(', ');
     function line(m) {
       var parts = [m.title, m.year || 'year unknown', m.runtime ? fmtLen(m.runtime) : 'length unknown', gens(m).map(gname).join('/') || 'no genres'];
+      if (m.kind === 'show') {
+        parts[0] = m.title + ' (TV show)';
+        parts[2] = m.runtime ? fmtLen(m.runtime) + ' per episode' : 'episode length unknown';
+        parts.push(m.season || m.episode ? 'at season ' + (m.season || 1) + ' episode ' + (m.episode || 0) + (m.seasonEps && m.seasonEps.length ? ' of ' + m.seasonEps.length + ' seasons' : '') : 'not started');
+      }
       if (m.watched) parts.push(m.rating ? m.rating + '/5' : 'unrated');
       if (m.review) parts.push('review: ' + m.review);
       var w = api.who ? api.who(m) : '';
@@ -41,7 +46,8 @@
     var out = [];
     out.push('TODAY: ' + new Date().toISOString().slice(0, 10));
     out.push('SUMMARY');
-    out.push('Watched: ' + watched.length + ' films. To watch: ' + todo.length + ' films.');
+    var shows = movies.filter(function (m) { return m.kind === 'show'; }).length;
+    out.push('Watched: ' + watched.length + ' titles. To watch: ' + todo.length + ' titles.' + (shows ? ' ' + shows + ' of the titles are TV shows (marked TV show; their stars and genres count with the rest, but the time below is films only).' : ''));
     out.push('Time watched: ' + Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm, counted from ' + withLen.length + ' films with a known length.');
     out.push('Average rating: ' + avg + ' from ' + rated.length + ' rated films. Favorites (4 or 5 stars): ' + rated.filter(function (m) { return m.rating >= 4; }).length + '.');
     out.push('Genres by number of watched films: ' + top + '.');
