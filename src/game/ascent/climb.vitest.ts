@@ -9,6 +9,7 @@ import { ASCENT_CONFIG, jumpPhysics, jumpReach } from './config';
 import { parsePartModel } from './gltf-level';
 import type { LevelBox } from './level';
 import { AscentSim } from './sim';
+import { Vector3 } from 'three/src/Three.js';
 
 const files = await Promise.all(CLIMB.zones.map((z) => readFile(new URL(`./assets/${z.file}`, import.meta.url))));
 const climb = await loadClimb(CLIMB.zones.length, (n) => {
@@ -28,6 +29,24 @@ const shifted = (b: Box, d: { x: number; y: number; z: number }): Box => ({
   max: { x: b.max.x + d.x, y: b.max.y + d.y, z: b.max.z + d.z },
 });
 
+/** Whether two triangles in a plane overlap by more than a sliver (separating axes, with a 1 mm allowance). */
+function trianglesOverlap(a: [number, number][], b: [number, number][]): boolean {
+  for (const tri of [a, b]) {
+    for (let k = 0; k < 3; k++) {
+      const [x0, y0] = tri[k];
+      const [x1, y1] = tri[(k + 1) % 3];
+      const len = Math.hypot(x1 - x0, y1 - y0);
+      if (len < 1e-9) return false;
+      const [nx, ny] = [-(y1 - y0) / len, (x1 - x0) / len];
+      const project = (t: [number, number][]) => t.map(([x, y]) => x * nx + y * ny);
+      const pa = project(a);
+      const pb = project(b);
+      if (Math.max(...pa) - 0.001 <= Math.min(...pb) || Math.max(...pb) - 0.001 <= Math.min(...pa)) return false;
+    }
+  }
+  return true;
+}
+
 const MARGIN = 0.8;
 const MAX_RISE = 0.8;
 
@@ -38,6 +57,67 @@ describe('the climb', () => {
     expect(level.ring).toBeDefined();
     expect(level.goal.y).toBeGreaterThan(300);
     expect(climb.parts[4].goal?.name).toBe('GOAL');
+  });
+
+  it('never draws two faces of different materials in the same place (they would flicker)', () => {
+    // Every scenery triangle facing the same way in the same plane (to the millimetre), grouped by that plane; two of
+    // different materials whose areas overlap would fight over the same pixels.
+    const planes = new Map<string, { mat: string; owner: string; pts: [number, number][] }[]>();
+    const p = [new Vector3(), new Vector3(), new Vector3()];
+    const n = new Vector3();
+    const e = new Vector3();
+    for (const part of climb.parts) {
+      const all = [...part.scenery, ...[...part.moving.values()].flat()];
+      for (const { mesh } of all) {
+        const m = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+        const g = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry;
+        const pos = g.getAttribute('position');
+        for (let i = 0; i + 2 < pos.count; i += 3) {
+          for (let k = 0; k < 3; k++) p[k].fromBufferAttribute(pos, i + k).applyMatrix4(mesh.matrixWorld);
+          n.subVectors(p[1], p[0]).cross(e.subVectors(p[2], p[0]));
+          if (n.length() < 1e-8) continue;
+          n.normalize();
+          const key = `${n.x.toFixed(3)},${n.y.toFixed(3)},${n.z.toFixed(3)},${n.dot(p[0]).toFixed(3)}`;
+          // Two axes across the plane, to compare the triangles in 2D.
+          const u = Math.abs(n.x) < 0.9 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0);
+          u.sub(n.clone().multiplyScalar(u.dot(n))).normalize();
+          const v = n.clone().cross(u);
+          const pts = p.map((q) => [q.dot(u), q.dot(v)] as [number, number]);
+          const list = planes.get(key) ?? [];
+          list.push({ mat: m.name, owner: mesh.name, pts });
+          planes.set(key, list);
+        }
+      }
+    }
+    const fights = new Set<string>();
+    for (const list of planes.values()) {
+      for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+          if (list[i].mat === list[j].mat) continue;
+          if (trianglesOverlap(list[i].pts, list[j].pts)) {
+            fights.add([list[i].owner, list[j].owner].sort().join(' and '));
+          }
+        }
+      }
+    }
+    expect([...fights].sort()).toEqual([]);
+  });
+
+  it('is lit: every zone has a look, every file says so, and the sky meshes are kept apart from the scenery', () => {
+    for (const z of level.zones ?? []) {
+      expect(z.look, z.title).toBeDefined();
+      for (const c of [z.look?.top, z.look?.horizon, z.look?.ground, z.look?.sun]) expect(c).toMatch(/^#[0-9a-f]{6}$/);
+      expect(Math.hypot(...(z.look?.sun_dir ?? [0, 0, 0]))).toBeCloseTo(1, 3);
+    }
+    expect(climb.parts.map((p) => p.style)).toEqual(['lit', 'lit', 'lit', 'lit', 'lit']);
+    expect(climb.parts[3].sky.map((m) => m.name)).toContain('SKY_earth');
+    expect(climb.parts[4].sky.map((m) => m.name)).toEqual(expect.arrayContaining(['SKY_stars', 'SKY_moon']));
+    for (const p of climb.parts) {
+      for (const s of p.scenery) {
+        expect(s.material).toBe('lit');
+        expect(s.mesh.name.startsWith('SKY_')).toBe(false);
+      }
+    }
   });
 
   it('has fans, drifting blocks and crumbling ones, each in its own zone first', () => {

@@ -138,6 +138,11 @@ describe('ambienceMix', () => {
     expect(ambienceMix(70 - AMBIENCE_FADE + 0.01, zones)[0]).toBeGreaterThan(0.99);
     expect(ambienceMix(70 + AMBIENCE_FADE - 0.01, zones)[1]).toBeGreaterThan(0.99);
   });
+  it('mixes over another distance when asked (the view blends the skies over its own)', () => {
+    expect(ambienceMix(70 - 20 + 0.01, zones, 20)[0]).toBeGreaterThan(0.99);
+    expect(ambienceMix(60, zones, 20)[1]).toBeCloseTo(0.25);
+    expect(ambienceMix(55, zones)[1]).toBe(0);
+  });
   it('always sums to 1, below the first zone and above the last', () => {
     for (const y of [-20, 0, 69, 71, 149.5, 400]) {
       expect(ambienceMix(y, zones).reduce((a, b) => a + b, 0)).toBeCloseTo(1);

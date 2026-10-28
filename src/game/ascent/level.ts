@@ -70,6 +70,23 @@ export interface LevelZone {
   /** Heights (metres, the feet) where it starts and ends. */
   base: number;
   top: number;
+  /** Its sky, sun and fog (a lit climb's zones; the views blend them by height): colours as sRGB hex. */
+  look?: ZoneLook;
+}
+
+/** A zone's look (tools/ascent/build_climb.py, LOOKS): the sky overhead, at the horizon and below, the sun, the starfield. */
+export interface ZoneLook {
+  top: string;
+  horizon: string;
+  ground: string;
+  sun: string;
+  /** The sun's strength, and the sky light's (each as a share of a colour lit square on). */
+  strength: number;
+  ambient: number;
+  /** Towards the sun (unit, the game's axes). */
+  sun_dir: [number, number, number];
+  /** How much of a starfield shows, 0 to 1. */
+  stars: number;
 }
 
 /** A level's zones, or one zone from the start to the goal when it has none. */

@@ -17,7 +17,16 @@ export interface ClimbManifest {
   goal: { x: number; y: number; z: number };
 }
 
-export const CLIMB: ClimbManifest = manifest;
+// A JSON import types an array as number[]: a look's sun_dir is checked to be three numbers here.
+export const CLIMB: ClimbManifest = {
+  ...manifest,
+  zones: manifest.zones.map(({ look, ...zone }) => {
+    const [x, y, z, ...rest] = look.sun_dir;
+    if (z === undefined || rest.length)
+      throw new Error(`R7: Ascent's climb.json: zone ${zone.n}'s sun_dir is not 3 numbers`);
+    return { ...zone, look: { ...look, sun_dir: [x, y, z] as [number, number, number] } };
+  }),
+};
 const URLS = [zone1, zone2, zone3, zone4, zone5];
 
 /** The name a saved climb goes by (save.ts): a new layout of the climb would change it, so an old save is not offered. */
@@ -50,7 +59,7 @@ export async function loadClimb(upTo = 2, load: ZoneLoader = fromNetwork, info: 
       info.goal,
       'the climb',
     ),
-    zones: info.zones.map(({ n, title, base, top }) => ({ n, title, base, top })),
+    zones: info.zones.map(({ n, title, base, top, look }) => ({ n, title, base, top, ...(look ? { look } : {}) })),
   });
   let level: Level;
   const zoneAt = (y: number) => {

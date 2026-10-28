@@ -16,10 +16,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { isLevelMaterial, type LevelMaterial } from './colors';
 import { LEVEL_NAMES, joinParts, partFromObjects, type Level, type LevelObject, type LevelPart } from './level';
 
-/** A piece of scenery: a mesh (placed in the world by its matrixWorld) and the material it is drawn in. */
+/**
+ * A piece of scenery: a mesh (placed in the world by its matrixWorld) and how it is drawn: in the tones of a material name
+ * (LEVEL_MATERIALS, the test climb's look), or `lit` (a lit climb's: the mesh's own material, lit and coloured).
+ */
 export interface SceneryMesh {
   mesh: Mesh;
-  material: LevelMaterial;
+  material: LevelMaterial | 'lit';
 }
 
 /** One level file and what the view draws for it. */
@@ -31,6 +34,10 @@ export interface PartModel {
   moving: Map<number, SceneryMesh[]>;
   /** The goal ring's mesh, when the file has GOAL (the view turns it about the vertical through `goal`). */
   goal: Mesh | null;
+  /** The sky's meshes (named SKY_...: the Earth, the Moon, the stars): far away, drawn without fog. Lit files only. */
+  sky: Mesh[];
+  /** `lit`: the file's own materials, lit (its ZONE empty says style = lit); `tones`: the material names' token tones. */
+  style: 'lit' | 'tones';
   /** Where it came from, for messages. */
   source: string;
 }
@@ -44,6 +51,9 @@ export interface LevelModel {
 }
 
 const isMesh = (o: Object3D): o is Mesh => (o as Mesh).isMesh === true;
+
+/** The names of a lit file's sky meshes start with this. */
+export const SKY_PREFIX = 'SKY_';
 
 const materialName = (mesh: Mesh): string => {
   const m = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
@@ -79,6 +89,8 @@ export function partModelFromScene(root: Object3D, source: string): PartModel {
     meshes.push(o);
   });
   const part = partFromObjects(objects, source);
+  const zoneObject = objects.find((o) => o.name.startsWith(LEVEL_NAMES.zone));
+  const style = zoneObject?.userData.style === 'lit' ? 'lit' : 'tones';
 
   // The scenery that goes with each drifting or crumbling box: <name> and <name>__... for COL_<name>.
   const owners = new Map<string, number>();
@@ -88,19 +100,24 @@ export function partModelFromScene(root: Object3D, source: string): PartModel {
   }
   const scenery: SceneryMesh[] = [];
   const moving = new Map<number, SceneryMesh[]>();
+  const sky: Mesh[] = [];
   for (const mesh of meshes) {
+    if (style === 'lit' && mesh.name.startsWith(SKY_PREFIX)) {
+      sky.push(mesh);
+      continue;
+    }
     const name = materialName(mesh);
-    if (!isLevelMaterial(name)) {
+    if (style === 'tones' && !isLevelMaterial(name)) {
       throw new Error(
         `R7: Ascent could not use ${source}: ${mesh.name} has the material "${name}", which the game does not know`,
       );
     }
     const owner = owners.get(mesh.name.split('__')[0]);
-    const item = { mesh, material: name };
+    const item: SceneryMesh = { mesh, material: style === 'lit' ? 'lit' : (name as LevelMaterial) };
     if (owner === undefined) scenery.push(item);
     else moving.set(owner, [...(moving.get(owner) ?? []), item]);
   }
-  return { part, scenery, moving, goal, source };
+  return { part, scenery, moving, goal, sky, style, source };
 }
 
 /** The part in a .glb file's bytes. */

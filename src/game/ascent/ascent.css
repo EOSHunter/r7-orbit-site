@@ -3,6 +3,9 @@
    positioned; the game fills it. Tokens only (CLAUDE.md, design rules). */
 
 .ascent {
+  /* The HUD's panels: the page's background, nearly opaque, so the sky behind never decides the text's contrast. */
+  --ascent-panel: color-mix(in srgb, var(--bg) 88%, transparent);
+
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -26,7 +29,9 @@
   margin: 0;
 }
 
-/* The altitude, top left, in mono; the best and the falls under it, smaller and dimmer. A soft scrim, not a box. */
+/* The altitude, top left, in mono; the best and the falls under it, smaller and dimmer. On a small dark panel: the lit
+   climb's skies run from obsidian to near white (the cloud zone), and a soft scrim faded into a light sky left grey smudges
+   and labels too faint to read. The panel's tone keeps every line of it at 4.5:1 or more over any sky. */
 .ascent-hud {
   position: absolute;
   top: var(--s-2);
@@ -37,7 +42,9 @@
   padding: var(--s-2) var(--s-3);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--bg) 65%, transparent), transparent);
+  background: var(--ascent-panel);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-md);
   pointer-events: none;
 }
 
@@ -50,7 +57,7 @@
   font-size: var(--fs-2xs);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 /* The message: the title and the prompt, over a scrim, before the climb and while paused. */
@@ -81,17 +88,24 @@
 }
 
 /* The controls, along the bottom: shown when the climb starts, then gone after a few seconds. */
+/* The controls, bottom middle, on the HUD's panel (the sky or the Earth behind it can be near white). */
 .ascent-hint {
   position: absolute;
-  right: var(--s-3);
   bottom: var(--s-3);
-  left: var(--s-3);
+  left: 50%;
+  width: max-content; /* one line where it fits (from the middle, the box would shrink to half the stage) */
+  max-width: calc(100% - 2 * var(--s-3));
+  translate: -50% 0; /* centred (a margin cannot do it: .ascent p sets every paragraph's margin to 0) */
+  padding: var(--s-1) var(--s-3);
   font-family: var(--font-mono);
   font-size: var(--fs-2xs);
   letter-spacing: var(--tracking-wide);
   text-align: center;
   text-transform: uppercase;
   color: var(--text-2);
+  background: var(--ascent-panel);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-md);
   opacity: 0;
   pointer-events: none;
 }
@@ -149,13 +163,15 @@
   font-size: var(--fs-lg);
   font-variant-numeric: tabular-nums;
   color: var(--text);
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--bg) 65%, transparent), transparent);
+  background: var(--ascent-panel);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-md);
   pointer-events: none;
 }
 
 /* The zone's name under the falls, a step brighter than them. */
 .ascent-zone {
-  color: var(--text-2);
+  color: var(--text);
 }
 
 /* The altimeter: a hairline down the left edge, a tick where each zone starts, a brass marker where the agent is. */

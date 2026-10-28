@@ -5,35 +5,105 @@
       "title": "Workshop",
       "base": 0.0,
       "top": 70,
-      "file": "zone-1.glb"
+      "file": "zone-1.glb",
+      "look": {
+        "top": "#4a3526",
+        "horizon": "#7a5a40",
+        "ground": "#2b1e15",
+        "sun": "#ffd9a8",
+        "strength": 3.4,
+        "ambient": 0.7,
+        "stars": 0.0,
+        "sun_dir": [
+          0.3149,
+          0.4949,
+          -0.8099
+        ]
+      }
     },
     {
       "n": 2,
       "title": "Server stack",
       "base": 70.58,
       "top": 150,
-      "file": "zone-2.glb"
+      "file": "zone-2.glb",
+      "look": {
+        "top": "#0c1525",
+        "horizon": "#1d3e63",
+        "ground": "#0e1520",
+        "sun": "#b4dcff",
+        "strength": 3.2,
+        "ambient": 0.6,
+        "stars": 0.0,
+        "sun_dir": [
+          -0.507,
+          0.7605,
+          -0.4056
+        ]
+      }
     },
     {
       "n": 3,
       "title": "Cloud",
       "base": 150.54,
       "top": 228,
-      "file": "zone-3.glb"
+      "file": "zone-3.glb",
+      "look": {
+        "top": "#4e9be9",
+        "horizon": "#d2e8ff",
+        "ground": "#a3cdf2",
+        "sun": "#fff4df",
+        "strength": 3.6,
+        "ambient": 0.75,
+        "stars": 0.0,
+        "sun_dir": [
+          0.4056,
+          0.8619,
+          0.3042
+        ]
+      }
     },
     {
       "n": 4,
       "title": "Upper air",
       "base": 228.78,
       "top": 300,
-      "file": "zone-4.glb"
+      "file": "zone-4.glb",
+      "look": {
+        "top": "#0d1c4a",
+        "horizon": "#3f73cc",
+        "ground": "#1f428f",
+        "sun": "#ffffff",
+        "strength": 4.0,
+        "ambient": 0.65,
+        "stars": 0.35,
+        "sun_dir": [
+          0.6116,
+          0.7645,
+          -0.2039
+        ]
+      }
     },
     {
       "n": 5,
       "title": "Orbit",
       "base": 300.77,
       "top": 355.53,
-      "file": "zone-5.glb"
+      "file": "zone-5.glb",
+      "look": {
+        "top": "#02020a",
+        "horizon": "#0c1236",
+        "ground": "#2a4f8f",
+        "sun": "#fff7e6",
+        "strength": 4.5,
+        "ambient": 0.6,
+        "stars": 1.0,
+        "sun_dir": [
+          0.7027,
+          0.6826,
+          0.2008
+        ]
+      }
     }
   ],
   "goal": {

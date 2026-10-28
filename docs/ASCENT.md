@@ -30,6 +30,26 @@ orbit suits the name.)
 
 ## How it looks
 
+**The climb is lit** (the author's new art style, 2026-10-27, after the first full climb: "lit shaded and colorful scenes
+with objects and less line work"). Each zone file says `style = lit` on its `ZONE_` empty, and the game draws its own
+materials (colour, roughness, metal, glow), flat shaded, lit by a sun and a sky light, with no edge lines: a workshop of
+wood, books, tool chests and floppies; navy server racks with status lights and glowing fan rings; pastel data blocks among
+clouds; blue solar panels and orange girders over the Earth; rock shards under the stars and the Moon, up to the brass ring.
+Each zone has a look in `climb.json` (`LOOKS` in `tools/ascent/build_climb.py`): the sky overhead, at the horizon and below,
+the sun's colour, strength and direction, the sky light, and how many stars show. The game blends them by height, 18 m
+either side of a zone's start (`render.lit` in `config.ts`): a sky dome shaded from below the horizon to overhead with a
+glow round the sun, fog in the horizon's colour, and the lights. Meshes named `SKY_` (the Earth, the Moon, the stars) are
+drawn first, in a scene of their own with a camera that sees 8 km and no fog; the agent is drawn last in a scene of its own,
+so its lights (which follow the camera) light it alone. A lit zone's still scenery is merged into one mesh per material, so a
+frame is about 50 draw calls. The game's 3D scenes have their own colours; the page round the game and the HUD keep the
+site's tokens and its one accent. `climb.vitest.ts` checks that no two faces of different materials share a plane anywhere in
+the climb (they flicker): a detail on a face stands 4 mm proud of it (`PROUD` in the script).
+
+The blob shadow is soft (dark in the middle, fading to its rim, 55% at most in the lit climb) and drawn only on the tops it
+lies on, never past their edges.
+
+The test climb (`?level=test`) and phase 1's level keep the first look, "blueprint noir", below.
+
 "Blueprint noir": matte obsidian blocks with thin ivory edge lines (the site's 1px hairlines, in 3D). Brass is used only for
 the goal ring, the assist-mode checkpoint beacons and the player's visor. Fog fades distant blocks into `--bg`, so depth
 comes from tone, as the design system asks (`CLAUDE.md` design rule 5).
@@ -56,6 +76,9 @@ comes from tone, as the design system asks (`CLAUDE.md` design rule 5).
   from behind.
 
 ### HUD
+
+The altitude block, the time and the controls line sit on small dark panels (the page's background at 88%, a hairline, a
+small radius): the lit climb's skies run from obsidian to near white, and every line keeps its contrast over any of them.
 
 - Altitude, top left (`412 m`)
 - Time, top right (`14:32`)

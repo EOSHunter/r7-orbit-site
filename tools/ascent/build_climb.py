@@ -15,10 +15,16 @@
 #   4 upper air      solar panels, girders and satellites round an antenna mast              plates that crumble, thin beams
 #   5 orbit          shards rising to the brass ring                                         drifts, crumbles, beams; the ring
 #
-# The contract with the game (level.ts, gltf-level.ts), on top of build_test_climb.py's (COL_ boxes, route, ground, SPAWN,
-# GOAL, the four material names):
+# The look (docs/ASCENT.md, "How it looks", the author's new art style of 2026-10-27): lit, shaded and coloured. Every
+# mesh has a material from PALETTE below (a base colour, how rough and how metallic it is, and a glow for lights and
+# screens); the game draws the materials as they are in the file. Each zone has its own sky, sun and fog (LOOKS, written to
+# climb.json). Meshes named SKY_... are the sky's (the Earth, the Moon, the stars): far away, never fogged.
 #
-#   ZONE_<n>          an empty in each file: zone = n, title, base and top (metres, Blender's z)
+# The contract with the game (level.ts, gltf-level.ts), on top of build_test_climb.py's (COL_ boxes, route, ground, SPAWN,
+# GOAL):
+#
+#   ZONE_<n>          an empty in each file: zone = n, title, base and top (metres, Blender's z); style = lit (the game
+#                     draws the file's own materials, lit, instead of the toned look of build_test_climb.py)
 #   COL_<name>        route = n numbers each file's blocks from 1; the files join in zone order
 #     fan = h         an updraft over the box, h metres high; strength = its upward push (m/s²)
 #     mover = 1       the box drifts to (move_x, move_y, move_z) from where it is (Blender axes) and back, every period s
@@ -27,8 +33,10 @@
 #   BEACON_<n>        an empty: an assist-mode checkpoint (beacon = n, in climbing order), where the agent's feet go
 #   GOAL              the ring (zone 5); ring_radius and ring_tube give its size: touching it finishes the climb
 #
-#   climb.json        beside the .glb files: each zone's title, base and top, and where the ring is (game axes), so the HUD's
-#                     altimeter and the goal are known before the top zones load
+#   SKY_<name>        scenery of the sky: drawn without fog, however far
+#
+#   climb.json        beside the .glb files: each zone's title, base, top and look (sky, sun, fog), and where the ring is
+#                     (game axes), so the HUD's altimeter, the goal and the sky are known before the top zones load
 #
 # Blender works Z up; the glTF exporter turns that into +Y up and Blender's +Y into -Z. Sizes are metres at the agent's scale
 # (1.2 m tall). Custom properties are not turned by the exporter: move_x/y/z stay in Blender's axes (level.ts turns them).
@@ -60,15 +68,82 @@ def srgb(hex_code):
     return (out[0], out[1], out[2], 1.0)
 
 
-# Preview tones only (tokens.css); the game reads the tokens themselves. (top, sides along x, sides along y, bottom)
-PREVIEW_TONES = {
-    'obsidian': ('#1b1b1f', '#151518', '#0f0f11', '#020203'),
-    'obsidian-dark': ('#151518', '#0f0f11', '#0f0f11', '#020203'),
-    'brass': ('#c9a96a',) * 4,
-    'ivory': ('#ece6d8',) * 4,
+# The palette: name: (base colour, roughness, metallic, glow). A glow above 0 makes the material give off its own colour at that
+# strength (lights, screens, LEDs). The game reads these from the file; the names are only for reading the script.
+PALETTE = {
+    # Workshop: warm wood, coloured book covers, a red tool chest, a glowing window and monitor.
+    'wood': ('#9a6a45', 0.75, 0.0, 0.0),
+    'wood-dark': ('#7c5235', 0.75, 0.0, 0.0),
+    'wall': ('#4e7f7b', 0.9, 0.0, 0.0),
+    'window': ('#ffd9a0', 0.5, 0.0, 0.9),
+    'book-red': ('#c0392b', 0.65, 0.0, 0.0),
+    'book-blue': ('#2f6fd6', 0.65, 0.0, 0.0),
+    'book-green': ('#2f9e5b', 0.65, 0.0, 0.0),
+    'book-yellow': ('#e9b824', 0.65, 0.0, 0.0),
+    'book-purple': ('#7e4fb6', 0.65, 0.0, 0.0),
+    'book-teal': ('#1d9aa8', 0.65, 0.0, 0.0),
+    'paper': ('#f3ead6', 0.9, 0.0, 0.0),
+    'tool-red': ('#cc3b2f', 0.45, 0.1, 0.0),
+    'tool-yellow': ('#f2b42c', 0.45, 0.1, 0.0),
+    'steel': ('#a3acb6', 0.3, 0.25, 0.0),
+    'plastic': ('#2c3038', 0.55, 0.0, 0.0),
+    'chip': ('#1c1e24', 0.45, 0.0, 0.0),
+    'pin': ('#d4d8de', 0.25, 0.25, 0.0),
+    'floppy': ('#2d538f', 0.55, 0.0, 0.0),
+    'label': ('#f5f2ea', 0.9, 0.0, 0.0),
+    'screen': ('#6fb5ff', 0.3, 0.0, 1.6),
+    'led-blue': ('#46c8ff', 0.3, 0.0, 3.0),
+    # Server stack: navy racks with status lights, aluminium heat sinks, orange cable trays, glowing fan rings.
+    'rack': ('#2c3647', 0.5, 0.3, 0.0),
+    'rack-dark': ('#1a2029', 0.55, 0.2, 0.0),
+    'alu': ('#bcc3cb', 0.3, 0.25, 0.0),
+    'tray': ('#e8802a', 0.55, 0.1, 0.0),
+    'led-green': ('#3dff8b', 0.3, 0.0, 3.0),
+    'led-amber': ('#ffb547', 0.3, 0.0, 3.0),
+    'fan-ring': ('#46e0ff', 0.3, 0.0, 2.2),
+    # Cloud: soft clouds and pastel data blocks with glowing bits.
+    'cloud': ('#f7f9fd', 0.95, 0.0, 0.0),
+    'data-blue': ('#a3c8ff', 0.6, 0.0, 0.0),
+    'data-lilac': ('#c9b7ff', 0.6, 0.0, 0.0),
+    'data-mint': ('#a2e8d2', 0.6, 0.0, 0.0),
+    'data-white': ('#eef3fb', 0.65, 0.0, 0.0),
+    'data-bit': ('#5b8def', 0.3, 0.0, 1.8),
+    # Upper air: blue solar panels with silver frames, orange girders, gold foil, white paint; the Earth below.
+    'panel': ('#1f428f', 0.25, 0.25, 0.0),
+    'panel-frame': ('#d9dde3', 0.35, 0.25, 0.0),
+    'girder': ('#e9763d', 0.55, 0.2, 0.0),
+    'paint': ('#eef0f3', 0.55, 0.1, 0.0),
+    'foil': ('#d9a733', 0.3, 0.25, 0.0),
+    'earth-ocean': ('#2663c8', 0.6, 0.0, 0.15),
+    'earth-land': ('#3f8f4c', 0.85, 0.0, 0.1),
+    'earth-cloud': ('#f4f7fb', 0.9, 0.0, 0.2),
+    # Orbit: asteroid rock, stars, the Moon, and the brass ring of the R7 logo.
+    'rock': ('#7d7168', 0.9, 0.0, 0.0),
+    'rock-dark': ('#564c45', 0.9, 0.0, 0.0),
+    'star': ('#fff6e0', 0.5, 0.0, 6.0),
+    'moon': ('#c2beb6', 0.95, 0.0, 0.05),
+    'brass': ('#c9a96a', 0.3, 0.25, 0.25),
 }
-BG = '#09090a'
-IVORY = '#ece6d8'
+BOOKS = ('book-red', 'book-blue', 'book-green', 'book-yellow', 'book-purple', 'book-teal')
+DATA = ('data-blue', 'data-lilac', 'data-mint', 'data-white')
+LEDS = ('led-green', 'led-blue', 'led-amber')
+
+# Each zone's sky, sun and fog, for the game (climb.json) and the previews: the sky's colour overhead and at the horizon, the
+# ground's (the light from below), the sun's colour and strength and where it comes from (Blender axes: a direction towards
+# it), how much light the sky gives, and how much of a starfield shows (0 to 1). The game blends them as the agent climbs.
+LOOKS = {
+    'workshop': dict(top='#4a3526', horizon='#7a5a40', ground='#2b1e15', sun='#ffd9a8', strength=3.4,
+                     sun_dir=(0.35, 0.9, 0.55), ambient=0.7, stars=0.0),
+    'server': dict(top='#0c1525', horizon='#1d3e63', ground='#0e1520', sun='#b4dcff', strength=3.2,
+                   sun_dir=(-0.5, 0.4, 0.75), ambient=0.6, stars=0.0),
+    'cloud': dict(top='#4e9be9', horizon='#d2e8ff', ground='#a3cdf2', sun='#fff4df', strength=3.6,
+                  sun_dir=(0.4, -0.3, 0.85), ambient=0.75, stars=0.0),
+    'upper': dict(top='#0d1c4a', horizon='#3f73cc', ground='#1f428f', sun='#ffffff', strength=4.0,
+                  sun_dir=(0.6, 0.2, 0.75), ambient=0.65, stars=0.35),
+    'orbit': dict(top='#02020a', horizon='#0c1236', ground='#2a4f8f', sun='#fff7e6', strength=4.5,
+                  sun_dir=(0.7, -0.2, 0.68), ambient=0.6, stars=1.0),
+}
+
 
 # ------------------------------------------------------------------------------------------------- the jump (config.ts)
 SPEED = 6.0
@@ -160,9 +235,19 @@ MATERIALS = {}
 
 
 def material(name):
+    """The palette's material by name: a Principled BSDF the glTF exporter writes as the game's material."""
     if name not in MATERIALS:
+        colour, roughness, metallic, glow = PALETTE[name]
         mat = bpy.data.materials.new(name)
-        mat.diffuse_color = srgb(PREVIEW_TONES[name][0])
+        mat.use_nodes = True
+        bsdf = next(n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
+        bsdf.inputs['Base Color'].default_value = srgb(colour)
+        bsdf.inputs['Roughness'].default_value = roughness
+        bsdf.inputs['Metallic'].default_value = metallic
+        if glow:
+            bsdf.inputs['Emission Color'].default_value = srgb(colour)
+            bsdf.inputs['Emission Strength'].default_value = glow
+        mat.diffuse_color = srgb(colour)
         MATERIALS[name] = mat
     return MATERIALS[name]
 
@@ -199,7 +284,8 @@ def mesh_object(zone, name, bm, location, mat):
     bm.free()
     obj = zone.link(bpy.data.objects.new(name, mesh))
     obj.location = location
-    mesh.materials.append(material(mat))
+    if mat:
+        mesh.materials.append(material(mat))
     return obj
 
 
@@ -268,7 +354,7 @@ def make_prop(zone, name, fn, b, rng):
         mesh_object(zone, name if i == 0 else f'{name}__{mat}', bm, (0, 0, 0), mat)
 
 
-def piece(zone, name, b, bm_fn, mat='obsidian'):
+def piece(zone, name, b, bm_fn, mat='plastic'):
     """Scenery filling box b (made by bm_fn(w, d, h) about its middle): part of the prop being made, or a mesh of its own."""
     w, d, h = b[3] - b[0], b[4] - b[1], b[5] - b[2]
     cx, cy = centre(b)
@@ -283,8 +369,7 @@ def collider(zone, name, b, **props):
     """COL_<name>: the solid box b, invisible in the game."""
     w, d, h = b[3] - b[0], b[4] - b[1], b[5] - b[2]
     cx, cy = centre(b)
-    obj = mesh_object(zone, f'COL_{name}', cuboid(w, d, h), (cx, cy, (b[2] + b[5]) / 2), 'obsidian')
-    obj.data.materials.clear()
+    obj = mesh_object(zone, f'COL_{name}', cuboid(w, d, h), (cx, cy, (b[2] + b[5]) / 2), None)
     obj.display_type = 'WIRE'
     for k, v in props.items():
         obj[k] = v
@@ -305,115 +390,132 @@ def empty(owner, name, location, **props):
 # the sides or flush with the top, so nothing visible stands above or outside the solid. Made through make_prop, so they are
 # scenery named after the box: <name> and <name>__<material> (they move and fall with it).
 
-def detail(zone, name, part, b, mat='obsidian', bm_fn=cuboid):
+# A detail on a face (a label, a strip) stands this far proud of it: two faces of different materials in one plane flicker
+# (climb.vitest.ts finds any). Thin enough that a foot on it does not show.
+PROUD = 0.004
+
+
+def detail(zone, name, part, b, mat='plastic', bm_fn=cuboid):
     return piece(zone, f'{name}__{part}', b, bm_fn, mat)
 
 
+def sphere(r, subdivisions=2):
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=subdivisions, radius=r)
+    return bm
+
+
 def prop_book(zone, name, b, rng):
-    """A giant book lying flat: covers top and bottom, the pages inset a little on three sides."""
+    """A giant book lying flat: coloured covers top and bottom, cream pages inset a little on three sides, a spine."""
     x0, y0, z0, x1, y1, z1 = b
+    cover = rng.choice(BOOKS)
     t = min(0.08, (z1 - z0) * 0.15)
-    piece(zone, name, (x0, y0, z1 - t, x1, y1, z1), cuboid)
-    detail(zone, name, 'back', (x0, y0, z0, x1, y1, z0 + t))
+    piece(zone, name, (x0, y0, z1 - t, x1, y1, z1), cuboid, cover)
+    detail(zone, name, 'back', (x0, y0, z0, x1, y1, z0 + t), cover)
     spine_left = rng.random() < 0.5
     inset = 0.06
-    pages = (x0 if spine_left else x0 + inset, y0 + inset, z0 + t, x1 - inset if spine_left else x1, y1 - inset, z1 - t)
-    detail(zone, name, 'pages', pages, 'obsidian-dark')
+    # The pages stop inside the spine and run a little into the covers: a face of theirs in the plane of one of the spine's
+    # would flicker with it (PROUD below).
+    pages = (x0 + 0.02 if spine_left else x0 + inset, y0 + inset, z0 + t - 0.01, x1 - inset if spine_left else x1 - 0.02,
+             y1 - inset, z1 - t + 0.01)
+    detail(zone, name, 'pages', pages, 'paper')
     spine = (x0, y0, z0 + t, x0 + 0.05, y1, z1 - t) if spine_left else (x1 - 0.05, y0, z0 + t, x1, y1, z1 - t)
-    detail(zone, name, 'spine', spine)
+    detail(zone, name, 'spine', spine, cover)
 
 
 def prop_case(zone, name, b, rng):
-    """A toolbox or a PC case: a box with a lid line and two latches on one side."""
+    """A tool box: a red or yellow body with a dark lid line and two steel latches on one side."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid)
+    piece(zone, name, b, cuboid, rng.choice(('tool-red', 'tool-yellow')))
     zl = z1 - (z1 - z0) * 0.28
-    detail(zone, name, 'lid', (x0 - 0.02, y0 - 0.02, zl - 0.03, x1 + 0.02, y1 + 0.02, zl))
+    detail(zone, name, 'lid', (x0 - 0.02, y0 - 0.02, zl - 0.03, x1 + 0.02, y1 + 0.02, zl), 'plastic')
     for f in (0.3, 0.7):
         x = x0 + (x1 - x0) * f
-        detail(zone, name, f'latch{int(f * 10)}', (x - 0.09, y0 - 0.05, zl - 0.14, x + 0.09, y0, zl + 0.06))
+        detail(zone, name, f'latch{int(f * 10)}', (x - 0.09, y0 - 0.05, zl - 0.14, x + 0.09, y0, zl + 0.06), 'steel')
 
 
 def prop_chip(zone, name, b, rng):
-    """A giant chip: a dark body with rows of pins down two sides."""
+    """A giant chip: a black body with rows of silver pins down two sides."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid, 'obsidian-dark')
+    piece(zone, name, b, cuboid, 'chip')
     n = max(3, int((y1 - y0) / 0.32))
     for i in range(n):
         y = y0 + (i + 0.5) * (y1 - y0) / n
         for side, (a0, a1) in (('l', (x0 - 0.12, x0)), ('r', (x1, x1 + 0.12))):
-            detail(zone, name, f'pin{side}{i}', (a0, y - 0.05, z0, a1, y + 0.05, z0 + (z1 - z0) * 0.6))
+            detail(zone, name, f'pin{side}{i}', (a0, y - 0.05, z0, a1, y + 0.05, z0 + (z1 - z0) * 0.6), 'pin')
 
 
 def prop_floppy(zone, name, b, rng):
-    """A floppy disk: a thin plate with the metal shutter flush with the top (ivory) and a label."""
+    """A floppy disk: a blue plate with a steel shutter and a white label flush with the top."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid)
-    w = x1 - x0
-    detail(zone, name, 'shutter', (x0 + w * 0.3, y1 - (y1 - y0) * 0.38, z1 - 0.01, x1 - w * 0.3, y1 - 0.02, z1), 'ivory')
+    piece(zone, name, b, cuboid, 'floppy')
+    w, d = x1 - x0, y1 - y0
+    detail(zone, name, 'shutter', (x0 + w * 0.3, y1 - d * 0.38, z1 - 0.01, x1 - w * 0.3, y1 - 0.02, z1 + PROUD), 'steel')
+    detail(zone, name, 'label', (x0 + w * 0.15, y0 + 0.05, z1 - 0.01, x1 - w * 0.15, y0 + d * 0.45, z1 + PROUD), 'label')
 
 
 def prop_rack(zone, name, b, rng):
-    """A rack unit: a box with strips proud of each side, like a stack of servers."""
+    """A rack unit: a navy box with dark strips on two sides, each with a status light."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid)
+    piece(zone, name, b, cuboid, 'rack')
     rows = min(8, max(2, int((z1 - z0) / 0.22)))  # a tall column gets a few strips, not dozens
     for i in range(rows):
         z = z0 + (i + 0.5) * (z1 - z0) / rows
-        detail(zone, name, f'u{i}', (x0 + 0.08, y0 - 0.03, z - 0.035, x1 - 0.08, y0, z + 0.035), 'obsidian-dark')
-        detail(zone, name, f'v{i}', (x0 + 0.08, y1, z - 0.035, x1 - 0.08, y1 + 0.03, z + 0.035), 'obsidian-dark')
+        detail(zone, name, f'u{i}', (x0 + 0.08, y0 - 0.03, z - 0.035, x1 - 0.08, y0, z + 0.035), 'rack-dark')
+        detail(zone, name, f'v{i}', (x0 + 0.08, y1, z - 0.035, x1 - 0.08, y1 + 0.03, z + 0.035), 'rack-dark')
+        detail(zone, name, f'l{i}', (x1 - 0.2, y0 - 0.05, z - 0.025, x1 - 0.12, y0 - 0.02, z + 0.025), rng.choice(LEDS))
 
 
 def prop_heatsink(zone, name, b, rng):
-    """A heat sink: a base plate and fins up to the top, along its longer side."""
+    """A heat sink: an aluminium base plate and fins up to the top, along its longer side."""
     x0, y0, z0, x1, y1, z1 = b
     base = z0 + (z1 - z0) * 0.35
-    piece(zone, name, (x0, y0, z0, x1, y1, base), cuboid)
+    piece(zone, name, (x0, y0, z0, x1, y1, base), cuboid, 'alu')
     along_x = (x1 - x0) >= (y1 - y0)
     n = max(4, int(((y1 - y0) if along_x else (x1 - x0)) / 0.22))
     for i in range(n):
         if along_x:
             y = y0 + (i + 0.5) * (y1 - y0) / n
-            detail(zone, name, f'fin{i}', (x0, y - 0.04, base, x1, y + 0.04, z1))
+            detail(zone, name, f'fin{i}', (x0, y - 0.04, base, x1, y + 0.04, z1), 'alu')
         else:
             x = x0 + (i + 0.5) * (x1 - x0) / n
-            detail(zone, name, f'fin{i}', (x - 0.04, y0, base, x + 0.04, y1, z1))
+            detail(zone, name, f'fin{i}', (x - 0.04, y0, base, x + 0.04, y1, z1), 'alu')
 
 
 def prop_tray(zone, name, b, rng):
-    """A cable tray: a beam with rails flush with the top along both long edges."""
+    """A cable tray: an orange beam with steel rails flush with the top along both long edges."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid, 'obsidian-dark')
+    piece(zone, name, b, cuboid, 'tray')
     if (x1 - x0) >= (y1 - y0):
-        detail(zone, name, 'rail_a', (x0, y0 - 0.04, z0, x1, y0, z1))
-        detail(zone, name, 'rail_b', (x0, y1, z0, x1, y1 + 0.04, z1))
+        detail(zone, name, 'rail_a', (x0, y0 - 0.04, z0, x1, y0, z1), 'steel')
+        detail(zone, name, 'rail_b', (x0, y1, z0, x1, y1 + 0.04, z1), 'steel')
     else:
-        detail(zone, name, 'rail_a', (x0 - 0.04, y0, z0, x0, y1, z1))
-        detail(zone, name, 'rail_b', (x1, y0, z0, x1 + 0.04, y1, z1))
+        detail(zone, name, 'rail_a', (x0 - 0.04, y0, z0, x0, y1, z1), 'steel')
+        detail(zone, name, 'rail_b', (x1, y0, z0, x1 + 0.04, y1, z1), 'steel')
 
 
 def prop_fan(zone, name, b, rng):
-    """A case fan lying on its back: a square housing, a ring and three blades under the top."""
+    """A case fan lying on its back: a dark housing, a glowing ring and three aluminium blades under the top."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, (x0, y0, z0, x1, y1, z0 + 0.12), cuboid)
+    piece(zone, name, (x0, y0, z0, x1, y1, z0 + 0.12), cuboid, 'plastic')
     w = x1 - x0
     for i, (a0, a1, b0, b1) in enumerate(((x0, x0 + 0.14, y0, y1), (x1 - 0.14, x1, y0, y1),
                                           (x0, x1, y0, y0 + 0.14), (x0, x1, y1 - 0.14, y1))):
-        detail(zone, name, f'frame{i}', (a0, b0, z0 + 0.12, a1, b1, z1))
+        detail(zone, name, f'frame{i}', (a0, b0, z0 + 0.12, a1, b1, z1), 'plastic')
     cx, cy = centre(b)
-    add(cylinder(w * 0.44, 0.06, 32), (cx, cy, z1 - 0.03), 'obsidian')
-    add(cylinder(w * 0.12, (z1 - z0) - 0.16, 16), (cx, cy, (z0 + z1) / 2 + 0.04), 'obsidian-dark')
+    add(cylinder(w * 0.44, 0.06, 32), (cx, cy, z1 - 0.04), 'fan-ring')  # its top just under the frame's
+    add(cylinder(w * 0.12, (z1 - z0) - 0.16, 16), (cx, cy, (z0 + z1) / 2 + 0.04), 'plastic')
     for i in range(3):
         blade = cuboid(w * 0.36, 0.14, 0.03)
         bmesh.ops.translate(blade, vec=(w * 0.2, 0, 0), verts=blade.verts)
         bmesh.ops.rotate(blade, verts=blade.verts, matrix=Matrix.Rotation(2 * math.pi * i / 3 + 0.3, 3, 'Z'))
-        add(blade, (cx, cy, z1 - 0.12), 'obsidian-dark')
+        add(blade, (cx, cy, z1 - 0.12), 'alu')
 
 
 def prop_data(zone, name, b, rng):
-    """A data block in the cloud: a soft, chamfered cube with a few bits standing out of its sides."""
+    """A data block in the cloud: a soft, chamfered pastel cube with a few glowing bits standing out of its sides."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.12))
+    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.12), rng.choice(DATA))
     for i in range(rng.randint(1, 3)):
         side = rng.choice(('x0', 'x1', 'y0', 'y1'))
         z = rng.uniform(z0 + 0.15, z1 - 0.2)
@@ -426,24 +528,24 @@ def prop_data(zone, name, b, rng):
             y = y0 if side == 'y0' else y1
             x = rng.uniform(x0 + 0.2, x1 - 0.2)
             box = (x - s, y - 0.08, z - s, x + s, y + 0.08, z + s)
-        detail(zone, name, f'bit{i}', box, 'obsidian-dark')
+        detail(zone, name, f'bit{i}', box, 'data-bit')
 
 
 def prop_panel(zone, name, b, rng):
-    """A solar panel: a thin plate, its cells marked by strips flush with the top."""
+    """A solar panel: a blue plate, its cells marked by silver strips flush with the top."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid, 'obsidian-dark')
+    piece(zone, name, b, cuboid, 'panel')
     for i in range(1, 3):
         x = x0 + (x1 - x0) * i / 3
-        detail(zone, name, f'gx{i}', (x - 0.025, y0, z1 - 0.02, x + 0.025, y1, z1))
+        detail(zone, name, f'gx{i}', (x - 0.025, y0 - PROUD, z1 - 0.02, x + 0.025, y1 + PROUD, z1 + PROUD), 'panel-frame')
         y = y0 + (y1 - y0) * i / 3
-        detail(zone, name, f'gy{i}', (x0, y - 0.025, z1 - 0.02, x1, y + 0.025, z1))
+        detail(zone, name, f'gy{i}', (x0 - PROUD, y - 0.025, z1 - 0.02, x1 + PROUD, y + 0.025, z1 + PROUD), 'panel-frame')
 
 
 def prop_girder(zone, name, b, rng):
-    """A girder: a beam with short ribs down its sides."""
+    """A girder: an orange beam with white ribs down its sides."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, cuboid)
+    piece(zone, name, b, cuboid, 'girder')
     along_x = (x1 - x0) >= (y1 - y0)
     length = (x1 - x0) if along_x else (y1 - y0)
     n = max(2, int(length / 0.8))
@@ -451,21 +553,64 @@ def prop_girder(zone, name, b, rng):
         f = (i + 0.5) / n
         if along_x:
             x = x0 + (x1 - x0) * f
-            detail(zone, name, f'rib{i}', (x - 0.04, y0 - 0.05, z0 - 0.15, x + 0.04, y1 + 0.05, z1 - 0.02))
+            detail(zone, name, f'rib{i}', (x - 0.04, y0 - 0.05, z0 - 0.15, x + 0.04, y1 + 0.05, z1 - 0.02), 'paint')
         else:
             y = y0 + (y1 - y0) * f
-            detail(zone, name, f'rib{i}', (x0 - 0.05, y - 0.04, z0 - 0.15, x1 + 0.05, y + 0.04, z1 - 0.02))
+            detail(zone, name, f'rib{i}', (x0 - 0.05, y - 0.04, z0 - 0.15, x1 + 0.05, y + 0.04, z1 - 0.02), 'paint')
 
 
 def prop_shard(zone, name, b, rng):
-    """A shard of rock in orbit: a chamfered block with a smaller one sunk into its side."""
+    """An asteroid shard in orbit: a chamfered rock with a darker one sunk into its underside."""
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.2))
+    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.2), 'rock')
     cx, cy = centre(b)
     s = min(x1 - x0, y1 - y0) * 0.35
     dz = (z1 - z0) * 0.4
-    detail(zone, name, 'chip', (cx - s, cy - s, z0 - dz, cx + s, cy + s, z0 + 0.1),
-           'obsidian-dark', lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.2))
+    detail(zone, name, 'chip', (cx - s, cy - s, z0 - dz, cx + s, cy + s, z0 + 0.1), 'rock-dark',
+           lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.2))
+
+
+def prop_tower(zone, name, b, rng):
+    """A PC case: dark, with a blue light strip down its front and steel vents."""
+    x0, y0, z0, x1, y1, z1 = b
+    piece(zone, name, b, cuboid, 'plastic')
+    detail(zone, name, 'strip', (x0 + 0.3, y0 - 0.04, z0 + 1.0, x0 + 0.45, y0, z1 - 1.0), 'led-blue')
+    for i in range(6):
+        z = z0 + 2 + i * 1.2
+        detail(zone, name, f'vent{i}', (x1 - 1.8, y0 - 0.03, z, x1 - 0.4, y0, z + 0.4), 'steel')
+
+
+def prop_manuals(zone, name, b, rng):
+    """A pile of thick manuals, each its own colour."""
+    x0, y0, z0, x1, y1, z1 = b
+    piece(zone, name, (x0 + 0.3, y0 + 0.3, z0 + 0.02, x1 - 0.3, y1 - 0.3, z0 + 0.03), cuboid, 'paper')  # hidden inside
+    z = z0
+    i = 0
+    while z < z1 - 1e-6:
+        h = min(z1 - z, rng.uniform(1.2, 2.2))
+        inset = rng.uniform(0.0, 0.25)
+        detail(zone, name, f'm{i}', (x0 + inset, y0 + inset * 0.5, z, x1 - inset * 0.5, y1 - inset, z + h), BOOKS[i % len(BOOKS)])
+        z += h
+        i += 1
+
+
+def prop_chest(zone, name, b, rng):
+    """A red tool chest with steel drawer fronts and handles."""
+    x0, y0, z0, x1, y1, z1 = b
+    piece(zone, name, b, cuboid, 'tool-red')
+    n = 5
+    for i in range(n):
+        za = z0 + (i + 0.15) * (z1 - z0) / n
+        zb = z0 + (i + 0.85) * (z1 - z0) / n
+        detail(zone, name, f'd{i}', (x0 + 0.2, y0 - 0.04, za, x1 - 0.2, y0, zb), 'tool-red')
+        detail(zone, name, f'h{i}', (x0 + 1.4, y0 - 0.12, (za + zb) / 2 - 0.08, x1 - 1.4, y0 - 0.04, (za + zb) / 2 + 0.08), 'steel')
+
+
+def prop_monitor(zone, name, b, rng):
+    """A monitor standing on the chest: a black bezel and a glowing screen on the side facing the start."""
+    x0, y0, z0, x1, y1, z1 = b
+    piece(zone, name, b, cuboid, 'chip')
+    detail(zone, name, 'screen', (x0 + 0.25, y0 - 0.02, z0 + 0.8, x1 - 0.25, y0, z1 - 0.3), 'screen')
 
 
 PROPS = {
@@ -653,21 +798,35 @@ def walk(course, zones, spawn_box):
 # --------------------------------------------------------------------------------------------------------- set pieces
 
 def workshop_floor(zone):
-    """The floor, and the stack of hardware in the middle: a PC case, a pile of manuals, a toolbox, a monitor."""
-    mesh_object(zone, 'floor', cuboid(64, 64, 1), (0, 0, -0.5), 'obsidian-dark')
+    """The floor (boards of two woods), the stack of hardware in the middle, and the room round it: two walls, a window."""
+    rng = random.Random(1)
+    for i in range(16):
+        x = -32 + i * 4
+        mesh_object(zone, f'floor_{i}', cuboid(4, 64, 1), (x + 2, 0, -0.5), 'wood' if i % 2 else 'wood-dark')
     collider(zone, 'floor', (-32, -32, -1, 32, 32, 0), ground=1)
     stack = [
-        ('tower_case', (-2.6, -2.6, 0, 2.6, 2.6, 24), prop_case),
-        ('manuals', (-3.2, -2.4, 24, 3.2, 2.4, 33), prop_book),
-        ('toolchest', (-2.4, -2.9, 33, 2.4, 2.9, 47), prop_case),
-        ('monitor', (-3.0, -1.0, 47, 3.0, 1.0, 66), prop_case),
+        ('tower_case', (-2.6, -2.6, 0, 2.6, 2.6, 24), prop_tower),
+        ('manuals', (-3.2, -2.4, 24, 3.2, 2.4, 33), prop_manuals),
+        ('toolchest', (-2.4, -2.9, 33, 2.4, 2.9, 47), prop_chest),
+        ('monitor', (-3.0, -1.0, 47, 3.0, 1.0, 66), prop_monitor),
     ]
     out = []
-    rng = random.Random(1)
     for name, b, fn in stack:
         make_prop(zone, name, fn, b, rng)
         collider(zone, name, b)
         out.append(b)
+    # The room: a back wall with a tall window, a side wall with a shelf of books. Scenery only, well away from the route.
+    mesh_object(zone, 'wall_back', cuboid(64, 1, 72), (0, 32.5, 36), 'wall')
+    mesh_object(zone, 'wall_side', cuboid(1, 64, 72), (-32.5, 0, 36), 'wall')
+    mesh_object(zone, 'window', cuboid(26, 0.1, 34), (6, 31.95, 30), 'window')
+    for i, (x, z) in enumerate(((6, 13), (6, 47), (-7, 30), (19, 30))):
+        w, h = (28, 1.2) if i < 2 else (1.2, 34)
+        mesh_object(zone, f'window_frame_{i}', cuboid(w, 0.6, h), (x, 31.6, z), 'wood-dark')
+    mesh_object(zone, 'shelf', cuboid(3, 30, 0.8), (-30.5, -4, 18), 'wood')
+    for i in range(14):
+        h = rng.uniform(3.5, 6.5)
+        mesh_object(zone, f'shelf_book_{i}', cuboid(2.4, rng.uniform(0.9, 1.6), h), (-30.6, -17 + i * 1.9, 18.4 + h / 2),
+                    BOOKS[i % len(BOOKS)])
     return out
 
 
@@ -679,7 +838,8 @@ def server_column(zone, base, top):
     i = 0
     while z < top:
         h = rng.uniform(6, 9)
-        b = (-2.0 + 1.0, -2.0 + 1.0, z, 2.0 + 1.0, 2.0 + 1.0, min(top, z + h))
+        # A millimetre between one rack and the next: butted faces can overlap by a rounding in the file's 32-bit floats.
+        b = (-2.0 + 1.0, -2.0 + 1.0, z, 2.0 + 1.0, 2.0 + 1.0, min(top, z + h - 0.001))
         name = f'rack_column_{i}'
         make_prop(zone, name, prop_rack, b, rng)
         collider(zone, name, b)
@@ -689,35 +849,133 @@ def server_column(zone, base, top):
     return out
 
 
+def server_hall(zone, base, top):
+    """The hall round the stack: tall racks far out, their status lights glowing, for depth. Scenery only."""
+    rng = random.Random(6)
+    for i in range(22):
+        a = 2 * math.pi * i / 22 + rng.uniform(-0.08, 0.08)
+        r = rng.uniform(30, 40)
+        x, y = math.cos(a) * r, math.sin(a) * r
+        z0 = base + rng.uniform(-10, 30)
+        h = rng.uniform(25, 45)
+        b = (x - 2, y - 2, z0, x + 2, y + 2, z0 + h)
+        make_prop(zone, f'hall_rack_{i}', prop_rack, b, rng)
+
+
 def antenna_mast(zone, base, top):
-    """A thin antenna mast with a satellite near its top (both solid), and two satellites far off (scenery only)."""
+    """A white antenna mast with red bands, a gold satellite near its top (both solid), and two satellites far off."""
     out = []
     mast = (-1.5, 0.5, base - 6, -0.5, 1.5, top - 12)
-    make_prop(zone, 'mast', prop_girder, mast, random.Random(3))
+    piece(zone, 'mast', mast, cuboid, 'paint')
+    for i in range(int((mast[5] - mast[2]) / 8)):
+        z = mast[2] + 4 + i * 8
+        piece(zone, f'mast__band{i}', (mast[0] - 0.02, mast[1] - 0.02, z, mast[3] + 0.02, mast[4] + 0.02, z + 1.2), cuboid,
+              'tool-red')
     collider(zone, 'mast', mast)
     out.append(mast)
     body = (-2.6, -0.6, top - 12, 0.6, 2.6, top - 9)
-    make_prop(zone, 'satellite', prop_case, body, random.Random(4))
+    piece(zone, 'satellite', body, cuboid, 'foil')
+    for s in (-1, 1):
+        piece(zone, f'satellite__wing{s}', (-1.0 + s * 3.4 - 1.6, 0.2, top - 10.6, -1.0 + s * 3.4 + 1.6, 1.8, top - 10.4),
+              cuboid, 'panel')
     collider(zone, 'satellite', body)
     out.append(body)
     for k, (x, y, z) in enumerate(((-34, 18, base + 20), (30, -26, base + 50))):
-        piece(zone, f'far_satellite_{k}', (x - 1.5, y - 1.5, z - 1.5, x + 1.5, y + 1.5, z + 1.5), cuboid)
+        piece(zone, f'far_satellite_{k}', (x - 1.5, y - 1.5, z - 1.5, x + 1.5, y + 1.5, z + 1.5), cuboid, 'foil')
         for s in (-1, 1):
             piece(zone, f'far_satellite_{k}__wing{s}', (x + s * 1.6, y - 1.0, z - 0.06, x + s * 6.5, y + 1.0, z + 0.06),
-                  cuboid, 'obsidian-dark')
+                  cuboid, 'panel')
     return out
 
 
+def cloud_puff(bm_parts, rng, cx, cy, cz, size):
+    """A cloud: a few overlapping spheres, flatter underneath."""
+    for i in range(rng.randint(4, 7)):
+        r = size * rng.uniform(0.45, 0.8)
+        p = (cx + rng.uniform(-size, size), cy + rng.uniform(-size * 0.6, size * 0.6), cz + rng.uniform(0, size * 0.35))
+        b = sphere(r, 2)
+        bmesh.ops.scale(b, vec=(1.0, 1.0, 0.7), verts=b.verts)
+        bmesh.ops.translate(b, vec=p, verts=b.verts)
+        bm_parts.append(b)
+
+
+def merged(zone, name, parts, mat):
+    """One mesh from many bmeshes (all in world space)."""
+    out = bmesh.new()
+    for b in parts:
+        tmp = bpy.data.meshes.new('merge')
+        b.to_mesh(tmp)
+        b.free()
+        out.from_mesh(tmp)
+        bpy.data.meshes.remove(tmp)
+    return mesh_object(zone, name, out, (0, 0, 0), mat)
+
+
 def cloud_far(zone, base, top, rng):
-    """Data blocks far out in the open: scenery only, for depth."""
-    for i in range(16):
+    """Clouds all round the cloud zone and a layer of them below it; and a few data blocks far out. Scenery only."""
+    parts = []
+    for i in range(18):
+        a = rng.uniform(0, 2 * math.pi)
+        r = rng.uniform(26, 55)
+        cloud_puff(parts, rng, math.cos(a) * r, math.sin(a) * r, rng.uniform(base - 10, top), rng.uniform(3, 6))
+    for i in range(14):
+        a = rng.uniform(0, 2 * math.pi)
+        r = rng.uniform(18, 70)
+        cloud_puff(parts, rng, math.cos(a) * r, math.sin(a) * r, base - rng.uniform(12, 20), rng.uniform(5, 9))
+    merged(zone, 'clouds', parts, 'cloud')
+    for i in range(10):
         a = rng.uniform(0, 2 * math.pi)
         r = rng.uniform(24, 40)
         z = rng.uniform(base, top)
         s = rng.uniform(1.0, 3.0)
         x, y = math.cos(a) * r, math.sin(a) * r
         piece(zone, f'far_block_{i}', (x - s, y - s, z - s, x + s, y + s, z + s),
-              lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.12))
+              lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.12), DATA[i % len(DATA)])
+
+
+EARTH_RADIUS = 1600.0
+EARTH_CENTRE = (0.0, 0.0, -1780.0)  # its top 180 m under the floor: far below the upper zones, with the horizon curving
+
+
+def earth(zone):
+    """The Earth far below the upper air: an ocean sphere with land and cloud patches on it. Sky: drawn without fog."""
+    rng = random.Random(8)
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=72, v_segments=36, radius=EARTH_RADIUS)
+    bmesh.ops.translate(bm, vec=EARTH_CENTRE, verts=bm.verts)
+    mesh_object(zone, 'SKY_earth', bm, (0, 0, 0), 'earth-ocean')
+    for mat, count, size in (('earth-land', 26, (90, 260)), ('earth-cloud', 40, (60, 180))):
+        parts = []
+        for i in range(count):
+            # A point on the upper half of the sphere, a flattened blob lying on it.
+            theta = rng.uniform(0, 2 * math.pi)
+            phi = rng.uniform(0.0, 1.1)
+            n = Vector((math.sin(phi) * math.cos(theta), math.sin(phi) * math.sin(theta), math.cos(phi)))
+            lift = 2.0 if mat == 'earth-land' else 6.0
+            p = Vector(EARTH_CENTRE) + n * (EARTH_RADIUS + lift)
+            r = rng.uniform(*size)
+            b = sphere(1.0, 2)
+            bmesh.ops.scale(b, vec=(r, r * rng.uniform(0.4, 1.0), 3.0), verts=b.verts)
+            rot = n.to_track_quat('Z', 'Y').to_matrix().to_4x4()
+            bmesh.ops.transform(b, matrix=Matrix.Translation(p) @ rot, verts=b.verts)
+            parts.append(b)
+        merged(zone, f'SKY_earth_{mat.split("-")[1]}', parts, mat)
+
+
+def space(zone, base):
+    """Orbit's sky: stars on a great sphere round the zone, and the Moon. Sky: drawn without fog."""
+    rng = random.Random(9)
+    parts = []
+    centre_z = base + 30
+    for i in range(420):
+        n = Vector((rng.gauss(0, 1), rng.gauss(0, 1), abs(rng.gauss(0, 1)) * 0.9 + 0.1)).normalized()
+        p = Vector((0, 0, centre_z)) + n * 700
+        b = sphere(rng.uniform(0.8, 2.2), 0)
+        bmesh.ops.translate(b, vec=p, verts=b.verts)
+        parts.append(b)
+    merged(zone, 'SKY_stars', parts, 'star')
+    moon = sphere(70, 3)
+    mesh_object(zone, 'SKY_moon', moon, (420, 300, centre_z + 160), 'moon')
 
 
 # --------------------------------------------------------------------------------------------------------------- build
@@ -744,6 +1002,9 @@ def build():
     course.solids += server_column(Z[1], 70, 150)
     course.solids += antenna_mast(Z[3], 228, 300)
     cloud_far(Z[2], 150, 228, random.Random(5))
+    server_hall(Z[1], 70, 150)
+    earth(Z[3])
+    space(Z[4], 300)
 
     last = walk(course, ZONES, first)
     Z[0].base = 0.0
@@ -804,7 +1065,7 @@ def build():
     for i, zone in enumerate(Z):
         top = ZONES[i]['top'] if i < len(Z) - 1 else ring_z + RING_RADIUS
         empty(zone, f'ZONE_{zone.n}', (0, 0, zone.base), zone=zone.n, title=zone.spec['title'], base=round(zone.base, 2),
-              top=round(top, 2))
+              top=round(top, 2), style='lit')
     bpy.context.view_layer.update()
     return course
 
@@ -836,8 +1097,12 @@ def manifest():
     zones = []
     for zone in Z:
         e = bpy.data.objects[f'ZONE_{zone.n}']
+        look = dict(LOOKS[zone.spec['key']])
+        x, y, z = look.pop('sun_dir')
+        length = math.sqrt(x * x + y * y + z * z)
+        look['sun_dir'] = [round(x / length, 4), round(z / length, 4), round(-y / length, 4)]
         zones.append({'n': zone.n, 'title': e['title'], 'base': e['base'], 'top': e['top'],
-                      'file': f'zone-{zone.n}.glb'})
+                      'file': f'zone-{zone.n}.glb', 'look': look})
     g = bpy.data.objects['GOAL'].location
     data = {'zones': zones, 'goal': {'x': round(g.x, 4), 'y': round(g.z, 4), 'z': round(-g.y, 4)}}
     with open(os.path.join(ASSETS, 'climb.json'), 'w', encoding='utf-8', newline='\n') as f:
@@ -864,67 +1129,10 @@ def report(course):
 
 
 # ------------------------------------------------------------------------------------------------------------- preview
-
-def paint_tones():
-    for obj in bpy.context.scene.objects:
-        if obj.type != 'MESH' or obj.name.startswith('COL_') or not obj.data.materials:
-            continue
-        mat = obj.data.materials[0].name
-        if mat not in PREVIEW_TONES:
-            continue
-        top, side_x, side_y, bottom = (Vector(srgb(c)[:3]) for c in PREVIEW_TONES[mat])
-        attr = obj.data.color_attributes.new('tone', 'FLOAT_COLOR', 'CORNER')
-        rot = obj.matrix_world.to_3x3()
-        for poly in obj.data.polygons:
-            n = (rot @ poly.normal).normalized()
-            w = (abs(n.x), abs(n.y), max(n.z, 0), max(-n.z, 0))
-            c = (side_x * w[0] + side_y * w[1] + top * w[2] + bottom * w[3]) / max(sum(w), 1e-6)
-            for li in poly.loop_indices:
-                attr.data[li].color = (c.x, c.y, c.z, 1.0)
-        obj.data.color_attributes.active_color = attr
-
-
-def edge_lines(width=0.03):
-    """
-    A thin bar on each edge the game draws (EdgesGeometry at 30 degrees) of every obsidian mesh, built as one mesh in one go
-    (adding bars to a bmesh one by one gets slower with every bar).
-    """
-    verts, faces = [], []
-    corners = [(-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1), (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)]
-    quads = [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]
-    for obj in list(bpy.context.scene.objects):
-        if obj.type != 'MESH' or obj.name.startswith('COL_') or not obj.data.materials:
-            continue
-        if obj.data.materials[0].name not in ('obsidian', 'obsidian-dark'):
-            continue
-        bm = bmesh.new()
-        bm.from_mesh(obj.data)
-        bm.transform(obj.matrix_world)
-        for e in bm.edges:
-            if len(e.link_faces) == 2 and e.calc_face_angle(0) < math.radians(30):
-                continue
-            a, b = e.verts[0].co, e.verts[1].co
-            d = b - a
-            if d.length < 1e-5:
-                continue
-            m = (Matrix.Translation((a + b) / 2) @ d.to_track_quat('Z', 'Y').to_matrix().to_4x4()
-                 @ Matrix.Diagonal((width / 2, width / 2, (d.length + width) / 2, 1)))
-            base = len(verts)
-            verts.extend(m @ Vector(c) for c in corners)
-            faces.extend(tuple(base + k for k in q) for q in quads)
-        bm.free()
-    mesh = bpy.data.meshes.new('lines')
-    mesh.from_pydata([tuple(v) for v in verts], [], faces)
-    obj = bpy.data.objects.new('lines', mesh)
-    bpy.context.scene.collection.objects.link(obj)
-    attr = mesh.color_attributes.new('tone', 'FLOAT_COLOR', 'CORNER')
-    line = srgb(IVORY)
-    dim = tuple(line[i] * 0.55 + srgb(BG)[i] * 0.45 for i in range(3))
-    for d in attr.data:
-        d.color = (*dim, 1.0)
-    mesh.color_attributes.active_color = attr
-    return obj
-
+#
+# Stills for the author's approval, as the game will draw them: EEVEE, each zone under its own sky colour and sun (LOOKS), the
+# materials as they are (lights and screens glowing). No fog, and the sky is one colour here (the game shades it from the
+# horizon up). Written to tools/ascent/out/ (not in git), with the .blend.
 
 def preview(course):
     import numpy as np
@@ -934,24 +1142,38 @@ def preview(course):
     for o in scene.objects:
         if o.name.startswith('COL_'):
             o.hide_render = True
-    paint_tones()
-    edge_lines()
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT_DIR, 'climb.blend'))
 
-    scene.render.engine = 'BLENDER_WORKBENCH'
-    scene.view_settings.view_transform = 'Standard'
-    shading = scene.display.shading
-    shading.light = 'FLAT'
-    shading.color_type = 'VERTEX'
-    shading.background_type = 'WORLD'
-    scene.world = bpy.data.worlds.new('preview')
-    scene.world.color = srgb(BG)[:3]
-    scene.display.render_aa = '8'
+    for engine in ('BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT'):
+        try:
+            scene.render.engine = engine
+            break
+        except TypeError:
+            continue
+    scene.view_settings.view_transform = 'Standard'  # colours as authored, as the game draws them
+    world = bpy.data.worlds.new('preview')
+    scene.world = world
+    world.use_nodes = True
+    bg = next(n for n in world.node_tree.nodes if n.type == 'BACKGROUND')
+    sun_data = bpy.data.lights.new('sun', 'SUN')
+    sun_data.angle = math.radians(2)
+    sun_data.use_shadow = False  # the game draws no shadow maps (the blob under the agent is its one shadow)
+    sun = bpy.data.objects.new('sun', sun_data)
+    scene.collection.objects.link(sun)
     cam_data = bpy.data.cameras.new('cam')
-    cam_data.clip_end = 800
+    cam_data.clip_end = 5000
     cam = bpy.data.objects.new('cam', cam_data)
     scene.collection.objects.link(cam)
     scene.camera = cam
+
+    def light(key):
+        look = LOOKS[key]
+        c = srgb(look['horizon'])
+        bg.inputs[0].default_value = c
+        bg.inputs[1].default_value = look['ambient']
+        sun_data.color = srgb(look['sun'])[:3]
+        sun_data.energy = look['strength']
+        sun.rotation_euler = Vector(look['sun_dir']).normalized().to_track_quat('Z', 'Y').to_euler()
 
     def shoot(path, pos, target, lens, size):
         cam.location = pos
@@ -979,21 +1201,15 @@ def preview(course):
 
     tiles = os.path.join(OUT_DIR, 'tiles')
     os.makedirs(tiles, exist_ok=True)
-    # The whole climb, from far off.
-    top = max(b[5] for _, _, b, _ in course.steps)
-    shoot(os.path.join(OUT_DIR, 'climb-overview.png'), (95, -150, top * 0.55), (0, 0, top * 0.48), 24, (1000, 1500))
-    print(f'PREVIEW -> {os.path.join(OUT_DIR, "climb-overview.png")}')
-
     for zone in Z:
+        light(zone.spec['key'])
         steps = [b for z, _, b, _ in course.steps if z is zone]
         base, ztop = zone.base, max(b[5] for b in steps)
         mid = (base + ztop) / 2
         mx, my = zone.spec['middle']
-        # The zone from outside, then the player's view a third of the way up it.
         a = shoot(os.path.join(tiles, f'zone-{zone.n}-out.png'), (mx + 34, my - 40, mid + 12), (mx, my, mid - 2), 24,
                   (960, 720))
         if zone is Z[-1]:
-            # The last zone: the last steps and the ring above them.
             here = steps[-4]
             ring = bpy.data.objects['GOAL'].location
             ax, ay, az = ring.x, ring.y, ring.z - 1.5
@@ -1007,7 +1223,7 @@ def preview(course):
         d = d.normalized() if d.length > 1e-6 else Vector((0, 1, 0))
         eye = Vector((hx, hy, here[5])) - d * 5.7 + Vector((0, 0, 3.2))
         b = shoot(os.path.join(tiles, f'zone-{zone.n}-play.png'), eye, (ax, ay, az), 20, (960, 720))
-        sheet([a, b], os.path.join(OUT_DIR, f'zone-{zone.n}.png'))
+        sheet([a, b], os.path.join(OUT_DIR, f'style-zone-{zone.n}.png'))
 
 
 def main():

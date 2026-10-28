@@ -96,9 +96,14 @@ export const AMBIENCE_FADE = 12;
 
 /**
  * How much of each zone's ambience plays at height `y`: one weight per zone (bottom up), 0 to 1, summing to 1. Inside a zone
- * it is that zone's alone; within AMBIENCE_FADE of the line between two zones, the two are mixed.
+ * it is that zone's alone; within `fade` metres of the line between two zones, the two are mixed (the view blends the
+ * zones' skies by the same rule, over its own distance).
  */
-export function ambienceMix(y: number, zones: readonly Pick<LevelZone, 'base'>[]): number[] {
+export function ambienceMix(
+  y: number,
+  zones: readonly Pick<LevelZone, 'base'>[],
+  fade: number = AMBIENCE_FADE,
+): number[] {
   const weights = zones.map(() => 0);
   if (!zones.length) return weights;
   let i = 0;
@@ -106,12 +111,12 @@ export function ambienceMix(y: number, zones: readonly Pick<LevelZone, 'base'>[]
   weights[i] = 1;
   // Near the next zone's start (below or above it), share with it.
   const next = zones[i + 1];
-  if (next && y > next.base - AMBIENCE_FADE) {
-    const t = (y - (next.base - AMBIENCE_FADE)) / (2 * AMBIENCE_FADE);
+  if (next && y > next.base - fade) {
+    const t = (y - (next.base - fade)) / (2 * fade);
     weights[i] = 1 - t;
     weights[i + 1] = t;
-  } else if (i > 0 && y < zones[i].base + AMBIENCE_FADE) {
-    const t = (y - (zones[i].base - AMBIENCE_FADE)) / (2 * AMBIENCE_FADE);
+  } else if (i > 0 && y < zones[i].base + fade) {
+    const t = (y - (zones[i].base - fade)) / (2 * fade);
     weights[i - 1] = 1 - t;
     weights[i] = t;
   }

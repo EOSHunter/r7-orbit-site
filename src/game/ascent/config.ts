@@ -89,8 +89,18 @@ export const ASCENT_CONFIG = {
     fog: { near: 18, far: 95 },
     /** The ivory edge lines' opacity (1px lines; the fog fades them with distance). */
     edgeOpacity: 0.55,
-    /** The blob shadow: its radius under the agent, and the height above the ground at which it has faded out. */
-    shadow: { radius: 0.42, fadeHeight: 12 },
+    /**
+     * A lit climb (its zones have a look: render.ts): fog into the horizon's colour, from `near` to `far` metres (further than
+     * the toned look's: the colours carry the depth); how far the sky's camera sees (the Earth, the Moon, the stars); the
+     * metres either side of a zone's start over which its sky, sun and fog blend into the next zone's.
+     */
+    lit: { fog: { near: 35, far: 150 }, skyFar: 8000, fade: 18 },
+    /**
+     * The blob shadow: its radius under the agent (it fades out softly towards it), the height above the ground at which it
+     * has faded out, and how dark its middle is (toned look, lit look). It is drawn only on the tops it falls on, never past
+     * their edges.
+     */
+    shadow: { radius: 0.5, fadeHeight: 12, opacity: 0.9, litOpacity: 0.55 },
     /** The goal ring above the top of the course: one turn takes this long (it stands still under reduced motion). */
     ringTurn: 24,
     /** A fan's updraft is drawn as short ivory streaks rising through it: how many, how long, how fast, how bright. */
