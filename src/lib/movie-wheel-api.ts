@@ -241,6 +241,13 @@ export interface Movie {
   addedBy: string;
   /** TMDB's file path for the poster, such as '/abc123.jpg', or empty. */
   poster: string;
+  /** A film or a TV show. For a show, runtime is the length of one episode. */
+  kind: 'movie' | 'show';
+  /** A show's last episode watched: the season and the episode in it (0 and 0 when not started). */
+  season: number;
+  episode: number;
+  /** A show's episodes in each season, from TMDB, such as [10, 8, 8]. */
+  seasonEps: number[];
 }
 
 interface Row {
@@ -257,6 +264,10 @@ interface Row {
   updated_at: number;
   added_by: string;
   poster: string;
+  kind: string;
+  season: number;
+  episode: number;
+  season_eps: string;
   deleted_at: number;
 }
 
@@ -288,6 +299,10 @@ export function cleanMovie(x: unknown): Movie | null {
     updatedAt: Math.max(0, Number(m.updatedAt) || 0),
     addedBy: /^[a-z0-9_-]{1,24}$/.test(String(m.addedBy ?? '')) ? String(m.addedBy) : '',
     poster: POSTER_PATH.test(String(m.poster ?? '')) ? String(m.poster) : '',
+    kind: m.kind === 'show' ? 'show' : 'movie',
+    season: num(m.season, 0, 99),
+    episode: num(m.episode, 0, 999),
+    seasonEps: (Array.isArray(m.seasonEps) ? m.seasonEps : []).slice(0, 60).map((n) => num(n, 0, 999)),
   };
 }
 
@@ -313,9 +328,17 @@ async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed:
     } catch {
       /* a bad value reads as no genres */
     }
+    let seasonEps: number[] = [];
+    try {
+      const parsed: unknown = JSON.parse(r.season_eps || '[]');
+      if (Array.isArray(parsed)) seasonEps = parsed.map((n) => Math.max(0, Math.min(999, Math.round(Number(n)) || 0)));
+    } catch {
+      /* a bad value reads as no season counts */
+    }
     list.push({
       id: r.id, title: r.title, watched: !!r.watched, genres, runtime: r.runtime, year: r.year, rating: r.rating,
       review: r.review, addedAt: r.added_at, watchedAt: r.watched_at, updatedAt: r.updated_at, addedBy: r.added_by ?? '', poster: r.poster ?? '',
+      kind: r.kind === 'show' ? 'show' : 'movie', season: r.season ?? 0, episode: r.episode ?? 0, seasonEps,
     });
   }
   if (savedAt === 0 && !list.length && !Object.keys(removed).length) return { list: null, removed, savedAt };
@@ -325,12 +348,13 @@ async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed:
 // A movie is kept from whichever copy changed it last (updated_at); a removal wins over an edit made before it, and an edit made after a
 // removal brings the movie back. Equal times keep what is stored, so a device with an old copy never undoes newer work.
 const UPSERT = `INSERT INTO movie_wheel_movies
-  (id, title, watched, genres, runtime, year, rating, review, added_at, watched_at, updated_at, added_by, poster, deleted_at)
-  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, COALESCE(NULLIF(?12, ''), ?13), ?14, 0)
+  (id, title, watched, genres, runtime, year, rating, review, added_at, watched_at, updated_at, added_by, poster, kind, season, episode, season_eps, deleted_at)
+  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, COALESCE(NULLIF(?12, ''), ?13), ?14, ?15, ?16, ?17, ?18, 0)
   ON CONFLICT(id) DO UPDATE SET
     title = excluded.title, watched = excluded.watched, genres = excluded.genres, runtime = excluded.runtime, year = excluded.year,
     rating = excluded.rating, review = excluded.review, added_at = excluded.added_at, watched_at = excluded.watched_at,
-    updated_at = excluded.updated_at, added_by = CASE WHEN ?12 != '' THEN ?12 ELSE movie_wheel_movies.added_by END, poster = excluded.poster, deleted_at = 0
+    updated_at = excluded.updated_at, added_by = CASE WHEN ?12 != '' THEN ?12 ELSE movie_wheel_movies.added_by END, poster = excluded.poster,
+    kind = excluded.kind, season = excluded.season, episode = excluded.episode, season_eps = excluded.season_eps, deleted_at = 0
   WHERE excluded.updated_at > movie_wheel_movies.updated_at AND excluded.updated_at > movie_wheel_movies.deleted_at`;
 const REMOVE = `INSERT INTO movie_wheel_movies (id, title, deleted_at) VALUES (?, '', ?)
   ON CONFLICT(id) DO UPDATE SET deleted_at = excluded.deleted_at
@@ -363,7 +387,7 @@ export async function handleList(ctx: MovieWheelContext): Promise<Response> {
     if (!m) continue;
     if (!known.has(m.addedBy)) m.addedBy = '';
     statements.push(
-      db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt, m.addedBy, me.key, m.poster),
+      db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt, m.addedBy, me.key, m.poster, m.kind, m.season, m.episode, JSON.stringify(m.seasonEps)),
     );
   }
   if (body.removed && typeof body.removed === 'object') {
@@ -389,6 +413,10 @@ const TMDB_GENRES: Record<number, string> = {
   28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy',
   36: 'History', 27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-fi', 53: 'Thriller', 10752: 'War', 37: 'Western',
 };
+// A TV show's genres are a different list; two of them stand for a pair of ours ("Action & Adventure", "Sci-Fi & Fantasy").
+const TMDB_TV_GENRES: Record<number, string[]> = {
+  10759: ['Action', 'Adventure'], 10762: ['Kids'], 10763: ['News'], 10764: ['Reality'], 10765: ['Sci-fi', 'Fantasy'], 10766: ['Soap'], 10767: ['Talk'], 10768: ['War'],
+};
 const POSTER_SIZES = new Set(['w92', 'w154', 'w185', 'w342', 'w500']);
 
 export interface TmdbMovie {
@@ -398,25 +426,49 @@ export interface TmdbMovie {
   poster: string;
   overview: string;
   genres: string[];
+  /** A film or a TV show. */
+  kind: 'movie' | 'show';
+  /** A film's length, or a show's usual episode length. */
   runtime?: number;
+  /** A show's episodes in each season (not the specials), only when the details were asked for. */
+  seasonEps?: number[];
 }
 
-function tmdbMovie(x: unknown): TmdbMovie | null {
+function tmdbMovie(x: unknown, kind: 'movie' | 'show' = 'movie'): TmdbMovie | null {
   if (!x || typeof x !== 'object') return null;
   const r = x as Record<string, unknown>;
   const id = Math.round(Number(r.id));
-  const title = String(r.title ?? '').trim().slice(0, 120);
+  const title = String((kind === 'show' ? r.name : r.title) ?? '').trim().slice(0, 120);
   if (!(id > 0) || !title) return null;
   const ids = Array.isArray(r.genre_ids) ? r.genre_ids : Array.isArray(r.genres) ? r.genres.map((g) => (g as { id?: unknown })?.id) : [];
+  const names: string[] = [];
+  for (const g of ids) {
+    for (const name of (kind === 'show' ? TMDB_TV_GENRES[Number(g)] : undefined) ?? (TMDB_GENRES[Number(g)] ? [TMDB_GENRES[Number(g)]] : [])) {
+      if (!names.includes(name)) names.push(name);
+    }
+  }
   const out: TmdbMovie = {
     id,
     title,
-    year: Math.max(0, Math.min(2100, Math.round(Number(String(r.release_date ?? '').slice(0, 4))) || 0)),
+    year: Math.max(0, Math.min(2100, Math.round(Number(String((kind === 'show' ? r.first_air_date : r.release_date) ?? '').slice(0, 4))) || 0)),
     poster: TMDB_PATH.test(String(r.poster_path ?? '')) ? String(r.poster_path) : '',
     overview: String(r.overview ?? '').slice(0, 300),
-    genres: ids.map((g) => TMDB_GENRES[Number(g)]).filter((g): g is string => !!g),
+    genres: names,
+    kind,
   };
-  const runtime = Math.round(Number(r.runtime));
+  let runtime = Math.round(Number(r.runtime));
+  if (kind === 'show') {
+    const usual = Array.isArray(r.episode_run_time) ? Math.round(Number(r.episode_run_time[0])) : 0;
+    const last = Math.round(Number((r.last_episode_to_air as { runtime?: unknown } | null | undefined)?.runtime));
+    runtime = usual > 0 ? usual : last;
+    if (Array.isArray(r.seasons)) {
+      out.seasonEps = (r.seasons as { season_number?: unknown; episode_count?: unknown }[])
+        .filter((x) => Number(x?.season_number) > 0)
+        .sort((a, b) => Number(a.season_number) - Number(b.season_number))
+        .slice(0, 60)
+        .map((x) => Math.max(0, Math.min(999, Math.round(Number(x.episode_count)) || 0)));
+    }
+  }
   if (runtime > 0) out.runtime = Math.min(999, runtime);
   return out;
 }
@@ -453,38 +505,55 @@ export async function handleTmdb(ctx: MovieWheelContext): Promise<Response> {
   if (!token) return fail(503, MESSAGES.noTmdb);
   const q = (params.get('q') ?? '').trim().slice(0, 120);
   const idParam = params.get('id');
-  let url: string;
-  if (idParam !== null) {
-    if (!/^[1-9][0-9]{0,9}$/.test(idParam)) return fail(400, MESSAGES.badBody);
-    url = `https://api.themoviedb.org/3/movie/${idParam}?language=en-US`;
-  } else if (q.length >= 2) {
-    const year = Math.round(Number(params.get('year')));
-    url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(q)}&include_adult=false&language=en-US&page=1${year >= 1870 && year <= 2100 ? `&year=${year}` : ''}`;
-  } else {
-    return fail(400, MESSAGES.badBody);
-  }
-  let res: Response;
-  try {
-    res = await doFetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
-  } catch {
-    return fail(502, MESSAGES.tmdbDown);
-  }
-  if (res.status === 401) return fail(502, MESSAGES.tmdbRefused);
-  if (res.status === 404 && idParam !== null) return fail(404, MESSAGES.badBody);
-  if (!res.ok) return fail(502, MESSAGES.tmdbDown);
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    return fail(502, MESSAGES.tmdbDown);
+  const type = params.get('type') ?? 'movie';
+  if (type !== 'movie' && type !== 'tv' && type !== 'any') return fail(400, MESSAGES.badBody);
+
+  async function call(url: string, byId: boolean): Promise<{ data: unknown } | Response> {
+    let res: Response;
+    try {
+      res = await doFetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+    } catch {
+      return fail(502, MESSAGES.tmdbDown);
+    }
+    if (res.status === 401) return fail(502, MESSAGES.tmdbRefused);
+    if (res.status === 404 && byId) return fail(404, MESSAGES.badBody);
+    if (!res.ok) return fail(502, MESSAGES.tmdbDown);
+    try {
+      return { data: await res.json() };
+    } catch {
+      return fail(502, MESSAGES.tmdbDown);
+    }
   }
   const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'private, max-age=3600' };
+
   if (idParam !== null) {
-    const movie = tmdbMovie(data);
-    return movie ? new Response(JSON.stringify(movie), { headers }) : fail(502, MESSAGES.tmdbDown);
+    if (!/^[1-9][0-9]{0,9}$/.test(idParam) || type === 'any') return fail(400, MESSAGES.badBody);
+    const got = await call(`https://api.themoviedb.org/3/${type}/${idParam}?language=en-US`, true);
+    if (got instanceof Response) return got;
+    const item = tmdbMovie(got.data, type === 'tv' ? 'show' : 'movie');
+    return item ? new Response(JSON.stringify(item), { headers }) : fail(502, MESSAGES.tmdbDown);
   }
-  const found = (data as { results?: unknown })?.results;
-  const results = (Array.isArray(found) ? found : []).map(tmdbMovie).filter((m): m is TmdbMovie => !!m).slice(0, 8);
+
+  if (q.length < 2) return fail(400, MESSAGES.badBody);
+  const year = Math.round(Number(params.get('year')));
+  const kinds: ('movie' | 'tv')[] = type === 'any' ? ['movie', 'tv'] : [type];
+  const lists = await Promise.all(
+    kinds.map(async (t) => {
+      const when = year >= 1870 && year <= 2100 ? (t === 'tv' ? `&first_air_date_year=${year}` : `&year=${year}`) : '';
+      const got = await call(`https://api.themoviedb.org/3/search/${t}?query=${encodeURIComponent(q)}&include_adult=false&language=en-US&page=1${when}`, false);
+      if (got instanceof Response) return got;
+      const found = (got.data as { results?: unknown })?.results;
+      return (Array.isArray(found) ? found : []).map((x) => tmdbMovie(x, t === 'tv' ? 'show' : 'movie')).filter((m): m is TmdbMovie => !!m);
+    }),
+  );
+  for (const l of lists) if (l instanceof Response) return l;
+  const good = lists as TmdbMovie[][];
+  let results: TmdbMovie[];
+  if (good.length === 1) results = good[0].slice(0, 8);
+  else {
+    results = [];
+    for (let i = 0; i < 5; i++) for (const l of good) if (l[i]) results.push(l[i]);
+  }
   return new Response(JSON.stringify({ results }), { headers });
 }
 
