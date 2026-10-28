@@ -1,0 +1,193 @@
+---
+// R7: Ascent's public page (docs/ASCENT.md, "The page"). Its words are src/content/pages/ascent.md (edited in /admin, Pages):
+// a Lead above the game, the rest below it, a last Text block as the credits (small print here, and the lines of the finish
+// screen; src/lib/page-copy.ts, ascentSlots). The frame is this file: before Play it is an ordinary page with a Play button,
+// and nothing heavy loads. Play puts the stage in full screen and locks the mouse to it in the click itself
+// (game/ascent/gesture.ts: browsers allow neither once the click is over), then loads the game's chunk (three.js), the
+// climb's first two zones and the robot, side by side. The menu's Leave takes the game away again.
+// /styleguide/ascent/ is the same game with a debug readout, for the tests and for tuning.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageBlocks from '../../components/PageBlocks.astro';
+import { site } from '../../data/site';
+import { APP_TYPES } from '../../lib/app-types';
+import { ascentSlots } from '../../lib/page-copy';
+import { loadPage } from '../../lib/page-copy-queries';
+import { headTitleFor } from '../../lib/seo';
+import { absoluteUrl, plainTitle, titleParts } from '../../lib/text';
+import { ASCENT_TEXT } from '../../game/ascent/text';
+import '../../game/ascent/ascent.css';
+
+const { title, seoTitle, description, sections, contexts } = await loadPage('ascent');
+const { lead, body, credits, creditLines } = ascentSlots(sections);
+const base = Astro.site ?? new URL(site.url);
+const pageUrl = absoluteUrl(Astro.url.pathname, base.href);
+const game = APP_TYPES.game;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': game.ld,
+    name: plainTitle(title),
+    description,
+    url: pageUrl,
+    applicationCategory: game.category,
+    operatingSystem: 'Web browser',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/', base.href) },
+      { '@type': 'ListItem', position: 2, name: 'Apps', item: absoluteUrl('/apps/', base.href) },
+      { '@type': 'ListItem', position: 3, name: plainTitle(title), item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout title={headTitleFor(title, seoTitle)} description={description}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
+  <div class="container wide">
+    <header class="page-head">
+      <p class="eyebrow brass">Game</p>
+      <h1 id="ascent-h">{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
+      <PageBlocks blocks={lead} contexts={contexts} lead="t-lead" />
+    </header>
+
+    <div
+      class="ascent-stage"
+      data-ascent-host
+      data-credits={JSON.stringify(creditLines)}
+      tabindex="0"
+      role="application"
+      aria-label={ASCENT_TEXT.canvasLabel}
+      aria-describedby="ascent-howto"
+    >
+      <div class="ascent-poster" data-ascent-poster>
+        <button class="btn solid lg" type="button" data-ascent-play>
+          Play
+        </button>
+        <p>Needs a keyboard and a mouse, or a touch screen, and WebGL.</p>
+        <noscript>
+          <p>This game needs JavaScript.</p>
+        </noscript>
+        <p class="ascent-loading" data-ascent-loading hidden>
+          Loading the climb…
+        </p>
+      </div>
+    </div>
+
+    <div id="ascent-howto" class="prose ascent-below">
+      <PageBlocks blocks={body} contexts={contexts} />
+      <PageBlocks blocks={credits} contexts={contexts} paragraphs="t-meta" />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .ascent-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 16rem;
+    margin-top: var(--s-5);
+    background: var(--bg);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+
+  .ascent-stage:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .ascent-stage:fullscreen {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ascent-poster {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--s-3);
+    padding: var(--s-4);
+    text-align: center;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+  }
+
+  .ascent-poster p {
+    margin: 0;
+  }
+
+  .ascent-below {
+    padding: var(--s-6) 0 var(--s-8);
+  }
+</style>
+
+<script>
+  import type { AgentModel, AscentHandle, Climb } from '../../game/ascent/index';
+  import { enterPlay, leavePlay } from '../../game/ascent/gesture';
+
+  const host = document.querySelector<HTMLElement>('[data-ascent-host]');
+  const poster = document.querySelector<HTMLElement>('[data-ascent-poster]');
+  const play = document.querySelector<HTMLButtonElement>('[data-ascent-play]');
+  const loadingLine = document.querySelector<HTMLElement>('[data-ascent-loading]');
+  let handle: AscentHandle | null = null;
+  let loading = false;
+
+  const credits = (() => {
+    try {
+      const lines: unknown = JSON.parse(host?.dataset.credits ?? '[]');
+      return Array.isArray(lines) ? lines.filter((l): l is string => typeof l === 'string') : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  function leave() {
+    if (!host) return;
+    handle?.destroy();
+    handle = null;
+    leavePlay(host);
+    if (poster) poster.hidden = false;
+    play?.focus();
+  }
+
+  async function boot() {
+    if (!host || handle || loading) return;
+    loading = true;
+    if (loadingLine) loadingLine.hidden = false;
+    try {
+      const { mountAscent, loadClimb, loadAgent, CLIMB_SAVE_NAME } = await import('../../game/ascent/index');
+      // The climb and the robot load side by side; without the climb the game plays its boxes in code, without the robot
+      // its capsule.
+      const [climb, robot] = await Promise.allSettled([loadClimb(), loadAgent()]);
+      const level: Climb | null = climb.status === 'fulfilled' ? climb.value : null;
+      const agent: AgentModel | null = robot.status === 'fulfilled' ? robot.value : null;
+      if (poster) poster.hidden = true;
+      handle = mountAscent(host, {
+        climb: level,
+        agent,
+        saveAs: level ? CLIMB_SAVE_NAME : null,
+        fullscreen: true,
+        credits,
+        onLeave: () => leave(),
+      });
+      handle.start();
+    } finally {
+      loading = false;
+      if (loadingLine) loadingLine.hidden = true;
+    }
+  }
+
+  play?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Now, inside the click: once the game has loaded, the browser would no longer allow either.
+    if (host) enterPlay(host, { lock: true, fullscreen: true });
+    boot();
+  });
+</script>

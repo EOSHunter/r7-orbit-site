@@ -1,11 +1,13 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { watchPage } from './helpers.js';
 
-// The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phases 1 and 2): the game, the test
-// climb and the robot built in Blender load only on Play, draw into a running canvas with no console errors, and the robot
-// moves, jumps, animates and pauses from the keyboard. ?level=code plays phase 1's boxes, and so does a page whose level
-// failed to load; a robot that failed to load is drawn as phase 1's capsule. Most tests play in the
+// The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phases 1 to 3): the game, the climb's
+// first zones and the robot built in Blender load only on Play, draw into a running canvas with no console errors, and the
+// robot moves, jumps, animates and pauses from the keyboard; the pause menu, saving, touch and the finish at the ring work.
+// ?level=code plays phase 1's boxes, and so does a page whose level failed to load; a robot that failed to load is drawn as
+// phase 1's capsule. Most tests play in the
 // page (?lock=0&fullscreen=0); one plays as a visitor does, in full screen. WebGL runs on SwiftShader (software), as in
 // runner.spec.js.
 
@@ -15,6 +17,18 @@ const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 test.use({ launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } });
 // One test at a time in this file: each runs WebGL on the CPU, and several at once starve each other into timeouts.
 test.describe.configure({ mode: 'default' });
+
+// The mouse lock is always refused in these tests. On Windows, Chromium locks the mouse with ClipCursor, which holds the real
+// cursor of whoever is using the machine inside the test browser's invisible window, even headless. A refusal is what the
+// game already expects from some browsers (gesture.ts swallows it, and the game says to click to look around), so every test
+// keeps its meaning.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    Element.prototype.requestPointerLock = function () {
+      return Promise.reject(new DOMException('The mouse lock is turned off in the tests', 'NotAllowedError'));
+    };
+  });
+});
 
 const host = (page) => page.locator('[data-ascent-host]');
 const game = (page) => page.locator('[data-ascent]');
@@ -45,7 +59,7 @@ test('Play loads the game; the canvas runs with no console errors', async ({ pag
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
   expect(scripts.length, 'the game chunk was requested on Play').toBeGreaterThan(before);
-  await expect(page.locator('[data-stat="level"]')).toHaveText('test climb (Blender)');
+  await expect(page.locator('[data-stat="level"]')).toHaveText('the climb (Blender)');
   await expect(page.locator('[data-stat="agent"]')).toHaveText('robot (Blender)');
 
   const canvas = page.getByRole('img', { name: 'R7: Ascent, a climbing game' });
@@ -82,11 +96,17 @@ test('the keyboard moves, jumps and pauses', async ({ page }) => {
   await boot(page);
   await expect.poll(() => page.locator('[data-stat="grounded"]').innerText()).toBe('yes');
   await expect.poll(() => page.locator('[data-stat="animation"]').innerText()).toBe('idle');
-  const [x0, , z0] = await position(page);
-
-  // W runs away from the camera (towards -Z at the start), and the robot runs.
-  await page.keyboard.down('KeyW');
+  // D runs right (towards +X at the start, along the open floor), and the robot runs.
+  const [xs] = await position(page);
+  await page.keyboard.down('KeyD');
   await expect.poll(() => page.locator('[data-stat="animation"]').innerText(), MOUNTED).toBe('run');
+  await expect.poll(async () => (await position(page))[0], MOUNTED).toBeGreaterThan(xs + 1);
+  await page.keyboard.up('KeyD');
+  await expect.poll(() => page.locator('[data-stat="animation"]').innerText(), MOUNTED).toBe('idle');
+
+  // W runs away from the camera (towards -Z at the start), straight.
+  const [x0, , z0] = await position(page);
+  await page.keyboard.down('KeyW');
   await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(z0 - 1);
   await page.keyboard.up('KeyW');
   const [x1] = await position(page);
@@ -114,7 +134,7 @@ test('the keyboard moves, jumps and pauses', async ({ page }) => {
   expect(await stat(page, 'jumps')).toBe(1);
 });
 
-test('the level and the robot from Blender load only on Play; ?level=code plays the boxes in code without the level', async ({
+test("the climb's first zones and the robot load only on Play; ?level=code plays the boxes without them", async ({
   page,
   baseURL,
 }) => {
@@ -125,8 +145,10 @@ test('the level and the robot from Blender load only on Play; ?level=code plays 
   expect(files, 'nothing heavy before Play').toEqual([]);
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
-  expect(files).toHaveLength(2);
-  expect(files.some((u) => /\/_astro\/test-climb\.[\w-]+\.glb$/.test(u))).toBe(true);
+  // The first two zones and the robot; the other zones wait until the agent nears them.
+  expect(files).toHaveLength(3);
+  expect(files.some((u) => /\/_astro\/zone-1\.[\w-]+\.glb$/.test(u))).toBe(true);
+  expect(files.some((u) => /\/_astro\/zone-2\.[\w-]+\.glb$/.test(u))).toBe(true);
   expect(files.some((u) => /\/_astro\/agent\.[\w-]+\.glb$/.test(u))).toBe(true);
 
   await page.goto(`${FIXTURE}?lock=0&fullscreen=0&level=code`, { waitUntil: 'networkidle' });
@@ -135,9 +157,9 @@ test('the level and the robot from Blender load only on Play; ?level=code plays 
   await expect(page.locator('[data-stat="level"]')).toHaveText('grey boxes (code)');
   await expect(page.locator('[data-stat="agent"]')).toHaveText('robot (Blender)');
   expect(
-    files.filter((u) => u.includes('test-climb')),
-    'the level is not fetched',
-  ).toHaveLength(1);
+    files.filter((u) => u.includes('/zone-')),
+    'the climb is not fetched again',
+  ).toHaveLength(2);
   await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
   expect(problems).toEqual([]);
 });
@@ -149,7 +171,7 @@ test('a level and a robot that fail to load fall back to the boxes and the capsu
   await page.goto(`${FIXTURE}?lock=0&fullscreen=0`, { waitUntil: 'networkidle' });
   await play(page).click();
   await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
-  await expect(page.locator('[data-stat="level"]')).toContainText('the test climb did not load');
+  await expect(page.locator('[data-stat="level"]')).toContainText('the climb did not load');
   await expect(page.locator('[data-stat="agent"]')).toContainText('capsule (the robot did not load');
   await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(0.2);
 });
@@ -252,13 +274,15 @@ test('the HUD counts the time; the pause menu turns on assist mode and keeps the
 test('a climb in progress is saved, and offered back as Continue', async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
+  await expect.poll(() => page.locator('[data-stat="grounded"]').innerText(), MOUNTED).toBe('yes');
+  const [, , z0] = await position(page);
   await page.keyboard.down('KeyW');
-  await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(8);
+  await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(z0 - 1);
   await page.keyboard.up('KeyW');
   await expect.poll(() => page.locator('[data-stat="grounded"]').innerText()).toBe('yes');
   await host(page).press('Escape');
   const saved = JSON.parse(await page.evaluate(() => localStorage.getItem('r7-ascent-save')));
-  expect(saved).toMatchObject({ v: 1, level: 'test-climb' });
+  expect(saved).toMatchObject({ v: 1, level: 'climb-1' });
 
   await page.goto(`${FIXTURE}?lock=0&fullscreen=0&start=0`, { waitUntil: 'networkidle' });
   await play(page).click();
@@ -308,5 +332,92 @@ test('touch: a stick on the left moves, Jump jumps, Pause pauses', async ({ page
   await page.getByRole('button', { name: 'Pause' }).dispatchEvent('pointerdown', { pointerType: 'touch' });
   await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
   await expect(page.locator('.ascent-prompt')).toHaveText('Paused');
+  expect(problems).toEqual([]);
+});
+
+test('touching the ring finishes the climb: the finish screen, and Climb again', async ({ page, baseURL }) => {
+  test.setTimeout(120_000);
+  const problems = watchPage(page, baseURL);
+  // A saved climb standing under the ring's near rim on the last platform: build_climb.py hangs the ring out from the
+  // platform, away from the middle of the zone, its near rim 2.2 m over the platform's top.
+  const climb = JSON.parse(readFileSync(new URL('../src/game/ascent/assets/climb.json', import.meta.url), 'utf8'));
+  const { x, y, z } = climb.goal;
+  const out = Math.hypot(x, z);
+  const [ox, oz] = [x / out, z / out];
+  const [radius, tilt] = [5, 0.42];
+  const rim = {
+    x: x - ox * radius * Math.cos(tilt),
+    y: y - radius * Math.sin(tilt),
+    z: z - oz * radius * Math.cos(tilt),
+  };
+  const save = {
+    v: 1,
+    level: 'climb-1',
+    pos: { x: rim.x, y: rim.y - 2.2, z: rim.z },
+    yaw: Math.atan2(-ox, -oz),
+    time: 900,
+    best: rim.y - 2.2,
+    falls: 4,
+    jumps: 400,
+    assist: false,
+    assisted: false,
+    checkpoint: null,
+    savedAt: Date.now(),
+  };
+  await page.addInitScript((value) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('r7-ascent-save', value);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+  await page.goto(`${FIXTURE}?lock=0&fullscreen=0&start=0`, { waitUntil: 'networkidle' });
+  await play(page).click();
+  await page.getByRole('button', { name: /^Continue/ }).click(MOUNTED);
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(page.locator('[data-stat="zones"]')).toHaveText('5 of 5', MOUNTED);
+  await expect.poll(() => page.locator('[data-stat="grounded"]').innerText(), MOUNTED).toBe('yes');
+
+  // A full jump (Space held: a tap is a short hop).
+  await page.keyboard.down('Space');
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'finished', MOUNTED);
+  await page.keyboard.up('Space');
+  await expect(page.locator('.ascent-title')).toHaveText('You reached orbit');
+  await expect(page.locator('.ascent-finish-stats')).toContainText('15:0');
+  const again = page.getByRole('button', { name: 'Climb again' });
+  await expect(again).toBeFocused();
+  expect(await page.evaluate(() => localStorage.getItem('r7-ascent-save'))).toBeNull();
+
+  await again.click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing');
+  await expect.poll(async () => (await position(page))[1], MOUNTED).toBeLessThan(1);
+  expect(problems).toEqual([]);
+});
+
+test('the public page /ascent/: the game in full screen on Play, the credits with the name from Site settings', async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(90_000);
+  const problems = watchPage(page, baseURL);
+  const site = JSON.parse(readFileSync(new URL('../src/data/site.json', import.meta.url), 'utf8'));
+  const glbs = [];
+  page.on('request', (r) => r.url().endsWith('.glb') && glbs.push(r.url()));
+  await page.goto('/ascent/', { waitUntil: 'networkidle' });
+  await expect(page.locator('h1')).toHaveCount(1);
+  // The credits (the page's last Text block) print the author's name through {author.name}.
+  await expect(page.locator('#ascent-howto')).toContainText(site.author.name);
+  await expect(page.locator('#ascent-howto')).not.toContainText('{author.name}');
+  expect(glbs, 'nothing heavy before Play').toEqual([]);
+
+  await play(page).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
+  await expect(game(page)).toHaveAttribute('data-ascent-fullscreen', 'true');
+  expect(glbs.filter((u) => u.includes('/zone-'))).toHaveLength(2);
+  await page.evaluate(() => document.exitFullscreen());
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
+  await expect(page.getByRole('button', { name: 'Leave' })).toBeVisible();
+  await page.getByRole('button', { name: 'Leave' }).click();
+  await expect(game(page)).toHaveCount(0);
+  await expect(play(page)).toBeFocused();
   expect(problems).toEqual([]);
 });

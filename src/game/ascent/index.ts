@@ -23,6 +23,7 @@
 
 import { loadAgentModel, type AgentModel } from './agent';
 import { OrbitCamera } from './camera';
+import { CLIMB_SAVE_NAME, loadClimb, type Climb } from './climb';
 import { FixedStepClock } from './clock';
 import { readTokenColors } from './colors';
 import { ASCENT_CONFIG, type AscentConfig } from './config';
@@ -44,11 +45,13 @@ import {
 import { AscentSim } from './sim';
 import { ASCENT_TEXT } from './text';
 import { createTouchControls } from './touch';
+import { createAudio, type AudioEngine } from './audio';
+import { SoundTracker, ambienceMix } from './sound-events';
 import agentUrl from './assets/agent.glb?url';
 import testClimbUrl from './assets/test-climb.glb?url';
 
-export { ASCENT_TEXT };
-export type { AgentModel, LevelModel };
+export { ASCENT_TEXT, CLIMB_SAVE_NAME, loadClimb };
+export type { AgentModel, Climb, LevelModel };
 
 /** The test climb built in Blender (tools/ascent/build_test_climb.py). Rejects when it cannot be loaded or used. */
 export const loadTestClimb = (): Promise<LevelModel> => loadLevelModel(testClimbUrl);
@@ -56,7 +59,7 @@ export const loadTestClimb = (): Promise<LevelModel> => loadLevelModel(testClimb
 export const loadAgent = (): Promise<AgentModel> => loadAgentModel(agentUrl);
 export { withConfig } from './config';
 
-export type AscentState = 'ready' | 'playing' | 'unsupported';
+export type AscentState = 'ready' | 'playing' | 'finished' | 'unsupported';
 
 export interface AscentStats {
   /** Frames per second, smoothed. */
@@ -82,6 +85,10 @@ export interface AscentStats {
   time: number;
   assist: boolean;
   checkpoint: number | null;
+  /** The ring was touched. */
+  finished: boolean;
+  /** Zones of the climb loaded so far (0 for a level that is not the climb). */
+  zones: number;
   cameraYaw: number;
   cameraPitch: number;
   cameraDistance: number;
@@ -90,6 +97,8 @@ export interface AscentStats {
 
 export interface AscentOptions {
   config?: AscentConfig;
+  /** The full climb (loadClimb): its first zones; the rest load as the agent nears them. Wins over `model` and `level`. */
+  climb?: Climb | null;
   /** A level made in Blender (loadTestClimb): its level and its meshes. Wins over `level`. */
   model?: LevelModel | null;
   level?: Level;
@@ -107,6 +116,8 @@ export interface AscentOptions {
   touch?: boolean;
   /** The menu's Leave: the host takes the game away (without it, the menu has no Leave). */
   onLeave?: () => void;
+  /** Lines for the finish screen's credits (the host's words; without them, no credits). */
+  credits?: readonly string[];
   /** Called after every frame (the prototype page's debug readout and its tests). */
   onStats?: (stats: AscentStats) => void;
 }
@@ -124,6 +135,8 @@ export interface AscentHandle {
 /** What mountAscent builds on; a test can replace the view (no WebGL in Node). */
 export interface AscentDeps {
   createView: (canvas: HTMLCanvasElement, options: ViewOptions) => View | null;
+  /** The sound (audio.ts); a test can leave it out. */
+  createAudio?: (win: Window) => AudioEngine | null;
 }
 
 /** Save the climb this often while playing (and on every pause). */
@@ -134,10 +147,13 @@ const TOUCH_LOOK = 1.8;
 export function mountAscent(
   container: HTMLElement,
   options: AscentOptions = {},
-  deps: AscentDeps = { createView },
+  deps: AscentDeps = { createView, createAudio },
 ): AscentHandle {
   const cfg = options.config ?? ASCENT_CONFIG;
-  const model = options.model ?? null;
+  const climb = options.climb ?? null;
+  const model: LevelModel | null = climb
+    ? { level: climb.level, parts: [...climb.parts], source: 'the climb' }
+    : (options.model ?? null);
   const level = model?.level ?? options.level ?? PROTOTYPE_LEVEL;
   const doc = container.ownerDocument;
   const win = doc.defaultView;
@@ -178,6 +194,11 @@ export function mountAscent(
     const noop = () => {};
     return { start: noop, pause: noop, resume: noop, restart: noop, destroy: () => root.remove() };
   }
+
+  // The sound: made now (after the Play click, so the browser lets it play), quiet while paused, closed on destroy.
+  const audio = (deps.createAudio ?? createAudio)(win);
+  const sounds = new SoundTracker();
+  audio?.setVolume(settings.volume, settings.muted);
 
   // ---- the HUD ----------------------------------------------------------------------------------------------------------
   // The altitude, best, falls and zone (top left), the time (top right), the altimeter (left edge), the message (middle), the
@@ -253,6 +274,22 @@ export function mountAscent(
   const speedOut = el('output', 'ascent-range-value');
   speedOut.htmlFor.add(speed.id);
   speedField.append(speedLabel, speed, speedOut);
+  const volumeField = el('div', 'field');
+  const volumeLabel = el('label', undefined, ASCENT_TEXT.volume);
+  volumeLabel.htmlFor = `${uid}-volume`;
+  const volume = el('input', 'ascent-range');
+  volume.type = 'range';
+  volume.id = `${uid}-volume`;
+  volume.min = '0';
+  volume.max = '1';
+  volume.step = '0.05';
+  const volumeOut = el('output', 'ascent-range-value');
+  volumeOut.htmlFor.add(volume.id);
+  volumeField.append(volumeLabel, volume, volumeOut);
+  const muteLabel = el('label', 'ascent-check');
+  const mute = el('input');
+  mute.type = 'checkbox';
+  muteLabel.append(mute, ` ${ASCENT_TEXT.mute}`);
   const invertLabel = el('label', 'ascent-check');
   const invert = el('input');
   invert.type = 'checkbox';
@@ -277,8 +314,32 @@ export function mountAscent(
   });
   motionField.append(motionLabel, motionSeg);
   const backButton = button(ASCENT_TEXT.back);
-  panel.append(speedField, invertLabel, motionField, backButton);
-  message.append(title, prompt, menu, assistNote, panel);
+  panel.append(speedField, invertLabel, motionField, volumeField, muteLabel, backButton);
+  // The finish: the time, the falls, whether assist mode was used, the host's credits.
+  const finishBox = el('div', 'ascent-finish');
+  finishBox.hidden = true;
+  const finishStats = el('dl', 'ascent-finish-stats');
+  const stat = (label: string) => {
+    const row = el('div');
+    const value = el('dd');
+    row.append(el('dt', undefined, label), value);
+    finishStats.append(row);
+    return value;
+  };
+  const finishTime = stat(ASCENT_TEXT.time);
+  const finishFalls = stat(ASCENT_TEXT.falls);
+  const finishJumps = stat(ASCENT_TEXT.jumps);
+  const finishAssist = el('p', 'ascent-note', ASCENT_TEXT.finishAssisted);
+  finishBox.append(finishStats, finishAssist);
+  if (options.credits?.length) {
+    const credits = el('div', 'ascent-credits');
+    credits.append(el('p', 'ascent-field-label', ASCENT_TEXT.credits));
+    for (const line of options.credits) credits.append(el('p', undefined, line));
+    finishBox.append(credits);
+  }
+  const againButton = button(ASCENT_TEXT.climbAgain, 'btn solid lg');
+  menu.prepend(againButton);
+  message.append(title, prompt, finishBox, menu, assistNote, panel);
 
   const hint = el('p', 'ascent-hint', ASCENT_TEXT.hint);
   // Playing without the pointer lock (refused, or let go without pausing): say how to get it, rather than leave the mouse
@@ -300,6 +361,10 @@ export function mountAscent(
     speed.value = String(settings.sensitivity);
     speedOut.textContent = `${settings.sensitivity.toFixed(1)}×`;
     invert.checked = settings.invertY;
+    volume.value = String(settings.volume);
+    volumeOut.textContent = `${Math.round(settings.volume * 100)}%`;
+    mute.checked = settings.muted;
+    audio?.setVolume(settings.volume, settings.muted);
     for (const b of motionButtons) {
       const on = b.dataset.motion === settings.motion;
       b.classList.toggle('on', on);
@@ -316,7 +381,7 @@ export function mountAscent(
   // ---- the sim, the camera, the clock -----------------------------------------------------------------------------------
   const sim = new AscentSim(level, cfg);
   const rig = new OrbitCamera(level.spawnYaw, cfg);
-  rig.snap(sim.pos, level.boxes);
+  rig.snap(sim.pos, sim.boxes);
   const clock = new FixedStepClock(cfg);
   let state: AscentState = 'ready';
   let paused = false;
@@ -383,11 +448,13 @@ export function mountAscent(
   const drawMenu = () => {
     const ready = state === 'ready';
     const isPaused = state === 'playing' && paused;
+    const finished = state === 'finished';
     continueButton.hidden = !(ready && saved);
     newClimbButton.hidden = !(ready && saved);
     for (const b of [resumeButton, restartButton, assistButton, settingsButton]) b.hidden = !isPaused;
-    leaveButton.hidden = !(isPaused && options.onLeave);
-    menu.hidden = !(ready ? saved : isPaused) || !panel.hidden;
+    againButton.hidden = !finished;
+    leaveButton.hidden = !((isPaused || finished) && options.onLeave);
+    menu.hidden = !(ready ? saved : isPaused || finished) || !panel.hidden;
     assistNote.hidden = !isPaused || menu.hidden;
     assistButton.setAttribute('aria-pressed', String(sim.assist));
     restartButton.textContent = confirmRestart ? ASCENT_TEXT.restartConfirm : ASCENT_TEXT.restart;
@@ -430,8 +497,11 @@ export function mountAscent(
     root.dataset.ascentFullscreen = String(isFull);
     message.hidden = state === 'playing' && !paused;
     title.hidden = state === 'playing';
+    title.textContent = state === 'finished' ? ASCENT_TEXT.finishTitle : ASCENT_TEXT.title;
+    prompt.hidden = state === 'finished';
+    finishBox.hidden = state !== 'finished';
     prompt.textContent =
-      state !== 'playing'
+      state === 'ready'
         ? touch
           ? ASCENT_TEXT.playTouch
           : ASCENT_TEXT.play
@@ -458,15 +528,19 @@ export function mountAscent(
       const move = moveVector(input.held, rig.yaw, touchControls.stick);
       sim.setMove(move.x, move.z);
       for (let i = 0; i < tick.steps; i++) sim.step();
+      nearZones();
       if (sim.teleports !== seenTeleports) {
         seenTeleports = sim.teleports;
         const toBeacon = sim.assist && sim.checkpoint !== null;
         if (!toBeacon) rig.yaw = level.spawnYaw;
-        rig.snap(sim.pos, level.boxes);
+        rig.snap(sim.pos, sim.boxes);
         live.textContent = toBeacon ? ASCENT_TEXT.fellToBeacon : ASCENT_TEXT.fell;
       }
-      rig.update(sim.lerpPos(tick.alpha), tick.delta, level.boxes);
+      rig.update(sim.lerpPos(tick.alpha), tick.delta, sim.boxes);
       if (sim.time - savedAt >= SAVE_EVERY) save();
+      if (sim.finished) finish();
+    } else if (state === 'finished') {
+      rig.update(sim.lerpPos(tick.alpha), tick.delta, sim.boxes);
     }
     lastSteps = tick.steps;
     lastAlpha = tick.alpha;
@@ -476,6 +550,29 @@ export function mountAscent(
     }
     lastFrame = now;
     view.render(sim, tick.alpha, rig, now / 1000);
+    if (audio && (state === 'playing' || state === 'finished')) {
+      const crumbles = sim.crumbles;
+      for (const e of sounds.update(
+        {
+          grounded: sim.grounded,
+          speed: Math.hypot(sim.vel.x, sim.vel.z),
+          vy: sim.vel.y,
+          jumps: sim.jumps,
+          landings: sim.landings,
+          teleports: sim.teleports,
+          checkpoint: sim.checkpoint,
+          lifted: sim.lifted,
+          shaking: crumbles.filter((c) => c.touched !== null).length,
+          broken: crumbles.filter((c) => c.broke !== null).length,
+          finished: sim.finished,
+        },
+        tick.delta,
+      )) {
+        audio.play(e);
+      }
+      audio.setMix(ambienceMix(sim.pos.y, zones));
+      audio.tick();
+    }
     updateHud();
     if (options.onStats) {
       options.onStats({
@@ -499,6 +596,8 @@ export function mountAscent(
         time: sim.time,
         assist: sim.assist,
         checkpoint: sim.checkpoint,
+        finished: sim.finished,
+        zones: climb?.parts.length ?? 0,
         cameraYaw: rig.yaw,
         cameraPitch: rig.pitch,
         cameraDistance: rig.distance,
@@ -518,6 +617,8 @@ export function mountAscent(
     touchControls.release();
     sim.release();
     paused = true;
+    audio?.suspend();
+    sounds.reset();
     save();
     exitLock();
     if (raf) win.cancelAnimationFrame(raf);
@@ -530,6 +631,7 @@ export function mountAscent(
   const resume = () => {
     if (destroyed || !paused) return;
     paused = false;
+    audio?.resume();
     input.release();
     touchControls.release();
     sim.release();
@@ -542,14 +644,78 @@ export function mountAscent(
     schedule();
   };
 
+  // The climb's zones: loaded as the agent nears them (the one above the zone it is in), and added to the sim and the view.
+  // A zone that fails to load is tried again a few seconds later.
+  let loadingZones: Promise<void> | null = null;
+  let failedAt = Number.NEGATIVE_INFINITY;
+  const loadZones = (need: number): Promise<void> => {
+    if (!climb || climb.parts.length >= need) return Promise.resolve();
+    if (loadingZones) return loadingZones;
+    const first = climb.level.boxes.length;
+    loadingZones = climb
+      .loadTo(need)
+      .then((added) => {
+        if (destroyed) return;
+        let at = first;
+        for (const p of added) {
+          view.addPart(p, at);
+          at += p.part.boxes.length;
+        }
+        sim.setLevel(climb.level);
+      })
+      .catch(() => {
+        failedAt = sim.time;
+      })
+      .finally(() => {
+        loadingZones = null;
+      });
+    return loadingZones;
+  };
+  const nearZones = () => {
+    if (!climb || loadingZones || sim.time - failedAt < 5) return;
+    const need = Math.min(climb.manifest.zones.length, climb.zoneAt(sim.pos.y) + 1);
+    if (climb.parts.length < need) void loadZones(need);
+  };
+
+  /** The ring was touched: the climb is over. The save goes (it is done), the menu offers another climb. */
+  const finish = () => {
+    state = 'finished';
+    input.release();
+    touchControls.release();
+    sim.release();
+    clearSave(store);
+    exitLock();
+    finishTime.textContent = formatTime(sim.time);
+    finishFalls.textContent = String(sim.falls);
+    finishJumps.textContent = String(sim.jumps);
+    finishAssist.hidden = !sim.assisted;
+    live.textContent = `${ASCENT_TEXT.finishTitle}. ${ASCENT_TEXT.time} ${formatTime(sim.time)}.`;
+    updateHud();
+    againButton.focus({ preventScroll: true });
+  };
+
   const begin = (from: AscentSave | null) => {
+    // A climb saved high up needs its zones before the agent can stand there.
+    if (climb && from) {
+      const need = Math.min(climb.manifest.zones.length, climb.zoneAt(from.pos.y) + 1);
+      if (climb.parts.length < need) {
+        if (!touchControls.shown) grab();
+        prompt.textContent = ASCENT_TEXT.loading;
+        void loadZones(need).then(() => {
+          if (!destroyed && climb.parts.length >= need) begin(from);
+        });
+        return;
+      }
+    }
     if (from) sim.restore(from);
     seenTeleports = sim.teleports;
     rig.yaw = from ? from.yaw : level.spawnYaw;
-    rig.snap(sim.pos, level.boxes);
+    rig.snap(sim.pos, sim.boxes);
     savedAt = sim.time;
     saved = null;
     state = 'playing';
+    audio?.resume();
+    sounds.reset();
     clock.reset();
     if (!touchControls.shown) grab();
     else enterPlay(container, { lock: false, fullscreen: gesture.fullscreen });
@@ -559,7 +725,7 @@ export function mountAscent(
   };
 
   const start = () => {
-    if (destroyed) return;
+    if (destroyed || state === 'finished') return;
     if (state === 'playing') return resume();
     begin(saved);
   };
@@ -570,7 +736,7 @@ export function mountAscent(
     seenTeleports = sim.teleports;
     rig.yaw = level.spawnYaw;
     rig.pitch = cfg.camera.pitch.start;
-    rig.snap(sim.pos, level.boxes);
+    rig.snap(sim.pos, sim.boxes);
     savedAt = 0;
     confirmRestart = false;
     clearSave(store);
@@ -584,7 +750,7 @@ export function mountAscent(
   };
 
   const onJump = (down: boolean) => {
-    if (destroyed) return;
+    if (destroyed || state === 'finished') return;
     if (state !== 'playing') {
       if (down) start();
       return;
@@ -603,6 +769,7 @@ export function mountAscent(
     onPause: () => pause(),
     onPointerDown: (e) => {
       container.focus({ preventScroll: true });
+      if (state === 'finished') return; // the finish screen's buttons only
       if (e.pointerType === 'touch') {
         touchControls.show();
         if (state !== 'playing') start();
@@ -632,7 +799,10 @@ export function mountAscent(
   const onMenu = (event: Event) => {
     const b = (event.target as Element | null)?.closest('button');
     if (!b) return;
-    if (b === continueButton) begin(saved);
+    if (b === againButton) {
+      restart();
+      begin(null);
+    } else if (b === continueButton) begin(saved);
     else if (b === newClimbButton) {
       clearSave(store);
       saved = null;
@@ -658,6 +828,8 @@ export function mountAscent(
   };
   const onSpeed = () => setSettings({ sensitivity: Number(speed.value) });
   const onInvert = () => setSettings({ invertY: invert.checked });
+  const onVolume = () => setSettings({ volume: Number(volume.value), muted: false });
+  const onMute = () => setSettings({ muted: mute.checked });
 
   const resize = () => {
     const width = container.clientWidth;
@@ -719,6 +891,8 @@ export function mountAscent(
     [message, 'click', onMenu],
     [speed, 'input', onSpeed],
     [invert, 'change', onInvert],
+    [volume, 'input', onVolume],
+    [mute, 'change', onMute],
   ];
   if (portrait) listeners.push([portrait, 'change', onOrientation]);
   if (!observer) listeners.push([win, 'resize', resize]);
@@ -747,6 +921,7 @@ export function mountAscent(
       for (const [target, type, fn] of listeners) target.removeEventListener(type, fn);
       observer?.disconnect();
       view.dispose();
+      audio?.dispose();
       root.remove();
     },
   };

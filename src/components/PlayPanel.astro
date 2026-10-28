@@ -5,11 +5,11 @@
 // only a button that opens the game in a new tab. Without JavaScript the facade is hidden and a plain link takes its place.
 import Icon from './Icon.astro';
 import MediaPlaceholder from './MediaPlaceholder.astro';
-import { PLATFORM_LABEL, aspectRatio, type PlayFields } from '../lib/play';
+import { PLATFORM_LABEL, aspectRatio, playsOnSite, type PlayFields } from '../lib/play';
 import { SIZES, publicSrcset } from '../lib/media-srcset';
 
 interface Props extends PlayFields {
-  /** The play address (an https URL). */
+  /** The play address (an https URL, or a page of this site in link mode). */
   playUrl: string;
   /** The project's name, plain text: used in labels and the iframe title. */
   title: string;
@@ -21,80 +21,116 @@ interface Props extends PlayFields {
   showHeading?: boolean;
 }
 
-const { playUrl, title, poster, playMode = 'embed', playAspect, controls = [], playNote, platforms = [], id: idProp, showHeading = true } = Astro.props;
+const {
+  playUrl,
+  title,
+  poster,
+  playMode = 'embed',
+  playAspect,
+  controls = [],
+  playNote,
+  platforms = [],
+  id: idProp,
+  showHeading = true,
+} = Astro.props;
 const embed = playMode !== 'link';
+// A page of this site opens in the same tab: no new tab, no external icon.
+const onSite = playsOnSite(playUrl);
 const srcset = await publicSrcset(poster);
 // Ids are made from the title so two panels on one page (the fixture page) never share one.
-const id = idProp ? `play-${idProp}` : 'play-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const id = idProp
+  ? `play-${idProp}`
+  : 'play-' +
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
 ---
 
-<section class="block play-section" aria-labelledby={`${id}-h`} data-play data-play-url={playUrl} data-play-title={title}>
-  <h2 class:list={['section-title', !showHeading && 'visually-hidden']} id={`${id}-h`}>Play</h2>
+<section
+  class="block play-section"
+  aria-labelledby={`${id}-h`}
+  data-play
+  data-play-url={playUrl}
+  data-play-title={title}
+>
+  <h2 class:list={['section-title', !showHeading && 'visually-hidden']} id={`${id}-h`}>
+    Play
+  </h2>
 
-  {
-    embed ? (
-      <>
-        <div class="play-stage" style={`--play-aspect: ${aspectRatio(playAspect)}`}>
-          {poster ? <img class="play-poster" src={poster} srcset={srcset} sizes={srcset && SIZES.page} alt="" data-play-facade /> : <MediaPlaceholder />}
-          <button class="btn solid play-start" type="button" data-play-start data-play-facade>
-            <Icon name="play" />Play {title}
-          </button>
-        </div>
-        <div class="play-bar" data-play-bar>
-          <button class="btn" type="button" data-play-fullscreen hidden>
-            <span data-play-fullscreen-label>Fullscreen</span>
-          </button>
-          <a class="btn" href={playUrl} target="_blank" rel="noopener">
-            Open in a new tab<Icon name="external" />
-          </a>
-        </div>
-        <p class="play-hint" data-play-hint>
-          The game loads when you press Play, and keyboard focus moves into it. <kbd>Esc</kbd> leaves fullscreen and releases the mouse. <kbd>Tab</kbd> moves focus back to this page, or click anywhere outside the game.
-        </p>
-        <p class="play-status visually-hidden" role="status" data-play-status />
-        <p class="play-nojs">
-          This game runs in your browser and needs JavaScript to load here.{' '}
-          <a href={playUrl} rel="noopener">Open {title} on its own page<Icon name="external" small /></a>.
-        </p>
-      </>
-    ) : (
-      <div class="cluster play-bar">
-        <a class="btn solid" href={playUrl} target="_blank" rel="noopener">
-          <Icon name="play" />Play {title}<Icon name="external" />
+  {embed ? (
+    <>
+      <div class="play-stage" style={`--play-aspect: ${aspectRatio(playAspect)}`}>
+        {poster ? (
+          <img class="play-poster" src={poster} srcset={srcset} sizes={srcset && SIZES.page} alt="" data-play-facade />
+        ) : (
+          <MediaPlaceholder />
+        )}
+        <button class="btn solid play-start" type="button" data-play-start data-play-facade>
+          <Icon name="play" />
+          Play {title}
+        </button>
+      </div>
+      <div class="play-bar" data-play-bar>
+        <button class="btn" type="button" data-play-fullscreen hidden>
+          <span data-play-fullscreen-label>Fullscreen</span>
+        </button>
+        <a class="btn" href={playUrl} target="_blank" rel="noopener">
+          Open in a new tab
+          <Icon name="external" />
         </a>
       </div>
-    )
-  }
+      <p class="play-hint" data-play-hint>
+        The game loads when you press Play, and keyboard focus moves into it. <kbd>Esc</kbd> leaves fullscreen and
+        releases the mouse. <kbd>Tab</kbd> moves focus back to this page, or click anywhere outside the game.
+      </p>
+      <p class="play-status visually-hidden" role="status" data-play-status />
+      <p class="play-nojs">
+        This game runs in your browser and needs JavaScript to load here.{' '}
+        <a href={playUrl} rel="noopener">
+          Open {title} on its own page
+          <Icon name="external" small />
+        </a>
+        .
+      </p>
+    </>
+  ) : (
+    <div class="cluster play-bar">
+      <a class="btn solid" href={playUrl} target={onSite ? undefined : '_blank'} rel={onSite ? undefined : 'noopener'}>
+        <Icon name="play" />
+        Play {title}
+        {!onSite && <Icon name="external" />}
+      </a>
+    </div>
+  )}
 
   {playNote && <p class="play-note">{playNote}</p>}
-  {
-    platforms.length > 0 && (
-      <p class="play-platforms" aria-label="Works on">
-        {platforms.map((p) => (
-          <span class="chip mono">{PLATFORM_LABEL[p]}</span>
+  {platforms.length > 0 && (
+    <p class="play-platforms" aria-label="Works on">
+      {platforms.map((p) => (
+        <span class="chip mono">{PLATFORM_LABEL[p]}</span>
+      ))}
+    </p>
+  )}
+  {controls.length > 0 && (
+    <div class="play-controls">
+      <h3 class="eyebrow" id={`${id}-controls-h`}>
+        Controls
+      </h3>
+      <dl aria-labelledby={`${id}-controls-h`}>
+        {controls.map((c) => (
+          <div>
+            <dt>
+              <kbd>{c.key}</kbd>
+            </dt>
+            <dd>{c.action}</dd>
+          </div>
         ))}
-      </p>
-    )
-  }
-  {
-    controls.length > 0 && (
-      <div class="play-controls">
-        <h3 class="eyebrow" id={`${id}-controls-h`}>Controls</h3>
-        <dl aria-labelledby={`${id}-controls-h`}>
-          {controls.map((c) => (
-            <div>
-              <dt><kbd>{c.key}</kbd></dt>
-              <dd>{c.action}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    )
-  }
+      </dl>
+    </div>
+  )}
 </section>
 
-{embed && (
-  <script>
-    import '../scripts/play-facade.js';
-  </script>
-)}
+{embed && <script>
+  import '../scripts/play-facade.js';
+</script>}

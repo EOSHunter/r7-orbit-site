@@ -7,6 +7,7 @@ import { APP_TYPES, APP_TYPE_IDS, appTypeOf } from './app-types';
 import { APPS_PATH, actionOf, appsPageLd, isApp, playLink, selectApps, sortApps, typeOf, typesPresent } from './apps';
 import { itemListLd } from './seo';
 import { collectSitemapEntries } from './sitemap';
+import { playsOnSite } from './play';
 
 const NOW = new Date('2026-10-05T12:00:00Z');
 const PLAY = 'https://play.example.test/';
@@ -45,7 +46,13 @@ describe('which projects are on the hub', () => {
 describe('types', () => {
   it('are defined once, game then app, each with a label, a plural, an icon, a button word and structured data', () => {
     expect(APP_TYPE_IDS).toEqual(['game', 'app']);
-    expect(APP_TYPES.game).toMatchObject({ label: 'Game', plural: 'Games', icon: 'play', action: 'Play', category: 'Game' });
+    expect(APP_TYPES.game).toMatchObject({
+      label: 'Game',
+      plural: 'Games',
+      icon: 'play',
+      action: 'Play',
+      category: 'Game',
+    });
     expect(APP_TYPES.app).toMatchObject({ label: 'App', plural: 'Apps', action: 'Open', category: 'WebApplication' });
     expect(APP_TYPES.game.ld).toEqual(['VideoGame', 'SoftwareApplication']);
     expect(APP_TYPES.app.ld).toEqual(['SoftwareApplication']);
@@ -144,6 +151,14 @@ describe('the primary link', () => {
   it('goes straight to the app, in a new tab, in link mode', () => {
     const a = project('vesper-drift', '2026-01-01', { playMode: 'link' });
     expect(playLink(a as never)).toEqual({ href: `${PLAY}vesper-drift/`, external: true });
+  });
+
+  it('goes to a game that is a page of this site in the same tab', () => {
+    const a = project('r7-ascent', '2026-01-01', { playMode: 'link', playUrl: '/ascent/' });
+    expect(playLink(a as never)).toEqual({ href: '/ascent/', external: false });
+    expect(playsOnSite('/ascent/')).toBe(true);
+    expect(playsOnSite('//elsewhere.example/')).toBe(false);
+    expect(playsOnSite('https://vesper.r7orbit.io/')).toBe(false);
   });
 });
 
@@ -295,7 +310,13 @@ describe('the `appType` field', () => {
     const { schema } = collections.projects as unknown as {
       schema: (ctx: { image: () => unknown }) => import('astro/zod').z.ZodType;
     };
-    const base = { title: 'An app', date: '2026-10-01', summary: 'One line.', status: 'shipped', playUrl: 'https://play.example.test/a/' };
+    const base = {
+      title: 'An app',
+      date: '2026-10-01',
+      summary: 'One line.',
+      status: 'shipped',
+      playUrl: 'https://play.example.test/a/',
+    };
     return schema({ image: () => z.string() }).safeParse({ ...base, ...extra });
   }
 

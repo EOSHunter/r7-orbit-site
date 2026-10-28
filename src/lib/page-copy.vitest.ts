@@ -8,6 +8,7 @@ import {
   pageSettingsOf,
   privacySlots,
   lostSlots,
+  ascentSlots,
   type PageSettings,
 } from './page-copy';
 import { sectionsSchema, type Section } from './sections';
@@ -60,7 +61,8 @@ describe('settings tokens', () => {
       /privacy\.md, block 3 \(Text\): there is no setting \{author\.mail\}\. .*\{site\.name\}/,
     );
     // There is no email and no feed to print.
-    for (const gone of ['{author.email}', '{links.rss}']) expect(() => fillTokens(gone, settings, 'x')).toThrow(/there is no setting/);
+    for (const gone of ['{author.email}', '{links.rss}'])
+      expect(() => fillTokens(gone, settings, 'x')).toThrow(/there is no setting/);
   });
 
   it('leaves braces that are not a token alone', () => {
@@ -140,7 +142,7 @@ describe('the page files', () => {
   });
 
   it('every page file reads through the schema and fills without an unknown token', () => {
-    for (const name of ['privacy', '404', 'search']) {
+    for (const name of ['privacy', '404', 'search', 'ascent']) {
       expect(() => fillPage(read(name), pageSettingsOf(site), `${name}.md`), name).not.toThrow();
     }
   });
@@ -155,10 +157,32 @@ describe('the waitlist condition', () => {
   });
 
   it('reads "on" from the settings: switched on AND with a site key', () => {
-    const waitlist = (enabled: boolean, turnstileSiteKey: string) => pageSettingsOf({ ...site, waitlist: { enabled, turnstileSiteKey } }).waitlistOn;
+    const waitlist = (enabled: boolean, turnstileSiteKey: string) =>
+      pageSettingsOf({ ...site, waitlist: { enabled, turnstileSiteKey } }).waitlistOn;
     expect(pageSettingsOf(site).waitlistOn).toBe(site.waitlist.enabled && site.waitlist.turnstileSiteKey !== '');
     expect(waitlist(true, '0x4AAAAAAABkMYinukE8nzY')).toBe(true);
     expect(waitlist(true, '')).toBe(false);
     expect(waitlist(false, '0x4AAAAAAABkMYinukE8nzY')).toBe(false);
+  });
+});
+
+describe('the game page (ascent)', () => {
+  const lead = (t: string) => ({ type: 'lead', text: t }) as Section;
+  it('puts the Lead above the game, the rest below it, and the last Text block as the credits', () => {
+    const credits = text(['Directed by *someone*.', 'Made with [three.js](https://threejs.org/).'].join('\n'));
+    const slots = ascentSlots([lead('Climb.'), text('How to play.'), credits]);
+    expect(textsOf({ sections: slots.lead } as never)).toEqual(['Climb.']);
+    expect(slots.body).toHaveLength(1);
+    expect(slots.creditLines).toEqual(['Directed by someone.', 'Made with three.js.']);
+    expect(ascentSlots([lead('Climb.')]).creditLines).toEqual([]);
+  });
+
+  it('prints the author name from the settings', () => {
+    const filled = fillPage(
+      page([text('Directed by {author.name}.')]),
+      { ...settings, authorName: 'A. Author' },
+      'x.md',
+    );
+    expect(textsOf(filled)).toEqual(['Directed by A. Author.']);
   });
 });

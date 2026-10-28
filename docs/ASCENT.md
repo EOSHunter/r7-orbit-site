@@ -5,11 +5,11 @@ The plan for a game on the site: a 3D climbing game in the style of *Only Up!*. 
 404 page's runner (`docs/RUNNER.md`): the same code layout, the same Blender-script pipeline, and a first prototype at an
 unlinked styleguide route before it has a public page.
 
-**Where it is:** phase 1, the feel prototype, is built at `/styleguide/ascent/` (noindex, unlinked, like the rest of the
-styleguide) and waits for the author to play it (below, "Phase 1: Feel prototype"). Phase 2 has started with the Blender
-pipeline: the page now plays a short test climb built by a Blender script, as the robot agent the author chose, also built in
-Blender and animated in code, with the HUD, the pause menu and its settings, save and resume, assist mode and touch controls
-(below, "Phase 2").
+**Where it is:** phases 1 and 2 are built, and phase 3's full climb plays at `/styleguide/ascent/` (noindex, unlinked, like
+the rest of the styleguide): five zones from the workshop floor to the brass ring, built by a Blender script, played as the
+robot agent the author chose, with the HUD, the pause menu and its settings, save and resume, assist mode and touch controls.
+The zones' renders wait for the author's approval (below, "Phase 3"). `?level=test` still plays phase 2's test climb and
+`?level=code` phase 1's boxes.
 
 ## The pitch
 
@@ -29,6 +29,26 @@ orbit suits the name.)
 | World | Workshop → Server stack → Cloud → Upper air → Orbit |
 
 ## How it looks
+
+**The climb is lit** (the author's new art style, 2026-10-27, after the first full climb: "lit shaded and colorful scenes
+with objects and less line work"). Each zone file says `style = lit` on its `ZONE_` empty, and the game draws its own
+materials (colour, roughness, metal, glow), flat shaded, lit by a sun and a sky light, with no edge lines: a workshop of
+wood, books, tool chests and floppies; navy server racks with status lights and glowing fan rings; pastel data blocks among
+clouds; blue solar panels and orange girders over the Earth; rock shards under the stars and the Moon, up to the brass ring.
+Each zone has a look in `climb.json` (`LOOKS` in `tools/ascent/build_climb.py`): the sky overhead, at the horizon and below,
+the sun's colour, strength and direction, the sky light, and how many stars show. The game blends them by height, 18 m
+either side of a zone's start (`render.lit` in `config.ts`): a sky dome shaded from below the horizon to overhead with a
+glow round the sun, fog in the horizon's colour, and the lights. Meshes named `SKY_` (the Earth, the Moon, the stars) are
+drawn first, in a scene of their own with a camera that sees 8 km and no fog; the agent is drawn last in a scene of its own,
+so its lights (which follow the camera) light it alone. A lit zone's still scenery is merged into one mesh per material, so a
+frame is about 50 draw calls. The game's 3D scenes have their own colours; the page round the game and the HUD keep the
+site's tokens and its one accent. `climb.vitest.ts` checks that no two faces of different materials share a plane anywhere in
+the climb (they flicker): a detail on a face stands 4 mm proud of it (`PROUD` in the script).
+
+The blob shadow is soft (dark in the middle, fading to its rim, 55% at most in the lit climb) and drawn only on the tops it
+lies on, never past their edges.
+
+The test climb (`?level=test`) and phase 1's level keep the first look, "blueprint noir", below.
 
 "Blueprint noir": matte obsidian blocks with thin ivory edge lines (the site's 1px hairlines, in 3D). Brass is used only for
 the goal ring, the assist-mode checkpoint beacons and the player's visor. Fog fades distant blocks into `--bg`, so depth
@@ -56,6 +76,9 @@ comes from tone, as the design system asks (`CLAUDE.md` design rule 5).
   from behind.
 
 ### HUD
+
+The altitude block, the time and the controls line sit on small dark panels (the page's background at 88%, a hairline, a
+small radius): the lit climb's skies run from obsidian to near white, and every line keeps its contrast over any of them.
 
 - Altitude, top left (`412 m`)
 - Time, top right (`14:32`)
@@ -96,9 +119,18 @@ The setting is computing gear, so it fits the site's subject without real brands
 - **Phone controls:** a virtual stick on the left, drag on the right half to look, a jump button. Portrait shows a "turn your
   phone sideways" prompt
 
+### Sound (built 2026-10-27, after the author's first full climb: "incredibly silent")
+
+Made in code with Web Audio (`audio.ts`): no audio files, nothing fetched. `sound-events.ts` (pure, unit-tested) reads the
+sim each frame and says what to play: a jump, a landing as loud as it was hard, footsteps (one each 0.85 m run, feet
+alternating), a fall back to the start or a beacon, a beacon touched, a panel creaking while it waits and cracking when it
+breaks, a fan's updraft catching the agent, and a rising chord at the finish. Under them, each zone has a bed of sound,
+mixed by height (12 m either side of a zone's start): the workshop's room tone, the server stack's fan drone and mains hum
+with an odd beep, the cloud's wind, the upper air's thinner wind over a rumble, and orbit's quiet two-note pad. Volume and
+mute are in Settings (`r7-ascent-settings`); the sound is quiet while paused and closed when the game is taken away.
+
 ### Later (not committed)
 
-- Sound, generated in code with Web Audio (no audio files)
 - Gamepad support
 - A speedrun split timer per zone
 - A shareable result line ("I reached 812 m in 14:32"), copied as text
@@ -120,7 +152,8 @@ in Node, apart from a read-only Three.js view.
 | `collision.ts` | box-only collision: axis-aligned boxes (later: rotated about the vertical axis only), the agent's box moved one axis at a time against them, what it stands on |
 | `sim.ts` | `AscentSim`: one fixed step of movement, jumping (coyote time, buffer), gravity, landing, falling and respawning, the altitude |
 | `level.ts` | the course as data: a list of boxes, a spawn point, the route and the goal. `PROTOTYPE_LEVEL` is phase 1's, laid out in code; `levelFromObjects` makes one from a Blender level's objects, with the rules below |
-| `gltf-level.ts` | a level made in Blender, read with `GLTFLoader`: its `Level`, its scenery meshes and its `GOAL` (`LevelModel`) |
+| `gltf-level.ts` | a level file made in Blender, read with `GLTFLoader`: its part of a level (`PartModel`: the `LevelPart`, its scenery, the scenery of each drifting or crumbling box apart, its `GOAL`); a whole level in one file is a `LevelModel` |
+| `climb.ts` | the full climb: `climb.json` (the zones, the ring) and the five zone files, loaded in order and joined (`loadClimb`); `zoneAt` says which zone a height is in |
 | `agent.ts` | the robot from `assets/agent.glb`: loaded and checked (`AgentModel`: its parts and materials), drawn lit in token colours with edge lines on its obsidian parts, posed each frame, and its light, which turns with the camera; the capsule when there is no model |
 | `agent-anim.ts` | the robot's animation as numbers: which animation the sim's state calls for (`chooseAnimation`: idle, run, jump, fall, land) and each frame's pose (`AgentAnimator`); pure, unit-tested |
 | `clock.ts` | the fixed-step clock (the runner's, 1/120 s, with an accumulator and interpolation) |
@@ -176,11 +209,13 @@ The climb is laid out in Blender. Game objects are marked by name or by custom p
 | … with custom property `route` = n | The n-th block of the climb (1, 2, 3 … with no gaps): the fairness test walks them in order |
 | … with custom property `ground` | The floor |
 | An empty named `SPAWN` | Where the climb starts; the agent faces the empty's +Y (turn it about Z to turn the agent) |
-| Custom property `beacon` | An assist-mode checkpoint |
-| Custom property `fan`, with `strength` | An updraft |
-| Custom property `mover`, with a path and `speed` | A drifting block |
-| Custom property `crumble`, with `delay` | A plate that breaks after you stand on it |
-| An object named `GOAL` | The orbit ring, turned about the vertical through its origin; touching it finishes the run (phase 3) |
+| An empty named `BEACON_<n>`, custom property `beacon` = n | An assist-mode checkpoint, where the agent's feet go; numbered in climbing order across the zones |
+| An empty named `ZONE_<n>`, with `zone`, `title`, `base`, `top` | The zone a file holds: its number, name and heights (the HUD's altimeter) |
+| A `COL_` box with `fan` = h and `strength` | An updraft h metres high over the box, pushing up at `strength` m/s² (the speed is capped: `config.fan`) |
+| A `COL_` box with `mover` = 1, `move_x`, `move_y`, `move_z` and `period` | A drifting block: to that offset (Blender's axes) and back, easing at each end, once every `period` seconds; it carries the agent standing on it |
+| A `COL_` box with `crumble` = s | A plate that breaks s seconds after the agent first stands on it, and comes back 4 s later (`config.crumble`) |
+| Meshes named `<name>` and `<name>__…` beside `COL_<name>` | The scenery of that box: it moves or falls with it |
+| An object named `GOAL`, with `ring_radius` and `ring_tube` | The orbit ring, turned about the vertical through its origin; touching it finishes the climb |
 | A material named `obsidian`, `obsidian-dark`, `brass` or `ivory` | The token tones the mesh is drawn in. Any other name stops the level from loading |
 
 **Collision is boxes only**, written for the game (no physics engine; one would add hundreds of kB). Boxes may later be
@@ -212,7 +247,7 @@ Rebuilding models needs Blender installed. Building the site does not.
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
 | Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, 171 kB gzipped; with the robot agent and its animation, 670 kB, **173 kB gzipped** (three.js is nearly all of it) |
 | The character `.glb` | < 150 kB. The robot is 115 kB, 28 kB gzipped (5,608 triangles; the normals make up much of it, for the smooth shading) |
-| Each zone `.glb` | < 500 kB, loaded as the player nears it. The test climb is 52 kB (11 kB gzipped), 1,892 triangles of scenery and ring (the ring is 1,152 of them) |
+| Each zone `.glb` | < 500 kB, loaded as the player nears it. The climb's zones are 228, 196, 219, 171 and 135 kB (about 1 MB in all; most of it the `COL_` boxes' and the nodes' JSON). The test climb is 52 kB (11 kB gzipped) |
 
 If the `.glb` files outgrow these, a build step with `gltfpack` (mesh compression) can shrink them. It is a dev dependency,
 so ask first.
@@ -316,6 +351,10 @@ monitor (0.5 m wide, 5.5 m long), a desk lamp's arm and shade at 12.6 m, and the
 `gltf-level.ts`; `gltf-level.vitest.ts` covers the file rules and walks the sim into the first book's side and onto it; and
 `tests/ascent.spec.js` checks that the `.glb` loads only on Play, `?level=code` and the fallback.
 
+**The finish screen** (2026-10-27, after the author's first climb: the text was too small in full screen). The HUD and the
+finish screen size their text by the stage's width (`cqw`), between token sizes; the finish is a solid panel over a darker
+scrim, with a large Climb again.
+
 **The rest of phase 2 (2026-10-27).** The author asked for it before phase 3, since the finish needs the timer and the public
 page is meant for phones too.
 
@@ -386,22 +425,73 @@ readout runs through idle, run and jump or fall, and the capsule when the files 
 
 ### Phase 3: The full climb
 
-- [ ] The five zones, scripted in Blender, each approved from renders
-- [ ] Fans, movers and crumbling plates
-- [ ] The orbit ring, the finish screen and the credits
-- [ ] Zones loaded as the player nears them
-- [ ] Tuning for a 15–20 minute first climb
+- [ ] The five zones, scripted in Blender, each approved from renders (built; the renders wait for the author's approval)
+- [x] Fans, movers and crumbling plates
+- [x] The orbit ring, the finish screen and the credits (the credits are the host's lines: the public page's)
+- [x] Zones loaded as the player nears them
+- [x] Tuning for a 15–20 minute first climb (by estimate: see below; the author's own climb is the real test)
 
 **Done when:** the author can climb from the workshop to orbit.
 
+**What was built (2026-10-27).** `tools/ascent/build_climb.py` builds the whole climb and exports one file per zone,
+`src/game/ascent/assets/zone-1.glb` to `zone-5.glb`, and `climb.json` beside them (each zone's name and heights, and where the
+ring is):
+
+```
+"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" -b --factory-startup -P tools/ascent/build_climb.py
+"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" -b --factory-startup -P tools/ascent/build_climb.py -- --preview
+```
+
+The second also renders `tools/ascent/out/climb-overview.png` and, per zone, `zone-<n>.png` (the zone from outside, and a
+climber's view; zone 5's shows the ring). They wait for the author's approval.
+
+The route is one walk upward, laid out by a seeded generator: each step is placed from the last by a rise and a gap drawn
+from the zone's ranges, inside the jump's reach, turning round the zone's middle, and moved until nothing is in its way or in
+the room above it. The same Blender gives the same files. 451 steps:
+
+| Zone | From | Steps | Scenery | New |
+|---|---|---|---|---|
+| 1 Workshop | 0 m | 118 | giant books, toolboxes, chips and floppies round a stack of hardware (a PC case, manuals, a tool chest, a monitor) | static jumps; beams |
+| 2 Server stack | 71 m | 75 | rack units, heat sinks and cable trays round a column of racks | 7 fans, each lifting about 5 m to a block beside it |
+| 3 Cloud | 151 m | 109 | soft data blocks in open air, more far out for depth | 27 drifting blocks (3 to 5.5 m, every 4.5 to 6.5 s) |
+| 4 Upper air | 229 m | 93 | solar panels, girders, an antenna mast with a satellite | 31 crumbling panels (0.7 s), thin beams |
+| 5 Orbit | 301 m | 56 | shards | drifting blocks, crumbling panels and beams together (no fans); the ring at 351 m |
+
+`level.vitest.ts`'s rules, for the whole climb (`climb.vitest.ts`, the files read through the game's own loader): every step
+within reach (from a drifting block's far end; up a fan's updraft), each step higher than the last, nothing overlapping
+wherever the drifting blocks are, each zone's new kind first in that zone, and a full jump from the last platform under the
+ring's lowest point touching it. 20 beacons for assist mode, one at each zone's start and every 24 steps.
+
+In the game (`sim.ts`): an updraft adds its push while the agent is over a fan, up to 9 m/s; a drifting block is placed by
+the sim's time (so a restart or a saved climb puts it back exactly), carries the agent standing on it, and pushes it aside
+rather than through it; a crumbling panel shakes while it waits to break, drops away, and is back 4 s later (not while the
+agent is where it would be); touching the ring finishes the climb and stops the clock. The view (`render.ts`) draws each
+zone's still scenery as one mesh and one set of lines, each moving box's apart, and fan updrafts as ivory streaks rising
+through them. Zones 1 and 2 load on Play; the next one loads when the agent enters the one below it (a failed load is tried
+again 5 s later), and a saved climb high up waits for its zones. The finish screen gives the time, the falls and the jumps,
+says if assist mode was used, offers Climb again, and lists the host's credits; the save is cleared.
+
+**Tuning, by estimate.** 451 steps, each taking at least a jump's time in the air plus 1.25 s to line it up, plus half a
+drift's period of waiting on each drifting block: about 16 minutes without a fall (zones 3.8, 2.4, 3.7, 3.0 and 1.8 minutes).
+A first climb with a few hardcore falls lands around 17 to 22 minutes. The numbers that set it are in `build_climb.py`
+(`ZONES`: each zone's rise, gap and block size).
+
 ### Phase 4: Polish and the public page
 
-- [ ] Look pass (fog, edge lines). The agent's animations are built (phase 2, "The robot agent")
-- [ ] The public page and its `tests/routes.js` entry (smoke, axe, budgets and Lighthouse cover the page before Play)
-- [ ] The `/apps/` entry, through the add-content skill
-- [ ] Unit tests for the save format
-- [ ] `CLAUDE.md` and the README updated (paths, commands)
+- [ ] Look pass (fog, edge lines): waits for the author's own climb. The agent's animations are built (phase 2, "The robot agent")
+- [x] The public page and its `tests/routes.js` entry (smoke, axe, budgets and Lighthouse cover the page before Play)
+- [x] The `/apps/` entry, through the add-content skill: `src/content/projects/r7-ascent.md`, written by Kepler, `draft: true` until the author publishes it
+- [x] Unit tests for the save format (`settings.vitest.ts`, phase 2)
+- [x] `CLAUDE.md` updated (paths); the README has no game section to change
 - [ ] Page copy, reviewed by the author
+
+**What was built (2026-10-27).** `/ascent/` (`src/pages/ascent/index.astro`): an ordinary page of the site with the game's
+stage and a Play button; its words are `src/content/pages/ascent.md`, a page with a fixed frame like Privacy (edited in /admin,
+Pages): a Lead above the game, how to play and the zones below it, and a last Text block as the credits, shown again on the
+finish screen (`{author.name}` prints the author's name from Site settings). Play goes full screen and locks the mouse in
+the click, then loads the game, the climb's first zones and the robot. Not in the main nav. The project page
+`src/content/projects/r7-ascent.md` (by Kepler, a draft) lists it on `/apps/` once published: a project's `playUrl` may now be
+a page of this site, which opens in the same tab (`playMode: link`; `docs/CONTENT_MODEL.md`).
 
 **Done when:** the site's definition of done holds (`CLAUDE.md`), including 320–1480 px and no console errors.
 
@@ -409,5 +499,5 @@ readout runs through idle, run and jump or fall, and the capsule when the files 
 
 | Question | Recommendation |
 |---|---|
-| The public URL | `/ascent/`, a page of this site. A playable project's `playUrl` today must be a full `https://` address and was made for games on their own host (`docs/CONTENT_MODEL.md`, "Playable projects"), so how an on-site game joins `/apps/` is decided with the URL |
-| Link in the main nav, or on the hub? | Not in the nav at first. List it on `/apps/` and link it from a project post; add it to the nav when the author is happy with it |
+| The public URL | Decided (2026-10-27): `/ascent/`. A project's `playUrl` may be a page of this site, so the game joins `/apps/` through its project page |
+| Link in the main nav, or on the hub? | Decided (2026-10-27): not in the nav; on `/apps/` (once the project page is published) and linked from it. The nav is the author's to change in Site settings |

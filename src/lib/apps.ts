@@ -3,7 +3,7 @@
 // Its type (a game, an app) is the `appType` field, defined in src/lib/app-types.ts.
 import { APP_TYPES, APP_TYPE_IDS, appTypeOf, type AppType } from './app-types';
 import { filterPublished, postUrl, type Post, type PublishOptions } from './content';
-import { isPlayable, type PlayFields } from './play';
+import { isPlayable, playsOnSite, type PlayFields } from './play';
 import { breadcrumbLd, collectionPageLd, itemListLd, type JsonLd, type SiteInfo } from './seo';
 
 export const APPS_PATH = '/apps/';
@@ -52,9 +52,14 @@ export interface PlayLink {
   external: boolean;
 }
 
-/** Embedded apps run on their project page (`#play` is the Play section); link-mode apps go straight to their address. */
+/**
+ * Embedded apps run on their project page (`#play` is the Play section); link-mode apps go straight to their address, in a
+ * new tab, or in the same tab when it is a page of this site (`/ascent/`).
+ */
 export function playLink(app: Pick<Post, 'collection' | 'id'> & { data: PlayFields }): PlayLink {
-  if (app.data.playMode === 'link' && app.data.playUrl) return { href: app.data.playUrl, external: true };
+  if (app.data.playMode === 'link' && app.data.playUrl) {
+    return { href: app.data.playUrl, external: !playsOnSite(app.data.playUrl) };
+  }
   return { href: `${postUrl(app)}#play`, external: false };
 }
 
@@ -63,7 +68,11 @@ export const actionOf = (type: AppType): string => APP_TYPES[type].action;
 
 /** The structured data of the hub: the page, the apps in the order shown (an ItemList, only when there are any) and the breadcrumb.
  *  `description` is the page's (src/content/pages/apps.md). */
-export function appsPageLd(site: SiteInfo, apps: Pick<Post, 'collection' | 'id' | 'data'>[], description: string): JsonLd[] {
+export function appsPageLd(
+  site: SiteInfo,
+  apps: Pick<Post, 'collection' | 'id' | 'data'>[],
+  description: string,
+): JsonLd[] {
   return [
     collectionPageLd(site, { path: APPS_PATH, name: APPS_LABEL, description }),
     ...(apps.length

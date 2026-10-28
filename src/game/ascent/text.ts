@@ -16,6 +16,7 @@ export const ASCENT_TEXT = {
   time: 'Time',
   best: 'Best',
   falls: 'Falls',
+  jumps: 'Jumps',
   fell: 'You fell. Back to the start.',
   fellToBeacon: 'You fell. Back to your last beacon.',
   noWebGL: 'This game needs WebGL.',
@@ -32,6 +33,13 @@ export const ASCENT_TEXT = {
   back: 'Back',
   continueClimb: 'Continue',
   newClimb: 'New climb',
+  loading: 'Loading the climb…',
+
+  // The finish
+  finishTitle: 'You reached orbit',
+  finishAssisted: 'Climbed with assist mode.',
+  climbAgain: 'Climb again',
+  credits: 'Credits',
 
   // Settings
   settingsLabel: 'Settings',
@@ -41,6 +49,8 @@ export const ASCENT_TEXT = {
   motionSystem: 'As the system asks',
   motionReduce: 'Reduced',
   motionFull: 'Full',
+  volume: 'Volume',
+  mute: 'Mute the sound',
 
   // Touch
   jump: 'Jump',
