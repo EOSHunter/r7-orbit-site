@@ -14,7 +14,10 @@ import { Vector3 } from 'three/src/Three.js';
 const files = await Promise.all(CLIMB.zones.map((z) => readFile(new URL(`./assets/${z.file}`, import.meta.url))));
 const climb = await loadClimb(CLIMB.zones.length, (n) => {
   const b = files[n - 1];
-  return parsePartModel(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), CLIMB.zones[n - 1].file);
+  // Without the textures: Node cannot decode pictures (the tests check the shapes, not the paint).
+  return parsePartModel(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), CLIMB.zones[n - 1].file, {
+    textures: false,
+  });
 });
 const level = climb.level;
 

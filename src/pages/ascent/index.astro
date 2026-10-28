@@ -66,7 +66,10 @@ const jsonLd = [
         <button class="btn solid lg" type="button" data-ascent-play>
           Play
         </button>
-        <p>Needs a keyboard and a mouse, or a touch screen, and WebGL.</p>
+        <p data-ascent-needs>{ASCENT_TEXT.needs}</p>
+        <p data-ascent-desktop hidden>
+          {ASCENT_TEXT.desktopOnly}
+        </p>
         <noscript>
           <p>This game needs JavaScript.</p>
         </noscript>
@@ -130,7 +133,7 @@ const jsonLd = [
 
 <script>
   import type { AgentModel, AscentHandle, Climb } from '../../game/ascent/index';
-  import { enterPlay, leavePlay } from '../../game/ascent/gesture';
+  import { enterPlay, hasKeyboardAndMouse, leavePlay } from '../../game/ascent/gesture';
 
   const host = document.querySelector<HTMLElement>('[data-ascent-host]');
   const poster = document.querySelector<HTMLElement>('[data-ascent-poster]');
@@ -182,6 +185,13 @@ const jsonLd = [
       loading = false;
       if (loadingLine) loadingLine.hidden = true;
     }
+  }
+
+  // Played with a keyboard and a mouse: without one (a phone, a tablet), a line says so in place of Play.
+  if (!hasKeyboardAndMouse(window)) {
+    if (play) play.hidden = true;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-ascent-needs]')) el.hidden = true;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-ascent-desktop]')) el.hidden = false;
   }
 
   play?.addEventListener('click', (e) => {

@@ -8,16 +8,17 @@
       "file": "zone-1.glb",
       "look": {
         "top": "#4a3526",
-        "horizon": "#7a5a40",
-        "ground": "#2b1e15",
-        "sun": "#ffd9a8",
-        "strength": 3.4,
-        "ambient": 0.7,
+        "horizon": "#4a392b",
+        "ground": "#6b4a30",
+        "sun": "#ffe4bd",
+        "strength": 3.2,
+        "ambient": 0.75,
         "stars": 0.0,
+        "fill": "#e8d2b4",
         "sun_dir": [
-          0.3149,
-          0.4949,
-          -0.8099
+          0.2297,
+          0.9186,
+          0.3215
         ]
       }
     },
@@ -30,11 +31,12 @@
       "look": {
         "top": "#0c1525",
         "horizon": "#1d3e63",
-        "ground": "#0e1520",
+        "ground": "#2a3a52",
         "sun": "#b4dcff",
-        "strength": 3.2,
-        "ambient": 0.6,
+        "strength": 3.4,
+        "ambient": 0.8,
         "stars": 0.0,
+        "fill": "#9ab4d8",
         "sun_dir": [
           -0.507,
           0.7605,
@@ -77,6 +79,7 @@
         "strength": 4.0,
         "ambient": 0.65,
         "stars": 0.35,
+        "fill": "#a9c4ee",
         "sun_dir": [
           0.6116,
           0.7645,
@@ -98,6 +101,7 @@
         "strength": 4.5,
         "ambient": 0.6,
         "stars": 1.0,
+        "fill": "#8494bd",
         "sun_dir": [
           0.7027,
           0.6826,

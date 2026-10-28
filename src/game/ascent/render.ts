@@ -23,6 +23,7 @@
 // runner's chunk is what it was (docs/DECISIONS.md, "R7: Ascent, phase 1").
 
 import {
+  ACESFilmicToneMapping,
   BackSide,
   BufferGeometry,
   CircleGeometry,
@@ -32,23 +33,34 @@ import {
   Float32BufferAttribute,
   Fog,
   Group,
+  HalfFloatType,
   HemisphereLight,
   LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshBasicMaterial,
+  NoToneMapping,
+  type Object3D,
   OctahedronGeometry,
+  PCFSoftShadowMap,
   PerspectiveCamera,
   SRGBColorSpace,
   Scene,
   ShaderMaterial,
   SphereGeometry,
   TorusGeometry,
+  Vector2,
   Vector3,
   Vector4,
+  WebGLRenderTarget,
   WebGLRenderer,
   type Material,
 } from 'three/src/Three.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { Pass } from 'three/examples/jsm/postprocessing/Pass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { CSM } from 'three/examples/jsm/csm/CSM.js';
 import { createAgentView, type AgentModel } from './agent';
 import type { AgentAnimation } from './agent-anim';
 import type { OrbitCamera } from './camera';
@@ -57,6 +69,7 @@ import { ASCENT_CONFIG, type AscentConfig } from './config';
 import type { LevelModel, PartModel, SceneryMesh } from './gltf-level';
 import type { Vec3 } from './collision';
 import type { Level, LevelBox, ZoneLook } from './level';
+import type { GraphicsSetting } from './settings';
 import type { AscentSim } from './sim';
 import { ambienceMix } from './sound-events';
 
@@ -76,6 +89,8 @@ export interface View {
   render(sim: AscentSim, alpha: number, camera: OrbitCamera, time: number): void;
   /** Draw a part of the level that has just loaded (a zone of the climb); its boxes start at `firstBox` in the level. */
   addPart(part: PartModel, firstBox: number): void;
+  /** High: shadows and glow (a lit climb); low: neither. The caller resizes after it, as low also draws at one pixel ratio. */
+  setQuality(quality: GraphicsSetting): void;
   /** Free every geometry, material and the WebGL context. */
   dispose(): void;
   info(): ViewInfo;
@@ -91,6 +106,8 @@ export interface ViewOptions {
   config?: AscentConfig;
   /** Hold the goal ring still, and leave out the agent's bob, squash and sway (asked each frame: the player can change it). */
   reducedMotion?: () => boolean;
+  /** The graphics to start with (default high). */
+  quality?: GraphicsSetting;
 }
 
 /** Whether this browser can give a WebGL 2 context (three.js needs one). Asked on a throwaway canvas, then released. */
@@ -274,36 +291,43 @@ function sceneryGeometry(scenery: readonly SceneryMesh[], colors: SceneColors) {
   return { faces, lines };
 }
 
+/** The vertex attributes a lit mesh may carry, and their sizes. */
+const LIT_ATTRIBUTES = { position: 3, normal: 3, uv: 2 } as const;
+
 /**
- * Lit scenery (a lit file's): every mesh in world space, merged into one geometry per material, each drawn in that material
- * (the file's own; flat shaded, as the file has no normals). One draw call per material for the whole set.
+ * Lit scenery (a lit file's): every mesh in world space, merged into one geometry per material (and per whether it casts a
+ * shadow), each drawn in that material (the file's own). One draw call per material for the whole set. A file without
+ * normals is drawn flat shaded.
  */
 function litGeometry(scenery: readonly SceneryMesh[]) {
-  const byMaterial = new Map<string, { material: Material; parts: BufferGeometry[] }>();
-  for (const { mesh } of scenery) {
+  const groups = new Map<string, { material: Material; shadow: boolean; parts: BufferGeometry[] }>();
+  for (const { mesh, shadow } of scenery) {
     const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-    const key = material.name || material.uuid;
-    const entry = byMaterial.get(key) ?? { material, parts: [] };
-    byMaterial.set(key, entry);
+    const key = `${material.name || material.uuid}:${shadow}`;
+    const entry = groups.get(key) ?? { material, shadow, parts: [] };
+    groups.set(key, entry);
     const tris = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
     tris.applyMatrix4(mesh.matrixWorld);
     entry.parts.push(tris);
   }
-  const out: { geometry: BufferGeometry; material: Material }[] = [];
-  for (const { material, parts } of byMaterial.values()) {
-    const size = parts.reduce((n, g) => n + g.getAttribute('position').array.length, 0);
-    const positions = new Float32Array(size);
-    let at = 0;
-    for (const g of parts) {
-      const a = g.getAttribute('position').array as Float32Array;
-      positions.set(a, at);
-      at += a.length;
-      g.dispose();
-    }
+  const out: { geometry: BufferGeometry; material: Material; shadow: boolean }[] = [];
+  for (const { material, shadow, parts } of groups.values()) {
     const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-    (material as Material & { flatShading?: boolean }).flatShading = true;
-    out.push({ geometry, material });
+    // Only the attributes every part has (a material's meshes come from one script, so in practice all of them). Read value
+    // by value: a packed file keeps its normals as 8-bit integers (getComponent turns them back into numbers).
+    for (const [name, size] of Object.entries(LIT_ATTRIBUTES)) {
+      if (!parts.every((g) => g.getAttribute(name))) continue;
+      const data = new Float32Array(parts.reduce((n, g) => n + g.getAttribute(name).count * size, 0));
+      let at = 0;
+      for (const g of parts) {
+        const a = g.getAttribute(name);
+        for (let i = 0; i < a.count; i++) for (let c = 0; c < size; c++) data[at++] = a.getComponent(i, c);
+      }
+      geometry.setAttribute(name, new Float32BufferAttribute(data, size));
+    }
+    for (const g of parts) g.dispose();
+    (material as Material & { flatShading?: boolean }).flatShading = !geometry.getAttribute('normal');
+    out.push({ geometry, material, shadow });
   }
   return out;
 }
@@ -330,6 +354,7 @@ void main() {
   float s = max(dot(d, sunDir), 0.0);
   c += sun * (pow(s, 900.0) * 1.6 + pow(s, 12.0) * 0.12);
   gl_FragColor = vec4(c, 1.0);
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
 
@@ -368,6 +393,7 @@ void main() {
   float r = length(vLocal) / radius;
   float a = opacity * (1.0 - smoothstep(0.25, 1.0, r));
   gl_FragColor = vec4(color, a);
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
 
@@ -377,6 +403,7 @@ interface Look {
   horizon: Color;
   ground: Color;
   sun: Color;
+  fill: Color;
   strength: number;
   ambient: number;
   sunDir: Vector3;
@@ -387,6 +414,7 @@ const toLook = (l: ZoneLook): Look => ({
   horizon: new Color(l.horizon),
   ground: new Color(l.ground),
   sun: new Color(l.sun),
+  fill: new Color(l.fill ?? l.horizon),
   strength: l.strength,
   ambient: l.ambient,
   sunDir: new Vector3(...l.sun_dir).normalize(),
@@ -398,6 +426,7 @@ function blendLooks(out: Look, looks: readonly Look[], weights: readonly number[
   out.horizon.setRGB(0, 0, 0);
   out.ground.setRGB(0, 0, 0);
   out.sun.setRGB(0, 0, 0);
+  out.fill.setRGB(0, 0, 0);
   out.sunDir.set(0, 0, 0);
   out.strength = out.ambient = out.stars = 0;
   for (let i = 0; i < looks.length; i++) {
@@ -416,6 +445,9 @@ function blendLooks(out: Look, looks: readonly Look[], weights: readonly number[
     out.sun.r += l.sun.r * w;
     out.sun.g += l.sun.g * w;
     out.sun.b += l.sun.b * w;
+    out.fill.r += l.fill.r * w;
+    out.fill.g += l.fill.g * w;
+    out.fill.b += l.fill.b * w;
     out.sunDir.addScaledVector(l.sunDir, w);
     out.strength += l.strength * w;
     out.ambient += l.ambient * w;
@@ -423,6 +455,18 @@ function blendLooks(out: Look, looks: readonly Look[], weights: readonly number[
   }
   if (out.sunDir.lengthSq() < 1e-6) out.sunDir.set(0, 1, 0);
   out.sunDir.normalize();
+}
+
+/** A pass that draws the frame's scenes (the sky, the level, the agent) into the composer's buffer, as RenderPass would one. */
+class ScenesPass extends Pass {
+  constructor(private readonly draw: () => void) {
+    super();
+    this.needsSwap = false;
+  }
+  render(renderer: WebGLRenderer, _write: WebGLRenderTarget, read: WebGLRenderTarget) {
+    renderer.setRenderTarget(this.renderToScreen ? null : read);
+    this.draw();
+  }
 }
 
 /** The view, drawing into `canvas`; null when no WebGL context can be made (the caller shows the fallback). */
@@ -439,6 +483,7 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   const r = cfg.render;
   const bg = toColor(colors.background);
   renderer.setClearColor(bg, 1);
+  renderer.shadowMap.type = PCFSoftShadowMap;
 
   const geometries: BufferGeometry[] = [];
   const materials: Material[] = [];
@@ -464,7 +509,6 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   // The sky (lit only): the dome, the sky's meshes, and the same sun and sky light as the level's.
   const sky = new Scene();
   const skyCamera = new PerspectiveCamera(r.fov, 16 / 9, 1, r.lit.skyFar);
-  const sun = new DirectionalLight(0xffffff, 0);
   const skySun = new DirectionalLight(0xffffff, 0);
   const skyLight = new HemisphereLight(0xffffff, 0xffffff, 0);
   const skySkyLight = new HemisphereLight(0xffffff, 0xffffff, 0);
@@ -492,8 +536,33 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   dome.frustumCulled = false;
   const starMaterials: Material[] = [];
   if (lit) {
-    scene.add(sun, skyLight);
+    scene.add(skyLight);
     sky.add(dome, skySun, skySkyLight);
+  }
+  // The level's sun and its shadows (lit only): cascades along the view (three's CSM), sharp near the camera and coarser
+  // further out, as far as the fog's end, so no shadow appears in view as the camera moves (one square round the agent did:
+  // the author saw the shadows load in). Each cascade is a sun of its own and a lit material picks the cascade for each pixel
+  // (csm.setupMaterial); without shadows (low graphics) one cascade's sun alone lights the level. Neighbouring cascades fade
+  // into each other.
+  const sh = r.lit.shadow;
+  const csm = lit
+    ? new CSM({
+        camera,
+        parent: scene,
+        cascades: sh.cascades,
+        maxFar: fog.far,
+        mode: 'practical',
+        shadowMapSize: sh.mapSize,
+        shadowBias: sh.bias,
+        lightNear: 1,
+        lightFar: 1000,
+        lightMargin: sh.margin,
+      })
+    : null;
+  if (csm) {
+    csm.fade = true;
+    for (const l of csm.lights) l.shadow.normalBias = sh.normalBias;
+    csm.updateFrustums();
   }
   renderer.autoClear = false;
   renderer.info.autoReset = false;
@@ -516,7 +585,13 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   const drawScenery = (items: readonly SceneryMesh[], style: PartModel['style']) => {
     if (style === 'tones') return drawn(sceneryGeometry(items, colors));
     const group = new Group();
-    for (const { geometry, material } of litGeometry(items)) group.add(new Mesh(geo(geometry), mat(material)));
+    for (const { geometry, material, shadow } of litGeometry(items)) {
+      csm?.setupMaterial(material);
+      const mesh = new Mesh(geo(geometry), mat(material));
+      mesh.castShadow = shadow;
+      mesh.receiveShadow = true;
+      group.add(mesh);
+    }
     return group;
   };
   if (!model) scene.add(drawn(levelGeometry(level.boxes, colors)));
@@ -568,6 +643,26 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   const agent = createAgentView({ colors, model: options.agent, config: cfg, reducedMotion: options.reducedMotion });
   agentScene.add(agent.object);
   let lastTime: number | null = null;
+  // The agent's shadow on the level: a copy of the agent in the level's scene that draws nothing itself (the agent is drawn
+  // in its own scene) but casts the shadow, posed like the agent each frame.
+  const isLight = (o: Object3D) => (o as { isLight?: boolean }).isLight === true;
+  const caster = agent.object.clone(true);
+  const hidden = mat(new MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  const lights: Object3D[] = [];
+  caster.traverse((o) => {
+    if ((o as Mesh).isMesh) {
+      (o as Mesh).material = hidden;
+      o.castShadow = true;
+    } else if (isLight(o)) lights.push(o);
+  });
+  for (const l of lights) l.removeFromParent();
+  const casterPairs: [Object3D, Object3D][] = [];
+  const pair = (from: Object3D, to: Object3D) => {
+    casterPairs.push([from, to]);
+    from.children.filter((c) => !isLight(c)).forEach((c, i) => to.children[i] && pair(c, to.children[i]));
+  };
+  pair(agent.object, caster);
+  if (lit) scene.add(caster);
 
   // The blob shadow: a soft dark patch on whatever is under the agent, fading with the height, so a landing spot is always
   // clear; cut to the tops it lies on.
@@ -603,6 +698,7 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   function setRing(goal: Mesh, at: Vec3) {
     // Lit, the ring is drawn in its own material (brass, a little glow); else in the token's brass.
     const own = Array.isArray(goal.material) ? goal.material[0] : goal.material;
+    if (lit) csm?.setupMaterial(own);
     const torus = new Mesh(geo(goal.geometry), lit ? mat(own) : brass);
     goal.updateWorldMatrix(true, false);
     goal.matrixWorld.decompose(new Vector3(), torus.quaternion, torus.scale);
@@ -636,6 +732,42 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   }
   const beacons: Group[] = model ? [] : level.beacons.map(addBeacon);
 
+  // The frame's scenes, in order: the sky (lit only), then the level, then the agent over it.
+  function drawScenes() {
+    renderer.clear();
+    if (lit) {
+      renderer.render(sky, skyCamera);
+      renderer.clearDepth();
+    }
+    renderer.render(scene, camera);
+    renderer.render(agentScene, camera);
+  }
+
+  // High graphics in a lit climb: the scenes are drawn into a buffer that keeps light brighter than white (half floats,
+  // with 4x multisampling), the bright part glows (UnrealBloomPass, drawn at half size), and OutputPass maps it all to the
+  // screen with the filmic curve. Low graphics, or the toned look, draw straight to the screen.
+  const composer = lit
+    ? new EffectComposer(renderer, new WebGLRenderTarget(1, 1, { type: HalfFloatType, samples: 4 }))
+    : null;
+  if (composer) {
+    const b = r.lit.bloom;
+    composer.addPass(new ScenesPass(drawScenes));
+    composer.addPass(new UnrealBloomPass(new Vector2(1, 1), b.strength, b.radius, b.threshold));
+    composer.addPass(new OutputPass());
+  }
+  renderer.toneMappingExposure = r.lit.exposure;
+  let high = true;
+  function setQuality(q: GraphicsSetting) {
+    high = q === 'high';
+    // Shadows are part of every lit material's shader: switching them compiles each again, once.
+    renderer.shadowMap.enabled = lit && high;
+    for (const l of csm?.lights ?? []) l.castShadow = high;
+    for (const m of materials) m.needsUpdate = true;
+    // Straight to the screen, the materials apply the filmic curve themselves; through the composer, OutputPass does.
+    renderer.toneMapping = lit ? ACESFilmicToneMapping : NoToneMapping;
+  }
+  setQuality(options.quality ?? 'high');
+
   // A level from Blender: each of its parts (one for the test climb, the zones loaded so far for the climb).
   if (model) {
     let first = 0;
@@ -653,6 +785,9 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
       camera.updateProjectionMatrix();
       skyCamera.aspect = camera.aspect;
       skyCamera.updateProjectionMatrix();
+      composer?.setPixelRatio(pixelRatio);
+      composer?.setSize(w, h);
+      csm?.updateFrustums();
     },
     render(sim, alpha, cam, time) {
       const feet = sim.lerpPos(alpha);
@@ -737,6 +872,14 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
       camera.position.set(cam.position.x, cam.position.y, cam.position.z);
       camera.lookAt(cam.target.x, cam.target.y, cam.target.z);
       renderer.info.reset();
+      if (lit) {
+        for (const [from, to] of casterPairs) {
+          to.position.copy(from.position);
+          to.quaternion.copy(from.quaternion);
+          to.scale.copy(from.scale);
+          to.visible = from.visible;
+        }
+      }
       if (look) {
         // The zones' looks, blended by the agent's height: the sky, the sun, the sky light, the fog, the stars.
         blendLooks(look, looks, ambienceMix(feet.y, zones, r.lit.fade));
@@ -746,16 +889,22 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
         (u.ground.value as Color).copy(look.ground);
         (u.sun.value as Color).copy(look.sun);
         (u.sunDir.value as Vector3).copy(look.sunDir);
-        for (const [s, h] of [
-          [sun, skyLight],
-          [skySun, skySkyLight],
-        ] as const) {
-          s.color.copy(look.sun);
-          s.intensity = look.strength;
-          s.position.copy(look.sunDir);
-          h.color.copy(look.horizon);
+        skySun.color.copy(look.sun);
+        skySun.intensity = look.strength;
+        skySun.position.copy(look.sunDir);
+        for (const h of [skyLight, skySkyLight]) {
+          h.color.copy(look.fill);
           h.groundColor.copy(look.ground);
           h.intensity = look.ambient * Math.PI;
+        }
+        if (csm) {
+          csm.lightDirection.copy(look.sunDir).negate();
+          csm.lights.forEach((l, i) => {
+            l.color.copy(look.sun);
+            l.intensity = high || i === 0 ? look.strength : 0;
+          });
+          camera.updateMatrixWorld();
+          csm.update();
         }
         (scene.fog as Fog).color.copy(look.horizon);
         for (const m of starMaterials) {
@@ -763,19 +912,18 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
           m.visible = look.stars > 0.01;
         }
         renderer.setClearColor(look.horizon, 1);
-        renderer.clear();
         skyCamera.position.copy(camera.position);
         skyCamera.quaternion.copy(camera.quaternion);
         dome.position.copy(camera.position);
-        renderer.render(sky, skyCamera);
-        renderer.clearDepth();
-      } else {
-        renderer.clear();
       }
-      renderer.render(scene, camera);
-      renderer.render(agentScene, camera);
+      if (composer && high) composer.render();
+      else {
+        renderer.setRenderTarget(null);
+        drawScenes();
+      }
     },
     addPart,
+    setQuality,
     info: () => ({
       triangles: renderer.info.render.triangles,
       calls: renderer.info.render.calls,
@@ -784,6 +932,8 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
       animation: agent.pose.animation,
     }),
     dispose() {
+      csm?.dispose();
+      composer?.dispose();
       agent.dispose();
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();

@@ -4,13 +4,14 @@
 // stays synchronous; without them the game plays phase 1's level in code, as phase 1's capsule.
 //
 // The host supplies the container: positioned (the game fills it), focusable (tabindex="0"), with an accessible name and its
-// instructions as text (aria-describedby). The game adds its canvas, the HUD, a message with the menu, the touch controls and
-// a live region inside it, and destroy() removes all of it, every listener, the animation frame, the observer and the WebGL
+// instructions as text (aria-describedby). The game adds its canvas, the HUD, a message with the menu and a live region
+// inside it, and destroy() removes all of it, every listener, the animation frame, the observer and the WebGL
 // context.
 //
 // Time: the rAF timestamp drives a fixed-step clock (clock.ts); the camera follows on the frame's real time. The game pauses
-// when the tab is hidden, the window loses focus, focus leaves the game, Escape (or the touch pause button) is pressed, the
-// pointer lock is let go, full screen ends, or a phone turns upright.
+// when the tab is hidden, the window loses focus, focus leaves the game, Escape is pressed, the pointer lock is let go, or
+// full screen ends. It is played with a keyboard and a mouse (desktop only: the host pages offer Play only where there is a
+// mouse, gesture.ts hasKeyboardAndMouse).
 //
 // Full screen and the pointer lock belong to the container (gesture.ts): the host asks for them in its Play click, before
 // this module has loaded, and the game asks again on the click or Space that resumes. Paused, the game stays in full screen;
@@ -40,11 +41,11 @@ import {
   saveSettings,
   storage,
   type AscentSettings,
+  type GraphicsSetting,
   type MotionSetting,
 } from './settings';
 import { AscentSim } from './sim';
 import { ASCENT_TEXT } from './text';
-import { createTouchControls } from './touch';
 import { createAudio, type AudioEngine } from './audio';
 import { SoundTracker, ambienceMix } from './sound-events';
 import agentUrl from './assets/agent.glb?url';
@@ -112,8 +113,6 @@ export interface AscentOptions {
   pointerLock?: boolean;
   /** Put the container in full screen when a climb starts or resumes (default false: the host decides). */
   fullscreen?: boolean;
-  /** Show the touch controls from the start (default: when the device's main pointer is coarse, or on the first touch). */
-  touch?: boolean;
   /** The menu's Leave: the host takes the game away (without it, the menu has no Leave). */
   onLeave?: () => void;
   /** Lines for the finish screen's credits (the host's words; without them, no credits). */
@@ -141,8 +140,6 @@ export interface AscentDeps {
 
 /** Save the climb this often while playing (and on every pause). */
 const SAVE_EVERY = 5;
-/** Touch looks this much faster than the mouse at the same setting (a thumb travels less than a mouse). */
-const TOUCH_LOOK = 1.8;
 
 export function mountAscent(
   container: HTMLElement,
@@ -186,6 +183,7 @@ export function mountAscent(
     agent: options.agent ?? null,
     config: cfg,
     reducedMotion: reduce,
+    quality: settings.graphics,
   });
   if (!view) {
     canvas.remove();
@@ -313,8 +311,26 @@ export function mountAscent(
     return b;
   });
   motionField.append(motionLabel, motionSeg);
+  const graphicsField = el('div', 'field');
+  const graphicsLabel = el('p', 'ascent-field-label', ASCENT_TEXT.graphics);
+  graphicsLabel.id = `${uid}-graphics`;
+  const graphicsSeg = el('div', 'seg');
+  graphicsSeg.setAttribute('role', 'group');
+  graphicsSeg.setAttribute('aria-labelledby', graphicsLabel.id);
+  const graphicsButtons = (
+    [
+      ['high', ASCENT_TEXT.graphicsHigh],
+      ['low', ASCENT_TEXT.graphicsLow],
+    ] as [GraphicsSetting, string][]
+  ).map(([value, text]) => {
+    const b = button(text, '');
+    b.dataset.graphics = value;
+    graphicsSeg.append(b);
+    return b;
+  });
+  graphicsField.append(graphicsLabel, graphicsSeg);
   const backButton = button(ASCENT_TEXT.back);
-  panel.append(speedField, invertLabel, motionField, volumeField, muteLabel, backButton);
+  panel.append(speedField, invertLabel, motionField, graphicsField, volumeField, muteLabel, backButton);
   // The finish: the time, the falls, whether assist mode was used, the host's credits.
   const finishBox = el('div', 'ascent-finish');
   finishBox.hidden = true;
@@ -370,6 +386,11 @@ export function mountAscent(
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', String(on));
     }
+    for (const b of graphicsButtons) {
+      const on = b.dataset.graphics === settings.graphics;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
   };
   const setSettings = (next: Partial<AscentSettings>) => {
     settings = { ...settings, ...next };
@@ -404,7 +425,6 @@ export function mountAscent(
     paused: false,
     locked: false,
     full: false,
-    touch: false,
   };
 
   // A climb saved earlier, offered back on the ready screen.
@@ -476,21 +496,11 @@ export function mountAscent(
     marker.style.bottom = `${Math.min(100, Math.max(0, ((sim.pos.y - bottom) / height) * 100))}%`;
     const isLocked = locked();
     const isFull = full();
-    const touch = touchControls.shown;
-    if (
-      state === shown.state &&
-      paused === shown.paused &&
-      isLocked === shown.locked &&
-      isFull === shown.full &&
-      touch === shown.touch
-    ) {
-      return;
-    }
+    if (state === shown.state && paused === shown.paused && isLocked === shown.locked && isFull === shown.full) return;
     shown.state = state;
     shown.paused = paused;
     shown.locked = isLocked;
     shown.full = isFull;
-    shown.touch = touch;
     root.dataset.ascentState = state;
     root.dataset.ascentPaused = String(paused);
     root.dataset.ascentLocked = String(isLocked);
@@ -501,17 +511,8 @@ export function mountAscent(
     prompt.hidden = state === 'finished';
     finishBox.hidden = state !== 'finished';
     prompt.textContent =
-      state === 'ready'
-        ? touch
-          ? ASCENT_TEXT.playTouch
-          : ASCENT_TEXT.play
-        : touch
-          ? ASCENT_TEXT.pausedTouch
-          : isFull
-            ? ASCENT_TEXT.pausedFullscreen
-            : ASCENT_TEXT.paused;
-    hint.textContent = touch ? ASCENT_TEXT.hintTouch : ASCENT_TEXT.hint;
-    lookHint.hidden = touch || !(wantsLock && state === 'playing' && !paused && !isLocked);
+      state === 'ready' ? ASCENT_TEXT.play : isFull ? ASCENT_TEXT.pausedFullscreen : ASCENT_TEXT.paused;
+    lookHint.hidden = !(wantsLock && state === 'playing' && !paused && !isLocked);
     if (!paused) {
       confirmRestart = false;
       if (!panel.hidden) showSettings(false);
@@ -525,7 +526,7 @@ export function mountAscent(
     const tick = clock.advance(now);
     if (state === 'playing') {
       rig.turn(turnInput(input.held), tick.delta);
-      const move = moveVector(input.held, rig.yaw, touchControls.stick);
+      const move = moveVector(input.held, rig.yaw);
       sim.setMove(move.x, move.z);
       for (let i = 0; i < tick.steps; i++) sim.step();
       nearZones();
@@ -614,7 +615,6 @@ export function mountAscent(
   const pause = () => {
     if (destroyed || paused || state !== 'playing') return;
     input.release();
-    touchControls.release();
     sim.release();
     paused = true;
     audio?.suspend();
@@ -625,7 +625,7 @@ export function mountAscent(
     raf = 0;
     updateHud();
     // Keyboard users land on Resume; a mouse that clicks the game resumes too.
-    if (!touchControls.shown) resumeButton.focus({ preventScroll: true });
+    resumeButton.focus({ preventScroll: true });
   };
 
   const resume = () => {
@@ -633,12 +633,10 @@ export function mountAscent(
     paused = false;
     audio?.resume();
     input.release();
-    touchControls.release();
     sim.release();
     clock.reset();
     lastFrame = null;
-    if (!touchControls.shown) grab();
-    else enterPlay(container, { lock: false, fullscreen: gesture.fullscreen });
+    grab();
     container.focus({ preventScroll: true });
     updateHud();
     schedule();
@@ -681,7 +679,6 @@ export function mountAscent(
   const finish = () => {
     state = 'finished';
     input.release();
-    touchControls.release();
     sim.release();
     clearSave(store);
     exitLock();
@@ -699,7 +696,7 @@ export function mountAscent(
     if (climb && from) {
       const need = Math.min(climb.manifest.zones.length, climb.zoneAt(from.pos.y) + 1);
       if (climb.parts.length < need) {
-        if (!touchControls.shown) grab();
+        grab();
         prompt.textContent = ASCENT_TEXT.loading;
         void loadZones(need).then(() => {
           if (!destroyed && climb.parts.length >= need) begin(from);
@@ -717,8 +714,7 @@ export function mountAscent(
     audio?.resume();
     sounds.reset();
     clock.reset();
-    if (!touchControls.shown) grab();
-    else enterPlay(container, { lock: false, fullscreen: gesture.fullscreen });
+    grab();
     container.focus({ preventScroll: true });
     updateHud();
     schedule();
@@ -743,9 +739,9 @@ export function mountAscent(
     updateHud();
   };
 
-  const look = (dx: number, dy: number, scale = 1) => {
+  const look = (dx: number, dy: number) => {
     if (state !== 'playing' || paused) return;
-    const k = settings.sensitivity * scale;
+    const k = settings.sensitivity;
     rig.look(dx * k, (settings.invertY ? -dy : dy) * k);
   };
 
@@ -767,33 +763,14 @@ export function mountAscent(
     onJump,
     onLook: (dx, dy) => look(dx, dy),
     onPause: () => pause(),
-    onPointerDown: (e) => {
+    onPointerDown: () => {
       container.focus({ preventScroll: true });
       if (state === 'finished') return; // the finish screen's buttons only
-      if (e.pointerType === 'touch') {
-        touchControls.show();
-        if (state !== 'playing') start();
-        else if (paused) resume();
-        return;
-      }
       if (state !== 'playing') start();
       else if (paused) resume();
       else grab();
     },
   });
-
-  const coarse = win.matchMedia?.('(pointer: coarse)').matches ?? false;
-  const touchControls = createTouchControls(
-    root,
-    canvas,
-    {
-      onJump,
-      onLook: (dx, dy) => look(dx, dy, TOUCH_LOOK),
-      onPause: () => pause(),
-      onShow: () => updateHud(),
-    },
-    { show: options.touch ?? coarse },
-  );
 
   // ---- the menu's buttons -----------------------------------------------------------------------------------------------
   const onMenu = (event: Event) => {
@@ -825,6 +802,11 @@ export function mountAscent(
       options.onLeave?.();
     } else if (b === backButton) showSettings(false);
     else if (b.dataset.motion) setSettings({ motion: b.dataset.motion as MotionSetting });
+    else if (b.dataset.graphics && b.dataset.graphics !== settings.graphics) {
+      setSettings({ graphics: b.dataset.graphics as GraphicsSetting });
+      view.setQuality(settings.graphics);
+      resize();
+    }
   };
   const onSpeed = () => setSettings({ sensitivity: Number(speed.value) });
   const onInvert = () => setSettings({ invertY: invert.checked });
@@ -834,8 +816,8 @@ export function mountAscent(
   const resize = () => {
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const coarseNow = win.matchMedia?.('(pointer: coarse)').matches ?? false;
-    const cap = coarseNow ? cfg.render.maxPixelRatioTouch : cfg.render.maxPixelRatio;
+    // Low graphics draw one image pixel per CSS pixel, whatever the screen.
+    const cap = settings.graphics === 'low' ? 1 : cfg.render.maxPixelRatio;
     view.resize(width, height, Math.min(win.devicePixelRatio || 1, cap));
     view.render(sim, lastAlpha, rig, (win.performance?.now() ?? 0) / 1000); // resizing clears the canvas: draw at once
   };
@@ -868,17 +850,12 @@ export function mountAscent(
   const onFullscreenChange = () => {
     const now = full();
     if (wasFull && !now) pause();
-    if (now && !wasFull && state === 'playing' && !paused && !touchControls.shown) {
+    if (now && !wasFull && state === 'playing' && !paused) {
       enterPlay(container, { lock: wantsLock, fullscreen: false });
     }
     wasFull = now;
     updateHud();
     resize();
-  };
-  // A phone turned upright mid-climb pauses (the prompt asks to turn it back).
-  const portrait = win.matchMedia?.('(orientation: portrait)');
-  const onOrientation = () => {
-    if (portrait?.matches && touchControls.shown) pause();
   };
   const onPageHide = () => save();
   const listeners: [EventTarget, string, EventListener][] = [
@@ -894,7 +871,6 @@ export function mountAscent(
     [volume, 'input', onVolume],
     [mute, 'change', onMute],
   ];
-  if (portrait) listeners.push([portrait, 'change', onOrientation]);
   if (!observer) listeners.push([win, 'resize', resize]);
   for (const [target, type, fn] of listeners) target.addEventListener(type, fn);
 
@@ -917,7 +893,6 @@ export function mountAscent(
       raf = 0;
       leavePlay(container);
       input.destroy();
-      touchControls.destroy();
       for (const [target, type, fn] of listeners) target.removeEventListener(type, fn);
       observer?.disconnect();
       view.dispose();

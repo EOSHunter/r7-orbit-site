@@ -7,7 +7,7 @@ unlinked styleguide route before it has a public page.
 
 **Where it is:** phases 1 and 2 are built, and phase 3's full climb plays at `/styleguide/ascent/` (noindex, unlinked, like
 the rest of the styleguide): five zones from the workshop floor to the brass ring, built by a Blender script, played as the
-robot agent the author chose, with the HUD, the pause menu and its settings, save and resume, assist mode and touch controls.
+robot agent the author chose, with the HUD, the pause menu and its settings, save and resume, assist mode and touch controls (removed 2026-10-28: desktop only).
 The zones' renders wait for the author's approval (below, "Phase 3"). `?level=test` still plays phase 2's test climb and
 `?level=code` phase 1's boxes.
 
@@ -23,12 +23,32 @@ orbit suits the name.)
 | Engine | Three.js (WebGL), loaded only when the player presses Play. `three` is already a runtime dependency (the runner's, 0.186); Ascent adds no package |
 | Art | Made in Blender by Claude with Python scripts, exported as glTF; the author directs |
 | Assets | Original only. No third-party models or packs |
-| Devices | Desktop (keyboard and mouse) and phone (touch, landscape) |
+| Devices | Desktop: keyboard and mouse (decided 2026-10-28; phones and tablets are told so) |
 | Difficulty | Hardcore by default (no checkpoints), with an optional **assist mode** that adds checkpoints |
 | Length | A first climb takes a decent player about 15–20 minutes |
 | World | Workshop → Server stack → Cloud → Upper air → Orbit |
 
 ## How it looks
+
+**Polish (2026-10-28; the renderer, and the workshop as the sample the other zones follow once the author approves it).**
+The author's reference is his own Godot game: crisp shadows, glowing light strips, painted detail on simple bevelled shapes,
+skies that move. In High graphics (Settings) the sun casts real shadows in three cascades along the view (three.js's `CSM`:
+sharp near the camera, coarser further out, as far as the fog's end, fading into each other; a single square round the
+agent made shadows appear as the camera moved, which the author saw), light well brighter than white glows (`UnrealBloomPass`
+at half size, above `render.lit.bloom.threshold`; lowered after the author found it too strong), and a filmic curve (ACES)
+maps it to the screen; Low draws none of that, at one pixel per CSS pixel. The agent casts its shadow through an
+invisible copy of itself posed each frame in the level's scene. Each zone's look has a `fill`: the sky light's colour from
+above where it is not the fog's (indoors, light off the walls; in the server stack a cool bounce, so the racks are never
+black in shade). The Earth is a smooth sphere painted by the script (`earth_texture`: fractal continents, coasts, deserts,
+ice caps and banded cloud, from waves summed over the sphere so nothing seams), tipped so the climb looks down on middle
+latitudes. In `build_climb.py` every seen box has its edges bevelled
+4 cm and smooth (face-weighted) normals, and the materials in `TEXTURED` get a painted texture made by the script with numpy:
+a tileable grey pattern their colour multiplies (wood grain, book cloth, page edges, paint, brushed steel, plaster, cork, floor
+tiles) and a bump map from the same pattern, on UVs projected from each face's axis in world metres, exported as WebP inside
+the zone file. The workshop is a closed room: four walls with skirting boards, a ceiling with a 33 m hatch the climb goes up
+through (its top is the server stack's floor), eight lamps under it (the zone's light comes from above), a door, a radiator
+under the window, a cork board of notes, and a giant mug, pencil and ruler. A mesh with the custom property `shadow = 0` casts
+none (the walls and the ceiling, which would otherwise shade the room).
 
 **The climb is lit** (the author's new art style, 2026-10-27, after the first full climb: "lit shaded and colorful scenes
 with objects and less line work"). Each zone file says `style = lit` on its `ZONE_` empty, and the game draws its own
@@ -84,7 +104,7 @@ small radius): the lit climb's skies run from obsidian to near white, and every 
 - Time, top right (`14:32`)
 - A zone altimeter on the left edge: one tick per zone, a brass marker for where you are
 - A controls hint at the bottom for the first minute, then it fades out
-- Pause menu (Esc, or a button on touch): resume, restart, assist mode, settings, leave
+- Pause menu (Esc): resume, restart, assist mode, settings, leave
 
 ## The world
 
@@ -126,7 +146,8 @@ sim each frame and says what to play: a jump, a landing as loud as it was hard, 
 alternating), a fall back to the start or a beacon, a beacon touched, a panel creaking while it waits and cracking when it
 breaks, a fan's updraft catching the agent, and a rising chord at the finish. Under them, each zone has a bed of sound,
 mixed by height (12 m either side of a zone's start): the workshop's room tone, the server stack's fan drone and mains hum
-with an odd beep, the cloud's wind, the upper air's thinner wind over a rumble, and orbit's quiet two-note pad. Volume and
+with an odd beep, the cloud's light breeze and two soft high notes (its first wind swelled slowly and sounded like the sea),
+the upper air's thinner wind over a rumble, and orbit's quiet two-note pad. Volume and
 mute are in Settings (`r7-ascent-settings`); the sound is quiet while paused and closed when the game is taken away.
 
 ### Later (not committed)
@@ -161,10 +182,9 @@ in Node, apart from a read-only Three.js view.
 | `camera.ts` | the third-person orbit camera: yaw and pitch from the look input, a spring on the follow, pulled in when a box is in the way |
 | `colors.ts` | the scene's colours, read from the tokens at runtime; the material names a level may use and their tones |
 | `render.ts` | the Three.js view: reads the sim, draws the scene (the agent through `agent.ts`); `createView()` is null without WebGL |
-| `settings.ts` | the player's settings (look speed, invert, reduced motion: as the system asks, always or never), kept in the browser (`r7-ascent-settings`); parsing pure |
+| `settings.ts` | the player's settings (look speed, invert, reduced motion: as the system asks, always or never; volume and mute; graphics high or low), kept in the browser (`r7-ascent-settings`); parsing pure |
 | `save.ts` | the climb in progress, kept in the browser (`r7-ascent-save`) and offered back; a versioned format checked field by field; the time as m:ss |
-| `touch.ts` | the touch controls: a stick under the left thumb, a look drag on the right half, Jump and Pause buttons, the "turn your phone sideways" prompt; `stickVector` pure |
-| `gesture.ts` | full screen and the pointer lock, asked for inside the click or key press that starts or resumes the climb; small and free of three.js, so the page's Play button can use it before the game has loaded |
+| `gesture.ts` | full screen and the pointer lock, asked for inside the click or key press that starts or resumes the climb; `hasKeyboardAndMouse`, which the pages ask before offering Play; small and free of three.js, so the page's Play button can use it before the game has loaded |
 | `index.ts` | `mountAscent(container, options)`: DOM, HUD, the loop, pause rules, pointer lock and full screen, resize, cleanup; `loadTestClimb()` and `loadAgent()` |
 | `ascent.css` | the HUD's styles, tokens only; imported by the page that hosts the game |
 
@@ -247,10 +267,18 @@ Rebuilding models needs Blender installed. Building the site does not.
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
 | Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, 171 kB gzipped; with the robot agent and its animation, 670 kB, **173 kB gzipped** (three.js is nearly all of it) |
 | The character `.glb` | < 150 kB. The robot is 115 kB, 28 kB gzipped (5,608 triangles; the normals make up much of it, for the smooth shading) |
-| Each zone `.glb` | < 500 kB, loaded as the player nears it. The climb's zones are 228, 196, 219, 171 and 135 kB (about 1 MB in all; most of it the `COL_` boxes' and the nodes' JSON). The test climb is 52 kB (11 kB gzipped) |
+| Each zone `.glb` | < 500 kB, loaded as the player nears it (`climb.vitest.ts`). Since the polish (2026-10-28) the zones are packed with `gltfpack` (below): 421, 234, 255, 199 and 185 kB, 1.29 MB in all (6.4 MB unpacked; the workshop's textures are about 0.15 MB of it). Before the polish they were 228, 196, 219, 171 and 135 kB. The test climb is 52 kB (11 kB gzipped) |
 
-If the `.glb` files outgrow these, a build step with `gltfpack` (mesh compression) can shrink them. It is a dev dependency,
-so ask first.
+**Packing (decided with the author 2026-10-28).** `tools/ascent/build_climb.py` exports each zone raw to
+`tools/ascent/out/raw/` and packs it into the assets with `gltfpack` (a dev dependency, run through `npx`; `PACK` in the
+script): meshopt compression, every node, material and custom property kept, positions as floats rounded to 16 bits,
+texture coordinates as floats, normals in 8 bits. The game decodes it with three.js's own `MeshoptDecoder` (gltf-level.ts),
+which runs in Node too, so the unit tests read the packed files. Three things keep it exact where it matters: every mesh is
+stored about its own middle (the rounding works on small numbers: under a millimetre, where world coordinates 300 m up
+would round by several), a collision box is a unit cube scaled by its node (a node's scale and place are kept exactly), and
+the still scenery is joined into one mesh per material before export (a file of a few dozen meshes instead of hundreds:
+each mesh is an entry in the file's index). A piece thinner than 15 cm is not bevelled (its bevel cannot be seen, and costs
+triangles).
 
 ## The page
 
@@ -361,7 +389,7 @@ page is meant for phones too.
 - **HUD.** Top left: the altitude, the best, the falls and the zone's name. Top right: the time (m:ss). Down the left edge,
   the altimeter: a hairline, a tick where each zone starts and a brass marker for the agent (a level without zones is one
   zone from the start to the goal). The controls hint shows for the first minute.
-- **Pause menu.** Escape (or the touch Pause button) pauses; the message then holds real buttons: Resume (focused, so
+- **Pause menu.** Escape pauses; the message then holds real buttons: Resume (focused, so
   Space or Enter resumes), Restart (pressed twice: "Restart from the floor?"), Assist mode (a toggle), Settings and Leave
   (only when the host gives `onLeave`). A click on the game around the menu still resumes. Keys pressed on the menu's own
   controls are theirs (Space presses the button; it does not jump).
@@ -376,13 +404,14 @@ page is meant for phones too.
   standing at one makes it the checkpoint. In assist mode a beacon shows as a brass ring with a brass diamond over it, the
   checkpoint larger, and a fall of 6 m below the checkpoint, or off the world, puts the agent back on it ("You fell. Back to
   your last beacon."). Turning it on marks the climb as assisted for the finish, until a restart with it off.
-- **Touch** (`touch.ts`): shown from the start on a device whose main pointer is coarse, or on the first touch. A stick
-  appears under the left thumb (a small push walks, full push runs), a drag on the right half looks (1.8 times the mouse's
-  speed at the same setting), Jump bottom right, Pause top right. Upright on a phone, the game pauses and asks to be turned
-  sideways. Touch never asks for the pointer lock.
+- **Desktop only** (decided 2026-10-28; the touch controls of phase 2 were removed). A precise 3D jumping game is hard to
+  play on a phone, and the graphics are aimed at a desktop's. Both pages ask `hasKeyboardAndMouse` (some pointer that is
+  fine and can hover: a laptop with a touch screen still plays); without one, a line says the game is played with a keyboard
+  and a mouse in place of Play. The page itself still reads at every width.
 
 Tests: `settings.vitest.ts` (settings, the save format, the stick), more in `input.vitest.ts` and `sim.vitest.ts` (assist
-mode, restore), and three in `tests/ascent.spec.js` (the menu, assist and settings; saving and Continue; touch).
+mode, restore), and in `tests/ascent.spec.js` (the menu, assist and settings; saving and Continue; the Graphics setting;
+a phone is told to use a computer).
 
 **The robot agent (2026-10-27).** The author asked for a character with more to it than "just a pill", and approved a robot
 from renders (the second round: the first read as flat). `tools/ascent/build_agent.py` builds it and exports

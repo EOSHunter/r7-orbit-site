@@ -1,20 +1,23 @@
 // The player's settings (docs/ASCENT.md, "Settings"): how fast the camera turns, whether looking up and down is inverted,
-// reduced motion, and the sound's volume and mute. Kept in the browser (localStorage `r7-ascent-settings`, beside the save); every read and write is wrapped in
+// reduced motion, the sound's volume and mute, and the graphics (high or low). Kept in the browser (localStorage `r7-ascent-settings`, beside the save); every read and write is wrapped in
 // try/catch, and the game works the same without storage. The parsing is pure (unit-tested): anything unknown or out of range
 // falls back to the default, so an old or hand-edited value never breaks the game.
 
 export type MotionSetting = 'system' | 'reduce' | 'full';
+/** High: shadows, glow and a sharp image; low: none of them, for slower graphics cards. */
+export type GraphicsSetting = 'high' | 'low';
 
 export interface AscentSettings {
-  /** Look speed, as a multiple of config.camera.sensitivity (and of the touch look). */
+  /** Look speed, as a multiple of config.camera.sensitivity. */
   sensitivity: number;
-  /** Moving the mouse (or a finger) up looks down. */
+  /** Moving the mouse up looks down. */
   invertY: boolean;
   /** Reduced motion: as the system asks, always, or never. */
   motion: MotionSetting;
   /** The sound's volume, 0 to 1, and whether it is muted. */
   volume: number;
   muted: boolean;
+  graphics: GraphicsSetting;
 }
 
 export const SETTINGS_KEY = 'r7-ascent-settings';
@@ -25,9 +28,11 @@ export const DEFAULT_SETTINGS: AscentSettings = {
   motion: 'system',
   volume: 0.7,
   muted: false,
+  graphics: 'high',
 };
 
 const MOTIONS: readonly MotionSetting[] = ['system', 'reduce', 'full'];
+const GRAPHICS: readonly GraphicsSetting[] = ['high', 'low'];
 
 /** Settings from a stored value; anything missing, unknown or out of range is the default. */
 export function parseSettings(raw: unknown): AscentSettings {
@@ -43,6 +48,9 @@ export function parseSettings(raw: unknown): AscentSettings {
   }
   if (typeof r.volume === 'number' && Number.isFinite(r.volume)) out.volume = Math.min(1, Math.max(0, r.volume));
   if (typeof r.muted === 'boolean') out.muted = r.muted;
+  if (typeof r.graphics === 'string' && (GRAPHICS as readonly string[]).includes(r.graphics)) {
+    out.graphics = r.graphics as GraphicsSetting;
+  }
   return out;
 }
 

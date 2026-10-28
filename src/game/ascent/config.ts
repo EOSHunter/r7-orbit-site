@@ -94,7 +94,20 @@ export const ASCENT_CONFIG = {
      * the toned look's: the colours carry the depth); how far the sky's camera sees (the Earth, the Moon, the stars); the
      * metres either side of a zone's start over which its sky, sun and fog blend into the next zone's.
      */
-    lit: { fog: { near: 35, far: 150 }, skyFar: 8000, fade: 18 },
+    lit: {
+      fog: { near: 35, far: 150 },
+      skyFar: 8000,
+      fade: 18,
+      /** Filmic tone mapping's exposure (bright light rolls off instead of clipping). */
+      exposure: 1.0,
+      /**
+       * High graphics: the sun casts real shadows in cascades along the view, as far as the fog's end (each cascade a map of
+       * `mapSize` texels; its bias; `margin` metres behind the view taken in, so tall things out of sight still cast into it),
+       * and light brighter than `threshold` glows (strength, radius; drawn at half size).
+       */
+      shadow: { cascades: 3, mapSize: 2048, bias: -0.0004, normalBias: 0.03, margin: 80 },
+      bloom: { strength: 0.3, radius: 0.3, threshold: 2.2 },
+    },
     /**
      * The blob shadow: its radius under the agent (it fades out softly towards it), the height above the ground at which it
      * has faded out, and how dark its middle is (toned look, lit look). It is drawn only on the tops it falls on, never past
@@ -105,9 +118,8 @@ export const ASCENT_CONFIG = {
     ringTurn: 24,
     /** A fan's updraft is drawn as short ivory streaks rising through it: how many, how long, how fast, how bright. */
     fanStreaks: { count: 10, length: 0.7, speed: 4, opacity: 0.35 },
-    /** Device pixel ratio cap: a mouse device, and a touch device (bigger screens with smaller dots). */
+    /** Device pixel ratio cap (high graphics; low draws at 1). */
     maxPixelRatio: 2,
-    maxPixelRatioTouch: 1.5,
     /**
      * The light on the agent (the one lit thing; the level is shaded by tone). Each number is the share of a part's colour it
      * gives a face square to it: an ambient on every face, then a key, a fill and a rim that turn with the camera (yaw in

@@ -1,5 +1,5 @@
 // The player's settings (settings.ts) and the saved climb (save.ts): what a stored value may hold, what is thrown away, and
-// that storage failing never breaks the game. The stick's maths (touch.ts) is here too: all three are small and pure.
+// that storage failing never breaks the game. Both are small and pure.
 import { describe, expect, it } from 'vitest';
 import { SAVE_KEY, clearSave, formatTime, loadSave, parseSave, writeSave, type AscentSave } from './save';
 import {
@@ -11,7 +11,6 @@ import {
   reducesMotion,
   saveSettings,
 } from './settings';
-import { STICK, stickVector } from './touch';
 
 /** A Storage in memory, or one whose every call throws (blocked storage). */
 function memory(): Storage {
@@ -36,14 +35,19 @@ const broken = new Proxy({} as Storage, {
 describe('settings', () => {
   it('keeps what is valid and puts the default in place of anything else', () => {
     expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS);
-    expect(parseSettings({ sensitivity: 1.5, invertY: true, motion: 'reduce', volume: 0.3, muted: true })).toEqual({
+    expect(
+      parseSettings({ sensitivity: 1.5, invertY: true, motion: 'reduce', volume: 0.3, muted: true, graphics: 'low' }),
+    ).toEqual({
       sensitivity: 1.5,
       invertY: true,
       motion: 'reduce',
       volume: 0.3,
       muted: true,
+      graphics: 'low',
     });
-    expect(parseSettings({ sensitivity: 99, invertY: 'yes', motion: 'wild', volume: 7, muted: 'no' })).toEqual({
+    expect(
+      parseSettings({ sensitivity: 99, invertY: 'yes', motion: 'wild', volume: 7, muted: 'no', graphics: 'ultra' }),
+    ).toEqual({
       ...DEFAULT_SETTINGS,
       sensitivity: SENSITIVITY_RANGE.max,
       volume: 1,
@@ -122,23 +126,5 @@ describe('the saved climb', () => {
     expect(formatTime(14 * 60 + 32)).toBe('14:32');
     expect(formatTime(3600 + 62)).toBe('1:01:02');
     expect(formatTime(-5)).toBe('0:00');
-  });
-});
-
-describe('stickVector', () => {
-  it('rests inside the dead zone, reaches full speed at the radius, and never more', () => {
-    expect(stickVector(STICK.radius * STICK.dead * 0.9, 0)).toEqual({ x: 0, y: 0 });
-    expect(stickVector(STICK.radius, 0).x).toBeCloseTo(1, 9);
-    const far = stickVector(0, -STICK.radius * 3);
-    expect(far.y).toBeCloseTo(1, 9);
-    expect(far.x).toBeCloseTo(0, 9);
-  });
-
-  it('a thumb pushed up is forward, down is back, and a small push is slow', () => {
-    expect(stickVector(0, -40).y).toBeGreaterThan(0);
-    expect(stickVector(0, 40).y).toBeLessThan(0);
-    const small = stickVector(0, -STICK.radius * 0.4);
-    expect(small.y).toBeGreaterThan(0);
-    expect(small.y).toBeLessThan(0.5);
   });
 });

@@ -1,5 +1,5 @@
 /* R7: Ascent's own words over the canvas: the HUD (altitude, time, altimeter), the message and its menu, the settings, the
-   controls hint, the touch controls and the WebGL fallback (src/game/ascent/index.ts, touch.ts). Not global: only a page that hosts the game imports this file. The host's container must be
+   controls hint, and the WebGL fallback (src/game/ascent/index.ts). Not global: only a page that hosts the game imports this file. The host's container must be
    positioned; the game fills it. Tokens only (CLAUDE.md, design rules). */
 
 .ascent {
@@ -267,105 +267,6 @@
 
 .ascent-check input {
   accent-color: var(--brass);
-}
-
-/* Touch controls: the stick appears under the left thumb; Jump bottom right; Pause top right, under the time. */
-.ascent-touch {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.ascent-touch[hidden] {
-  display: none;
-}
-
-.ascent-stick {
-  position: absolute;
-  width: var(--s-10); /* 128px: the stick's reach (touch.ts STICK.radius, 56px) either way */
-  height: var(--s-10);
-  transform: translate(-50%, -50%);
-  border: var(--bw) solid var(--line-strong);
-  border-radius: var(--r-full);
-  background: color-mix(in srgb, var(--surface-2) 50%, transparent);
-}
-
-.ascent-stick[hidden] {
-  display: none;
-}
-
-.ascent-stick-knob {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--s-7);
-  height: var(--s-7);
-  margin: calc(-0.5 * var(--s-7)) 0 0 calc(-0.5 * var(--s-7));
-  border-radius: var(--r-full);
-  background: color-mix(in srgb, var(--text) 35%, transparent);
-}
-
-.ascent-jump,
-.ascent-pause-button {
-  position: absolute;
-  pointer-events: auto;
-  touch-action: none;
-  border: var(--bw) solid var(--line-strong);
-  border-radius: var(--r-full);
-  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
-  color: var(--text);
-  font: var(--fs-xs) var(--font-mono);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.ascent-jump {
-  right: var(--s-6);
-  bottom: var(--s-6);
-  width: var(--s-9);
-  height: var(--s-9);
-}
-
-.ascent-jump:active {
-  border-color: var(--line-brass);
-  color: var(--brass-bright);
-}
-
-.ascent-pause-button {
-  top: calc(var(--s-2) + var(--s-8));
-  right: var(--s-4);
-  width: var(--s-7);
-  height: var(--s-7);
-}
-
-/* Two bars: the pause sign, drawn rather than typed. */
-.ascent-pause-button::before {
-  content: '';
-  display: block;
-  width: var(--s-3);
-  height: var(--s-4);
-  margin: auto;
-  border-inline: var(--s-1) solid currentColor;
-}
-
-/* Upright on a phone: ask for it on its side. */
-.ascent-rotate {
-  position: absolute;
-  inset: 0;
-  display: none;
-  place-content: center;
-  padding: var(--s-6);
-  text-align: center;
-  color: var(--text);
-  background: var(--scrim-strong);
-}
-
-@media (orientation: portrait) {
-  .ascent[data-ascent-touch='true'] .ascent-rotate {
-    display: grid;
-  }
 }
 
 /* The finish: the time, falls and jumps as a short list, then the note and the host's credits. */

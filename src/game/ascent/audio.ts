@@ -4,7 +4,7 @@
 //
 //   1 workshop      a low room tone
 //   2 server stack  the drone of fans, a mains hum, now and then a beep
-//   3 cloud         wind, rising and falling
+//   3 cloud         a light, airy breeze and a soft high tone (a slow swell in the wind sounded like waves)
 //   4 upper air     stronger, thinner wind over a low rumble
 //   5 orbit         a quiet pad, two notes breathing in and out
 //
@@ -214,11 +214,16 @@ export function createAudio(win: Window): AudioEngine | null {
   noiseLoop('bandpass', 190, 0.8, 0.16, server);
   hum(60, 0.02, server);
   hum(120, 0.008, server);
-  // 3 cloud: wind, rising and falling.
+  // 3 cloud: a light, airy breeze, held nearly level (a deep, slow swell in a band of noise is what the sea sounds like), and
+  // two soft high notes under it.
   const cloud = bed();
-  const wind = noiseLoop('bandpass', 700, 0.6, 0.09, cloud);
-  wobble(wind.gain.gain, 0.13, 0.05);
-  wobble(wind.filter.frequency, 0.07, 220);
+  const breeze = noiseLoop('highpass', 1800, 0.5, 0.035, cloud);
+  wobble(breeze.gain.gain, 0.05, 0.006);
+  wobble(breeze.filter.frequency, 0.03, 300);
+  const airA = hum(523.25, 0.006, cloud);
+  const airB = hum(783.99, 0.0035, cloud);
+  wobble(airA.gain, 0.06, 0.002);
+  wobble(airB.gain, 0.045, 0.0015);
   // 4 upper air: thinner, stronger wind over a low rumble.
   const upper = bed();
   const gust = noiseLoop('bandpass', 1150, 0.5, 0.1, upper);

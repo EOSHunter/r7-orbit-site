@@ -1,15 +1,15 @@
 ---
 // Prototype of R7: Ascent (docs/ASCENT.md, phases 1 to 3 of 4). The full climb and the robot agent built in Blender
 // (tools/ascent/; a capsule stands in if the robot does not load), a third-person camera, the HUD, the pause menu (settings,
-// assist mode), save and resume, touch controls, and the finish at the ring; the feel's numbers are in
+// assist mode), save and resume, and the finish at the ring; the feel's numbers are in
 // src/game/ascent/config.ts. The game and its first two zones are loaded when Play is pressed, so three.js is a lazy chunk and
 // never in this page's first load; the other zones load as the agent nears them. ?level=test plays phase 2's test climb;
 // ?level=code plays phase 1's grey boxes, laid out in code (and so does a failed level load, which the debug readout says). Under the
 // game, a debug readout that only this page has. Play puts the stage in full screen and locks the mouse to it, in the click
 // itself (game/ascent/gesture.ts): the browser allows neither once the click is over, and the game takes a moment to load.
 // Fixture for tests/ascent.spec.js (?lock=0 never asks for pointer lock; ?fullscreen=0 plays in the page; ?start=0 stops on
-// the ready screen; ?touch=1 shows the touch controls from the start). Not linked from anywhere and kept out of search
-// engines, like the rest of the styleguide.
+// the ready screen). Played with a keyboard and a mouse: without one, the page says so in place of Play. Not linked from
+// anywhere and kept out of search engines, like the rest of the styleguide.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { ASCENT_TEXT } from '../../../game/ascent/text';
 import '../../../game/ascent/ascent.css';
@@ -67,7 +67,12 @@ const stats = [
           <button class="btn solid lg" type="button" data-ascent-play>
             Play
           </button>
-          <p class="as-needs">Needs a keyboard and a mouse, or a touch screen, and WebGL.</p>
+          <p class="as-needs" data-ascent-needs>
+            {ASCENT_TEXT.needs}
+          </p>
+          <p class="as-needs" data-ascent-desktop hidden>
+            {ASCENT_TEXT.desktopOnly}
+          </p>
           <noscript>
             <p>This game needs JavaScript.</p>
           </noscript>
@@ -207,7 +212,7 @@ const stats = [
 
 <script>
   import type { AgentModel, AscentHandle, AscentStats, Climb, LevelModel } from '../../../game/ascent/index';
-  import { enterPlay } from '../../../game/ascent/gesture';
+  import { enterPlay, hasKeyboardAndMouse } from '../../../game/ascent/gesture';
 
   const host = document.querySelector<HTMLElement>('[data-ascent-host]');
   const poster = document.querySelector<HTMLElement>('[data-ascent-poster]');
@@ -229,7 +234,6 @@ const stats = [
     start: query.get('start') !== '0',
     level: (['code', 'test'].includes(query.get('level') ?? '') ? query.get('level') : 'climb') as
       'climb' | 'test' | 'code',
-    touch: query.get('touch') === '1' ? true : undefined,
   };
   let handle: AscentHandle | null = null;
   let loading = false;
@@ -303,7 +307,6 @@ const stats = [
         saveAs,
         pointerLock: options.pointerLock,
         fullscreen: options.fullscreen,
-        touch: options.touch,
         onLeave: () => leave(),
         onStats,
       });
@@ -313,6 +316,13 @@ const stats = [
       loading = false;
       if (poster) poster.hidden = !!handle;
     }
+  }
+
+  // Played with a keyboard and a mouse: without one (a phone, a tablet), a line says so in place of Play.
+  if (!hasKeyboardAndMouse(window)) {
+    if (play) play.hidden = true;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-ascent-needs]')) el.hidden = true;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-ascent-desktop]')) el.hidden = false;
   }
 
   play?.addEventListener('click', (e) => {

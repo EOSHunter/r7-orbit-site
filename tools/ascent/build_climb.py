@@ -45,7 +45,10 @@ import json
 import math
 import os
 import random
+import shutil
+import subprocess
 import sys
+import zlib
 
 import bmesh
 import bpy
@@ -93,9 +96,22 @@ PALETTE = {
     'label': ('#f5f2ea', 0.9, 0.0, 0.0),
     'screen': ('#6fb5ff', 0.3, 0.0, 1.6),
     'led-blue': ('#46c8ff', 0.3, 0.0, 3.0),
+    'ceiling': ('#e3d8c6', 0.9, 0.0, 0.0),
+    'tile-dark': ('#2b3039', 0.6, 0.1, 0.0),
+    'lamp': ('#fff1d6', 0.4, 0.0, 4.0),
+    'cork': ('#b2834f', 0.9, 0.0, 0.0),
+    'note-yellow': ('#f6d65a', 0.85, 0.0, 0.0),
+    'note-pink': ('#f29bb4', 0.85, 0.0, 0.0),
+    'note-blue': ('#8ec5f2', 0.85, 0.0, 0.0),
+    'mug': ('#d6493b', 0.35, 0.0, 0.0),
+    'coffee': ('#3a2316', 0.15, 0.0, 0.0),
+    'pencil': ('#f2c230', 0.5, 0.0, 0.0),
+    'graphite': ('#3a3a3f', 0.4, 0.2, 0.0),
+    'radiator': ('#ebe7df', 0.45, 0.1, 0.0),
+    'ruler': ('#e5cf7a', 0.6, 0.0, 0.0),
     # Server stack: navy racks with status lights, aluminium heat sinks, orange cable trays, glowing fan rings.
-    'rack': ('#2c3647', 0.5, 0.3, 0.0),
-    'rack-dark': ('#1a2029', 0.55, 0.2, 0.0),
+    'rack': ('#46566f', 0.5, 0.3, 0.0),
+    'rack-dark': ('#2a3342', 0.55, 0.2, 0.0),
     'alu': ('#bcc3cb', 0.3, 0.25, 0.0),
     'tray': ('#e8802a', 0.55, 0.1, 0.0),
     'led-green': ('#3dff8b', 0.3, 0.0, 3.0),
@@ -114,9 +130,7 @@ PALETTE = {
     'girder': ('#e9763d', 0.55, 0.2, 0.0),
     'paint': ('#eef0f3', 0.55, 0.1, 0.0),
     'foil': ('#d9a733', 0.3, 0.25, 0.0),
-    'earth-ocean': ('#2663c8', 0.6, 0.0, 0.15),
-    'earth-land': ('#3f8f4c', 0.85, 0.0, 0.1),
-    'earth-cloud': ('#f4f7fb', 0.9, 0.0, 0.2),
+    'earth': ('#ffffff', 0.85, 0.0, 0.0),  # its colours are its painted texture (earth_texture)
     # Orbit: asteroid rock, stars, the Moon, and the brass ring of the R7 logo.
     'rock': ('#7d7168', 0.9, 0.0, 0.0),
     'rock-dark': ('#564c45', 0.9, 0.0, 0.0),
@@ -128,20 +142,216 @@ BOOKS = ('book-red', 'book-blue', 'book-green', 'book-yellow', 'book-purple', 'b
 DATA = ('data-blue', 'data-lilac', 'data-mint', 'data-white')
 LEDS = ('led-green', 'led-blue', 'led-amber')
 
+# The painted detail: a material named here gets a tileable texture made below with numpy (a grey pattern its colour is
+# multiplied by, and a bump map from the same pattern), repeating every `tile` metres on UVs projected from the box's sides.
+# kind, tile (m), bump strength. Glows and the sky stay plain; the zones above the workshop get theirs later.
+TEXTURED = {
+    'wood': ('grain', 3.0, 0.7), 'wood-dark': ('grain', 3.0, 0.7), 'ruler': ('grain', 2.0, 0.4),
+    'wall': ('plaster', 8.0, 0.5), 'ceiling': ('plaster', 8.0, 0.5), 'label': ('plaster', 1.0, 0.2),
+    'cork': ('cork', 1.5, 0.8), 'tile-dark': ('tiles', 4.0, 0.6),
+    **{b: ('cloth', 0.8, 0.5) for b in BOOKS},
+    'paper': ('pages', 0.5, 0.7),
+    'tool-red': ('paint', 2.0, 0.3), 'tool-yellow': ('paint', 2.0, 0.3), 'mug': ('paint', 2.0, 0.2),
+    'radiator': ('paint', 2.0, 0.3), 'pencil': ('paint', 1.0, 0.3),
+    'steel': ('brushed', 1.0, 0.35), 'pin': ('brushed', 1.0, 0.35),
+    'plastic': ('plastic', 1.5, 0.3), 'chip': ('plastic', 1.5, 0.3), 'floppy': ('plastic', 1.5, 0.3),
+}
+TEX_SIZE = 512
+TEX_DIR = os.path.join(HERE, 'out', 'textures')
+TEXTURES = {}
+# A texture's grey averages this (linear): its material's colour is divided by it, so the colour on average stays the palette's.
+TEX_MEAN = 0.9
+
+
+def _noise(rng, n, fu, fv):
+    """Tileable noise, -1 to 1: white noise kept to about fu cycles across a tile and fv down it (the FFT wraps, so it tiles)."""
+    import numpy as np
+    f = np.fft.fft2(rng.standard_normal((n, n)))
+    ky = np.fft.fftfreq(n)[:, None] * n
+    kx = np.fft.fftfreq(n)[None, :] * n
+    f *= np.exp(-((kx / fu) ** 2 + (ky / fv) ** 2))
+    out = np.real(np.fft.ifft2(f))
+    return out / (np.abs(out).max() + 1e-9)
+
+
+def pattern(kind):
+    """A kind's grey (linear, about TEX_MEAN) and height (0 to 1), as n x n arrays; rows run along v, columns along u."""
+    import numpy as np
+    rng = np.random.default_rng(zlib.crc32(kind.encode()))
+    n = TEX_SIZE
+    u = np.arange(n)[None, :] / n
+    v = np.arange(n)[:, None] / n
+    if kind == 'grain':  # wood: rings and fine fibres running along v
+        low = _noise(rng, n, 3, 1.2)
+        fibre = _noise(rng, n, 90, 2)
+        rings = np.sin(2 * np.pi * (14 * u + 0.8 * low))
+        a = 1 + 0.06 * rings + 0.05 * fibre + 0.04 * low
+        h = 0.5 + 0.25 * rings + 0.25 * fibre
+    elif kind == 'cloth':  # book cloth: a fine weave over a soft mottle
+        weave = np.sin(2 * np.pi * 64 * u) * np.sin(2 * np.pi * 64 * v)
+        fine = _noise(rng, n, 140, 140)
+        low = _noise(rng, n, 4, 4)
+        a = 1 + 0.03 * weave + 0.04 * fine + 0.05 * low
+        h = 0.5 + 0.3 * weave + 0.2 * fine
+    elif kind == 'pages':  # a book's page edges: thin lines across
+        lines = np.sin(2 * np.pi * 96 * v + 0.6 * _noise(rng, n, 2, 2))
+        a = 1 + 0.035 * lines + 0.03 * _noise(rng, n, 6, 60)
+        h = 0.5 + 0.4 * lines
+    elif kind == 'paint':  # painted metal: a faint mottle and speckle
+        low = _noise(rng, n, 4, 4)
+        speck = _noise(rng, n, 200, 200)
+        a = 1 + 0.03 * low + 0.02 * speck
+        h = 0.5 + 0.15 * low + 0.25 * speck
+    elif kind == 'brushed':  # brushed steel: streaks along u
+        s = _noise(rng, n, 2, 220)
+        a = 1 + 0.08 * s
+        h = 0.5 + 0.3 * s
+    elif kind == 'plaster':  # walls: soft blotches and a fine grain
+        low, mid, fine = _noise(rng, n, 3, 3), _noise(rng, n, 20, 20), _noise(rng, n, 150, 150)
+        a = 1 + 0.05 * low + 0.03 * mid + 0.02 * fine
+        h = 0.5 + 0.2 * mid + 0.2 * fine
+    elif kind == 'cork':
+        grains = _noise(rng, n, 120, 120)
+        a = 1 + 0.12 * grains + 0.05 * _noise(rng, n, 6, 6)
+        h = 0.5 + 0.45 * grains
+    elif kind == 'tiles':  # floor tiles: a square grid of grout lines
+        gu = np.minimum(u % 0.5, 0.5 - u % 0.5)
+        gv = np.minimum(v % 0.5, 0.5 - v % 0.5)
+        grout = (np.minimum(gu, gv) < 0.008).astype(float)
+        mottle = _noise(rng, n, 8, 8)
+        a = 1 + 0.04 * mottle - 0.35 * grout
+        h = 0.6 + 0.1 * mottle - 0.5 * grout
+    else:  # plastic: nearly smooth
+        fine, low = _noise(rng, n, 120, 120), _noise(rng, n, 5, 5)
+        a = 1 + 0.03 * low + 0.015 * fine
+        h = 0.5 + 0.25 * fine
+    a = np.clip(a * TEX_MEAN, 0, 1)
+    return a, np.clip(h, 0, 1)
+
+
+def _image(name, rgb, colour):
+    import numpy as np
+    os.makedirs(TEX_DIR, exist_ok=True)
+    n = rgb.shape[0]
+    img = bpy.data.images.new(name, n, n, alpha=False)
+    if not colour:
+        img.colorspace_settings.name = 'Non-Color'
+    img.pixels.foreach_set(np.dstack([rgb, np.ones((n, n, 1))]).astype(np.float32).ravel())
+    path = os.path.join(TEX_DIR, f'{name}.png')
+    img.filepath_raw = path
+    img.file_format = 'PNG'
+    img.save()
+    bpy.data.images.remove(img)
+    out = bpy.data.images.load(path, check_existing=True)
+    if not colour:
+        out.colorspace_settings.name = 'Non-Color'
+    return out
+
+
+def texture(kind):
+    """The kind's two images: its grey (sRGB) and its bump map (a normal map from the height, OpenGL's +Y)."""
+    import numpy as np
+    if kind not in TEXTURES:
+        a, h = pattern(kind)
+        grey = np.where(a <= 0.0031308, a * 12.92, 1.055 * np.power(a, 1 / 2.4) - 0.055)
+        # The bump map at half the size (the height averaged over 2 x 2): it is most of a zone's picture bytes otherwise.
+        h = h.reshape(TEX_SIZE // 2, 2, TEX_SIZE // 2, 2).mean(axis=(1, 3))
+        n = TEX_SIZE // 2
+        dx = (np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)) * n / 64
+        dy = (np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)) * n / 64
+        normal = np.dstack([-dx, -dy, np.ones_like(h)])
+        normal /= np.linalg.norm(normal, axis=2, keepdims=True)
+        TEXTURES[kind] = (_image(f'tex-{kind}', np.dstack([grey] * 3), True),
+                          _image(f'tex-{kind}-normal', normal * 0.5 + 0.5, False))
+    return TEXTURES[kind]
+
+
+def earth_texture(w=1536, h=768):
+    """The Earth's paint, wrapped round the sphere by its own UVs (longitude across, latitude up): oceans deep and shallow near
+    the coasts, continents green to sand with ice at the poles, and swirls of cloud over it. The patterns are waves summed over
+    the sphere itself, so nothing is stretched at the poles or seamed where the wrap meets."""
+    import numpy as np
+    rng = np.random.default_rng(42)
+    lon = (np.arange(w) + 0.5) / w * 2 * np.pi
+    lat = -np.pi / 2 + (np.arange(h) + 0.5) / h * np.pi
+    lon, lat = np.meshgrid(lon, lat)
+    p = np.stack([np.cos(lat) * np.cos(lon), np.cos(lat) * np.sin(lon), np.sin(lat)], axis=-1)
+
+    def field(n, k0, k1, stretch=(1.0, 1.0, 1.0)):
+        """n waves across the sphere, k0 to k1 cycles a radian, the fine ones weaker (1/k): a fractal pattern. `stretch`
+        leans the waves' directions (more z: bands along the latitudes, as clouds lie)."""
+        out = np.zeros(lat.shape)
+        for _ in range(n):
+            d = rng.normal(size=3) * np.array(stretch)
+            d /= np.linalg.norm(d)
+            k = rng.uniform(k0, k1)
+            out += np.sin(k * (p @ d) + rng.uniform(0, 2 * np.pi)) / k
+        return out / np.abs(out).max()
+
+    def hexes(*codes):
+        return [np.array(srgb(c)[:3]) for c in codes]
+
+    deep, shallow, green, forest, sand, ice = hexes('#163f8a', '#2f86d6', '#4f9a4a', '#2f6e3c', '#c9ae74', '#eef3f8')
+    height = field(220, 1.5, 80)
+    shore = np.quantile(height, 0.6)  # about 40% land
+    span = np.quantile(height, 0.95) - np.quantile(height, 0.05)
+    land = np.clip((height - shore) / (0.02 * span), 0, 1)[..., None]
+    coast = np.clip(1 - (shore - height) / (0.25 * span), 0, 1)[..., None]
+    swell = field(60, 6, 60)[..., None]  # the sea's own shading, deeper and lighter
+    ocean = deep + (shallow - deep) * np.clip(coast ** 2 + 0.15 * swell, 0, 1)
+    kind = field(120, 3, 60)[..., None]
+    dry = np.clip((kind - 0.1) / 0.3, 0, 1) * np.clip(1 - np.abs(lat[..., None]) / 0.9, 0, 1)
+    ground = green + (forest - green) * np.clip(-kind * 2, 0, 1)
+    ground = ground + (sand - ground) * dry
+    surface = ocean + (ground - ocean) * land
+    polar = np.clip((np.abs(lat) - 1.2) / 0.12, 0, 1)[..., None]
+    surface = surface + (ice - surface) * polar
+    cloud = field(200, 5, 90, stretch=(0.5, 0.5, 2.5)) * (0.75 + 0.25 * np.cos(3 * lat))
+    cover = (np.clip((cloud - np.quantile(cloud, 0.7)) / (0.15 * np.ptp(cloud)), 0, 1) * 0.85)[..., None]
+    rgb = surface + (ice - surface) * cover
+    srgb_rgb = np.where(rgb <= 0.0031308, rgb * 12.92, 1.055 * np.power(np.clip(rgb, 0, 1), 1 / 2.4) - 0.055)
+    os.makedirs(TEX_DIR, exist_ok=True)
+    img = bpy.data.images.new('tex-earth', w, h, alpha=False)
+    img.pixels.foreach_set(np.dstack([srgb_rgb, np.ones((h, w, 1))]).astype(np.float32).ravel())
+    path = os.path.join(TEX_DIR, 'tex-earth.png')
+    img.filepath_raw = path
+    img.file_format = 'PNG'
+    img.save()
+    bpy.data.images.remove(img)
+    return bpy.data.images.load(path, check_existing=True)
+
+
+def box_uv(bm, offset, tile):
+    """UVs projected onto each face from the axis it faces most, in world metres / tile, so textures meet across pieces."""
+    uv = bm.loops.layers.uv.verify()
+    for f in bm.faces:
+        n = f.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        for loop in f.loops:
+            p = loop.vert.co + offset
+            if ax == 2:
+                u, v = p.x, p.y
+            elif ax == 0:
+                u, v = p.y, p.z
+            else:
+                u, v = p.x, p.z
+            loop[uv].uv = (u / tile, v / tile)
+
 # Each zone's sky, sun and fog, for the game (climb.json) and the previews: the sky's colour overhead and at the horizon, the
 # ground's (the light from below), the sun's colour and strength and where it comes from (Blender axes: a direction towards
-# it), how much light the sky gives, and how much of a starfield shows (0 to 1). The game blends them as the agent climbs.
+# it), how much light the sky gives, and how much of a starfield shows (0 to 1). `fill` is the sky light's colour from above
+# where it is not the horizon's (indoors: light bounced off the walls, not the fog's dark). The game blends them as the agent climbs.
 LOOKS = {
-    'workshop': dict(top='#4a3526', horizon='#7a5a40', ground='#2b1e15', sun='#ffd9a8', strength=3.4,
-                     sun_dir=(0.35, 0.9, 0.55), ambient=0.7, stars=0.0),
-    'server': dict(top='#0c1525', horizon='#1d3e63', ground='#0e1520', sun='#b4dcff', strength=3.2,
-                   sun_dir=(-0.5, 0.4, 0.75), ambient=0.6, stars=0.0),
+    'workshop': dict(top='#4a3526', horizon='#4a392b', ground='#6b4a30', sun='#ffe4bd', strength=3.2,
+                     sun_dir=(0.25, -0.35, 1.0), ambient=0.75, stars=0.0, fill='#e8d2b4'),
+    'server': dict(top='#0c1525', horizon='#1d3e63', ground='#2a3a52', sun='#b4dcff', strength=3.4,
+                   sun_dir=(-0.5, 0.4, 0.75), ambient=0.8, stars=0.0, fill='#9ab4d8'),
     'cloud': dict(top='#4e9be9', horizon='#d2e8ff', ground='#a3cdf2', sun='#fff4df', strength=3.6,
                   sun_dir=(0.4, -0.3, 0.85), ambient=0.75, stars=0.0),
     'upper': dict(top='#0d1c4a', horizon='#3f73cc', ground='#1f428f', sun='#ffffff', strength=4.0,
-                  sun_dir=(0.6, 0.2, 0.75), ambient=0.65, stars=0.35),
+                  sun_dir=(0.6, 0.2, 0.75), ambient=0.65, stars=0.35, fill='#a9c4ee'),
     'orbit': dict(top='#02020a', horizon='#0c1236', ground='#2a4f8f', sun='#fff7e6', strength=4.5,
-                  sun_dir=(0.7, -0.2, 0.68), ambient=0.6, stars=1.0),
+                  sun_dir=(0.7, -0.2, 0.68), ambient=0.6, stars=1.0, fill='#8494bd'),
 }
 
 
@@ -247,7 +457,36 @@ def material(name):
         if glow:
             bsdf.inputs['Emission Color'].default_value = srgb(colour)
             bsdf.inputs['Emission Strength'].default_value = glow
+        if name == 'earth':
+            tex = mat.node_tree.nodes.new('ShaderNodeTexImage')
+            tex.image = earth_texture()
+            mat.node_tree.links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
+        if name in TEXTURED:
+            # Base colour = the grey pattern x the colour (the exporter writes it as the texture and its factor), and the
+            # bump map through a Normal Map node.
+            kind, _, strength = TEXTURED[name]
+            grey, bump = texture(kind)
+            nodes, links = mat.node_tree.nodes, mat.node_tree.links
+            tex = nodes.new('ShaderNodeTexImage')
+            tex.image = grey
+            mix = nodes.new('ShaderNodeMix')
+            mix.data_type = 'RGBA'
+            mix.blend_type = 'MULTIPLY'
+            mix.inputs['Factor'].default_value = 1.0
+            a = next(s for s in mix.inputs if s.name == 'A' and s.type == 'RGBA')
+            b = next(s for s in mix.inputs if s.name == 'B' and s.type == 'RGBA')
+            lin = srgb(colour)
+            b.default_value = tuple(min(1.0, c / TEX_MEAN) for c in lin[:3]) + (1.0,)
+            links.new(tex.outputs['Color'], a)
+            links.new(next(s for s in mix.outputs if s.name == 'Result' and s.type == 'RGBA'), bsdf.inputs['Base Color'])
+            ntex = nodes.new('ShaderNodeTexImage')
+            ntex.image = bump
+            nmap = nodes.new('ShaderNodeNormalMap')
+            nmap.inputs['Strength'].default_value = strength
+            links.new(ntex.outputs['Color'], nmap.inputs['Color'])
+            links.new(nmap.outputs['Normal'], bsdf.inputs['Normal'])
         mat.diffuse_color = srgb(colour)
+        mat.use_backface_culling = True  # one-sided in the game: every mesh is closed
         MATERIALS[name] = mat
     return MATERIALS[name]
 
@@ -278,7 +517,31 @@ class Zone:
         return name
 
 
-def mesh_object(zone, name, bm, location, mat):
+# Edges sharper than this stay sharp; gentler ones (a bevel's, a sphere's) are smoothed over. Face-area weighted normals keep
+# big flat faces flat right up to their bevels.
+SHARP = math.radians(50)
+
+
+def mesh_object(zone, name, bm, location, mat, shadow=True):
+    """A mesh of bm at location in mat; a seen mesh gets smooth edges and, if its material is textured, UVs. shadow=False:
+    it casts none (the workshop's walls and ceiling: the light comes from inside the room)."""
+    # The mesh's vertices about its own middle, the object placed there: the packed file keeps positions as floats with 16
+    # bits (PACK), which stays under a millimetre on numbers this small, where world coordinates hundreds of metres up would not.
+    if bm.verts:
+        lo = Vector((min(v.co[i] for v in bm.verts) for i in range(3)))
+        hi = Vector((max(v.co[i] for v in bm.verts) for i in range(3)))
+        mid = (lo + hi) / 2
+        bmesh.ops.translate(bm, vec=-mid, verts=bm.verts)
+        location = Vector(location) + mid
+    if mat:
+        bm.normal_update()
+        for e in bm.edges:
+            if len(e.link_faces) == 2 and e.calc_face_angle(0.0) > SHARP:
+                e.smooth = False
+        for f in bm.faces:
+            f.smooth = True
+        if mat in TEXTURED:
+            box_uv(bm, location, TEXTURED[mat][1])
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
@@ -286,13 +549,35 @@ def mesh_object(zone, name, bm, location, mat):
     obj.location = location
     if mat:
         mesh.materials.append(material(mat))
+        mod = obj.modifiers.new('normals', 'WEIGHTED_NORMAL')
+        mod.mode = 'FACE_AREA'
+        mod.keep_sharp = True
+    if not shadow:
+        obj['shadow'] = 0
     return obj
 
 
-def cuboid(w, d, h):
+def box(w, d, h):
+    """A plain box (the collision boxes')."""
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
     bmesh.ops.scale(bm, vec=(w, d, h), verts=bm.verts)
+    return bm
+
+
+# Every seen box's edges are cut back this far (less on a thin one), so they catch the light instead of ending in a hard line.
+# A piece thinner than BEVEL_MIN (a pin, a label, a tick on the ruler) stays sharp: its bevel would not show from the camera,
+# and costs triangles (the zone files' size).
+BEVEL = 0.04
+BEVEL_MIN = 0.15
+
+
+def cuboid(w, d, h):
+    bm = box(w, d, h)
+    c = min(BEVEL, 0.2 * min(w, d, h))
+    if min(w, d, h) >= BEVEL_MIN:
+        bmesh.ops.bevel(bm, geom=list(bm.verts) + list(bm.edges), offset=c, segments=1, profile=0.5, affect='EDGES',
+                        clamp_overlap=True)
     return bm
 
 
@@ -369,7 +654,10 @@ def collider(zone, name, b, **props):
     """COL_<name>: the solid box b, invisible in the game."""
     w, d, h = b[3] - b[0], b[4] - b[1], b[5] - b[2]
     cx, cy = centre(b)
-    obj = mesh_object(zone, f'COL_{name}', cuboid(w, d, h), (cx, cy, (b[2] + b[5]) / 2), None)
+    # A unit cube scaled to the box: the file keeps a node's scale and position exactly, so the box is exact however the
+    # vertices are packed.
+    obj = mesh_object(zone, f'COL_{name}', box(1, 1, 1), (cx, cy, (b[2] + b[5]) / 2), None)
+    obj.scale = (w, d, h)
     obj.display_type = 'WIRE'
     for k, v in props.items():
         obj[k] = v
@@ -815,9 +1103,7 @@ def workshop_floor(zone):
         make_prop(zone, name, fn, b, rng)
         collider(zone, name, b)
         out.append(b)
-    # The room: a back wall with a tall window, a side wall with a shelf of books. Scenery only, well away from the route.
-    mesh_object(zone, 'wall_back', cuboid(64, 1, 72), (0, 32.5, 36), 'wall')
-    mesh_object(zone, 'wall_side', cuboid(1, 64, 72), (-32.5, 0, 36), 'wall')
+    workshop_room(zone, rng)
     mesh_object(zone, 'window', cuboid(26, 0.1, 34), (6, 31.95, 30), 'window')
     for i, (x, z) in enumerate(((6, 13), (6, 47), (-7, 30), (19, 30))):
         w, h = (28, 1.2) if i < 2 else (1.2, 34)
@@ -828,6 +1114,62 @@ def workshop_floor(zone):
         mesh_object(zone, f'shelf_book_{i}', cuboid(2.4, rng.uniform(0.9, 1.6), h), (-30.6, -17 + i * 1.9, 18.4 + h / 2),
                     BOOKS[i % len(BOOKS)])
     return out
+
+
+# The workshop's ceiling: its underside, and the top the server stack stands on. The climb goes up through a square hatch in
+# it, HATCH metres either side of the middle (the zone-2 route keeps well inside it).
+CEILING = (72.0, 73.0)
+HATCH = 16.5
+
+
+def workshop_room(zone, rng):
+    """Four walls with skirting boards, a ceiling with the hatch and lamps under it, a door, a radiator under the window, a
+    cork board of notes, and a giant mug, pencil and ruler on the floor. Scenery only, well away from the route. The walls and
+    the ceiling cast no shadow: the lamps are inside the room."""
+    lo, hi = CEILING
+    for name, size, at in (('wall_back', (64, 1, hi), (0, 32.5, hi / 2)), ('wall_front', (64, 1, hi), (0, -32.5, hi / 2)),
+                           ('wall_left', (1, 66, hi), (-32.5, 0, hi / 2)), ('wall_right', (1, 66, hi), (32.5, 0, hi / 2))):
+        mesh_object(zone, name, cuboid(*size), at, 'wall', shadow=False)
+    for i, (size, at) in enumerate((((63.6, 0.3, 0.8), (0, 31.8, 0.4)), ((63.6, 0.3, 0.8), (0, -31.8, 0.4)),
+                                    ((0.3, 63.0, 0.8), (-31.8, 0, 0.4)), ((0.3, 63.0, 0.8), (31.8, 0, 0.4)))):
+        mesh_object(zone, f'skirting_{i}', cuboid(*size), at, 'wood-dark')
+    # The ceiling round the hatch: plaster underneath, dark tiles on top (the server stack's floor).
+    for i, (x0, y0, x1, y1) in enumerate(((-32, HATCH, 32, 32), (-32, -32, 32, -HATCH), (-32, -HATCH, -HATCH, HATCH),
+                                          (HATCH, -HATCH, 32, HATCH))):  # inside the walls
+        cx, cy, w, d = (x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0
+        mesh_object(zone, f'ceiling_{i}', cuboid(w, d, 0.5), (cx, cy, lo + 0.25), 'ceiling', shadow=False)
+        mesh_object(zone, f'roof_{i}', cuboid(w, d, 0.5), (cx, cy, hi - 0.25), 'tile-dark', shadow=False)
+    for i, (x, y) in enumerate(((-24, -24), (0, -24), (24, -24), (-24, 0), (24, 0), (-24, 24), (0, 24), (24, 24))):
+        mesh_object(zone, f'lamp_{i}', cuboid(7, 1.6, 0.3), (x, y, lo - 0.15), 'lamp', shadow=False)
+    # A door in the front wall, and its handle.
+    mesh_object(zone, 'door', cuboid(10, 0.4, 22), (19, -31.75, 11), 'wood-dark')
+    mesh_object(zone, 'door_handle', cuboid(1.6, 0.5, 0.4), (15.6, -31.3, 11), 'steel')
+    # A radiator under the window: a row of fins.
+    for i in range(14):
+        mesh_object(zone, f'radiator_{i}', cuboid(0.9, 1.0, 6), (-4 + i * 1.6, 31.1, 4.5), 'radiator')
+    mesh_object(zone, 'radiator_pipe', cuboid(22.4, 0.5, 0.5), (6.4, 31.1, 1.2), 'radiator')
+    # A cork board on the right wall, with notes pinned to it.
+    mesh_object(zone, 'cork_board', cuboid(0.4, 18, 12), (31.6, -2, 28), 'cork')
+    notes = ('note-yellow', 'note-pink', 'note-blue')
+    for i in range(9):
+        y, z = -8.5 + (i % 3) * 5.5 + rng.uniform(-0.6, 0.6), 23.5 + (i // 3) * 4 + rng.uniform(-0.4, 0.4)
+        mesh_object(zone, f'note_{i}', cuboid(0.06, 2.6, 2.6), (31.37, y, z), notes[i % 3])
+    # A giant mug of coffee, a pencil and a ruler on the floor.
+    mesh_object(zone, 'mug', cylinder(3.2, 7.5, 40), (-22, 21, 3.75), 'mug')
+    mesh_object(zone, 'mug_coffee', cylinder(2.9, 0.02, 40), (-22, 21, 7.5 + PROUD), 'coffee')
+    handle = torus(1.8, 0.45, 32, 10)
+    bmesh.ops.rotate(handle, verts=handle.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(90), 3, 'X'))
+    mesh_object(zone, 'mug_handle', handle, (-18.2, 21, 3.9), 'mug')
+    body = cylinder(0.55, 15, 6)
+    bmesh.ops.rotate(body, verts=body.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(90), 3, 'Y'))
+    mesh_object(zone, 'pencil', body, (-19.5, -24, 0.55), 'pencil')
+    tip = cylinder(0.55, 2.2, 6, r_top=0.0)
+    bmesh.ops.rotate(tip, verts=tip.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(90), 3, 'Y'))
+    mesh_object(zone, 'pencil_tip', tip, (-10.9, -24, 0.55), 'wood')
+    mesh_object(zone, 'ruler', cuboid(2.4, 26, 0.18), (25, -4, 0.09), 'ruler')
+    for i in range(26):
+        mesh_object(zone, f'ruler_tick_{i}', box(0.6 if i % 5 else 1.1, 0.06, 0.02), (24.0 + (0.3 if i % 5 else 0.55), -16.5 + i,
+                    0.18 + 0.01), 'graphite')
 
 
 def server_column(zone, base, top):
@@ -856,7 +1198,7 @@ def server_hall(zone, base, top):
         a = 2 * math.pi * i / 22 + rng.uniform(-0.08, 0.08)
         r = rng.uniform(30, 40)
         x, y = math.cos(a) * r, math.sin(a) * r
-        z0 = base + rng.uniform(-10, 30)
+        z0 = max(CEILING[1], base + rng.uniform(-10, 30))  # on the workshop's ceiling at the lowest
         h = rng.uniform(25, 45)
         b = (x - 2, y - 2, z0, x + 2, y + 2, z0 + h)
         make_prop(zone, f'hall_rack_{i}', prop_rack, b, rng)
@@ -938,28 +1280,15 @@ EARTH_CENTRE = (0.0, 0.0, -1780.0)  # its top 180 m under the floor: far below t
 
 
 def earth(zone):
-    """The Earth far below the upper air: an ocean sphere with land and cloud patches on it. Sky: drawn without fog."""
-    rng = random.Random(8)
+    """The Earth far below the upper air: a smooth sphere painted with oceans, continents, ice and cloud (earth_texture).
+    Sky: drawn without fog."""
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=72, v_segments=36, radius=EARTH_RADIUS)
+    bm.loops.layers.uv.verify()  # calc_uvs fills a UV layer that must already be there
+    bmesh.ops.create_uvsphere(bm, u_segments=96, v_segments=48, radius=EARTH_RADIUS, calc_uvs=True)
+    # Tipped over, so the climb looks down on land and sea at middle latitudes, not on the North Pole's ice.
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(62), 3, 'X'))
     bmesh.ops.translate(bm, vec=EARTH_CENTRE, verts=bm.verts)
-    mesh_object(zone, 'SKY_earth', bm, (0, 0, 0), 'earth-ocean')
-    for mat, count, size in (('earth-land', 26, (90, 260)), ('earth-cloud', 40, (60, 180))):
-        parts = []
-        for i in range(count):
-            # A point on the upper half of the sphere, a flattened blob lying on it.
-            theta = rng.uniform(0, 2 * math.pi)
-            phi = rng.uniform(0.0, 1.1)
-            n = Vector((math.sin(phi) * math.cos(theta), math.sin(phi) * math.sin(theta), math.cos(phi)))
-            lift = 2.0 if mat == 'earth-land' else 6.0
-            p = Vector(EARTH_CENTRE) + n * (EARTH_RADIUS + lift)
-            r = rng.uniform(*size)
-            b = sphere(1.0, 2)
-            bmesh.ops.scale(b, vec=(r, r * rng.uniform(0.4, 1.0), 3.0), verts=b.verts)
-            rot = n.to_track_quat('Z', 'Y').to_matrix().to_4x4()
-            bmesh.ops.transform(b, matrix=Matrix.Translation(p) @ rot, verts=b.verts)
-            parts.append(b)
-        merged(zone, f'SKY_earth_{mat.split("-")[1]}', parts, mat)
+    mesh_object(zone, 'SKY_earth', bm, (0, 0, 0), 'earth')
 
 
 def space(zone, base):
@@ -1072,24 +1401,76 @@ def build():
 
 # ------------------------------------------------------------------------------------------------------------- export
 
+RAW_DIR = os.path.join(OUT_DIR, 'raw')
+# gltfpack (a dev dependency): meshopt compression of the vertices and indices; nodes, materials and custom properties kept as
+# they are (the level contract needs every name); positions as floats rounded to 16 bits (each mesh is about its own middle,
+# so that is under a millimetre; a collision box's size and place are its node's, which are exact); texture coordinates as
+# floats (they are in world metres, which 12 bits would blur); normals in 8 bits. The game decodes it with three.js's
+# MeshoptDecoder (gltf-level.ts).
+PACK = ['-cc', '-kn', '-km', '-ke', '-vpf', '-vp', '16', '-vtf']
+
+
+def pack(raw, out):
+    """Compress the exported raw .glb into the game's assets with gltfpack, run through npx from the repository."""
+    npx = shutil.which('npx') or shutil.which('npx.cmd')
+    if not npx:
+        raise SystemExit('build_climb.py needs Node (npx) on the PATH to compress the zones with gltfpack: npm install first')
+    subprocess.run([npx, '--no-install', 'gltfpack', '-i', raw, '-o', out, *PACK], cwd=ROOT, check=True)
+
+
+def merge_static(zone):
+    """Join the zone's scenery that never moves into one mesh per material (and per whether it casts a shadow), as the game
+    draws it anyway: a file of a few dozen meshes instead of hundreds is far smaller (each mesh is its own entry in the file's
+    index). The collision boxes, the goal, the sky's meshes and the scenery of a drifting or crumbling box stay as they are."""
+    moving = {o.name[len('COL_'):] for o in zone.collection.objects
+              if o.name.startswith('COL_') and ('mover' in o or 'crumble' in o)}
+    groups = {}
+    for o in zone.collection.objects:
+        if o.type != 'MESH' or o.name.startswith(('COL_', 'SKY_', 'GOAL')) or o.name.split('__')[0] in moving:
+            continue
+        key = (o.data.materials[0].name if o.data.materials else '', int(o.get('shadow', 1)))
+        groups.setdefault(key, []).append(o)
+    dg = bpy.context.evaluated_depsgraph_get()
+    for (mat, shadow), objs in groups.items():
+        # The smooth normals are a modifier's: made real first, so the join keeps them.
+        for o in objs:
+            mesh = bpy.data.meshes.new_from_object(o.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
+            old = o.data
+            o.modifiers.clear()
+            o.data = mesh
+            bpy.data.meshes.remove(old)
+        for o in bpy.context.view_layer.objects:
+            o.select_set(False)
+        for o in objs:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = objs[0]
+        if len(objs) > 1:
+            bpy.ops.object.join()
+        objs[0].name = f'z{zone.n}_scenery__{mat}' + ('' if shadow else '__noshadow')
+
+
 def export():
     os.makedirs(ASSETS, exist_ok=True)
+    os.makedirs(RAW_DIR, exist_ok=True)
+    for zone in Z:
+        merge_static(zone)
     for zone in Z:
         for o in bpy.context.scene.objects:
             o.select_set(False)
         for o in zone.collection.objects:
             o.select_set(True)
-        path = os.path.join(ASSETS, f'zone-{zone.n}.glb')
+        path = os.path.join(RAW_DIR, f'zone-{zone.n}.glb')
         options = dict(
-            filepath=path, export_format='GLB', use_selection=True, export_yup=True, export_apply=False,
-            export_texcoords=False, export_normals=False, export_tangents=False, export_materials='EXPORT',
+            filepath=path, export_format='GLB', use_selection=True, export_yup=True, export_apply=True,
+            export_texcoords=True, export_normals=True, export_tangents=False, export_materials='EXPORT',
             export_attributes=False, export_cameras=False, export_lights=False, export_extras=True,
-            export_animations=False, export_draco_mesh_compression_enable=False, export_image_format='NONE',
+            export_animations=False, export_draco_mesh_compression_enable=False, export_image_format='WEBP',
         )
         try:
             bpy.ops.export_scene.gltf(export_vertex_color='NONE', **options)
         except TypeError:
             bpy.ops.export_scene.gltf(**options)
+        pack(path, os.path.join(ASSETS, f'zone-{zone.n}.glb'))
 
 
 def manifest():

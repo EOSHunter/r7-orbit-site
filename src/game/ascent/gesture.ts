@@ -26,6 +26,19 @@ function attempt(call: (() => unknown) | undefined): void {
  * Asks for the pointer lock, then full screen, on `target`, skipping what it already has. The lock goes first: entering full
  * screen uses up the click in some browsers, and the lock would then be refused.
  */
+/**
+ * Whether this device has a keyboard and a mouse (or a trackpad): some pointer that is fine and can hover. The game is played
+ * with them (desktop only, 2026-10-28): a phone or a tablet alone is offered a line saying so instead of Play. A laptop with a
+ * touch screen still plays.
+ */
+export function hasKeyboardAndMouse(win: Pick<Window, 'matchMedia'>): boolean {
+  try {
+    return win.matchMedia('(any-pointer: fine)').matches && win.matchMedia('(any-hover: hover)').matches;
+  } catch {
+    return true;
+  }
+}
+
 export function enterPlay(target: HTMLElement, want: PlayGesture): void {
   const doc = target.ownerDocument;
   if (want.lock && doc.pointerLockElement !== target) {
