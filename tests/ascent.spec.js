@@ -5,7 +5,8 @@ import { watchPage } from './helpers.js';
 
 // The R7: Ascent prototype (src/pages/styleguide/ascent/index.astro, docs/ASCENT.md phases 1 to 3): the game, the climb's
 // first zones and the robot built in Blender load only on Play, draw into a running canvas with no console errors, and the
-// robot moves, jumps, animates and pauses from the keyboard; the pause menu, saving, touch and the finish at the ring work.
+// robot moves, jumps, animates and pauses from the keyboard; the pause menu, saving, the Graphics setting and the finish at the ring work; a phone is told to use a
+// computer.
 // ?level=code plays phase 1's boxes, and so does a page whose level failed to load; a robot that failed to load is drawn as
 // phase 1's capsule. Most tests play in the
 // page (?lock=0&fullscreen=0); one plays as a visitor does, in full screen. WebGL runs on SwiftShader (software), as in
@@ -294,44 +295,40 @@ test('a climb in progress is saved, and offered back as Continue', async ({ page
   await expect.poll(async () => (await position(page))[2], MOUNTED).toBeCloseTo(saved.pos.z, 1);
 });
 
-test('touch: a stick on the left moves, Jump jumps, Pause pauses', async ({ page, baseURL }) => {
+// Desktop only (2026-10-28): a phone or a tablet, with no mouse, gets a line saying so in place of Play, on both pages.
+test.describe('on a phone', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  for (const path of [FIXTURE, '/ascent/']) {
+    test(`${path} offers no Play, and says the game needs a keyboard and a mouse`, async ({ page, baseURL }) => {
+      const problems = watchPage(page, baseURL);
+      await page.goto(path, { waitUntil: 'networkidle' });
+      await expect(play(page)).toBeHidden();
+      await expect(page.locator('[data-ascent-desktop]')).toBeVisible();
+      await expect(page.locator('[data-ascent-desktop]')).toContainText('keyboard and a mouse');
+      await expect(page.locator('[data-ascent-needs]')).toBeHidden();
+      const scroll = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      expect(scroll).toBeLessThanOrEqual(0);
+      expect(problems).toEqual([]);
+    });
+  }
+});
+
+test('the Graphics setting switches between high and low, and is kept', async ({ page, baseURL }) => {
   test.setTimeout(90_000);
   const problems = watchPage(page, baseURL);
-  await page.goto(`${FIXTURE}?lock=0&fullscreen=0&touch=1`, { waitUntil: 'networkidle' });
-  await play(page).click();
-  await expect(game(page)).toHaveAttribute('data-ascent-state', 'playing', MOUNTED);
-  await expect(game(page)).toHaveAttribute('data-ascent-touch', 'true');
-  await expect(page.locator('.ascent-hint')).toHaveText(/Left thumb to move/);
-  await expect.poll(() => page.locator('[data-stat="grounded"]').innerText(), MOUNTED).toBe('yes');
-  const [, , z0] = await position(page);
-
-  // A thumb down on the left half, pushed up: forward, away from the camera.
-  await page.evaluate(() => {
-    const c = document.querySelector('.ascent-canvas');
-    const r = c.getBoundingClientRect();
-    const at = (type, dy) =>
-      c.dispatchEvent(
-        new PointerEvent(type, {
-          pointerId: 7,
-          pointerType: 'touch',
-          clientX: r.left + r.width * 0.2,
-          clientY: r.top + r.height * 0.7 + dy,
-          bubbles: true,
-        }),
-      );
-    at('pointerdown', 0);
-    at('pointermove', -80);
-  });
-  await expect.poll(async () => (await position(page))[2], MOUNTED).toBeLessThan(z0 - 1);
-
-  const jump = page.getByRole('button', { name: 'Jump' });
-  await jump.dispatchEvent('pointerdown', { pointerId: 8, pointerType: 'touch' });
-  await expect.poll(() => stat(page, 'jumps')).toBe(1);
-  await jump.dispatchEvent('pointerup', { pointerId: 8, pointerType: 'touch' });
-
-  await page.getByRole('button', { name: 'Pause' }).dispatchEvent('pointerdown', { pointerType: 'touch' });
-  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'true');
-  await expect(page.locator('.ascent-prompt')).toHaveText('Paused');
+  await boot(page);
+  await host(page).press('Escape');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const low = page.getByRole('button', { name: 'Low', exact: true });
+  await expect(page.getByRole('button', { name: 'High', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await low.click();
+  await expect(low).toHaveAttribute('aria-pressed', 'true');
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('r7-ascent-settings') ?? '{}').graphics);
+  expect(stored).toBe('low');
+  await page.getByRole('button', { name: 'Back' }).click();
+  await page.getByRole('button', { name: 'Resume' }).click();
+  await expect(game(page)).toHaveAttribute('data-ascent-paused', 'false');
+  await expect.poll(() => stat(page, 'time'), MOUNTED).toBeGreaterThan(1);
   expect(problems).toEqual([]);
 });
 

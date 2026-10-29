@@ -6,7 +6,7 @@
 // jump. The mouse looks around while the pointer is locked (after a click on the game), or while a button is held and dragged.
 // release() forgets every held key (the host calls it on pause, blur and when the tab hides: a keyup that happens while the
 // page is not listening is never heard, and a key must never stay held). Keys pressed on the game's own buttons and fields
-// (the pause menu) are theirs: Space on Restart presses Restart, it does not jump. Touch pointers are left to touch.ts.
+// (the pause menu) are theirs: Space on Restart presses Restart, it does not jump. A touch does nothing (the game is played with a mouse).
 
 export type Action = 'forward' | 'back' | 'left' | 'right' | 'jump' | 'turnLeft' | 'turnRight' | 'pause';
 
@@ -133,7 +133,7 @@ export function createInput(
   const onPointerDown = (event: Event) => {
     const e = event as PointerEvent;
     handlers.onPointerDown?.(e);
-    if (e.pointerType === 'touch') return; // touch.ts: a stick on the left, a look drag on the right
+    if (e.pointerType === 'touch') return; // played with a mouse: a touch screen does not look around
     if (!locked()) drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
   };
 

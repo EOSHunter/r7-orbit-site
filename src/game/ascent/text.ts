@@ -5,13 +5,10 @@ export const ASCENT_TEXT = {
   title: 'R7: Ascent',
   canvasLabel: 'R7: Ascent, a climbing game',
   play: 'Click or press Space to play',
-  playTouch: 'Tap to play',
   paused: 'Paused. Click or press Space to continue',
   pausedFullscreen: 'Paused. Click or press Space to continue, or press Escape to leave full screen',
-  pausedTouch: 'Paused',
   clickToLook: 'Click to look around with the mouse',
   hint: 'WASD or arrows to move · Space to jump · mouse to look · Q and E to turn · Esc to pause',
-  hintTouch: 'Left thumb to move · drag on the right to look · tap Jump',
   altitude: 'Altitude',
   time: 'Time',
   best: 'Best',
@@ -51,9 +48,11 @@ export const ASCENT_TEXT = {
   motionFull: 'Full',
   volume: 'Volume',
   mute: 'Mute the sound',
+  graphics: 'Graphics',
+  graphicsHigh: 'High',
+  graphicsLow: 'Low',
 
-  // Touch
-  jump: 'Jump',
-  pause: 'Pause',
-  rotate: 'Turn your phone sideways to play',
+  // The host pages
+  needs: 'Needs a keyboard, a mouse and WebGL.',
+  desktopOnly: 'R7: Ascent is played with a keyboard and a mouse. Open this page on a computer to climb.',
 } as const;

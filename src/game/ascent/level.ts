@@ -87,6 +87,8 @@ export interface ZoneLook {
   sun_dir: [number, number, number];
   /** How much of a starfield shows, 0 to 1. */
   stars: number;
+  /** The sky light's colour from above, where it is not the horizon's (indoors: light off the walls). */
+  fill?: string;
 }
 
 /** A level's zones, or one zone from the start to the goal when it has none. */

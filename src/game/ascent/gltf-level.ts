@@ -11,8 +11,9 @@
 // three.js comes from its ES sources here as in render.ts, and so does the GLTFLoader's own `three` (astro.config.mjs,
 // ascentOwnThree): Ascent's chunk carries its own copy, and the runner's chunk is left whole for the 404 page's prefetch.
 
-import { Box3, type Mesh, type Object3D } from 'three/src/Three.js';
+import { Box3, Texture, type Mesh, type Object3D } from 'three/src/Three.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { isLevelMaterial, type LevelMaterial } from './colors';
 import { LEVEL_NAMES, joinParts, partFromObjects, type Level, type LevelObject, type LevelPart } from './level';
 
@@ -23,6 +24,8 @@ import { LEVEL_NAMES, joinParts, partFromObjects, type Level, type LevelObject, 
 export interface SceneryMesh {
   mesh: Mesh;
   material: LevelMaterial | 'lit';
+  /** Whether it casts a shadow (a lit file's mesh with the custom property shadow = 0 does not: the workshop's walls). */
+  shadow: boolean;
 }
 
 /** One level file and what the view draws for it. */
@@ -113,16 +116,42 @@ export function partModelFromScene(root: Object3D, source: string): PartModel {
       );
     }
     const owner = owners.get(mesh.name.split('__')[0]);
-    const item: SceneryMesh = { mesh, material: style === 'lit' ? 'lit' : (name as LevelMaterial) };
+    const item: SceneryMesh = {
+      mesh,
+      material: style === 'lit' ? 'lit' : (name as LevelMaterial),
+      shadow: mesh.userData.shadow !== 0,
+    };
     if (owner === undefined) scenery.push(item);
     else moving.set(owner, [...(moving.get(owner) ?? []), item]);
   }
   return { part, scenery, moving, goal, sky, style, source };
 }
 
+/** How to read a file: `textures: false` leaves its pictures out (an empty texture each), where no image can be decoded (the
+ * unit tests, in Node). */
+export interface ParseOptions {
+  textures?: boolean;
+}
+
 /** The part in a .glb file's bytes. */
-export async function parsePartModel(data: ArrayBuffer, source = 'the level file'): Promise<PartModel> {
-  const gltf = await new GLTFLoader().parseAsync(data, '');
+export async function parsePartModel(
+  data: ArrayBuffer,
+  source = 'the level file',
+  options: ParseOptions = {},
+): Promise<PartModel> {
+  // The climb's zones are compressed with gltfpack (meshopt; tools/ascent/build_climb.py): the decoder is small and comes with
+  // three.js, and it runs in Node too (the unit tests).
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  if (options.textures === false) {
+    // Every texture the file asks for is an empty one, before any of the loader's own image handling runs.
+    loader.register((parser) => {
+      const get = parser.getDependency.bind(parser);
+      parser.getDependency = (type: string, index: number) =>
+        type === 'texture' ? Promise.resolve(new Texture()) : get(type, index);
+      return { name: 'ascent-no-textures' };
+    });
+  }
+  const gltf = await loader.parseAsync(data, '');
   return partModelFromScene(gltf.scene, source);
 }
 
