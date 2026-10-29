@@ -13,12 +13,13 @@
 #   2 server stack   rack units, heat sinks and cable trays round a column of racks          fans that blow you up
 #   3 cloud          soft data blocks in open air                                            blocks that drift
 #   4 upper air      solar panels, girders and satellites round an antenna mast              plates that crumble, thin beams
-#   5 orbit          shards rising to the brass ring                                         drifts, crumbles, beams; the ring
+#   5 orbit          asteroids rising to the brass ring                                      drifts, crumbles, beams; the ring
 #
 # The look (docs/ASCENT.md, "How it looks", the author's new art style of 2026-10-27): lit, shaded and coloured. Every
 # mesh has a material from PALETTE below (a base colour, how rough and how metallic it is, and a glow for lights and
 # screens); the game draws the materials as they are in the file. Each zone has its own sky, sun and fog (LOOKS, written to
-# climb.json). Meshes named SKY_... are the sky's (the Earth, the Moon, the stars): far away, never fogged.
+# climb.json). Meshes named SKY_... are the sky's (the Earth, the Moon, the stars, the ringed planet, the station and the ship):
+# far away, never fogged.
 #
 # The contract with the game (level.ts, gltf-level.ts), on top of build_test_climb.py's (COL_ boxes, route, ground, SPAWN,
 # GOAL):
@@ -117,6 +118,9 @@ PALETTE = {
     'led-green': ('#3dff8b', 0.3, 0.0, 3.0),
     'led-amber': ('#ffb547', 0.3, 0.0, 3.0),
     'fan-ring': ('#46e0ff', 0.3, 0.0, 2.2),
+    'hall-floor': ('#323a48', 0.6, 0.1, 0.0),
+    'cable': ('#1d222b', 0.6, 0.0, 0.0),
+    'cable-blue': ('#2f6fd0', 0.5, 0.0, 0.0),
     # Cloud: soft clouds and pastel data blocks with glowing bits.
     'cloud': ('#f7f9fd', 0.95, 0.0, 0.0),
     'data-blue': ('#a3c8ff', 0.6, 0.0, 0.0),
@@ -131,12 +135,21 @@ PALETTE = {
     'paint': ('#eef0f3', 0.55, 0.1, 0.0),
     'foil': ('#d9a733', 0.3, 0.25, 0.0),
     'earth': ('#ffffff', 0.85, 0.0, 0.0),  # its colours are its painted texture (earth_texture)
+    'balloon': ('#f1ece2', 0.6, 0.0, 0.0),
     # Orbit: asteroid rock, stars, the Moon, and the brass ring of the R7 logo.
-    'rock': ('#7d7168', 0.9, 0.0, 0.0),
-    'rock-dark': ('#564c45', 0.9, 0.0, 0.0),
+    'rock': ('#8c7f74', 0.9, 0.0, 0.0),
+    'rock-dark': ('#6b5f57', 0.9, 0.0, 0.0),
     'star': ('#fff6e0', 0.5, 0.0, 6.0),
     'moon': ('#c2beb6', 0.95, 0.0, 0.05),
     'brass': ('#c9a96a', 0.3, 0.25, 0.25),
+    # Far off in orbit: a ringed planet, a station and a ship.
+    'planet': ('#ffffff', 0.9, 0.0, 0.0),  # its colours are its painted texture (planet_texture)
+    'ring-light': ('#e6d6b4', 0.9, 0.0, 0.0),
+    'ring-mid': ('#bfa47a', 0.9, 0.0, 0.0),
+    'ring-dark': ('#8c7556', 0.9, 0.0, 0.0),
+    'hull': ('#dfe3e8', 0.45, 0.15, 0.0),
+    'engine': ('#8fd3ff', 0.3, 0.0, 5.0),
+    'beacon-red': ('#ff4a3d', 0.3, 0.0, 4.0),
 }
 BOOKS = ('book-red', 'book-blue', 'book-green', 'book-yellow', 'book-purple', 'book-teal')
 DATA = ('data-blue', 'data-lilac', 'data-mint', 'data-white')
@@ -144,8 +157,17 @@ LEDS = ('led-green', 'led-blue', 'led-amber')
 
 # The painted detail: a material named here gets a tileable texture made below with numpy (a grey pattern its colour is
 # multiplied by, and a bump map from the same pattern), repeating every `tile` metres on UVs projected from the box's sides.
-# kind, tile (m), bump strength. Glows and the sky stay plain; the zones above the workshop get theirs later.
+# kind, tile (m), bump strength. Glows, clouds and the sky's far spheres stay plain.
 TEXTURED = {
+    # Server stack: rack fronts of units and vents, brushed heat sinks, painted trays, a raised floor.
+    'rack': ('vents', 2.0, 0.6), 'rack-dark': ('plastic', 1.5, 0.3), 'alu': ('brushed', 1.0, 0.35),
+    'tray': ('paint', 2.0, 0.3), 'hall-floor': ('tiles', 3.0, 0.6), 'cable-blue': ('plastic', 1.5, 0.2),
+    # Cloud: a faint grid on the data blocks.
+    **{b: ('grid', 2.0, 0.25) for b in DATA},
+    # Upper air and orbit: solar cells, crinkled gold foil, painted girders, hull plates, rock.
+    'panel': ('cells', 1.2, 0.5), 'panel-frame': ('brushed', 1.0, 0.35), 'girder': ('paint', 2.0, 0.3),
+    'paint': ('paint', 2.0, 0.3), 'foil': ('foil', 1.5, 0.9), 'hull': ('plates', 4.0, 0.4), 'balloon': ('paint', 4.0, 0.2),
+    'rock': ('rock', 3.0, 0.9), 'rock-dark': ('rock', 3.0, 0.9),
     'wood': ('grain', 3.0, 0.7), 'wood-dark': ('grain', 3.0, 0.7), 'ruler': ('grain', 2.0, 0.4),
     'wall': ('plaster', 8.0, 0.5), 'ceiling': ('plaster', 8.0, 0.5), 'label': ('plaster', 1.0, 0.2),
     'cork': ('cork', 1.5, 0.8), 'tile-dark': ('tiles', 4.0, 0.6),
@@ -221,6 +243,51 @@ def pattern(kind):
         mottle = _noise(rng, n, 8, 8)
         a = 1 + 0.04 * mottle - 0.35 * grout
         h = 0.6 + 0.1 * mottle - 0.5 * grout
+    elif kind == 'vents':  # a rack's front: units stacked up v, each a band of round holes between plain strips
+        unit = (v * 8) % 1
+        seam = (np.minimum(unit, 1 - unit) < 0.03).astype(float)
+        band = ((unit > 0.25) & (unit < 0.75) & ((u * 2) % 1 > 0.06) & ((u * 2) % 1 < 0.94)).astype(float)
+        holes = ((np.sin(2 * np.pi * 96 * u) * np.sin(2 * np.pi * 96 * v)) > 0.45).astype(float) * band
+        mottle = _noise(rng, n, 5, 5)
+        a = 1 + 0.03 * mottle - 0.3 * seam - 0.35 * holes
+        h = 0.6 + 0.05 * mottle - 0.4 * seam - 0.4 * holes
+    elif kind == 'grid':  # data blocks: a faint grid of lines over a soft mottle
+        gu = np.minimum(u % 0.25, 0.25 - u % 0.25)
+        gv = np.minimum(v % 0.25, 0.25 - v % 0.25)
+        lines = (np.minimum(gu, gv) < 0.004).astype(float)
+        low = _noise(rng, n, 4, 4)
+        a = 1 + 0.03 * low - 0.1 * lines
+        h = 0.5 + 0.1 * low - 0.3 * lines
+    elif kind == 'cells':  # solar cells: dark squares in a silver grid, thin bus lines across each
+        gu = np.minimum((u * 6) % 1, 1 - (u * 6) % 1)
+        gv = np.minimum((v * 6) % 1, 1 - (v * 6) % 1)
+        grid = (np.minimum(gu, gv) < 0.04).astype(float)
+        bus = (np.minimum((v * 18) % 1, 1 - (v * 18) % 1) < 0.04).astype(float) * (1 - grid)
+        sheen = _noise(rng, n, 3, 3)
+        a = 0.85 + 0.05 * sheen + 0.6 * grid + 0.2 * bus
+        h = 0.5 + 0.3 * grid + 0.1 * bus
+    elif kind == 'foil':  # gold foil: crinkles in two sizes, catching the light at random
+        c = np.abs(_noise(rng, n, 24, 24)) + 0.5 * np.abs(_noise(rng, n, 60, 60))
+        a = 0.8 + 0.35 * c
+        h = np.clip(c, 0, 1)
+    elif kind == 'plates':  # hull plates: panel lines and a faint mottle
+        gu = np.minimum((u * 2) % 1, 1 - (u * 2) % 1)
+        gv = np.minimum((v * 3) % 1, 1 - (v * 3) % 1)
+        lines = (np.minimum(gu, gv) < 0.006).astype(float)
+        mottle = _noise(rng, n, 6, 6)
+        a = 1 + 0.04 * mottle - 0.25 * lines
+        h = 0.6 + 0.05 * mottle - 0.4 * lines
+    elif kind == 'rock':  # rock: lumps at three sizes and a scatter of small craters
+        lumps = _noise(rng, n, 4, 4) + 0.5 * _noise(rng, n, 16, 16) + 0.25 * _noise(rng, n, 64, 64)
+        pits = np.zeros((n, n))
+        for _ in range(40):
+            cu, cv, r = rng.random(), rng.random(), rng.uniform(0.01, 0.05)
+            du = np.minimum(np.abs(u - cu), 1 - np.abs(u - cu))  # wrapped, so it tiles
+            dv = np.minimum(np.abs(v - cv), 1 - np.abs(v - cv))
+            d = np.sqrt(du ** 2 + dv ** 2) / r
+            pits += np.where(d < 1, -(1 - d ** 2), 0) + np.where((d >= 1) & (d < 1.3), 0.4 * (1.3 - d) / 0.3, 0)
+        a = 1 + 0.1 * lumps + 0.08 * pits
+        h = 0.5 + 0.2 * lumps + 0.3 * pits
     else:  # plastic: nearly smooth
         fine, low = _noise(rng, n, 120, 120), _noise(rng, n, 5, 5)
         a = 1 + 0.03 * low + 0.015 * fine
@@ -321,6 +388,50 @@ def earth_texture(w=1536, h=768):
     return bpy.data.images.load(path, check_existing=True)
 
 
+def planet_texture(w=1024, h=512):
+    """The ringed planet's paint, wrapped by its UVs: bands of cream, tan and rust along the latitudes, their edges stirred
+    by waves round the sphere, and one pale oval storm."""
+    import numpy as np
+    rng = np.random.default_rng(7)
+    lon = (np.arange(w) + 0.5) / w * 2 * np.pi
+    lat = -np.pi / 2 + (np.arange(h) + 0.5) / h * np.pi
+    lon, lat = np.meshgrid(lon, lat)
+    p = np.stack([np.cos(lat) * np.cos(lon), np.cos(lat) * np.sin(lon), np.sin(lat)], axis=-1)
+    stir = np.zeros(lat.shape)
+    for _ in range(80):
+        d = rng.normal(size=3)
+        d /= np.linalg.norm(d)
+        k = rng.uniform(3, 40)
+        stir += np.sin(k * (p @ d) + rng.uniform(0, 2 * np.pi)) / k
+    stir /= np.abs(stir).max()
+    t = lat * 5.0 + 0.35 * stir + 0.08 * np.sin(lat * 23.0)
+    stops = [np.array(srgb(c)[:3]) for c in ('#efe2c4', '#c99d68', '#e6d3ae', '#a8704a', '#f1e7d0', '#b98a5a')]
+    f = (t / (2 * np.pi) * len(stops)) % len(stops)
+    i0 = np.floor(f).astype(int)
+    frac = (f - i0)[..., None]
+    frac = frac * frac * (3 - 2 * frac)
+    table = np.array(stops)
+    rgb = table[i0 % len(stops)] * (1 - frac) + table[(i0 + 1) % len(stops)] * frac
+    # The storm: a pale oval in the southern bands.
+    d = np.sqrt(((lon - 2.2) / 0.28) ** 2 + ((lat + 0.38) / 0.11) ** 2)
+    storm = np.clip(1.2 - d, 0, 1)[..., None]
+    rgb = rgb + (np.array(srgb('#f6ead2')[:3]) - rgb) * storm
+    srgb_rgb = np.where(rgb <= 0.0031308, rgb * 12.92, 1.055 * np.power(np.clip(rgb, 0, 1), 1 / 2.4) - 0.055)
+    os.makedirs(TEX_DIR, exist_ok=True)
+    img = bpy.data.images.new('tex-planet', w, h, alpha=False)
+    img.pixels.foreach_set(np.dstack([srgb_rgb, np.ones((h, w, 1))]).astype(np.float32).ravel())
+    path = os.path.join(TEX_DIR, 'tex-planet.png')
+    img.filepath_raw = path
+    img.file_format = 'PNG'
+    img.save()
+    bpy.data.images.remove(img)
+    return bpy.data.images.load(path, check_existing=True)
+
+
+# The sky's spheres painted all over (their UVs are the sphere's own, not box_uv's).
+PAINTED = {'earth': earth_texture, 'planet': planet_texture}
+
+
 def box_uv(bm, offset, tile):
     """UVs projected onto each face from the axis it faces most, in world metres / tile, so textures meet across pieces."""
     uv = bm.loops.layers.uv.verify()
@@ -347,11 +458,11 @@ LOOKS = {
     'server': dict(top='#0c1525', horizon='#1d3e63', ground='#2a3a52', sun='#b4dcff', strength=3.4,
                    sun_dir=(-0.5, 0.4, 0.75), ambient=0.8, stars=0.0, fill='#9ab4d8'),
     'cloud': dict(top='#4e9be9', horizon='#d2e8ff', ground='#a3cdf2', sun='#fff4df', strength=3.6,
-                  sun_dir=(0.4, -0.3, 0.85), ambient=0.75, stars=0.0),
+                  sun_dir=(0.4, -0.3, 0.85), ambient=0.75, stars=0.0, fill='#dcebff'),
     'upper': dict(top='#0d1c4a', horizon='#3f73cc', ground='#1f428f', sun='#ffffff', strength=4.0,
                   sun_dir=(0.6, 0.2, 0.75), ambient=0.65, stars=0.35, fill='#a9c4ee'),
     'orbit': dict(top='#02020a', horizon='#0c1236', ground='#2a4f8f', sun='#fff7e6', strength=4.5,
-                  sun_dir=(0.7, -0.2, 0.68), ambient=0.6, stars=1.0, fill='#8494bd'),
+                  sun_dir=(0.7, -0.2, 0.68), ambient=0.9, stars=1.0, fill='#a3b2d6'),
 }
 
 
@@ -457,9 +568,9 @@ def material(name):
         if glow:
             bsdf.inputs['Emission Color'].default_value = srgb(colour)
             bsdf.inputs['Emission Strength'].default_value = glow
-        if name == 'earth':
+        if name in PAINTED:
             tex = mat.node_tree.nodes.new('ShaderNodeTexImage')
-            tex.image = earth_texture()
+            tex.image = PAINTED[name]()
             mat.node_tree.links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
         if name in TEXTURED:
             # Base colour = the grey pattern x the colour (the exporter writes it as the texture and its factor), and the
@@ -522,9 +633,10 @@ class Zone:
 SHARP = math.radians(50)
 
 
-def mesh_object(zone, name, bm, location, mat, shadow=True):
+def mesh_object(zone, name, bm, location, mat, shadow=True, rounded=False):
     """A mesh of bm at location in mat; a seen mesh gets smooth edges and, if its material is textured, UVs. shadow=False:
-    it casts none (the workshop's walls and ceiling: the light comes from inside the room)."""
+    it casts none (the workshop's walls and ceiling: the light comes from inside the room). rounded: a soft shape (a cloud,
+    a rock) smoothed evenly, without the weighting that keeps a box's big faces flat (it shows a sphere's facets)."""
     # The mesh's vertices about its own middle, the object placed there: the packed file keeps positions as floats with 16
     # bits (PACK), which stays under a millimetre on numbers this small, where world coordinates hundreds of metres up would not.
     if bm.verts:
@@ -549,6 +661,7 @@ def mesh_object(zone, name, bm, location, mat, shadow=True):
     obj.location = location
     if mat:
         mesh.materials.append(material(mat))
+    if mat and not rounded:
         mod = obj.modifiers.new('normals', 'WEIGHTED_NORMAL')
         mod.mode = 'FACE_AREA'
         mod.keep_sharp = True
@@ -847,15 +960,55 @@ def prop_girder(zone, name, b, rng):
             detail(zone, name, f'rib{i}', (x0 - 0.05, y - 0.04, z0 - 0.15, x1 + 0.05, y + 0.04, z1 - 0.02), 'paint')
 
 
+def lumpy(rng, amount, waves=6):
+    """A smooth random bump over the unit sphere, about -amount to amount: a few waves summed, for rocks."""
+    ws = []
+    for _ in range(waves):
+        d = Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))).normalized()
+        ws.append((d, rng.uniform(1.5, 4.5), rng.uniform(0, 2 * math.pi)))
+
+    def f(p):
+        return amount * sum(math.sin(k * p.dot(d) + ph) for d, k, ph in ws) / math.sqrt(waves)
+    return f
+
+
+def asteroid(w, d, h, rng, extra):
+    """A floating rock whose flat top fills the box's top (a rounded square, so little of the box's top is bare) and whose
+    lumpy underside narrows to a point `extra` metres below the box. Made about the box's middle, as piece() wants."""
+    bm = sphere(1.0, 2)
+    bump = lumpy(rng, 0.08)
+    for v in bm.verts:
+        p = v.co.copy()
+        x, y, z = p
+        r = math.hypot(x, y)
+        k = r / ((x ** 4 + y ** 4) ** 0.25) if r > 1e-6 else 1.0  # the circle stretched to a rounded square
+        if z >= 0:
+            f = 0.97 + min(0.03, bump(p) * 0.3)
+            v.co = Vector((x * k * f * w / 2, y * k * f * d / 2, h / 2))
+        else:
+            f = 0.9 + bump(p)
+            v.co = Vector((x * k * min(1.0, f) * w / 2, y * k * min(1.0, f) * d / 2, h / 2 + z * (h + extra) * f))
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    return bm
+
+
+def rock(size, rng):
+    """A whole asteroid for the background: a lumpy, squashed sphere about `size` metres across (finer when it is big)."""
+    bm = sphere(1.0, 3 if size > 8 else 2)
+    bump = lumpy(rng, 0.18)
+    sx, sy, sz = (size / 2 * rng.uniform(0.7, 1.2) for _ in range(3))
+    for v in bm.verts:
+        f = 1 + bump(v.co)
+        v.co = Vector((v.co.x * sx * f, v.co.y * sy * f, v.co.z * sz * f))
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0),
+                     matrix=Matrix.Rotation(rng.uniform(0, math.pi), 3, Vector((rng.random(), rng.random(), 1)).normalized()))
+    return bm
+
+
 def prop_shard(zone, name, b, rng):
-    """An asteroid shard in orbit: a chamfered rock with a darker one sunk into its underside."""
-    x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.2), 'rock')
-    cx, cy = centre(b)
-    s = min(x1 - x0, y1 - y0) * 0.35
-    dz = (z1 - z0) * 0.4
-    detail(zone, name, 'chip', (cx - s, cy - s, z0 - dz, cx + s, cy + s, z0 + 0.1), 'rock-dark',
-           lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.2))
+    """An asteroid in orbit: a lumpy rock, flat on top where the agent lands, narrowing to a point underneath."""
+    extra = min(0.6, (b[5] - b[2]) * 0.5)
+    piece(zone, name, b, lambda w, d, h: asteroid(w, d, h, rng, extra), rng.choice(('rock', 'rock', 'rock-dark')))
 
 
 def prop_tower(zone, name, b, rng):
@@ -1191,17 +1344,96 @@ def server_column(zone, base, top):
     return out
 
 
+HALL = 58.0  # the server hall's floor reaches this far from the middle (the workshop's roof is its middle)
+
+
+def prop_hall_rack(zone, name, b, rng, facing):
+    """A rack tower in the hall: its front's units and vents are its texture; short bars of status lights sit here and there
+    on the side that faces the climb (`facing`: 'x0', 'x1', 'y0' or 'y1'), and a blue cable bundle runs up one corner."""
+    x0, y0, z0, x1, y1, z1 = b
+    piece(zone, name, b, cuboid, 'rack')
+    along_y = facing in ('x0', 'x1')
+    plane = {'x0': x0, 'x1': x1, 'y0': y0, 'y1': y1}[facing]
+    out = -1 if facing in ('x0', 'y0') else 1
+    lo, hi = sorted((plane, plane + out * 0.05))
+    # Each bar in a column of its own (two in one place would flicker).
+    for k, t in enumerate(rng.sample([0.5 + 0.35 * i for i in range(8)], rng.randint(4, 7))):
+        za = rng.uniform(z0 + 2, z1 - 6)
+        zb = za + rng.uniform(1.0, 4.0)
+        led = rng.choice(LEDS)
+        if along_y:
+            detail(zone, name, f'led{k}', (lo, y0 + t, za, hi, y0 + t + 0.12, zb), led)
+        else:
+            detail(zone, name, f'led{k}', (x0 + t, lo, za, x0 + t + 0.12, hi, zb), led)
+    corner = rng.choice((0.25, 3.75))
+    at = (plane + out * 0.25, y0 + corner) if along_y else (x0 + corner, plane + out * 0.25)
+    add(cylinder(0.2, z1 - z0 - 0.2, 8), (at[0], at[1], (z0 + z1) / 2), 'cable-blue')
+
+
 def server_hall(zone, base, top):
-    """The hall round the stack: tall racks far out, their status lights glowing, for depth. Scenery only."""
+    """The hall round the stack: a raised floor out from the workshop's roof, two rings of rack towers in rows with aisles
+    between, cable trays bridging the aisles and cables slung between the towers. Scenery only, well outside the route."""
     rng = random.Random(6)
-    for i in range(22):
-        a = 2 * math.pi * i / 22 + rng.uniform(-0.08, 0.08)
-        r = rng.uniform(30, 40)
-        x, y = math.cos(a) * r, math.sin(a) * r
-        z0 = max(CEILING[1], base + rng.uniform(-10, 30))  # on the workshop's ceiling at the lowest
-        h = rng.uniform(25, 45)
-        b = (x - 2, y - 2, z0, x + 2, y + 2, z0 + h)
-        make_prop(zone, f'hall_rack_{i}', prop_rack, b, rng)
+    lo = CEILING[1]
+    # The floor round the workshop's roof (which ends at the walls' outer faces, 33 m out).
+    edge = 33.01
+    for i, (x0, y0, x1, y1) in enumerate(((-HALL, edge, HALL, HALL), (-HALL, -HALL, HALL, -edge),
+                                          (-HALL, -edge, -edge, edge), (edge, -edge, HALL, edge))):
+        mesh_object(zone, f'hall_floor_{i}', cuboid(x1 - x0, y1 - y0, 1.0), ((x0 + x1) / 2, (y0 + y1) / 2, lo - 0.5),
+                    'hall-floor')
+    towers = []
+    for ring in (24.0, 36.0):
+        # Rows along x on two sides, rows along y on the other two, a rack every 4.6 m with a gap here and there.
+        for side in (-1, 1):
+            y = side * ring
+            for x in [i * 4.6 for i in range(-int(ring / 4.6) - 2, int(ring / 4.6) + 3)]:
+                if abs(x) <= ring + 2 and rng.random() > 0.12:
+                    towers.append(((x - 2, y - 2), 'y0' if side > 0 else 'y1'))
+            x = side * ring
+            for y in [i * 4.6 for i in range(-int((ring - 4) / 4.6), int((ring - 4) / 4.6) + 1)]:
+                if rng.random() > 0.12:
+                    towers.append(((x - 2, y - 2), 'x0' if side > 0 else 'x1'))
+    for i, ((x, y), facing) in enumerate(towers):
+        h = rng.uniform(45, 76)  # the tallest just into the sea of clouds above
+        make_prop(zone, f'hall_rack_{i}', lambda z, n, b, r: prop_hall_rack(z, n, b, r, facing),
+                  (x, y, lo, x + 4, y + 4, lo + h), rng)
+    # Cable trays across the aisle between the rings, at heights along the climb, their ends inside the towers.
+    for i in range(28):
+        a = rng.uniform(0, 2 * math.pi)
+        z = rng.uniform(base + 8, top + 10)
+        c, s = math.cos(a), math.sin(a)
+        if abs(c) > abs(s):
+            x0, x1 = sorted((math.copysign(25.5, c), math.copysign(34.5, c)))
+            y = rng.uniform(-18, 18)
+            b = (x0, y - 0.7, z, x1, y + 0.7, z + 0.35)
+        else:
+            y0, y1 = sorted((math.copysign(25.5, s), math.copysign(34.5, s)))
+            x = rng.uniform(-18, 18)
+            b = (x - 0.7, y0, z, x + 0.7, y1, z + 0.35)
+        make_prop(zone, f'hall_tray_{i}', prop_tray, b, rng)
+    # Cables slung between neighbouring towers of the inner ring: chains of short pieces sagging in the middle.
+    inner = [t for t in towers if max(abs(t[0][0] + 2), abs(t[0][1] + 2)) < 30]
+    parts = []
+    for i in range(24):
+        (ax, ay), _ = rng.choice(inner)
+        (bx_, by), _ = rng.choice(inner)
+        p0 = Vector((ax + 2, ay + 2, rng.uniform(base + 10, top)))
+        p1 = Vector((bx_ + 2, by + 2, p0.z + rng.uniform(-6, 6)))
+        if (p1 - p0).length < 12 or (p1 - p0).length > 40:
+            continue
+        sag = (p1 - p0).length * 0.15
+        n = 10
+        pts = [p0.lerp(p1, k / n) - Vector((0, 0, sag * 4 * (k / n) * (1 - k / n))) for k in range(n + 1)]
+        if any(math.hypot(q.x - 1, q.y - 1) < 20 for q in pts):
+            continue  # it would cross the climb
+        for k in range(n):
+            seg = pts[k + 1] - pts[k]
+            c = cylinder(0.16, seg.length + 0.1, 6)
+            rot = Vector((0, 0, 1)).rotation_difference(seg.normalized()).to_matrix()
+            bmesh.ops.rotate(c, verts=c.verts, cent=(0, 0, 0), matrix=rot)
+            bmesh.ops.translate(c, vec=(pts[k] + pts[k + 1]) / 2, verts=c.verts)
+            parts.append(c)
+    merged(zone, 'hall_cables', parts, 'cable')
 
 
 def antenna_mast(zone, base, top):
@@ -1222,26 +1454,93 @@ def antenna_mast(zone, base, top):
               cuboid, 'panel')
     collider(zone, 'satellite', body)
     out.append(body)
-    for k, (x, y, z) in enumerate(((-34, 18, base + 20), (30, -26, base + 50))):
-        piece(zone, f'far_satellite_{k}', (x - 1.5, y - 1.5, z - 1.5, x + 1.5, y + 1.5, z + 1.5), cuboid, 'foil')
-        for s in (-1, 1):
-            piece(zone, f'far_satellite_{k}__wing{s}', (x + s * 1.6, y - 1.0, z - 0.06, x + s * 6.5, y + 1.0, z + 0.06),
-                  cuboid, 'panel')
+    rng = random.Random(4)
+    for k, (x, y, z) in enumerate(((-34, 18, base + 20), (30, -26, base + 50), (8, 44, base + 64))):
+        satellite(zone, f'far_satellite_{k}', (x, y, z), 2.6, rng.uniform(0, math.pi), rng.uniform(-0.4, 0.4))
+    # A weather balloon drifting past: a white envelope, its line and the box of instruments under it.
+    bx_, by, bz = -46, -40, base + 38
+    piece(zone, 'balloon', (bx_ - 7, by - 7, bz - 8, bx_ + 7, by + 7, bz + 8), lambda w, d, h: sphere(7, 3), 'balloon')
+    piece(zone, 'balloon_line', (bx_ - 0.06, by - 0.06, bz - 20, bx_ + 0.06, by + 0.06, bz - 6.5),
+          lambda w, d, h: cylinder(0.06, h, 6), 'cable')
+    piece(zone, 'balloon_payload', (bx_ - 0.8, by - 0.8, bz - 21.4, bx_ + 0.8, by + 0.8, bz - 20), cuboid, 'foil')
     return out
 
 
-def cloud_puff(bm_parts, rng, cx, cy, cz, size):
-    """A cloud: a few overlapping spheres, flatter underneath."""
+def posed(bm, rot, at):
+    """bm (made about its middle) turned by the 3 x 3 matrix rot about that middle, then moved to `at`."""
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=rot)
+    bmesh.ops.translate(bm, vec=at, verts=bm.verts)
+    return bm
+
+
+def assembly(zone, name, at, rot, parts):
+    """A model made of (bm made about its middle, offset from the model's middle, material) parts, turned by rot and placed
+    at `at`: one mesh per material, named <name> and <name>__<material> (so a SKY_ model stays the sky's)."""
+    global GATHER
+    GATHER = {}
+    for bm, off, mat in parts:
+        add(posed(bm, rot, (0, 0, 0)), Vector(at) + rot @ Vector(off), mat)
+    gathered, GATHER = GATHER, None
+    for i, (mat, bm) in enumerate(gathered.items()):
+        mesh_object(zone, name if i == 0 else f'{name}__{mat}', bm, (0, 0, 0), mat)
+
+
+def turned(bm, axis, angle=90):
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(angle), 3, axis))
+    return bm
+
+
+def satellite(zone, name, at, s, yaw, tilt):
+    """A satellite about s metres across its body: gold foil, two wings of solar cells on silver arms, a white dish and a
+    thin antenna."""
+    parts = [(cuboid(s, s, s * 1.2), (0, 0, 0), 'foil')]
+    for side in (-1, 1):
+        parts.append((box(s * 0.75, s * 0.08, s * 0.08), (side * (s * 0.5 + s * 0.3), 0, 0), 'panel-frame'))
+        parts.append((box(s * 2.6, s * 1.1, s * 0.04), (side * (s * 0.5 + s * 0.6 + s * 1.3), 0, 0), 'panel'))
+    parts.append((cylinder(s * 0.08, s * 0.2, 16, r_top=s * 0.5), (0, 0, s * 0.7), 'paint'))
+    parts.append((cylinder(s * 0.025, s * 0.9, 6), (s * 0.3, s * 0.3, -s * 1.0), 'panel-frame'))
+    rot = Matrix.Rotation(yaw, 3, 'Z') @ Matrix.Rotation(tilt, 3, 'X')
+    assembly(zone, name, at, rot, parts)
+
+
+def cloud_puff(bm_parts, rng, cx, cy, cz, size, subdivisions=2, clear=0.0):
+    """A cloud: a few round lumps, squashed and flat underneath, wrapped in one skin: each vertex of a sphere round the
+    biggest lump's middle is pushed out to the farthest lump along its direction. One smooth outline with no seams where
+    the lumps meet, for fewer vertices than the lumps as spheres of their own. No lump nearer the middle than `clear`."""
+    lumps = []
     for i in range(rng.randint(4, 7)):
         r = size * rng.uniform(0.45, 0.8)
-        p = (cx + rng.uniform(-size, size), cy + rng.uniform(-size * 0.6, size * 0.6), cz + rng.uniform(0, size * 0.35))
-        b = sphere(r, 2)
-        bmesh.ops.scale(b, vec=(1.0, 1.0, 0.7), verts=b.verts)
-        bmesh.ops.translate(b, vec=p, verts=b.verts)
-        bm_parts.append(b)
+        p = Vector((cx + rng.uniform(-size, size), cy + rng.uniform(-size * 0.6, size * 0.6), cz + rng.uniform(0, size * 0.35)))
+        if math.hypot(p.x, p.y) - r < clear:
+            continue
+        lumps.append((p, Vector((r, r, r * 0.7))))
+    if not lumps:
+        return
+    c = max(lumps, key=lambda l: l[1].x)[0]
+    floor = min(p.z for p, _ in lumps) - size * 0.15
+    b = sphere(1.0, subdivisions)
+    for v in b.verts:
+        d = v.co.normalized()
+        far = 0.0
+        for p, radii in lumps:
+            # The ray from c along d through the lump (a unit sphere once scaled by its radii): where it leaves.
+            o = Vector(((c - p)[i] / radii[i] for i in range(3)))
+            k = Vector((d[i] / radii[i] for i in range(3)))
+            qa, qb, qc = k.dot(k), 2 * o.dot(k), o.dot(o) - 1
+            disc = qb * qb - 4 * qa * qc
+            if disc >= 0:
+                far = max(far, (-qb + math.sqrt(disc)) / (2 * qa))
+        q = c + d * far
+        if q.z < floor:
+            q.z = floor - (floor - q.z) * 0.25  # flatter underneath
+        v.co = q
+    # Smoothed a little: a ray that only grazes a far lump leaves a wedge.
+    for _ in range(4):
+        bmesh.ops.smooth_vert(b, verts=b.verts, factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    bm_parts.append(b)
 
 
-def merged(zone, name, parts, mat):
+def merged(zone, name, parts, mat, rounded=False, shadow=True):
     """One mesh from many bmeshes (all in world space)."""
     out = bmesh.new()
     for b in parts:
@@ -1250,21 +1549,47 @@ def merged(zone, name, parts, mat):
         b.free()
         out.from_mesh(tmp)
         bpy.data.meshes.remove(tmp)
-    return mesh_object(zone, name, out, (0, 0, 0), mat)
+    return mesh_object(zone, name, out, (0, 0, 0), mat, shadow=shadow, rounded=rounded)
+
+
+CLEAR = 19.0  # nothing far off comes nearer the middle than this: the climbs of zones 2 to 4 keep inside it
 
 
 def cloud_far(zone, base, top, rng):
-    """Clouds all round the cloud zone and a layer of them below it; and a few data blocks far out. Scenery only."""
+    """Clouds all round the cloud zone, a sea of them below it (the server hall's towers rise through it, with a hole round
+    the climb), streams of glowing data rising far out, and a few data blocks. Scenery only."""
     parts = []
     for i in range(18):
         a = rng.uniform(0, 2 * math.pi)
         r = rng.uniform(26, 55)
-        cloud_puff(parts, rng, math.cos(a) * r, math.sin(a) * r, rng.uniform(base - 10, top), rng.uniform(3, 6))
-    for i in range(14):
-        a = rng.uniform(0, 2 * math.pi)
-        r = rng.uniform(18, 70)
-        cloud_puff(parts, rng, math.cos(a) * r, math.sin(a) * r, base - rng.uniform(12, 20), rng.uniform(5, 9))
-    merged(zone, 'clouds', parts, 'cloud')
+        cloud_puff(parts, rng, math.cos(a) * r, math.sin(a) * r, rng.uniform(base - 10, top), rng.uniform(3, 6), 3,
+                   clear=CLEAR)
+    # The sea: rings of puffs out to the fog, close enough to run together, larger and coarser further out.
+    for r0, count, size, sub in ((22, 16, (5, 8), 3), (38, 22, (7, 11), 3), (60, 26, (10, 15), 2), (90, 30, (14, 20), 2)):
+        for i in range(count):
+            a = 2 * math.pi * (i + rng.uniform(-0.3, 0.3)) / count
+            r = r0 + rng.uniform(0, 12)
+            cloud_puff(parts, rng, math.cos(a) * r, math.sin(a) * r, base - rng.uniform(13, 18), rng.uniform(*size), sub,
+                       clear=CLEAR)
+    # The clouds cast no shadow: on their own coarse spheres it falls in facets (the sun's shadow map sees the flat faces
+    # the smooth shading hides).
+    merged(zone, 'clouds', parts, 'cloud', rounded=True, shadow=False)
+    # Data rising: a few spirals of small glowing cubes far out.
+    bits = []
+    for s in range(4):
+        a0 = rng.uniform(0, 2 * math.pi)
+        r = rng.uniform(30, 46)
+        z = base - 12
+        k = 0
+        while z < top - 4:
+            a = a0 + k * 0.22
+            p = (math.cos(a) * (r + 2.2 * math.sin(k * 0.7)), math.sin(a) * (r + 2.2 * math.sin(k * 0.7)), z)
+            c = box(0.4, 0.4, 0.4)
+            bmesh.ops.translate(c, vec=p, verts=c.verts)
+            bits.append(c)
+            z += rng.uniform(1.2, 2.4)
+            k += 1
+    merged(zone, 'data_streams', bits, 'data-bit')
     for i in range(10):
         a = rng.uniform(0, 2 * math.pi)
         r = rng.uniform(24, 40)
@@ -1305,6 +1630,83 @@ def space(zone, base):
     merged(zone, 'SKY_stars', parts, 'star')
     moon = sphere(70, 3)
     mesh_object(zone, 'SKY_moon', moon, (420, 300, centre_z + 160), 'moon')
+    ringed_planet(zone, (-380, -300, centre_z + 10))  # just over the horizon from the climb
+    station(zone, (260, -250, centre_z + 40))
+    ship(zone, (-150, 320, centre_z - 10))
+    satellite(zone, 'SKY_satellite_0', (90, 150, centre_z - 20), 4.0, 0.7, 0.3)
+    satellite(zone, 'SKY_satellite_1', (-170, 40, centre_z + 50), 4.0, 2.1, -0.5)
+
+
+def asteroid_field(zone, base, top):
+    """Rocks all round orbit, small ones near and a few great ones far out. Scenery only, clear of the climb and the ring."""
+    rng = random.Random(11)
+    for i in range(70):
+        a = rng.uniform(0, 2 * math.pi)
+        far = i < 10
+        r = rng.uniform(70, 120) if far else rng.uniform(30, 75)
+        size = rng.uniform(10, 22) if far else rng.uniform(1.0, 5.5) * (1 + r / 75)
+        z = rng.uniform(base - 20, top + 80) if far else rng.uniform(base - 2, top + 50)
+        mesh_object(zone, f'far_rock_{i}', rock(size, rng), (math.cos(a) * r, math.sin(a) * r, z),
+                    'rock-dark' if rng.random() < 0.35 else 'rock', rounded=True)
+
+
+def washer(r0, r1, t, segments=128):
+    """A flat ring from radius r0 to r1, t thick, closed (seen from both sides)."""
+    bm = bmesh.new()
+    loops = []
+    for rr, zz in ((r0, -t / 2), (r1, -t / 2), (r1, t / 2), (r0, t / 2)):
+        loops.append([bm.verts.new((rr * math.cos(2 * math.pi * i / segments), rr * math.sin(2 * math.pi * i / segments), zz))
+                      for i in range(segments)])
+    for k in range(4):
+        a, b = loops[k], loops[(k + 1) % 4]
+        for i in range(segments):
+            j = (i + 1) % segments
+            bm.faces.new((a[i], a[j], b[j], b[i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+
+def ringed_planet(zone, at):
+    """A banded planet with rings in three shades, tilted, far out in orbit's sky. Sky: drawn without fog."""
+    tilt = Matrix.Rotation(math.radians(24), 3, 'X') @ Matrix.Rotation(math.radians(-30), 3, 'Y')
+    bm = bmesh.new()
+    bm.loops.layers.uv.verify()
+    bmesh.ops.create_uvsphere(bm, u_segments=64, v_segments=32, radius=80, calc_uvs=True)
+    mesh_object(zone, 'SKY_planet', posed(bm, tilt, at), (0, 0, 0), 'planet')
+    for name, r0, r1, mat in (('inner', 104, 130, 'ring-mid'), ('gap', 132, 139, 'ring-dark'),
+                              ('outer', 141, 165, 'ring-light')):
+        mesh_object(zone, f'SKY_planet_ring_{name}', posed(washer(r0, r1, 0.6), tilt, at), (0, 0, 0), mat)
+
+
+def station(zone, at):
+    """A space station: a long silver truss, three white modules across it, four pairs of solar wings and red lights at
+    its ends."""
+    parts = [(cuboid(80, 2.5, 2.5), (0, 0, 0), 'panel-frame')]
+    for x in (-13, 0, 13):
+        parts.append((turned(cylinder(4, 16, 24), 'X'), (x, 0, 0), 'hull'))
+    parts.append((sphere(5.2, 2), (0, 0, 0), 'hull'))
+    for x in (-37, -27, 27, 37):
+        for y in (-17, 17):
+            parts.append((cuboid(8, 28, 0.3), (x, y, 0), 'panel'))
+        parts.append((box(0.8, 34, 0.8), (x, 0, 0), 'panel-frame'))
+    for x in (-7, 7):
+        parts.append((cuboid(9, 0.3, 6), (x, 0, 7), 'paint'))
+    for x in (-40.2, 40.2):
+        parts.append((box(1, 1, 1), (x, 0, 1.7), 'beacon-red'))
+    rot = Matrix.Rotation(0.6, 3, 'Z') @ Matrix.Rotation(0.25, 3, 'X')
+    assembly(zone, 'SKY_station', at, rot, parts)
+
+
+def ship(zone, at):
+    """A small ship crossing far off: a white hull with a pointed nose, swept wings, and two engines glowing blue."""
+    parts = [(turned(cylinder(2.2, 16, 16), 'Y'), (0, 0, 0), 'hull'),
+             (turned(cylinder(2.2, 6, 16, r_top=0.2), 'Y'), (11, 0, 0), 'hull'),
+             (cuboid(7, 15, 0.4), (-3, 0, -0.6), 'hull')]
+    for y in (-3.2, 3.2):
+        parts.append((turned(cylinder(1.1, 5, 12), 'Y'), (-7, y, 0), 'rack-dark'))
+        parts.append((turned(cylinder(0.85, 0.3, 12), 'Y'), (-9.6, y, 0), 'engine'))
+    rot = Matrix.Rotation(-0.9, 3, 'Z') @ Matrix.Rotation(0.12, 3, 'X')
+    assembly(zone, 'SKY_ship', at, rot, parts)
 
 
 # --------------------------------------------------------------------------------------------------------------- build
@@ -1334,6 +1736,7 @@ def build():
     server_hall(Z[1], 70, 150)
     earth(Z[3])
     space(Z[4], 300)
+    asteroid_field(Z[4], 300, 345)
 
     last = walk(course, ZONES, first)
     Z[0].base = 0.0

@@ -30,7 +30,8 @@ orbit suits the name.)
 
 ## How it looks
 
-**Polish (2026-10-28; the renderer, and the workshop as the sample the other zones follow once the author approves it).**
+**Polish (2026-10-28; the renderer and the workshop first, then the other four zones to the workshop's standard on
+2026-10-29, after the author approved the workshop).**
 The author's reference is his own Godot game: crisp shadows, glowing light strips, painted detail on simple bevelled shapes,
 skies that move. In High graphics (Settings) the sun casts real shadows in three cascades along the view (three.js's `CSM`:
 sharp near the camera, coarser further out, as far as the fog's end, fading into each other; a single square round the
@@ -48,7 +49,22 @@ tiles) and a bump map from the same pattern, on UVs projected from each face's a
 the zone file. The workshop is a closed room: four walls with skirting boards, a ceiling with a 33 m hatch the climb goes up
 through (its top is the server stack's floor), eight lamps under it (the zone's light comes from above), a door, a radiator
 under the window, a cork board of notes, and a giant mug, pencil and ruler. A mesh with the custom property `shadow = 0` casts
-none (the walls and the ceiling, which would otherwise shade the room).
+none (the walls and the ceiling, which would otherwise shade the room; the clouds, whose coarse spheres would shade themselves
+in facets). The zones above (2026-10-29), all scenery well outside the climb:
+
+- **Server stack:** a raised floor out from the workshop's roof to 58 m, two rings of rack towers in rows with aisles
+  between (their fronts a texture of rack units and vent holes, short bars of status lights on the side facing the climb, a
+  blue cable bundle up a corner; the tallest reach just into the clouds), cable trays across the aisles and cables slung
+  between the towers.
+- **Cloud:** a sea of clouds under the zone with a hole round the climb (through it, the Earth), out to the fog; each cloud
+  is a few lumps wrapped in one smooth skin (`cloud_puff`), so it has a soft outline and no seams; four spirals of glowing
+  data cubes rising far out; the data blocks get a faint grid.
+- **Upper air:** solar cells on the panels, gold foil on the satellites, three satellites with dishes and cell wings (one
+  `satellite()` model), and a weather balloon drifting past.
+- **Orbit:** the steps are asteroids (`asteroid()`: a lumpy rock whose flat top fills the box's top as a rounded square,
+  narrowing to a point underneath); seventy more rocks all round, a few great ones far out; and in the sky (`SKY_`, no fog)
+  a banded planet with three rings just over the horizon (`planet_texture`), a space station, a ship with glowing engines and
+  two satellites. Orbit's shade gets more light from the Earth below, so the rocks' dark sides are never black.
 
 **The climb is lit** (the author's new art style, 2026-10-27, after the first full climb: "lit shaded and colorful scenes
 with objects and less line work"). Each zone file says `style = lit` on its `ZONE_` empty, and the game draws its own
@@ -267,7 +283,7 @@ Rebuilding models needs Blender installed. Building the site does not.
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
 | Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, 171 kB gzipped; with the robot agent and its animation, 670 kB, **173 kB gzipped** (three.js is nearly all of it) |
 | The character `.glb` | < 150 kB. The robot is 115 kB, 28 kB gzipped (5,608 triangles; the normals make up much of it, for the smooth shading) |
-| Each zone `.glb` | < 500 kB, loaded as the player nears it (`climb.vitest.ts`). Since the polish (2026-10-28) the zones are packed with `gltfpack` (below): 421, 234, 255, 199 and 185 kB, 1.29 MB in all (6.4 MB unpacked; the workshop's textures are about 0.15 MB of it). Before the polish they were 228, 196, 219, 171 and 135 kB. The test climb is 52 kB (11 kB gzipped) |
+| Each zone `.glb` | < 500 kB, loaded as the player nears it (`climb.vitest.ts`). Since the polish (2026-10-28) the zones are packed with `gltfpack` (below): 421, 476, 398, 359 and 427 kB with every zone finished (2026-10-29), 2.08 MB in all; with only the workshop finished they were 421, 234, 255, 199 and 185 kB. The server stack is nearest the limit: its rack towers are most of it. Before the polish they were 228, 196, 219, 171 and 135 kB. The test climb is 52 kB (11 kB gzipped) |
 
 **Packing (decided with the author 2026-10-28).** `tools/ascent/build_climb.py` exports each zone raw to
 `tools/ascent/out/raw/` and packs it into the assets with `gltfpack` (a dev dependency, run through `npx`; `PACK` in the
@@ -484,7 +500,7 @@ the room above it. The same Blender gives the same files. 451 steps:
 | 2 Server stack | 71 m | 75 | rack units, heat sinks and cable trays round a column of racks | 7 fans, each lifting about 5 m to a block beside it |
 | 3 Cloud | 151 m | 109 | soft data blocks in open air, more far out for depth | 27 drifting blocks (3 to 5.5 m, every 4.5 to 6.5 s) |
 | 4 Upper air | 229 m | 93 | solar panels, girders, an antenna mast with a satellite | 31 crumbling panels (0.7 s), thin beams |
-| 5 Orbit | 301 m | 56 | shards | drifting blocks, crumbling panels and beams together (no fans); the ring at 351 m |
+| 5 Orbit | 301 m | 56 | asteroids, girders | drifting blocks, crumbling panels and beams together (no fans); the ring at 351 m |
 
 `level.vitest.ts`'s rules, for the whole climb (`climb.vitest.ts`, the files read through the game's own loader): every step
 within reach (from a drifting block's far end; up a fan's updraft), each step higher than the last, nothing overlapping

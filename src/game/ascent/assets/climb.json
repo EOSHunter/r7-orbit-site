@@ -58,6 +58,7 @@
         "strength": 3.6,
         "ambient": 0.75,
         "stars": 0.0,
+        "fill": "#dcebff",
         "sun_dir": [
           0.4056,
           0.8619,
@@ -99,9 +100,9 @@
         "ground": "#2a4f8f",
         "sun": "#fff7e6",
         "strength": 4.5,
-        "ambient": 0.6,
+        "ambient": 0.9,
         "stars": 1.0,
-        "fill": "#8494bd",
+        "fill": "#a3b2d6",
         "sun_dir": [
           0.7027,
           0.6826,
