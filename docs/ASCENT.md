@@ -58,7 +58,11 @@ in facets). The zones above (2026-10-29), all scenery well outside the climb:
   between the towers.
 - **Cloud:** a sea of clouds under the zone with a hole round the climb (through it, the Earth), out to the fog; each cloud
   is a few lumps wrapped in one smooth skin (`cloud_puff`), so it has a soft outline and no seams; four spirals of glowing
-  data cubes rising far out; the data blocks get a faint grid.
+  data cubes rising far out; the data blocks get a faint grid and are made up as storage (2026-10-29, `prop_data`): a drive
+  (a label, two status lights, a port on another side), a sled (a dark front panel with a handle and two lights) or a memory
+  module (a row of chips over a strip of gold contacts, a light on another side), with one light colour to a block. The
+  details sit on the sides, never the top, and are few (three or four materials to a block, no hidden back faces): every
+  drifting block's material is a mesh of its own in the file, and the zone is the nearest of the five to its 500 kB.
 - **Upper air:** solar cells on the panels, gold foil on the satellites, three satellites with dishes and cell wings (one
   `satellite()` model), and a weather balloon drifting past.
 - **Orbit:** the steps are asteroids (`asteroid()`: a lumpy rock whose flat top fills the box's top as a rounded square,
@@ -72,7 +76,9 @@ materials (colour, roughness, metal, glow), flat shaded, lit by a sun and a sky 
 wood, books, tool chests and floppies; navy server racks with status lights and glowing fan rings; pastel data blocks among
 clouds; blue solar panels and orange girders over the Earth; rock shards under the stars and the Moon, up to the brass ring.
 Each zone has a look in `climb.json` (`LOOKS` in `tools/ascent/build_climb.py`): the sky overhead, at the horizon and below,
-the sun's colour, strength and direction, the sky light, and how many stars show. The game blends them by height, 18 m
+the sun's colour, strength and direction (one direction for the whole climb, 2026-10-29: blended by height, a sun that
+moved from zone to zone turned as the agent jumped near a zone's edge, and the author saw the shadows swing), the sky light,
+and how many stars show. The game blends them by height, 18 m
 either side of a zone's start (`render.lit` in `config.ts`): a sky dome shaded from below the horizon to overhead with a
 glow round the sun, fog in the horizon's colour, and the lights. Meshes named `SKY_` (the Earth, the Moon, the stars) are
 drawn first, in a scene of their own with a camera that sees 8 km and no fog; the agent is drawn last in a scene of its own,
@@ -162,7 +168,8 @@ sim each frame and says what to play: a jump, a landing as loud as it was hard, 
 alternating), a fall back to the start or a beacon, a beacon touched, a panel creaking while it waits and cracking when it
 breaks, a fan's updraft catching the agent, and a rising chord at the finish. Under them, each zone has a bed of sound,
 mixed by height (12 m either side of a zone's start): the workshop's room tone, the server stack's fan drone and mains hum
-with an odd beep, the cloud's light breeze and two soft high notes (its first wind swelled slowly and sounded like the sea),
+with an odd beep, the cloud's wind, gusting unevenly with a faint whistle, and two soft high notes (its first wind swelled
+slowly and sounded like the sea; the next, the high end of the noise alone, sounded like static to the author),
 the upper air's thinner wind over a rumble, and orbit's quiet two-note pad. Volume and
 mute are in Settings (`r7-ascent-settings`); the sound is quiet while paused and closed when the game is taken away.
 
@@ -223,7 +230,10 @@ open Blender. This is the runner's pipeline (`tools/runner/build_rover.py`) at a
    (`blender -b --factory-startup -P tools/ascent/<script>.py`; on Windows Blender is
    `C:\Program Files\Blender Foundation\Blender 5.1\blender.exe`). The script builds the scene from scratch and exports a
    `.glb`. A note like "make the server racks taller" is a script edit and a rebuild, so every asset can be rebuilt with one
-   command, and the same Blender gives the same file.
+   command, and the same Blender gives the same file. Blender itself does not always: an icosphere's or a UV sphere's
+   vertices, and a twice-bevelled box's faces and the way its many-cornered faces are cut into triangles, come out in a
+   different order from run to run, so the scripts sort them (`in_order`, `chamfered` in `build_climb.py`). Build twice and
+   compare the files after a change to the geometry code.
 2. **Preview renders for approval.** For each new model or zone, the script also renders still images in the game's
    colours (`-- --preview`, as the rover's script does). The author approves or asks for changes before an asset goes into
    the game (`CLAUDE.md`: generated images need the author's approval, one by one). Approved previews are kept in
@@ -283,7 +293,9 @@ Rebuilding models needs Blender installed. Building the site does not.
 | The page before Play | Inside the site budgets: < 50 kB gzipped JS, < 40 kB CSS, Lighthouse ≥ 95 |
 | Three.js and the game code, loaded on Play | About 150 kB gzipped. Phase 1 measured 557 kB, 143 kB gzipped; with `GLTFLoader` and the level code (phase 2), 663 kB, 171 kB gzipped; with the robot agent and its animation, 670 kB, **173 kB gzipped** (three.js is nearly all of it) |
 | The character `.glb` | < 150 kB. The robot is 115 kB, 28 kB gzipped (5,608 triangles; the normals make up much of it, for the smooth shading) |
-| Each zone `.glb` | < 500 kB, loaded as the player nears it (`climb.vitest.ts`). Since the polish (2026-10-28) the zones are packed with `gltfpack` (below): 421, 476, 398, 359 and 427 kB with every zone finished (2026-10-29), 2.08 MB in all; with only the workshop finished they were 421, 234, 255, 199 and 185 kB. The server stack is nearest the limit: its rack towers are most of it. Before the polish they were 228, 196, 219, 171 and 135 kB. The test climb is 52 kB (11 kB gzipped) |
+| Each zone `.glb` | < 500 kB, loaded as the player nears it (`climb.vitest.ts`). Since the polish (2026-10-28) the zones are packed with `gltfpack` (below): 421, 476, 398, 359 and 427 kB with every zone finished (2026-10-29), 2.08 MB in all; with the cloud's
+data blocks made up as drives, sleds and modules the same day, 421, 476, 500, 354 and 426 kB, 2.18 MB in all (the
+test's limit is 500 × 1,024 bytes, so the cloud's 500,180 bytes pass with about 12 kB to spare); with only the workshop finished they were 421, 234, 255, 199 and 185 kB. The server stack is nearest the limit: its rack towers are most of it. Before the polish they were 228, 196, 219, 171 and 135 kB. The test climb is 52 kB (11 kB gzipped) |
 
 **Packing (decided with the author 2026-10-28).** `tools/ascent/build_climb.py` exports each zone raw to
 `tools/ascent/out/raw/` and packs it into the assets with `gltfpack` (a dev dependency, run through `npx`; `PACK` in the

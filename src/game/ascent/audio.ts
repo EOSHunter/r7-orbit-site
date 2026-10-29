@@ -4,7 +4,8 @@
 //
 //   1 workshop      a low room tone
 //   2 server stack  the drone of fans, a mains hum, now and then a beep
-//   3 cloud         a light, airy breeze and a soft high tone (a slow swell in the wind sounded like waves)
+//   3 cloud         wind gusting unevenly with a faint whistle, and a soft high tone (a slow, even swell sounded like
+//                   waves; the high end of the noise alone, like static)
 //   4 upper air     stronger, thinner wind over a low rumble
 //   5 orbit         a quiet pad, two notes breathing in and out
 //
@@ -214,12 +215,19 @@ export function createAudio(win: Window): AudioEngine | null {
   noiseLoop('bandpass', 190, 0.8, 0.16, server);
   hum(60, 0.02, server);
   hum(120, 0.008, server);
-  // 3 cloud: a light, airy breeze, held nearly level (a deep, slow swell in a band of noise is what the sea sounds like), and
-  // two soft high notes under it.
+  // 3 cloud: wind. A band of noise in the middle that gusts on two uneven wobbles (one slow, even swell is what the sea sounds
+  // like), a faint whistle drifting in pitch over it, a little weight underneath, and two soft high notes. Not the high end
+  // of the noise alone: the author heard that as static.
   const cloud = bed();
-  const breeze = noiseLoop('highpass', 1800, 0.5, 0.035, cloud);
-  wobble(breeze.gain.gain, 0.05, 0.006);
-  wobble(breeze.filter.frequency, 0.03, 300);
+  const wind = noiseLoop('bandpass', 520, 1.1, 0.06, cloud);
+  wobble(wind.gain.gain, 0.13, 0.022);
+  wobble(wind.gain.gain, 0.31, 0.012);
+  wobble(wind.filter.frequency, 0.09, 180);
+  wobble(wind.filter.frequency, 0.23, 80);
+  const whistle = noiseLoop('bandpass', 950, 9, 0.02, cloud);
+  wobble(whistle.filter.frequency, 0.17, 260);
+  wobble(whistle.gain.gain, 0.11, 0.012);
+  noiseLoop('lowpass', 140, 0.7, 0.03, cloud);
   const airA = hum(523.25, 0.006, cloud);
   const airB = hum(783.99, 0.0035, cloud);
   wobble(airA.gain, 0.06, 0.002);

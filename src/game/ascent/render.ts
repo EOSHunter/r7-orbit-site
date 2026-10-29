@@ -545,6 +545,7 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
   // (csm.setupMaterial); without shadows (low graphics) one cascade's sun alone lights the level. Neighbouring cascades fade
   // into each other.
   const sh = r.lit.shadow;
+  const lightFar = sh.margin + 2 * fog.far + 100; // the margin, then the deepest cascade (its depth along the light)
   const csm = lit
     ? new CSM({
         camera,
@@ -553,9 +554,9 @@ export function createView(canvas: HTMLCanvasElement, options: ViewOptions): Vie
         maxFar: fog.far,
         mode: 'practical',
         shadowMapSize: sh.mapSize,
-        shadowBias: sh.bias,
+        shadowBias: -sh.bias / (lightFar - 1), // metres as a share of the light's depth (config.ts)
         lightNear: 1,
-        lightFar: 1000,
+        lightFar,
         lightMargin: sh.margin,
       })
     : null;
