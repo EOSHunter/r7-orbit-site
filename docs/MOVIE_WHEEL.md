@@ -45,7 +45,13 @@ Uploaded posters have a table of their own:
 npx wrangler d1 execute r7-waitlist --remote --file=migrations/0006_movie_wheel_uploaded_posters.sql
 ```
 
-0004 and 0005 add a column each, so running one twice stops with "duplicate column name": that means it was already applied. 0006 can be run twice.
+TV shows add four columns to the movie table:
+
+```
+npx wrangler d1 execute r7-waitlist --remote --file=migrations/0007_movie_wheel_shows.sql
+```
+
+**Run 0007 before the shows page goes live**: the page saves the new columns with every change, so a site without them cannot save the list. 0004, 0005 and 0007 add columns, so running one twice stops with "duplicate column name": that means it was already applied. 0006 can be run twice.
 
 ### 2. Put the page and the API behind Cloudflare Access
 
@@ -112,9 +118,19 @@ The **Reviews** tab lists every movie you have rated or written about, newest fi
 
 **"What did you think?"** When you mark a movie watched and leave no rating or review, the next time you open the app it asks (a sheet with big stars and an optional review). Save, **Not now** (it asks again next time, up to three times in all), or **Don't ask about this one**. It only asks about movies you marked watched on that device, so it never quizzes one of you about a movie the other watched, and it never asks about your older watched movies.
 
+## TV shows
+
+The list holds films and TV shows. The **Movies / Shows / Both** tabs under the page title choose what the wheel, the list, search, the dashboard and Reviews show (the choice is remembered on the device, and the numbers on the tabs count each kind). TMDB covers shows with the same token, so nothing else is set up.
+
+- **Adding a show.** The add box searches TMDB for both kinds on **Both**, shows only on **Shows** and films only on **Movies**; shows are marked **TV**. Picking one fills in the poster, genres, the length of an episode and how many episodes each season has. A show typed in by hand on the **Shows** tab is a show too, and **Edit > Type** switches a title between Movie and Show.
+- **Where you are.** A show has a season and an episode: the last one you watched. Set them in **Edit > Where you are**, or tap the **+** icon on the card for "watched the next episode" (S1 E1 when you have not started, then the next episode, then the first of the next season; the last episode of the last season marks the show watched). The card shows the progress as a chip such as "S2 · E5".
+- **Finishing.** The check marks the whole show watched and puts it at its last episode. A show you are partway through stays on To watch.
+- **Hours.** A show counts as its episodes watched times the length of an episode, so the dashboard's time watched includes shows you are partway through. Averages, longest and shortest are about films only.
+- **Posters and names.** The background lookup treats a show like a film but searches TMDB's shows, and fills in a matched show's seasons and episode length. R7 sees shows marked as TV shows with where you are; films it adds are still films.
+
 ## Posters
 
-Posters and film details come from [TMDB](https://www.themoviedb.org) (free for personal use; their terms ask for the credit line the page shows at the bottom).
+Posters and film and show details come from [TMDB](https://www.themoviedb.org) (free for personal use; their terms ask for the credit line the page shows at the bottom).
 
 - **Existing movies.** Each device looks every movie up once, a few at a time in the background. With a release year it takes TMDB's closest title among the films released that year (or a year either side), so "Bladerunner 1982" and "Donny Darko 2001" are found; without a year (a series, say) only an exact title counts. A match gives the movie its poster and **TMDB's own name for it** ("Bladerunner" becomes "Blade Runner", "Alien 2" becomes "Aliens"); when two movies would get the same name the later one has its year added. A movie that already has a poster keeps it, and a movie that cannot be matched keeps its name and has no poster until you choose one with **Edit > Poster > Find a poster**. The poster and name are saved with the movie, so every device gets them.
 - **New movies.** Typing a title in the add box suggests library matches first and then matches from TMDB (marked "TMDB"), which cover new releases. Picking one fills in the length, year, genres and poster.

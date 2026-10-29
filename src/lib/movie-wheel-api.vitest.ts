@@ -27,7 +27,7 @@ import {
 
 // node:sqlite is built into Node 22.13 and later (engines allows 22.12, where it needs a flag): without it these tests are skipped.
 const sqlite = await import('node:sqlite').catch(() => undefined);
-const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by', '0005_movie_wheel_poster', '0006_movie_wheel_uploaded_posters']
+const MIGRATION = ['0002_movie_wheel', '0003_movie_wheel_chats', '0004_movie_wheel_added_by', '0005_movie_wheel_poster', '0006_movie_wheel_uploaded_posters', '0007_movie_wheel_shows']
   .map((name) => readFileSync(`migrations/${name}.sql`, 'utf8'))
   .join('\n');
 
@@ -733,8 +733,8 @@ describe.skipIf(!sqlite)('the TMDB endpoint', () => {
     expect(res.response.status).toBe(200);
     const body = (await res.response.json()) as { results: Record<string, unknown>[] };
     expect(body.results).toEqual([
-      { id: 603, title: 'The Matrix', year: 1999, poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'A hacker learns the truth.', genres: ['Action', 'Sci-fi'] },
-      { id: 604, title: 'The Matrix Reloaded', year: 2003, poster: '', overview: '', genres: ['Sci-fi', 'Thriller'] },
+      { id: 603, title: 'The Matrix', year: 1999, poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'A hacker learns the truth.', genres: ['Action', 'Sci-fi'], kind: 'movie' },
+      { id: 604, title: 'The Matrix Reloaded', year: 2003, poster: '', overview: '', genres: ['Sci-fi', 'Thriller'], kind: 'movie' },
     ]);
     expect(t.calls).toHaveLength(1);
     expect(t.calls[0].url).toBe('https://api.themoviedb.org/3/search/movie?query=The%20Matrix&include_adult=false&language=en-US&page=1&year=1999');
@@ -756,7 +756,7 @@ describe.skipIf(!sqlite)('the TMDB endpoint', () => {
       new Response(JSON.stringify({ id: 603, title: 'The Matrix', release_date: '1999-03-30', poster_path: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'x', runtime: 136, genres: [{ id: 28, name: 'Action' }, { id: 878, name: 'Science Fiction' }] }), { status: 200 }),
     );
     const res = await get('id=603');
-    expect(await res.response.json()).toEqual({ id: 603, title: 'The Matrix', year: 1999, poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'x', genres: ['Action', 'Sci-fi'], runtime: 136 });
+    expect(await res.response.json()).toEqual({ id: 603, title: 'The Matrix', year: 1999, poster: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', overview: 'x', genres: ['Action', 'Sci-fi'], kind: 'movie', runtime: 136 });
     expect(t.calls[0].url).toBe('https://api.themoviedb.org/3/movie/603?language=en-US');
     expect((await get('id=abc')).response.status).toBe(400);
     expect((await get('id=1/../../account')).response.status).toBe(400);
@@ -909,5 +909,92 @@ describe.skipIf(!sqlite)('uploaded posters', () => {
   it('is wired up by its Function file', async () => {
     const { onRequest } = await import('../../functions/api/movie-wheel/poster');
     expect(typeof onRequest).toBe('function');
+  });
+});
+
+// TV shows: what a show holds, and TMDB's TV lookups.
+describe.skipIf(!sqlite)('shows on the list', () => {
+  it('keeps what makes a show a show, and returns it', async () => {
+    const { call } = await setup();
+    await call('PUT', {
+      list: [
+        movie('s', 'Severance', 5, { kind: 'show', season: 2, episode: 4, seasonEps: [9, 10], runtime: 50 }),
+        movie('m', 'Alien', 5),
+        movie('x', 'Odd', 5, { kind: 'cartoon', season: -3, episode: 99999, seasonEps: ['a', 12, 5000, null] }),
+      ],
+    });
+    const { list } = (await (await call('GET')).response.json()) as { list: Record<string, unknown>[] };
+    const by = Object.fromEntries(list.map((m) => [m.id as string, m]));
+    expect(by.s).toMatchObject({ kind: 'show', season: 2, episode: 4, seasonEps: [9, 10], runtime: 50 });
+    expect(by.m).toMatchObject({ kind: 'movie', season: 0, episode: 0, seasonEps: [] });
+    expect(by.x).toMatchObject({ kind: 'movie', season: 0, episode: 999, seasonEps: [0, 12, 999, 0] });
+  });
+
+  it('keeps a show\'s progress with the newest edit like any other field', async () => {
+    const { call } = await setup();
+    await call('PUT', { list: [movie('s', 'Severance', 5, { kind: 'show', season: 1, episode: 2 })] });
+    await call('PUT', { list: [movie('s', 'Severance', 9, { kind: 'show', season: 2, episode: 5, seasonEps: [9, 10] })] });
+    await call('PUT', { list: [movie('s', 'Severance', 7, { kind: 'show', season: 1, episode: 1 })] });
+    const { list } = (await (await call('GET')).response.json()) as { list: Record<string, unknown>[] };
+    expect(list[0]).toMatchObject({ season: 2, episode: 5, seasonEps: [9, 10] });
+  });
+
+  it('trims a show to size: at most 60 seasons', () => {
+    const m = cleanMovie({ id: 'x', title: 'X', kind: 'show', seasonEps: Array.from({ length: 80 }, () => 8) });
+    expect(m?.seasonEps).toHaveLength(60);
+  });
+});
+
+const TV_SEARCH = {
+  results: [
+    { id: 95396, name: 'Severance', first_air_date: '2022-02-17', poster_path: '/lFf6LLrQjYldcZItzOkGmMMigP7.jpg', overview: 'Work and life, split.', genre_ids: [18, 9648, 10765] },
+    { id: 1, name: 'Action Show', first_air_date: '2010-01-01', poster_path: null, overview: '', genre_ids: [10759, 10764, 35] },
+    { id: 2 },
+  ],
+};
+const TV_DETAIL = {
+  id: 95396, name: 'Severance', first_air_date: '2022-02-17', poster_path: '/lFf6LLrQjYldcZItzOkGmMMigP7.jpg', overview: 'x',
+  episode_run_time: [], last_episode_to_air: { runtime: 52 },
+  genres: [{ id: 18 }, { id: 9648 }, { id: 10765 }],
+  seasons: [{ season_number: 2, episode_count: 10 }, { season_number: 0, episode_count: 3 }, { season_number: 1, episode_count: 9 }],
+};
+
+describe.skipIf(!sqlite)('the TMDB endpoint, for TV', () => {
+  it('searches shows by name and first air year, and answers them as shows', async () => {
+    const { get, t } = await tmdbSetup(() => new Response(JSON.stringify(TV_SEARCH), { status: 200 }));
+    const res = await get('q=Severance&year=2022&type=tv');
+    const body = (await res.response.json()) as { results: Record<string, unknown>[] };
+    expect(body.results).toEqual([
+      { id: 95396, title: 'Severance', year: 2022, poster: '/lFf6LLrQjYldcZItzOkGmMMigP7.jpg', overview: 'Work and life, split.', genres: ['Drama', 'Mystery', 'Sci-fi', 'Fantasy'], kind: 'show' },
+      { id: 1, title: 'Action Show', year: 2010, poster: '', overview: '', genres: ['Action', 'Adventure', 'Reality', 'Comedy'], kind: 'show' },
+    ]);
+    expect(t.calls[0].url).toBe('https://api.themoviedb.org/3/search/tv?query=Severance&include_adult=false&language=en-US&page=1&first_air_date_year=2022');
+  });
+
+  it('reads a show with its episode length and the episodes in each season, in order, without the specials', async () => {
+    const { get, t } = await tmdbSetup(() => new Response(JSON.stringify(TV_DETAIL), { status: 200 }));
+    const res = await get('id=95396&type=tv');
+    expect(await res.response.json()).toEqual({
+      id: 95396, title: 'Severance', year: 2022, poster: '/lFf6LLrQjYldcZItzOkGmMMigP7.jpg', overview: 'x', genres: ['Drama', 'Mystery', 'Sci-fi', 'Fantasy'],
+      kind: 'show', runtime: 52, seasonEps: [9, 10],
+    });
+    expect(t.calls[0].url).toBe('https://api.themoviedb.org/3/tv/95396?language=en-US');
+  });
+
+  it('searches both kinds for type=any, one of each in turn, and refuses a type it does not know', async () => {
+    const { get, t } = await tmdbSetup((url) =>
+      new Response(JSON.stringify(url.pathname.endsWith('/tv') ? TV_SEARCH : SEARCH), { status: 200 }),
+    );
+    const res = await get('q=Matrix&type=any');
+    const { results } = (await res.response.json()) as { results: { title: string; kind: string }[] };
+    expect(results.map((r) => `${r.kind}:${r.title}`)).toEqual(['movie:The Matrix', 'show:Severance', 'movie:The Matrix Reloaded', 'show:Action Show']);
+    expect(t.calls).toHaveLength(2);
+    expect((await get('q=Matrix&type=book')).response.status).toBe(400);
+    expect((await get('id=5&type=any')).response.status).toBe(400);
+  });
+
+  it('says so when one of the two lookups fails', async () => {
+    const { get } = await tmdbSetup((url) => (url.pathname.endsWith('/tv') ? new Response('{}', { status: 500 }) : new Response(JSON.stringify(SEARCH), { status: 200 })));
+    expect((await get('q=Matrix&type=any')).response.status).toBe(502);
   });
 });
