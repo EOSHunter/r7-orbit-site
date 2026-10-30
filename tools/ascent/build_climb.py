@@ -11,7 +11,7 @@
 #
 #   1 workshop       giant books, toolboxes, chips and floppies, round a stack of hardware   static jumps
 #   2 server stack   rack units, heat sinks and cable trays round a column of racks          fans that blow you up
-#   3 cloud          soft data blocks in open air                                            blocks that drift
+#   3 cloud          soft data blocks (drives, sleds, memory modules) over a sea of clouds   blocks that drift
 #   4 upper air      solar panels, girders and satellites round an antenna mast              plates that crumble, thin beams
 #   5 orbit          asteroids rising to the brass ring                                      drifts, crumbles, beams; the ring
 #
@@ -452,17 +452,21 @@ def box_uv(bm, offset, tile):
 # ground's (the light from below), the sun's colour and strength and where it comes from (Blender axes: a direction towards
 # it), how much light the sky gives, and how much of a starfield shows (0 to 1). `fill` is the sky light's colour from above
 # where it is not the horizon's (indoors: light bounced off the walls, not the fog's dark). The game blends them as the agent climbs.
+# One sun for the whole climb: the zones change its colour and strength, never where it is. The game blends the looks by the
+# agent's height, so a sun that moved from zone to zone turned as the agent jumped near a zone's edge, and the shadows of
+# blocks high above swung across the clouds (the author filmed it at 138 m, where the server's and the cloud's suns met).
+SUN_DIR = (0.35, -0.3, 0.88)
 LOOKS = {
     'workshop': dict(top='#4a3526', horizon='#4a392b', ground='#6b4a30', sun='#ffe4bd', strength=3.2,
-                     sun_dir=(0.25, -0.35, 1.0), ambient=0.75, stars=0.0, fill='#e8d2b4'),
+                     sun_dir=SUN_DIR, ambient=0.75, stars=0.0, fill='#e8d2b4'),
     'server': dict(top='#0c1525', horizon='#1d3e63', ground='#2a3a52', sun='#b4dcff', strength=3.4,
-                   sun_dir=(-0.5, 0.4, 0.75), ambient=0.8, stars=0.0, fill='#9ab4d8'),
+                   sun_dir=SUN_DIR, ambient=0.8, stars=0.0, fill='#9ab4d8'),
     'cloud': dict(top='#4e9be9', horizon='#d2e8ff', ground='#a3cdf2', sun='#fff4df', strength=3.6,
-                  sun_dir=(0.4, -0.3, 0.85), ambient=0.75, stars=0.0, fill='#dcebff'),
+                  sun_dir=SUN_DIR, ambient=0.75, stars=0.0, fill='#dcebff'),
     'upper': dict(top='#0d1c4a', horizon='#3f73cc', ground='#1f428f', sun='#ffffff', strength=4.0,
-                  sun_dir=(0.6, 0.2, 0.75), ambient=0.65, stars=0.35, fill='#a9c4ee'),
+                  sun_dir=SUN_DIR, ambient=0.65, stars=0.35, fill='#a9c4ee'),
     'orbit': dict(top='#02020a', horizon='#0c1236', ground='#2a4f8f', sun='#fff7e6', strength=4.5,
-                  sun_dir=(0.7, -0.2, 0.68), ambient=0.9, stars=1.0, fill='#a3b2d6'),
+                  sun_dir=SUN_DIR, ambient=0.9, stars=1.0, fill='#a3b2d6'),
 }
 
 
@@ -698,7 +702,17 @@ def chamfered(w, d, h, c):
     bm = cuboid(w, d, h)
     bmesh.ops.bevel(bm, geom=list(bm.verts) + list(bm.edges), offset=c, segments=1, profile=0.5, affect='EDGES',
                     clamp_overlap=True)
-    return bm
+    # The second bevel's faces come out in a different order from run to run, and some have more than four corners, which
+    # Blender cuts into triangles differently each run too (ties broken by where things sit in memory). Each of those is flat
+    # and convex, so it is cut here into a fan from its lowest corner, and the faces are sorted: the same every time.
+    for f in [f for f in bm.faces if len(f.verts) > 4]:
+        vs = list(f.verts)
+        k = min(range(len(vs)), key=lambda i: tuple(round(c, 6) for c in reversed(vs[i].co)))
+        vs = vs[k:] + vs[:k]
+        for i in range(1, len(vs) - 1):
+            bm.faces.new((vs[0], vs[i], vs[i + 1]))
+        bm.faces.remove(f)
+    return in_order(bm)
 
 
 def cylinder(r, h, segments=20, r_top=None):
@@ -800,10 +814,20 @@ def detail(zone, name, part, b, mat='plastic', bm_fn=cuboid):
     return piece(zone, f'{name}__{part}', b, bm_fn, mat)
 
 
+def in_order(bm):
+    """Blender does not number a sphere's vertices and faces the same way every run: sorted by where they are, the files come
+    out the same each time."""
+    for seq, where in ((bm.verts, lambda v: v.co), (bm.faces, lambda f: f.calc_center_median())):
+        order = sorted(seq, key=lambda e: tuple(round(c, 6) for c in reversed(where(e))))
+        rank = {e: i for i, e in enumerate(order)}
+        seq.sort(key=lambda e: rank[e])
+    return bm
+
+
 def sphere(r, subdivisions=2):
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=subdivisions, radius=r)
-    return bm
+    return in_order(bm)
 
 
 def prop_book(zone, name, b, rng):
@@ -913,23 +937,95 @@ def prop_fan(zone, name, b, rng):
         add(blade, (cx, cy, z1 - 0.12), 'alu')
 
 
+def on_face(zone, name, part, b, face, u0, u1, za, zb, out0, out1, mat):
+    """A detail on one side of box b ('x0', 'x1', 'y0' or 'y1'): u0 to u1 metres along the side from its start (x0 or y0),
+    za to zb high, standing out0 to out1 metres out from the side. Its back lies on the side and is never seen, so it is left
+    out; a detail no deeper than FLAT is its front alone (the zone files' size)."""
+    x0, y0, _, x1, y1, _ = b
+    axis = 1 if face[0] == 'y' else 0
+    s = -1 if face[1] == '0' else 1
+    flat = out1 - out0 <= FLAT
+
+    def plate(w, d, h):
+        bm = box(w, d, h)
+        bm.normal_update()
+        drop = [f for f in bm.faces if f.normal[axis] * s < (0.5 if flat else -0.5)]
+        bmesh.ops.delete(bm, geom=drop, context='FACES')
+        return bm
+
+    if axis == 1:
+        y = y0 if s < 0 else y1
+        lo, hi = sorted((y + s * out0, y + s * out1))
+        detail(zone, name, part, (x0 + u0, lo, za, x0 + u1, hi, zb), mat, plate)
+    else:
+        x = x0 if s < 0 else x1
+        lo, hi = sorted((x + s * out0, x + s * out1))
+        detail(zone, name, part, (lo, y0 + u0, za, hi, y0 + u1, zb), mat, plate)
+
+
+FLAT = 0.015
+
+
 def prop_data(zone, name, b, rng):
-    """A data block in the cloud: a soft, chamfered pastel cube with a few glowing bits standing out of its sides."""
+    """A data block in the cloud: a soft, chamfered pastel case made up as one of three kinds of storage, its details on its
+    sides (the top stays clear to land on):
+
+      drive    a label and two status lights, and on another side a dark port
+      sled     a dark front panel across one side with a handle in the case's colour and two status lights
+      module   a row of chips and a strip of contacts along one side, a status light on another
+    """
     x0, y0, z0, x1, y1, z1 = b
-    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.12), rng.choice(DATA))
-    for i in range(rng.randint(1, 3)):
-        side = rng.choice(('x0', 'x1', 'y0', 'y1'))
-        z = rng.uniform(z0 + 0.15, z1 - 0.2)
-        s = rng.uniform(0.12, 0.22)
-        if side[0] == 'x':
-            x = x0 if side == 'x0' else x1
-            y = rng.uniform(y0 + 0.2, y1 - 0.2)
-            box = (x - 0.08, y - s, z - s, x + 0.08, y + s, z + s)
-        else:
-            y = y0 if side == 'y0' else y1
-            x = rng.uniform(x0 + 0.2, x1 - 0.2)
-            box = (x - s, y - 0.08, z - s, x + s, y + 0.08, z + s)
-        detail(zone, name, f'bit{i}', box, 'data-bit')
+    c = min(x1 - x0, y1 - y0, z1 - z0) * 0.12
+    case = rng.choice(DATA)
+    piece(zone, name, b, lambda w, d, h: chamfered(w, d, h, c), case)
+    # The draws the earlier look took from the climb's generator, kept so every block after this one looks as it did.
+    for _ in range(rng.randint(1, 3)):
+        rng.choice('abcd'), rng.random(), rng.random(), rng.random()
+    r = random.Random(zlib.crc32(name.encode()))
+    faces = ['x0', 'x1', 'y0', 'y1']
+    r.shuffle(faces)
+
+    def side(f):  # how long a side is
+        return (x1 - x0) if f[0] == 'y' else (y1 - y0)
+
+    lo, hi = z0 + c + 0.04, z1 - c - 0.04  # the flat of a side, inside the chamfer
+    mid = (lo + hi) / 2
+    kind = r.choice(('drive', 'sled', 'module'))
+    # Few details and few materials to a block (three or four): each material is a mesh of its own on a drifting block, and
+    # every mesh and every box costs the zone file some bytes (500 kB at most, climb.vitest.ts).
+    led = r.choice(LEDS)
+    f = faces[0]
+    n = side(f)
+    if kind == 'drive':
+        # The label ends before the lights begin (two details overlapping in one plane would flicker).
+        on_face(zone, name, 'label', b, f, c + 0.08, min(c + 0.08 + 0.45 * n, n - c - 0.6), mid - 0.3 * (hi - lo),
+                mid + 0.2 * (hi - lo), 0, 0.012, 'label')
+        for i in range(2):
+            u = n - c - 0.2 - i * 0.17
+            on_face(zone, name, f'led{i}', b, f, u, u + 0.1, mid - 0.05, mid + 0.05, 0, 0.035, led)
+        g = faces[1]
+        m = side(g)
+        w = min(0.7, 0.45 * m)
+        pz = lo + 0.25 * (hi - lo)
+        on_face(zone, name, 'port', b, g, (m - w) / 2, (m + w) / 2, pz - 0.11, pz + 0.11, 0, 0.03, 'chip')
+    elif kind == 'sled':
+        on_face(zone, name, 'bezel', b, f, c + 0.05, n - c - 0.05, lo, hi, 0, 0.03, 'chip')
+        hz = hi - 0.18
+        on_face(zone, name, 'handle', b, f, 0.25 * n, 0.75 * n, hz - 0.04, hz + 0.04, 0.03, 0.09, case)
+        for i in range(2):
+            u = n - c - 0.25 - i * 0.18
+            on_face(zone, name, f'led{i}', b, f, u, u + 0.1, lo + 0.12, lo + 0.2, 0.03, 0.055, led)
+    else:
+        count = max(2, min(3, int((n - 2 * c) / 0.45)))
+        span = n - 2 * c - 0.2
+        for i in range(count):
+            u = c + 0.1 + span * (i + 0.5) / count
+            on_face(zone, name, f'chip{i}', b, f, u - 0.16, u + 0.16, mid - 0.12 * (hi - lo), mid + 0.28 * (hi - lo), 0,
+                    0.03, 'chip')
+        on_face(zone, name, 'contacts', b, f, c + 0.1, n - c - 0.1, lo, lo + 0.1, 0, 0.012, 'pin')
+        g = faces[1]
+        m = side(g)
+        on_face(zone, name, 'led0', b, g, m / 2 - 0.05, m / 2 + 0.05, mid - 0.05, mid + 0.05, 0, 0.035, led)
 
 
 def prop_panel(zone, name, b, rng):
@@ -1596,8 +1692,7 @@ def cloud_far(zone, base, top, rng):
         z = rng.uniform(base, top)
         s = rng.uniform(1.0, 3.0)
         x, y = math.cos(a) * r, math.sin(a) * r
-        piece(zone, f'far_block_{i}', (x - s, y - s, z - s, x + s, y + s, z + s),
-              lambda w, d, h: chamfered(w, d, h, min(w, d, h) * 0.12), DATA[i % len(DATA)])
+        make_prop(zone, f'far_block_{i}', prop_data, (x - s, y - s, z - s, x + s, y + s, z + s), rng)
 
 
 EARTH_RADIUS = 1600.0
@@ -1610,6 +1705,7 @@ def earth(zone):
     bm = bmesh.new()
     bm.loops.layers.uv.verify()  # calc_uvs fills a UV layer that must already be there
     bmesh.ops.create_uvsphere(bm, u_segments=96, v_segments=48, radius=EARTH_RADIUS, calc_uvs=True)
+    in_order(bm)
     # Tipped over, so the climb looks down on land and sea at middle latitudes, not on the North Pole's ice.
     bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(62), 3, 'X'))
     bmesh.ops.translate(bm, vec=EARTH_CENTRE, verts=bm.verts)
@@ -1672,6 +1768,7 @@ def ringed_planet(zone, at):
     bm = bmesh.new()
     bm.loops.layers.uv.verify()
     bmesh.ops.create_uvsphere(bm, u_segments=64, v_segments=32, radius=80, calc_uvs=True)
+    in_order(bm)
     mesh_object(zone, 'SKY_planet', posed(bm, tilt, at), (0, 0, 0), 'planet')
     for name, r0, r1, mat in (('inner', 104, 130, 'ring-mid'), ('gap', 132, 139, 'ring-dark'),
                               ('outer', 141, 165, 'ring-light')):

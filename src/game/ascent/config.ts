@@ -101,11 +101,16 @@ export const ASCENT_CONFIG = {
       /** Filmic tone mapping's exposure (bright light rolls off instead of clipping). */
       exposure: 1.0,
       /**
-       * High graphics: the sun casts real shadows in cascades along the view, as far as the fog's end (each cascade a map of
-       * `mapSize` texels; its bias; `margin` metres behind the view taken in, so tall things out of sight still cast into it),
-       * and light brighter than `threshold` glows (strength, radius; drawn at half size).
+       * High graphics: the sun casts real shadows in cascades along the view, as far as the fog's end, each a map of
+       * `mapSize` texels. `bias` is how many metres towards the sun a surface is read as, against acne, and `normalBias`
+       * how far out along it. three.js takes the bias as a share of the light's whole depth, which the cascades make
+       * hundreds of metres, so render.ts divides it by that depth: as a share, -0.0004 was 34 cm, nothing that close above
+       * a top shaded it, and the agent's own shadow showed only in a jump (the author saw shadows change as he jumped).
+       * `margin` is how far towards the sun beyond the view things are still taken in as casters: past the top of the
+       * climb (about 430 m with the rocks above the ring), so none drops out as the view moves. Light brighter than
+       * `threshold` glows (strength, radius; drawn at half size).
        */
-      shadow: { cascades: 3, mapSize: 2048, bias: -0.0004, normalBias: 0.03, margin: 80 },
+      shadow: { cascades: 3, mapSize: 2048, bias: 0.02, normalBias: 0.04, margin: 450 },
       bloom: { strength: 0.3, radius: 0.3, threshold: 2.2 },
     },
     /**

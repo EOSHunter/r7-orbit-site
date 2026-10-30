@@ -112,6 +112,10 @@ describe('the climb', () => {
       for (const c of [z.look?.top, z.look?.horizon, z.look?.ground, z.look?.sun]) expect(c).toMatch(/^#[0-9a-f]{6}$/);
       expect(Math.hypot(...(z.look?.sun_dir ?? [0, 0, 0]))).toBeCloseTo(1, 3);
     }
+    // One sun for the whole climb: the looks are blended by the agent's height, so a sun that moved from zone to zone
+    // turned as the agent jumped near a zone's edge, and every shadow swung with it.
+    const dirs = (level.zones ?? []).map((z) => z.look?.sun_dir);
+    for (const d of dirs) expect(d).toEqual(dirs[0]);
     expect(climb.parts.map((p) => p.style)).toEqual(['lit', 'lit', 'lit', 'lit', 'lit']);
     expect(climb.parts[3].sky.map((m) => m.name)).toContain('SKY_earth');
     expect(climb.parts[4].sky.map((m) => m.name)).toEqual(expect.arrayContaining(['SKY_stars', 'SKY_moon']));
