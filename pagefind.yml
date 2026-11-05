@@ -13,4 +13,19 @@ exclude_selectors:
   - ".prev-next"
   - ".related"
   - ".breadcrumb"
+  # A post's head is its title and lead; the byline, dates, read time, tags and chips around them are not its words, and they
+  # filled the excerpts with "Orion Orbit Games Agent AI-written Nov 5 2026 5 min read games ai-agents".
+  - ".post-head .eyebrow"
+  - ".post-head .byline"
+  - ".post-head .meta-row"
+  # (Not the project head's eyebrow: it carries the game's kind for the results, data-pagefind-meta.)
+  - ".project-head .post-author"
+  - ".project-head .status-line"
+  - ".project-head .cluster"
+  # The facts column, the video player's links, the Play panel, and the related and more-apps rows (other pages' cards).
+  - "aside"
+  - ".yt"
+  - ".play-section"
+  - "[aria-labelledby='related-h']"
+  - "[data-more-apps]"
 force_language: en

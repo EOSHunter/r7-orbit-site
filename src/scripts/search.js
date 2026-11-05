@@ -39,38 +39,40 @@ function kindOf(url) {
   return KINDS[first] || { label: 'Page', icon: 'link' };
 }
 
+function icon(name, small) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', small ? 'ico sm' : 'ico');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS(SVG_NS, 'use');
+  use.setAttribute('href', '#i-' + name);
+  svg.appendChild(use);
+  return svg;
+}
+
+// One result is one row: the title and its kind on the first line, a line of the matching text under it.
 function resultItem(data) {
   const meta = data.meta || {};
-  const kind = meta.kind && /^[a-z]+$/.test(meta.kindIcon || '') ? { label: meta.kind, icon: meta.kindIcon } : kindOf(data.url);
+  const kind =
+    meta.kind && /^[a-z]+$/.test(meta.kindIcon || '') ? { label: meta.kind, icon: meta.kindIcon } : kindOf(data.url);
   const li = document.createElement('li');
   const a = document.createElement('a');
-  a.className = 'card link search-result';
+  a.className = 'search-row search-result';
   a.href = data.url;
 
-  const body = document.createElement('div');
-  body.className = 'card-body';
+  const title = document.createElement('span');
+  title.className = 'search-row-title';
+  title.textContent = meta.title || data.url;
 
   const label = document.createElement('span');
   label.className = 'kind';
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('class', 'ico sm');
-  svg.setAttribute('aria-hidden', 'true');
-  const use = document.createElementNS(SVG_NS, 'use');
-  use.setAttribute('href', '#i-' + kind.icon);
-  svg.appendChild(use);
-  label.append(svg, kind.label);
+  label.append(icon(kind.icon, true), kind.label);
 
-  const title = document.createElement('span');
-  title.className = 'card-title';
-  title.textContent = (data.meta && data.meta.title) || data.url;
-
-  const excerpt = document.createElement('p');
-  excerpt.className = 'card-text';
+  const excerpt = document.createElement('span');
+  excerpt.className = 'search-row-text';
   // Pagefind escapes the page text and adds only <mark> around the matched words.
   excerpt.innerHTML = data.excerpt;
 
-  body.append(label, title, excerpt);
-  a.appendChild(body);
+  a.append(title, label, excerpt);
   li.appendChild(a);
   return li;
 }
@@ -80,6 +82,8 @@ function setup(root) {
   const form = root.querySelector('[data-search-form]');
   const status = root.querySelector('[data-search-status]');
   const list = root.querySelector('[data-search-results]');
+  // The palette's quick links, shown until something is typed.
+  const quick = root.querySelector('[data-search-quick]');
   const isPage = root.hasAttribute('data-search-page');
   const limit = isPage ? 20 : 8;
   let run = 0;
@@ -87,6 +91,7 @@ function setup(root) {
   function show(message, results) {
     status.textContent = message;
     list.replaceChildren(...(results || []));
+    if (quick) quick.hidden = input.value.trim() !== '';
   }
 
   async function search() {
@@ -122,7 +127,7 @@ function setup(root) {
   // Move through the results with the arrow keys; ArrowUp from the first goes back to the field.
   root.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    const links = Array.from(list.querySelectorAll('a'));
+    const links = Array.from(root.querySelectorAll('[data-search-results] a, [data-search-quick]:not([hidden]) a'));
     if (!links.length) return;
     const at = links.indexOf(document.activeElement);
     let next;
@@ -187,7 +192,8 @@ if (dialog || pageUi) {
   document.addEventListener('keydown', (e) => {
     if (e.key !== '/' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
     const t = e.target;
-    if (t instanceof Element && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+    if (t instanceof Element && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))
+      return;
     if (document.querySelector('dialog[open]')) return;
     e.preventDefault();
     open();

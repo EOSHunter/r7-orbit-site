@@ -43,8 +43,20 @@ main:focus { outline: 0; }
 .skip-link:hover { color: var(--on-brass); }
 
 /* ---------------------------------------------------------------------------------------------------- Header */
-.header-tools { display: flex; align-items: center; gap: var(--s-1); margin-left: auto; }
+/* docs/DECISIONS.md, "Interface components": the current page underlined in brass (not a box), search as a pill with its "/"
+   shortcut, one call to action (Play), and on a phone a full-screen sheet of large links. */
+.header-tools { display: flex; align-items: center; gap: var(--s-2); margin-left: auto; }
 .site-header .bar { gap: var(--s-4); }
+
+/* Search: the icon on a phone; from 900px the word and the "/" key in a quiet pill. */
+.btn.search-pill { flex: none; width: 36px; padding: 0; gap: var(--s-2); }
+.search-pill-label, .search-pill-key { display: none; }
+.search-pill-key { font: var(--fs-2xs)/1 var(--font-mono); color: var(--text-3); padding: 3px 6px; border: var(--bw) solid var(--line-strong); border-radius: var(--r-xs); }
+/* Play: the header's one call to action, in brass outline; filled faintly on the Apps hub. */
+.btn.header-play { flex: none; height: 32px; padding: 0 var(--s-4); border-color: var(--line-brass); color: var(--brass-bright); font-weight: var(--fw-medium); }
+.btn.header-play:hover { background: var(--brass-wash-2); }
+.btn.header-play[aria-current='page'] { background: var(--brass-wash-3); }
+.btn.header-play svg { width: 14px; height: 14px; }
 
 .menu-toggle { display: none; }
 .menu-toggle .i-close { display: none; }
@@ -54,24 +66,41 @@ main:focus { outline: 0; }
 /* No script: the nav is a scrolling row under the wordmark */
 .site-header .bar { flex-wrap: wrap; height: auto; min-height: var(--header-h); }
 .site-nav { order: 3; flex: 1 1 100%; margin-left: 0; padding-bottom: var(--s-2); }
+/* The focus ring sits inside the link, so a nav that scrolls (no script) or clips never cuts it off. */
+.site-nav a:focus-visible { outline-offset: -2px; }
 
-/* With script, small screens: a panel under the bar */
+/* With script, small screens: a sheet the height of the screen under the bar. Absolute, not fixed: the header's backdrop blur
+   makes it the containing block of anything fixed inside it. The page under it does not scroll (html.menu-open, site.js). */
 .js .site-header .bar { flex-wrap: nowrap; height: var(--header-h); }
 .js .menu-toggle { display: inline-flex; }
 .js .site-nav {
-  position: absolute; top: 100%; left: 0; right: 0; order: 0; display: none; flex-direction: column; align-items: stretch; gap: var(--s-1);
-  padding: var(--s-3) var(--gutter) var(--s-4); background: var(--surface-1); border-bottom: var(--bw) solid var(--line); box-shadow: var(--shadow-float);
-  overflow: visible;
+  position: absolute; top: 100%; left: 0; right: 0; height: calc(100dvh - var(--header-h)); order: 0; display: none;
+  flex-direction: column; align-items: stretch; gap: 0; padding: var(--s-4) var(--gutter) var(--s-8); background: var(--bg); overflow-y: auto;
 }
 .js .site-nav[data-open] { display: flex; animation: fade-in var(--dur) var(--ease); }
-.js .site-nav a { padding: var(--s-3); font-size: var(--fs-md); }
+.js .site-nav a {
+  padding: var(--s-4) 0; border-bottom: var(--bw) solid var(--line); border-radius: 0;
+  font: var(--fw-regular) var(--fs-2xl)/1.2 var(--font-display); color: var(--text-2);
+}
+.js .site-nav a:hover { background: none; color: var(--text); }
+.js .site-nav a[aria-current='page'] { background: none; box-shadow: none; color: var(--brass-bright); }
+html.menu-open { overflow: hidden; }
 
 @media (min-width: 900px) {
   .site-header .bar, .js .site-header .bar { flex-wrap: nowrap; height: var(--header-h); }
-  .site-nav, .js .site-nav { position: static; order: 0; flex: 0 1 auto; display: flex; flex-direction: row; align-items: center; gap: 2px; margin-left: auto; padding: 0; background: none; border: 0; box-shadow: none; overflow-x: auto; animation: none; }
-  .site-nav a, .js .site-nav a { padding: 6px var(--s-3); font-size: var(--fs-sm); }
-  .header-tools { margin-left: 0; }
+  .site-nav, .js .site-nav { position: static; height: auto; order: 0; flex: 0 1 auto; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 2px; margin-left: auto; padding: 0; background: none; border: 0; box-shadow: none; overflow-x: auto; scrollbar-width: none; animation: none; }
+  .site-nav a, .js .site-nav a { position: relative; flex: none; padding: 6px var(--s-3); border: 0; font: var(--fs-sm)/1.5 var(--font-ui); color: var(--text-3); }
+  .site-nav a:hover, .js .site-nav a:hover { background: none; color: var(--text); }
+  .site-nav a[aria-current='page'], .js .site-nav a[aria-current='page'] { background: none; box-shadow: none; color: var(--text); }
+  .site-nav a[aria-current='page']::after {
+    content: ''; position: absolute; left: var(--s-3); right: var(--s-3); bottom: 0; height: 1px; background: var(--brass);
+  }
+  .header-tools { margin-left: var(--s-3); }
+  .btn.search-pill { width: auto; padding: 0 var(--s-2) 0 var(--s-3); border-color: var(--line); color: var(--text-3); }
+  .btn.search-pill:hover { color: var(--text); }
+  .search-pill-label, .search-pill-key { display: inline; }
   .js .menu-toggle { display: none; }
+  html.menu-open { overflow: visible; }
 }
 
 /* ---------------------------------------------------------------------------------------------------- Footer */
@@ -195,8 +224,10 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .feed-count { margin: 0 0 var(--s-4); }
 
 /* ------------------------------------------------------------------------------------------ Archive: the toolbar */
-.toolbar { display: grid; gap: var(--s-4); padding-block: var(--s-4); margin-bottom: var(--s-5); border-block: var(--bw) solid var(--line); }
-.toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); }
+/* One row: the switches side by side and the count at the end. The search box and the tag chips take a line of their own. */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-6); padding-block: var(--s-3); margin-bottom: var(--s-5); border-block: var(--bw) solid var(--line); }
+.toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.toolbar-row:has(> .search), .toolbar-row:has(> .tag-list) { flex: 1 1 100%; }
 .toolbar .eyebrow { flex: none; }
 .search { position: relative; display: block; flex: 1 1 16rem; min-width: 0; margin: 0; }
 .search .ico { position: absolute; inset-block: 0; margin-block: auto; left: var(--s-3); color: var(--text-3); pointer-events: none; }
@@ -205,7 +236,7 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .tag-list { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 button.chip { background: transparent; cursor: pointer; }
 .tag-list .chip { min-height: 28px; padding-inline: var(--s-3); }
-.toolbar-count { margin: 0; }
+.toolbar-count { margin: 0 0 0 auto; }
 
 .empty { display: grid; justify-items: start; gap: var(--s-4); padding: var(--s-7) var(--s-6); border: var(--bw) dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface-1); }
 .empty h2 { font-size: var(--fs-2xl); }
@@ -696,7 +727,6 @@ html:not(.js) .feed-kinds { display: flex; flex-wrap: wrap; align-items: center;
 .tag-index .count { color: var(--text-3); font-size: var(--fs-2xs); }
 .tag-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-4); margin-bottom: var(--s-5); }
 .tag-back { margin: var(--s-7) 0 0; }
-.toolbar { grid-template-columns: minmax(0, 1fr); }
 .toolbar-row > .seg, .toolbar-row > .tag-list { min-width: 0; }
 
 /* --- project and repo pages (phase 4d) --- */
@@ -711,23 +741,57 @@ html:not(.js) .repo-head [data-copy] { display: none; }
 .facts .links .btn { justify-content: space-between; }
 
 /* ===== search (Pagefind; src/components/Search.astro, src/scripts/search.js) ===== */
-.search-dialog { width: min(calc(100vw - var(--s-5)), 40rem); max-height: calc(100dvh - var(--s-7)); margin: var(--s-6) auto auto; padding: 0; overflow: auto; color: var(--text); background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-float); }
+/* The palette: a centred dialog, the field as its title bar, rows under it, the keys along the bottom. */
+.search-dialog { width: min(calc(100vw - var(--s-5)), 40rem); max-height: min(36rem, calc(100dvh - var(--s-7))); margin: max(var(--s-5), 12vh) auto auto; padding: 0; overflow: hidden; color: var(--text); background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-float); }
+.search-dialog[open] { display: flex; flex-direction: column; }
 .search-dialog::backdrop { background: var(--scrim-strong); }
 body:has(.search-dialog[open]) { overflow: hidden; }
 .search-panel-inner { display: grid; gap: var(--s-4); padding: var(--s-4); }
+.search-dialog .search-panel-inner { display: flex; flex-direction: column; gap: 0; min-height: 0; padding: 0; }
 .search-panel.page .search-panel-inner { padding: 0; max-width: 40rem; }
 .search-dialog .search-form, .search-panel .search-form { display: flex; align-items: center; gap: var(--s-3); }
 .search-dialog .search, .search-panel .search { flex: 1 1 auto; }
+.search-dialog .search-form { flex: none; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: var(--bw) solid var(--line); }
+.search-dialog .search .ico { left: var(--s-4); }
+.search-dialog .search .input { height: 52px; padding-left: calc(var(--s-4) + var(--s-3) + 15px); font-size: var(--fs-base); background: transparent; border-color: transparent; }
+.search-dialog .search .input:hover, .search-dialog .search .input:focus { background: transparent; border-color: transparent; }
+/* The field is the palette's title bar: focus shows as a brass rule under it, not a ring around it. */
+.search-dialog .search .input:focus-visible { outline: 0; }
+.search-dialog .search-form:has(.input:focus-visible) { border-bottom-color: var(--line-brass); }
+.search-close-key, .search-keys kbd { font: var(--fs-2xs)/1 var(--font-mono); color: var(--text-3); padding: 3px 6px; border: var(--bw) solid var(--line-strong); border-radius: var(--r-xs); }
+.search-close-key { display: none; }
+.search-dialog .search-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--s-3) var(--s-2); }
 .search-status { margin: 0; }
-.search-results { list-style: none; display: grid; gap: var(--s-3); margin: 0; padding: 0; }
+.search-dialog .search-status { padding: var(--s-2) var(--s-3); }
+/* Before anything is typed the quick links say what to do; the status stays for screen readers. */
+.search-dialog .search-status:has(+ .search-quick:not([hidden])) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.search-quick ul { list-style: none; margin: 0; padding: 0; }
+.search-quick .eyebrow { margin: 0; padding: var(--s-2) var(--s-3); }
+.search-results { list-style: none; display: grid; gap: var(--s-1); margin: 0; padding: 0; }
+.search-panel.page .search-results { margin-top: var(--s-4); }
 .search-results:empty { display: none; }
-.search-result .card-body { gap: var(--s-2); padding: var(--s-4); }
-.search-result .card-text { -webkit-line-clamp: 2; line-clamp: 2; }
-.search-result:focus-visible { border-color: var(--line-brass); }
+/* A row: quick links (icon, label, arrow) and results (title and kind, a line of text under them). */
+.search-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--s-1) var(--s-3); min-height: 44px; padding: var(--s-2) var(--s-3); color: var(--text); text-decoration: none; border-radius: var(--r-sm); transition: background var(--dur-fast) var(--ease); }
+.search-row > .ico { color: var(--text-3); }
+.search-row:hover, .search-row:focus-visible { background: var(--surface-2); }
+.search-row:focus-visible { outline: var(--bw) solid var(--line-brass); outline-offset: -1px; }
+.search-row:hover > .ico, .search-row:focus-visible > .ico { color: var(--brass-bright); }
+.search-row-title { font-size: var(--fs-md); font-weight: 500; min-width: 0; }
+.search-result { grid-template-columns: 1fr auto; padding-block: var(--s-3); }
+.search-result .kind { justify-self: end; }
+.search-result .kind::before { display: none; }
+.search-row-text { grid-column: 1 / -1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: var(--fs-sm); line-height: 1.5; color: var(--text-2); }
 .search-result mark { background: var(--brass-wash-1); color: var(--brass-bright); border-radius: var(--r-xs); }
 .search-keys { margin: 0; }
-.search-dialog .search-keys { display: none; }
-@media (hover: hover) and (min-width: 900px) { .search-dialog .search-keys { display: block; } }
+.search-keys { display: none; }
+.search-dialog .search-keys { flex: none; gap: var(--s-4); padding: var(--s-3) var(--s-4); border-top: var(--bw) solid var(--line); }
+.search-keys kbd { margin-right: var(--s-1); }
+@media (hover: hover) and (min-width: 900px) {
+  .search-dialog .search-keys { display: flex; }
+  .search-dialog .search .input { font-size: var(--fs-lg); }
+  .search-close-label { display: none; }
+  .search-close-key { display: inline; }
+}
 .search-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-6) 0 var(--s-8); padding: 0; }
 .search-kinds .chip { min-height: 28px; padding-inline: var(--s-3); }
 .search-note { margin: var(--s-4) 0 0; color: var(--text-2); }
@@ -735,3 +799,13 @@ html:not(.js) .search-panel.page { display: none; }
 html.js .search-kinds { display: none; }
 /* End of search styles */
 .preview-badge { align-self: flex-start; color: var(--brass-bright); border-color: var(--line-brass); background: var(--brass-wash-1); }
+
+/* ===== Interface components (docs/DECISIONS.md, "Interface components") =====
+   Rectangles are actions and switches (.btn, .seg); pills are labels (.chip); uppercase tracked type is for eyebrows and kinds
+   only. These override components.css for the site; the design system's own rules are unchanged. */
+/* The segmented control: a recessed track, sentence-case labels, the chosen one raised. */
+.seg { gap: 2px; padding: 2px; background: var(--surface-1); }
+.seg button { height: 28px; padding: 0 var(--s-3); border-radius: var(--r-xs); font-size: var(--fs-sm); letter-spacing: 0; text-transform: none; }
+.seg button:focus-visible { outline-offset: -2px; }
+/* A badge inside an eyebrow (Playable, Preview) is a label, not part of the eyebrow's caps. */
+.eyebrow .chip { font-family: var(--font-ui); font-size: var(--fs-xs); letter-spacing: 0; text-transform: none; }

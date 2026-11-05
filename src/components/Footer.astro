@@ -14,6 +14,13 @@ interface Props {
 // is empty in the settings is already left out (footerLinks in src/lib/site-settings.ts).
 const { links = footerItems } = Astro.props;
 const year = new Date().getFullYear();
+// The Pages column: the header's nav, and Apps (the header reaches it through its Play button, not a nav link), before About.
+const about = navItems.findIndex((item) => item.href === '/about/');
+const pages = navItems.some((item) => item.href === '/apps/')
+  ? navItems
+  : about < 0
+    ? [...navItems, { label: 'Apps', href: '/apps/' }]
+    : [...navItems.slice(0, about), { label: 'Apps', href: '/apps/' }, ...navItems.slice(about)];
 ---
 
 <footer class="site-footer">
@@ -27,9 +34,11 @@ const year = new Date().getFullYear();
         <p>{site.description}</p>
       </div>
       <nav aria-label="Pages">
-        <p class="eyebrow" aria-hidden="true">Pages</p>
+        <p class="eyebrow" aria-hidden="true">
+          Pages
+        </p>
         <ul class="footer-pages">
-          {navItems.map((item) => (
+          {pages.map((item) => (
             <li>
               <a href={item.href}>{item.label}</a>
             </li>
@@ -37,7 +46,9 @@ const year = new Date().getFullYear();
         </ul>
       </nav>
       <nav aria-label="Footer">
-        <p class="eyebrow" aria-hidden="true">Elsewhere</p>
+        <p class="eyebrow" aria-hidden="true">
+          Elsewhere
+        </p>
         <ul class="footer-links">
           {links.map((link) => (
             <li>

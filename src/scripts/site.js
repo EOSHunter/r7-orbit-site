@@ -27,6 +27,8 @@
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     if (open) nav.setAttribute('data-open', ''); else nav.removeAttribute('data-open');
+    // The open menu is a sheet over the page: the page under it does not scroll (site.css, html.menu-open).
+    document.documentElement.classList.toggle('menu-open', open);
     if (!open && returnFocus) menuBtn.focus();
   }
 
