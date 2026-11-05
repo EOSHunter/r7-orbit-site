@@ -1,0 +1,112 @@
+---
+title: "How AI agents built *R7: Ascent*, a climb to orbit"
+seoTitle: "How AI agents built R7: Ascent"
+date: 2026-11-05
+summary: "From a planning chat to a five-zone climb in three days: what Hunter asked for, how Blender scripts made the art, and what changed after he played it."
+tags: [games, ai-agents]
+author: orion
+draft: true
+# IMAGE NEEDED: featuredImage: a screenshot from the game's camera, the robot from behind on a block in the Server stack or the Cloud, 16:9 and 1280px wide or more, in src/assets/blog/ (with featuredImageAlt)
+sections:
+  - type: lead
+    text: "R7: Ascent is a 3D climbing game you play in your browser, here on the site. You start on the floor of a giant workshop and climb through five zones to the brass ring from the R7 logo, in orbit. AI coding agents built it in three days under Hunter's direction, and they made the game's models and levels by writing scripts for Blender."
+  - type: text
+    text: |-
+      One missed jump can drop you a long way, and by default there are no checkpoints. Assist mode, in the pause menu, adds beacons to fall back to. The game is played with a keyboard and a mouse.
+  - type: button
+    label: "Play R7: Ascent"
+    url: /ascent/
+  - type: text
+    text: |-
+      - **Three days** of building, Oct 27 to Oct 29, 2026, from grey boxes to the finished climb
+      - **Five zones** and 451 steps, from the workshop floor to the ring at 351 m
+      - **15 to 20 minutes**, the target for a first climb
+      - **Every model and level** in the finished climb built by a Python script
+  - type: heading
+    text: A plan before any code
+    level: 2
+  - type: text
+    text: |-
+      Hunter wanted a climbing game for the site, the kind where the whole challenge is going up and one fall can cost you minutes. An agent started looking through the code to build it straight away, and Hunter stopped it. He wanted to settle how the game should work and how it should look first.
+
+      So the first step was a planning chat. The agent drew a mockup of the game screen and asked Hunter a handful of questions, and his answers became the plan:
+
+      - **The name.** He picked R7: Ascent from a short list. The R-7 was the rocket that put Sputnik into orbit, and the game is a climb to orbit.
+      - **3D in the browser.** The agent recommended 2D, which would have been smaller and quicker to build. Hunter chose 3D, drawn with three.js, a library for 3D graphics on the web. It loads only when you press Play, so the page stays light until then.
+      - **Hardcore by default,** with an assist mode for anyone who wants checkpoints.
+      - **About 15 to 20 minutes** for a first climb.
+      - **Workshop to orbit:** desks and keyboards, then servers, clouds, the upper air and space.
+
+      The plan went into the site's docs, and every agent after that worked from it.
+  - type: heading
+    text: Blender, run by scripts
+    level: 2
+  - type: text
+    text: |-
+      Blender is a free 3D modeling program. Hunter wanted it for the game's art, and he wanted the agents to make all of it while he directed. Each model and each zone is a Python script that starts Blender in the background, builds the scene from scratch and exports a file the game loads. Hunter never had to open Blender.
+
+      That makes a change such as taller server racks a small edit to a script and a rebuild. The robot's script also rendered still pictures of it, and Hunter approved the second round before the robot went into the game. The zones he judged by playing them.
+
+      Blender is the level editor too. Invisible boxes named `COL_` are what the robot stands on and bumps into. Other objects carry tags the game reads: where you start, where a fan blows you upward, which blocks drift and which panels crumble.
+  - type: heading
+    text: Feel first, then a robot
+    level: 2
+  - type: text
+    text: |-
+      The first playable version was grey boxes and a capsule. Its only job was to show whether jumping felt good, before any art existed. When Hunter first played it in a box on the page, the mouse would not stay locked to the game, so Play now goes full screen and locks the mouse in the same click. Two small rules do a lot of that work. A jump still counts for a moment after you step off an edge, and a jump pressed just before you land happens when you land.
+
+      Next came a test climb on a giant desk, built by the first Blender script: 13 jumps from two books on the floor, over a chair and a keyboard, up to a desk lamp. Then the capsule had to go. Hunter asked for a character with more to it than a pill, and approved a small robot on the second round of renders (the first round looked flat). It has an ivory head with one brass visor band, a short antenna, and a battery pack on its back, since the camera sees it from behind most of the time.
+
+      The robot's running, jumping and landing are animated in code from what the game is doing, so the animation never changes how a jump moves.
+  - type: heading
+    text: Five zones, each with a new kind of jump
+    level: 2
+  - type: text
+    text: |-
+      A script lays out the whole climb step by step, and tests check that every jump can be made.
+
+      1. **Workshop.** Giant books, toolboxes and chips round a tower of hardware. Plain jumps, to learn the controls.
+      2. **Server stack.** Racks and heat sinks, and fans that blow you upward.
+      3. **Cloud.** Data blocks that drift back and forth and carry you with them.
+      4. **Upper air.** Solar panels that break a moment after you land on them, and thin girders.
+      5. **Orbit.** Asteroids, drifting blocks, crumbling panels and girders, up to the ring. Touch the ring to finish.
+  - type: gallery
+    label: Screenshots of the five zones
+    shots:
+      - image: /media/blog/r7-ascent-workshop.jpg
+        alt: The robot from behind on a dark block in the workshop, among giant books, floppy disks and a red mug, with a tall red tool chest and a white door behind it
+        caption: Workshop
+      - image: /media/blog/r7-ascent-server-stack.jpg
+        alt: The robot on a navy block between towers of server racks lit with green and blue status lights, with heat sinks on the blocks around it and a glowing fan ring below
+        caption: Server stack
+      - image: /media/blog/r7-ascent-cloud.jpg
+        alt: The robot on a pale data block above a sea of clouds, with pastel storage blocks floating around it and the tops of the server racks below
+        caption: Cloud
+      - image: /media/blog/r7-ascent-upper-air.jpg
+        alt: The robot on a blue solar panel in a deep blue sky over the Earth, with orange girders, a red and white antenna mast, a satellite and a ringed planet
+        caption: Upper air
+      - image: /media/blog/r7-ascent-orbit.jpg
+        alt: The robot on an asteroid in orbit, with more rocks floating round it, a ringed planet at the edge of the dark blue sky and the Earth below
+        caption: Orbit
+  - type: heading
+    text: What changed after Hunter played it
+    level: 2
+  - type: text
+    text: |-
+      The full climb was playable at the end of the first day of building. Most of what came after it came from Hunter playing it and saying what was wrong.
+
+      - **The look.** The first style was dark blocks with thin ivory edge lines, close to the site's own design. After his first full climb, Hunter asked for lit, colorful scenes with real objects and fewer lines. The zones were rebuilt with materials, a sun and a sky, textures painted by the scripts, and shadows.
+      - **The silence.** The first climb had no sound at all. Sound is now made in code while the game runs, with no audio files: jumps, landings, footsteps, fans, and a bed of sound for each zone. The cloud zone's wind took three tries, because the first sounded like the sea and the second like static.
+      - **The sun.** Each zone first had a sun of its own, and jumping near the edge of a zone made the shadows swing round. Now one sun lights the whole climb.
+      - **Phones.** Touch controls were built, with a thumb stick and a Jump button, then removed. A precise 3D jumping game is hard to play on a phone, so a phone now gets a line saying the game needs a keyboard and a mouse.
+  - type: heading
+    text: Verdict
+    level: 2
+  - type: callout
+    kind: warn
+    title: VERDICT NEEDED
+    text: "Hunter's verdict goes here, in his words: one or two sentences in a tip callout titled My verdict. Orion adds no opinion of its own."
+  - type: button
+    label: "Play R7: Ascent"
+    url: /ascent/
+---
