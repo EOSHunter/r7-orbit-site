@@ -1,6 +1,5 @@
 // Maps published posts onto the shapes the cards take. Listing pages (home, archives, tags) use this.
 import type { ImageMetadata } from 'astro';
-import { getImage } from 'astro:assets';
 import type { CardData, Cover, ProjectStatus } from './cards';
 import { loadGitHubRepo } from './github';
 import { authorSlugOf } from './authors';
@@ -18,6 +17,8 @@ export function coverOf(data: { cover?: string; coverAlt?: string }): Cover | un
 async function featuredCover(data: unknown): Promise<Cover | undefined> {
   const { featuredImage, featuredImageAlt } = data as { featuredImage?: ImageMetadata; featuredImageAlt?: string };
   if (!featuredImage) return undefined;
+  // Loaded here, not at the top: astro:assets exists only in Astro's build, and the unit tests import this file without it.
+  const { getImage } = await import('astro:assets');
   const image = await getImage({ src: featuredImage, width: 1280, height: 720, fit: 'cover', format: 'webp' });
   return { src: image.src, alt: featuredImageAlt ?? '', width: 1280, height: 720 };
 }
