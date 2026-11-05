@@ -279,3 +279,8 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
   - **Grain**: a faint, still film grain (an SVG noise in the CSS) on the bare background under every surface, never over text or pictures.
   - **A blur under the sticky header**: a short strip that fades out downward, so content softens as it slides beneath the header.
   - Cost: no new file on any page; `site.js` grows by under 1 kB gzipped.
+- **Apps page effects (phase 3): tried and dropped** (2026-11-05). Both were built and shown to the author, and neither shipped, because neither scales as the number of apps grows:
+  - **Tilting app cards** (each card leaning toward the pointer in 3D): out of place, above all with many apps.
+  - **The posters' orbit** (the apps' posters circling the R7 mark beside the /apps/ heading): it crowds, or has to leave apps out, as the list grows.
+  - Do not bring either back without asking. An effect on the Apps page has to work the same with 2 apps or 20. The code is on the unmerged branch `claude/apps-phase-3`, for reference.
+  - **Rolling numbers in stats rows: not built.** No published page shows a stats row yet (no repo pages, no `stats` block in use); build it when one does.
