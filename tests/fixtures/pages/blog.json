@@ -1,11 +1,14 @@
 {
   "path": "/blog/",
-  "inputs": "sha256:bd87bac270b24179",
+  "inputs": "sha256:bb6177d410e24e41",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,22 +16,16 @@
     "description: Longer posts about building with AI agents: what I tried, what happened and what I would do again.",
     "p.eyebrow: Blog",
     "h1: Writing about building with agents",
-    "em: building with agents",
-    "p.t-lead: Longer posts about the things I make and how they went. Filter by tag, search the titles, or read from the top."
+    "p.t-lead: Longer posts about the things I make and how they went, newest first."
   ],
   "lines": [
     "title: Blog · R7 Orbit",
     "description: Longer posts about building with AI agents: what I tried, what happened and what I would do again.",
     "p.eyebrow: Blog",
     "h1: Writing about building with agents",
-    "em: building with agents",
-    "p.t-lead: Longer posts about the things I make and how they went. Filter by tag, search the titles, or read from the top.",
+    "p.t-lead: Longer posts about the things I make and how they went, newest first.",
     "div aria-label: Filter and sort posts",
-    "label.visually-hidden: Search posts",
-    "div aria-label: Sort",
-    "button: Newest",
-    "button: Oldest",
-    "span.eyebrow: Tags",
+    "span.eyebrow: By author",
     "[content]",
     "h2.visually-hidden: Posts",
     "[content]",

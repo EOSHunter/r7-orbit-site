@@ -1,11 +1,14 @@
 {
   "path": "/tags/",
-  "inputs": "sha256:2cd79a4aaf08d928",
+  "inputs": "sha256:3e554ebd74a46888",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,7 +16,6 @@
     "description: Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.",
     "p.eyebrow: Tags",
     "h1: Browse by topic",
-    "em: topic",
     "p.t-lead: Every tag in use, with the number of posts that carry it. A tag gets its own page once two posts share it."
   ],
   "lines": [
@@ -21,7 +23,6 @@
     "description: Every tag used on the site, with how many posts carry it. Pick one to see its news, posts, videos, projects and repos together.",
     "p.eyebrow: Tags",
     "h1: Browse by topic",
-    "em: topic",
     "p.t-lead: Every tag in use, with the number of posts that carry it. A tag gets its own page once two posts share it.",
     "h2.visually-hidden: Tags with a page",
     "[content]",

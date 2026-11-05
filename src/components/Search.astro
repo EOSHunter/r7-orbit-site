@@ -1,9 +1,11 @@
 ---
 // Site search. Two shapes of the same panel, both driven by src/scripts/search.js:
-//   default      a modal <dialog>, opened with "/" or the header button (mounted once in BaseLayout)
+//   default      a command palette: a modal <dialog>, opened with "/" or the header's search pill (mounted once in BaseLayout).
+//                Before anything is typed it offers the site's sections as quick links.
 //   page={true}  the same panel inline, for /search/ (and the no-JS fallback note)
 // The index is made by Pagefind at build time (npm run build) and loaded from /pagefind/ on first use.
 import Icon from './Icon.astro';
+import { navItems } from '../data/nav';
 // ?url emits search.js as its own hashed file instead of bundling it, so site.js (which loads it on first use) has no
 // imports and Astro can inline it into the page: one request fewer before first paint.
 import searchSrc from '../scripts/search.js?url&no-inline';
@@ -14,6 +16,17 @@ interface Props {
 
 const { page = false } = Astro.props;
 const Tag = page ? 'div' : 'dialog';
+
+// The palette's quick links: Apps first (the header reaches it through its Play button), then the nav in its order.
+const ICONS: Record<string, string> = {
+  '/apps/': 'play',
+  '/blog/': 'blog',
+  '/news/': 'news',
+  '/vlogs/': 'vlog',
+  '/projects/': 'project',
+  '/repos/': 'repo',
+};
+const quick = [{ label: 'Apps', href: '/apps/' }, ...navItems.filter((item) => item.href !== '/apps/')];
 ---
 
 <Tag
@@ -31,26 +44,55 @@ const Tag = page ? 'div' : 'dialog';
           class="input"
           type="search"
           name="q"
-          placeholder="Search posts"
-          aria-label="Search posts"
+          placeholder="Search posts, games and videos"
+          aria-label="Search posts, games and videos"
           autocomplete="off"
           spellcheck="false"
           data-search-input
         />
       </div>
       {!page && (
-        <button class="btn quiet sm" type="button" data-search-close>
-          <Icon name="close" small />
-          Close
+        <button class="btn quiet sm search-close" type="button" aria-label="Close" data-search-close>
+          <span class="search-close-label">Close</span>
+          <kbd class="search-close-key" aria-hidden="true">
+            Esc
+          </kbd>
         </button>
       )}
     </form>
-    <p class="t-meta search-status" role="status" data-search-status>
-      Type to search…
-    </p>
-    <ol class="search-results" data-search-results></ol>
+    <div class="search-body">
+      <p class="t-meta search-status" role="status" data-search-status>
+        Type to search…
+      </p>
+      {!page && (
+        <nav class="search-quick" aria-label="Jump to" data-search-quick>
+          <p class="eyebrow">Jump to</p>
+          <ul>
+            {quick.map((item) => (
+              <li>
+                <a class="search-row" href={item.href}>
+                  <Icon name={ICONS[item.href] ?? 'link'} />
+                  <span class="search-row-title">{item.label}</span>
+                  <Icon name="arrow" small />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      <ol class="search-results" data-search-results></ol>
+    </div>
     <p class="t-meta search-keys" aria-hidden="true">
-      ↑ ↓ move · Enter opens · Esc closes
+      <span>
+        <kbd>↑</kbd>
+        <kbd>↓</kbd> move
+      </span>
+      <span>
+        <kbd>Enter</kbd> opens
+      </span>
+      <span>
+        <kbd>Esc</kbd> closes
+      </span>
     </p>
   </div>
 </Tag>

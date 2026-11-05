@@ -1,11 +1,14 @@
 {
   "path": "/news/",
-  "inputs": "sha256:b6e6b319146ee3b7",
+  "inputs": "sha256:4a7203928f2f9a79",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,7 +16,6 @@
     "description: Short news items on AI, each with a link to the source and my take on what it means.",
     "p.eyebrow: News",
     "h1: News, with my take on it",
-    "em: take",
     "p.t-lead: Short items on what happened in AI and what I would do about it. Each one links to its source."
   ],
   "lines": [
@@ -21,7 +23,6 @@
     "description: Short news items on AI, each with a link to the source and my take on what it means.",
     "p.eyebrow: News",
     "h1: News, with my take on it",
-    "em: take",
     "p.t-lead: Short items on what happened in AI and what I would do about it. Each one links to its source.",
     "h2: No news items yet.",
     "p: Check back soon."

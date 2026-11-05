@@ -19,6 +19,8 @@ interface Props extends PlayFields {
   id?: string;
   /** Draw the "Play" heading (default). A page of blocks hides it (the panel keeps it for screen readers): the author's own headings lead. */
   showHeading?: boolean;
+  /** Link mode: draw the Play button (default). A project page leaves it out: its header already has the one Play button. */
+  showButton?: boolean;
 }
 
 const {
@@ -32,6 +34,7 @@ const {
   platforms = [],
   id: idProp,
   showHeading = true,
+  showButton = true,
 } = Astro.props;
 const embed = playMode !== 'link';
 // A page of this site opens in the same tab: no new tab, no external icon.
@@ -95,13 +98,15 @@ const id = idProp
       </p>
     </>
   ) : (
-    <div class="cluster play-bar">
-      <a class="btn solid" href={playUrl} target={onSite ? undefined : '_blank'} rel={onSite ? undefined : 'noopener'}>
-        <Icon name="play" />
-        Play {title}
-        {!onSite && <Icon name="external" />}
-      </a>
-    </div>
+    showButton && (
+      <div class="cluster play-bar">
+        <a class="btn solid" href={playUrl} target={onSite ? undefined : '_blank'} rel={onSite ? undefined : 'noopener'}>
+          <Icon name="play" />
+          Play {title}
+          {!onSite && <Icon name="external" />}
+        </a>
+      </div>
+    )
   )}
 
   {playNote && <p class="play-note">{playNote}</p>}

@@ -168,7 +168,7 @@ const path = `/projects/${post.id}/`;
         <div class="cluster actions">
           {playable && (
             <a
-              class="btn solid"
+              class="btn solid lg"
               href={embedded ? '#play' : data.playUrl}
               target={embedded || onSite ? undefined : '_blank'}
               rel={embedded || onSite ? undefined : 'noopener'}
@@ -178,14 +178,14 @@ const path = `/projects/${post.id}/`;
             </a>
           )}
           {data.liveUrl && (
-            <a class={playable ? 'btn' : 'btn solid'} href={data.liveUrl} rel="noopener">
+            <a class={playable ? 'btn lg' : 'btn solid lg'} href={data.liveUrl} rel="noopener">
               Live site
               <Icon name="external" />
             </a>
           )}
           {source && (
             <a
-              class={playable || data.liveUrl ? 'btn' : 'btn solid'}
+              class={playable || data.liveUrl ? 'btn lg' : 'btn solid lg'}
               href={source.href}
               rel={source.external ? 'noopener' : undefined}
             >
@@ -214,9 +214,11 @@ const path = `/projects/${post.id}/`;
         )}
       </div>
     )}
+    {/* Embedded, the panel is the game. In link mode the header's Play button is the only one: the panel keeps the note,
+        platforms and controls under the cover, with its heading for screen readers only. */}
     {playProps && (
       <div id="play">
-        <PlayPanel {...playProps} />
+        <PlayPanel {...playProps} showHeading={embedded} showButton={embedded} />
       </div>
     )}
 

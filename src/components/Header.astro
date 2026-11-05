@@ -12,6 +12,8 @@ interface Props {
 }
 
 const { current, items = navItems } = Astro.props;
+// The one call to action in the header: the playable work (docs/DECISIONS.md, "Interface components"). Current on the Apps hub.
+const playCurrent = current === '/apps/';
 ---
 
 <header class="site-header">
@@ -28,9 +30,20 @@ const { current, items = navItems } = Astro.props;
       ))}
     </nav>
     <div class="header-tools">
-      <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/ -->
-      <a class="btn quiet icon" href="/search/" aria-label="Search" data-search-open>
+      <!-- search: data-search-open lets src/scripts/search.js open the dialog; without JS the link goes to /search/. The word and
+           the "/" shortcut show from 900px; below, the icon alone. -->
+      <a class="btn quiet search-pill" href="/search/" aria-label="Search" data-search-open>
         <Icon name="search" />
+        <span class="search-pill-label" aria-hidden="true">
+          Search
+        </span>
+        <kbd class="search-pill-key" aria-hidden="true">
+          /
+        </kbd>
+      </a>
+      <a class="btn header-play" href="/apps/" aria-current={playCurrent ? 'page' : undefined}>
+        <Icon name="play" />
+        Play
       </a>
       <button
         class="btn quiet icon menu-toggle"

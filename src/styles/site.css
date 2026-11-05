@@ -43,8 +43,20 @@ main:focus { outline: 0; }
 .skip-link:hover { color: var(--on-brass); }
 
 /* ---------------------------------------------------------------------------------------------------- Header */
-.header-tools { display: flex; align-items: center; gap: var(--s-1); margin-left: auto; }
+/* docs/DECISIONS.md, "Interface components": the current page underlined in brass (not a box), search as a pill with its "/"
+   shortcut, one call to action (Play), and on a phone a full-screen sheet of large links. */
+.header-tools { display: flex; align-items: center; gap: var(--s-2); margin-left: auto; }
 .site-header .bar { gap: var(--s-4); }
+
+/* Search: the icon on a phone; from 900px the word and the "/" key in a quiet pill. */
+.btn.search-pill { flex: none; width: 36px; padding: 0; gap: var(--s-2); }
+.search-pill-label, .search-pill-key { display: none; }
+.search-pill-key { font: var(--fs-2xs)/1 var(--font-mono); color: var(--text-3); padding: 3px 6px; border: var(--bw) solid var(--line-strong); border-radius: var(--r-xs); }
+/* Play: the header's one call to action, in brass outline; filled faintly on the Apps hub. */
+.btn.header-play { flex: none; height: 32px; padding: 0 var(--s-4); border-color: var(--line-brass); color: var(--brass-bright); font-weight: var(--fw-medium); }
+.btn.header-play:hover { background: var(--brass-wash-2); }
+.btn.header-play[aria-current='page'] { background: var(--brass-wash-3); }
+.btn.header-play svg { width: 14px; height: 14px; }
 
 .menu-toggle { display: none; }
 .menu-toggle .i-close { display: none; }
@@ -54,37 +66,64 @@ main:focus { outline: 0; }
 /* No script: the nav is a scrolling row under the wordmark */
 .site-header .bar { flex-wrap: wrap; height: auto; min-height: var(--header-h); }
 .site-nav { order: 3; flex: 1 1 100%; margin-left: 0; padding-bottom: var(--s-2); }
+/* The focus ring sits inside the link, so a nav that scrolls (no script) or clips never cuts it off. */
+.site-nav a:focus-visible { outline-offset: -2px; }
 
-/* With script, small screens: a panel under the bar */
+/* With script, small screens: a sheet the height of the screen under the bar. Absolute, not fixed: the header's backdrop blur
+   makes it the containing block of anything fixed inside it. The page under it does not scroll (html.menu-open, site.js). */
 .js .site-header .bar { flex-wrap: nowrap; height: var(--header-h); }
 .js .menu-toggle { display: inline-flex; }
 .js .site-nav {
-  position: absolute; top: 100%; left: 0; right: 0; order: 0; display: none; flex-direction: column; align-items: stretch; gap: var(--s-1);
-  padding: var(--s-3) var(--gutter) var(--s-4); background: var(--surface-1); border-bottom: var(--bw) solid var(--line); box-shadow: var(--shadow-float);
-  overflow: visible;
+  position: absolute; top: 100%; left: 0; right: 0; height: calc(100dvh - var(--header-h)); order: 0; display: none;
+  flex-direction: column; align-items: stretch; gap: 0; padding: var(--s-4) var(--gutter) var(--s-8); background: var(--bg); overflow-y: auto;
 }
 .js .site-nav[data-open] { display: flex; animation: fade-in var(--dur) var(--ease); }
-.js .site-nav a { padding: var(--s-3); font-size: var(--fs-md); }
+.js .site-nav a {
+  padding: var(--s-4) 0; border-bottom: var(--bw) solid var(--line); border-radius: 0;
+  font: var(--fw-regular) var(--fs-2xl)/1.2 var(--font-display); color: var(--text-2);
+}
+.js .site-nav a:hover { background: none; color: var(--text); }
+.js .site-nav a[aria-current='page'] { background: none; box-shadow: none; color: var(--brass-bright); }
+html.menu-open { overflow: hidden; }
 
 @media (min-width: 900px) {
   .site-header .bar, .js .site-header .bar { flex-wrap: nowrap; height: var(--header-h); }
-  .site-nav, .js .site-nav { position: static; order: 0; flex: 0 1 auto; display: flex; flex-direction: row; align-items: center; gap: 2px; margin-left: auto; padding: 0; background: none; border: 0; box-shadow: none; overflow-x: auto; animation: none; }
-  .site-nav a, .js .site-nav a { padding: 6px var(--s-3); font-size: var(--fs-sm); }
-  .header-tools { margin-left: 0; }
+  .site-nav, .js .site-nav { position: static; height: auto; order: 0; flex: 0 1 auto; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 2px; margin-left: auto; padding: 0; background: none; border: 0; box-shadow: none; overflow-x: auto; scrollbar-width: none; animation: none; }
+  .site-nav a, .js .site-nav a { position: relative; flex: none; padding: 6px var(--s-3); border: 0; font: var(--fs-sm)/1.5 var(--font-ui); color: var(--text-3); }
+  .site-nav a:hover, .js .site-nav a:hover { background: none; color: var(--text); }
+  .site-nav a[aria-current='page'], .js .site-nav a[aria-current='page'] { background: none; box-shadow: none; color: var(--text); }
+  .site-nav a[aria-current='page']::after {
+    content: ''; position: absolute; left: var(--s-3); right: var(--s-3); bottom: 0; height: 1px; background: var(--brass);
+  }
+  .header-tools { margin-left: var(--s-3); }
+  .btn.search-pill { width: auto; padding: 0 var(--s-2) 0 var(--s-3); border-color: var(--line); color: var(--text-3); }
+  .btn.search-pill:hover { color: var(--text); }
+  .search-pill-label, .search-pill-key { display: inline; }
   .js .menu-toggle { display: none; }
+  html.menu-open { overflow: visible; }
 }
 
 /* ---------------------------------------------------------------------------------------------------- Footer */
-.footer-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
-.footer-brand { display: grid; gap: var(--s-3); justify-items: start; }
-.footer-brand p { margin: 0; max-width: 36ch; color: var(--text-3); }
-.footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); align-content: flex-start; }
-.footer-links a { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--text-2); }
-.footer-links a:hover { color: var(--brass-bright); }
-.footer-legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2) var(--s-5); padding-top: var(--s-5); border-top: var(--bw) solid var(--line); font: var(--fs-xs) var(--font-mono); }
+.footer-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7) var(--s-6); padding-top: var(--s-4); }
+.footer-brand { display: grid; gap: var(--s-4); justify-items: start; }
+.footer-brand .wordmark img { height: 28px; }
+.footer-brand p { margin: 0; max-width: 36ch; color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-ui); }
+/* The two link columns (Pages, Elsewhere). Styled by place, not class: tests/site-chrome.js reads <nav aria-label="Footer"> as is. */
+.footer-grid > nav { display: grid; gap: var(--s-4); align-content: start; }
+.footer-pages, .footer-links { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.footer-pages a, .footer-links a { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--text-2); }
+.footer-pages a:hover, .footer-links a:hover { color: var(--brass-bright); }
+.footer-legal { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); padding-top: var(--s-5); border-top: var(--bw) solid var(--line); font: var(--fs-xs) var(--font-mono); }
+.footer-legal a { color: var(--text-3); }
+.footer-legal a:hover { color: var(--brass-bright); }
+.footer-legal > :last-child:not(:nth-child(2)) { margin-left: auto; }
 @media (min-width: 640px) {
-  .footer-grid { grid-template-columns: 1fr auto; align-items: start; }
-  .footer-legal { grid-column: 1 / -1; }
+  .footer-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .footer-brand, .footer-legal { grid-column: 1 / -1; }
+}
+@media (min-width: 900px) {
+  .footer-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .footer-brand { grid-column: auto; }
 }
 
 /* ---------------------------------------------------------------------------------------- Sections and headings */
@@ -93,6 +132,12 @@ main:focus { outline: 0; }
 .section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--s-3) var(--s-5); margin-bottom: var(--s-6); }
 .section-head > div { display: grid; gap: var(--s-2); }
 .section-title { font-size: var(--fs-2xl); line-height: var(--lh-snug); font-weight: var(--fw-medium); }
+/* Desktop: fewer sizes, bigger steps between them, more air between the sections (docs/DECISIONS.md, "Design audit, brand"). */
+@media (min-width: 900px) {
+  .section { padding-block: var(--s-9); }
+  .section-head { margin-bottom: var(--s-7); }
+  .section-title { font-size: var(--fs-3xl); }
+}
 .more-link { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-sm); }
 .more-link .ico { transition: transform var(--dur) var(--ease); }
 .more-link:hover .ico { transform: translateX(2px); }
@@ -100,6 +145,8 @@ main:focus { outline: 0; }
 .page-head { display: grid; gap: var(--s-4); padding-block: var(--s-8) var(--s-6); }
 .page-head .t-lead { max-width: 58ch; margin: 0; }
 .page-head > h1 { max-width: 20ch; }
+/* The icon sits on the line with the label, as it does in a post's head (it dropped onto a line of its own). */
+.page-head > .eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 
 /* ------------------------------------------------------------------------------------------------- Media placeholder */
 /* A photo that doesn't exist yet: the plate, the dot grid and a faded ivory mark. Swap the .media-ph for an <img>. */
@@ -119,7 +166,8 @@ main:focus { outline: 0; }
 .card .kind .ico { color: inherit; }
 .card-foot .ico { color: var(--text-3); transition: transform var(--dur) var(--ease), color var(--dur-fast); }
 a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-bright); }
-.card-foot .status { display: inline-flex; align-items: center; gap: var(--s-2); }
+/* The status mark and its word, wherever they appear (a card, a project's head, its facts): never run together. */
+.status { display: inline-flex; align-items: center; gap: var(--s-2); }
 
 /* The one pinned post: a wide card */
 .pinned { display: grid; }
@@ -136,6 +184,10 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .hero { padding-block: var(--s-8) var(--s-8); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); align-items: center; }
 .hero .eyebrow { margin-bottom: var(--s-4); }
+/* The hero's line is a sentence, not two words: a step down the display scale, and the brass phrase never split over two
+   lines, so it reads in two lines on a desktop. */
+.hero .t-display { font-size: var(--fs-4xl); }
+.hero .t-display em { white-space: nowrap; }
 .hero .t-lead { margin: var(--s-5) 0 0; max-width: 52ch; }
 .hero .cluster { margin-top: var(--s-6); }
 .hero .orbit { display: none; }
@@ -145,9 +197,6 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .hero-fx.on { opacity: 1; }
 .hero-fx canvas { display: block; width: 100%; height: 100%; }
 .hero:has(.hero-fx.on)::before { opacity: 0; transition: opacity var(--dur-slow) var(--ease); }
-.hero-eyebrow { position: relative; }
-.hero-eyebrow-veil { position: absolute; inset: 0; margin: 0; white-space: nowrap; pointer-events: none; }
-.hero-eyebrow .is-decrypting { color: transparent; }
 /* The brass phrase in the hero headline: a slow sheen of light passes across it every few seconds. Plain brass under reduced
    motion, without background-clip: text, and in forced colours. The padding keeps the italic's overhang inside the clip. */
 @media (prefers-reduced-motion: no-preference) {
@@ -175,8 +224,10 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .feed-count { margin: 0 0 var(--s-4); }
 
 /* ------------------------------------------------------------------------------------------ Archive: the toolbar */
-.toolbar { display: grid; gap: var(--s-4); padding-block: var(--s-4); margin-bottom: var(--s-5); border-block: var(--bw) solid var(--line); }
-.toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); }
+/* One row: the switches side by side and the count at the end. The search box and the tag chips take a line of their own. */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-6); padding-block: var(--s-3); margin-bottom: var(--s-5); border-block: var(--bw) solid var(--line); }
+.toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.toolbar-row:has(> .search), .toolbar-row:has(> .tag-list) { flex: 1 1 100%; }
 .toolbar .eyebrow { flex: none; }
 .search { position: relative; display: block; flex: 1 1 16rem; min-width: 0; margin: 0; }
 .search .ico { position: absolute; inset-block: 0; margin-block: auto; left: var(--s-3); color: var(--text-3); pointer-events: none; }
@@ -185,7 +236,7 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .tag-list { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 button.chip { background: transparent; cursor: pointer; }
 .tag-list .chip { min-height: 28px; padding-inline: var(--s-3); }
-.toolbar-count { margin: 0; }
+.toolbar-count { margin: 0 0 0 auto; }
 
 .empty { display: grid; justify-items: start; gap: var(--s-4); padding: var(--s-7) var(--s-6); border: var(--bw) dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface-1); }
 .empty h2 { font-size: var(--fs-2xl); }
@@ -569,11 +620,72 @@ body::before {
   .reveal.revealed { opacity: 1; transform: none; }
 }
 
-/* Card spotlight (site.js, (j)): a soft brass light under the pointer on a linked card, over its hover surface. */
-@media (hover: hover) and (pointer: fine) {
-  a.card:hover, .card.link:hover {
-    background-image: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), var(--brass-wash-3), transparent 70%);
+/* ---------------------------------------------------------------------------------------------- Editorial cards */
+/* docs/DECISIONS.md, "Design audit, cards". A post's card in a grid, and the pinned post, have no box: the picture (with the
+   rounded corners) and the type carry them. Hover lifts nothing; the picture eases in a little and the title turns brass.
+   App cards (.app-card) keep their box: they hold two buttons, so the whole card is not one link. */
+.grid-cards > .card, .card.pinned {
+  background: none; border: 0; border-radius: 0; overflow: visible; box-shadow: none; animation: none;
+}
+.grid-cards > .card .card-media, .card.pinned .card-media { border: 0; border-radius: var(--r-lg); }
+.grid-cards > .card .card-body { padding: var(--s-4) 0 0; gap: var(--s-2); }
+.grid-cards > .card .card-title.serif { font-size: var(--fs-xl); }
+.grid-cards > .card .card-text { -webkit-line-clamp: 2; }
+.grid-cards > .card .card-foot { margin-top: var(--s-1); padding-top: 0; }
+.grid-cards > a.card:hover, a.card.pinned:hover { background: none; box-shadow: none; transform: none; }
+.grid-cards > .card .card-media img, .card.pinned .card-media img { transition: transform var(--dur-slow) var(--ease); }
+.grid-cards > a.card:hover .card-media img, a.card.pinned:hover .card-media img { transform: scale(1.03); }
+.grid-cards > a.card .card-title, a.card.pinned .card-title { transition: color var(--dur-fast) var(--ease); }
+.grid-cards > a.card:is(:hover, :focus-visible) .card-title, a.card.pinned:is(:hover, :focus-visible) .card-title { color: var(--brass-bright); }
+/* The newest post: a brass hairline round its picture, in place of the rail at the edge of a box. */
+.grid-cards > .card.fresh::before { display: none; }
+.grid-cards > .card.fresh .card-media { box-shadow: 0 0 0 var(--bw) var(--line-brass); }
+/* "Playable" reads as a word beside the kind, not a chip. */
+.card .playable-badge { border: 0; background: none; padding: 0; color: var(--brass); }
+
+/* The pinned post: the lead of the page. A large picture beside a large headline. */
+.card.pinned .card-body { padding: var(--s-5) 0 0; }
+.card.pinned .card-title { font-size: var(--fs-2xl); }
+@media (min-width: 900px) {
+  .card.pinned { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--s-7); align-items: center; }
+  .card.pinned .card-media { aspect-ratio: 16 / 10; min-height: 0; border-right: 0; }
+  .card.pinned .card-body { padding: 0; }
+  .card.pinned .card-title { font-size: var(--fs-3xl); }
+}
+
+/* The grid fits the count, so no card is left alone on a row. Phones: compact rows (a small picture, kind, title and date).
+   From 640px, two columns, and an odd count opens with one wide card. From 1000px, three columns (a six-track grid), and the
+   count decides: 1, 4, 7… open with a wide card; 2, 5, 8… end with two halves. A wide card lays its picture beside its words.
+   (A kind filter hides cards without moving the rest: the grid then follows the count it was built with.) */
+.grid-cards { grid-template-columns: minmax(0, 1fr); column-gap: var(--s-6); row-gap: var(--s-6); }
+@media (max-width: 639px) {
+  .grid-cards > .card { display: grid; grid-template-columns: 7rem minmax(0, 1fr); column-gap: var(--s-4); align-items: start; }
+  .grid-cards > .card .card-media { aspect-ratio: 4 / 3; border-radius: var(--r-md); }
+  .grid-cards > .card .card-body { padding: 0; gap: var(--s-1); }
+  .grid-cards > .card .card-title.serif { font-size: var(--fs-lg); }
+  .grid-cards > .card .card-text { display: none; }
+  .grid-cards > .card .play span { width: 32px; height: 32px; }
+  .grid-cards > .card .duration { display: none; }
+}
+@media (min-width: 640px) {
+  .grid-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-7); }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { grid-column: 1 / -1; }
+}
+@media (min-width: 640px) and (max-width: 999px) {
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: var(--s-6); align-items: center; }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child .card-body { padding: 0; }
+}
+@media (min-width: 1000px) {
+  .grid-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .grid-cards > * { grid-column: span 2; }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { grid-column: span 2; }
+  .grid-cards:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2) { grid-column: span 3; }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child {
+    grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--s-7); align-items: center;
   }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-body { padding: 0; }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-title.serif { font-size: var(--fs-2xl); }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-text { -webkit-line-clamp: 3; }
 }
 
 @media (forced-colors: active) { body::before, .site-header::after { display: none; } }
@@ -615,7 +727,6 @@ html:not(.js) .feed-kinds { display: flex; flex-wrap: wrap; align-items: center;
 .tag-index .count { color: var(--text-3); font-size: var(--fs-2xs); }
 .tag-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-3) var(--s-4); margin-bottom: var(--s-5); }
 .tag-back { margin: var(--s-7) 0 0; }
-.toolbar { grid-template-columns: minmax(0, 1fr); }
 .toolbar-row > .seg, .toolbar-row > .tag-list { min-width: 0; }
 
 /* --- project and repo pages (phase 4d) --- */
@@ -630,23 +741,57 @@ html:not(.js) .repo-head [data-copy] { display: none; }
 .facts .links .btn { justify-content: space-between; }
 
 /* ===== search (Pagefind; src/components/Search.astro, src/scripts/search.js) ===== */
-.search-dialog { width: min(calc(100vw - var(--s-5)), 40rem); max-height: calc(100dvh - var(--s-7)); margin: var(--s-6) auto auto; padding: 0; overflow: auto; color: var(--text); background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-float); }
+/* The palette: a centred dialog, the field as its title bar, rows under it, the keys along the bottom. */
+.search-dialog { width: min(calc(100vw - var(--s-5)), 40rem); max-height: min(36rem, calc(100dvh - var(--s-7))); margin: max(var(--s-5), 12vh) auto auto; padding: 0; overflow: hidden; color: var(--text); background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-float); }
+.search-dialog[open] { display: flex; flex-direction: column; }
 .search-dialog::backdrop { background: var(--scrim-strong); }
 body:has(.search-dialog[open]) { overflow: hidden; }
 .search-panel-inner { display: grid; gap: var(--s-4); padding: var(--s-4); }
+.search-dialog .search-panel-inner { display: flex; flex-direction: column; gap: 0; min-height: 0; padding: 0; }
 .search-panel.page .search-panel-inner { padding: 0; max-width: 40rem; }
 .search-dialog .search-form, .search-panel .search-form { display: flex; align-items: center; gap: var(--s-3); }
 .search-dialog .search, .search-panel .search { flex: 1 1 auto; }
+.search-dialog .search-form { flex: none; padding: var(--s-2) var(--s-3) var(--s-2) 0; border-bottom: var(--bw) solid var(--line); }
+.search-dialog .search .ico { left: var(--s-4); }
+.search-dialog .search .input { height: 52px; padding-left: calc(var(--s-4) + var(--s-3) + 15px); font-size: var(--fs-base); background: transparent; border-color: transparent; }
+.search-dialog .search .input:hover, .search-dialog .search .input:focus { background: transparent; border-color: transparent; }
+/* The field is the palette's title bar: focus shows as a brass rule under it, not a ring around it. */
+.search-dialog .search .input:focus-visible { outline: 0; }
+.search-dialog .search-form:has(.input:focus-visible) { border-bottom-color: var(--line-brass); }
+.search-close-key, .search-keys kbd { font: var(--fs-2xs)/1 var(--font-mono); color: var(--text-3); padding: 3px 6px; border: var(--bw) solid var(--line-strong); border-radius: var(--r-xs); }
+.search-close-key { display: none; }
+.search-dialog .search-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--s-3) var(--s-2); }
 .search-status { margin: 0; }
-.search-results { list-style: none; display: grid; gap: var(--s-3); margin: 0; padding: 0; }
+.search-dialog .search-status { padding: var(--s-2) var(--s-3); }
+/* Before anything is typed the quick links say what to do; the status stays for screen readers. */
+.search-dialog .search-status:has(+ .search-quick:not([hidden])) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.search-quick ul { list-style: none; margin: 0; padding: 0; }
+.search-quick .eyebrow { margin: 0; padding: var(--s-2) var(--s-3); }
+.search-results { list-style: none; display: grid; gap: var(--s-1); margin: 0; padding: 0; }
+.search-panel.page .search-results { margin-top: var(--s-4); }
 .search-results:empty { display: none; }
-.search-result .card-body { gap: var(--s-2); padding: var(--s-4); }
-.search-result .card-text { -webkit-line-clamp: 2; line-clamp: 2; }
-.search-result:focus-visible { border-color: var(--line-brass); }
+/* A row: quick links (icon, label, arrow) and results (title and kind, a line of text under them). */
+.search-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--s-1) var(--s-3); min-height: 44px; padding: var(--s-2) var(--s-3); color: var(--text); text-decoration: none; border-radius: var(--r-sm); transition: background var(--dur-fast) var(--ease); }
+.search-row > .ico { color: var(--text-3); }
+.search-row:hover, .search-row:focus-visible { background: var(--surface-2); }
+.search-row:focus-visible { outline: var(--bw) solid var(--line-brass); outline-offset: -1px; }
+.search-row:hover > .ico, .search-row:focus-visible > .ico { color: var(--brass-bright); }
+.search-row-title { font-size: var(--fs-md); font-weight: 500; min-width: 0; }
+.search-result { grid-template-columns: 1fr auto; padding-block: var(--s-3); }
+.search-result .kind { justify-self: end; }
+.search-result .kind::before { display: none; }
+.search-row-text { grid-column: 1 / -1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: var(--fs-sm); line-height: 1.5; color: var(--text-2); }
 .search-result mark { background: var(--brass-wash-1); color: var(--brass-bright); border-radius: var(--r-xs); }
 .search-keys { margin: 0; }
-.search-dialog .search-keys { display: none; }
-@media (hover: hover) and (min-width: 900px) { .search-dialog .search-keys { display: block; } }
+.search-keys { display: none; }
+.search-dialog .search-keys { flex: none; gap: var(--s-4); padding: var(--s-3) var(--s-4); border-top: var(--bw) solid var(--line); }
+.search-keys kbd { margin-right: var(--s-1); }
+@media (hover: hover) and (min-width: 900px) {
+  .search-dialog .search-keys { display: flex; }
+  .search-dialog .search .input { font-size: var(--fs-lg); }
+  .search-close-label { display: none; }
+  .search-close-key { display: inline; }
+}
 .search-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-6) 0 var(--s-8); padding: 0; }
 .search-kinds .chip { min-height: 28px; padding-inline: var(--s-3); }
 .search-note { margin: var(--s-4) 0 0; color: var(--text-2); }
@@ -654,3 +799,13 @@ html:not(.js) .search-panel.page { display: none; }
 html.js .search-kinds { display: none; }
 /* End of search styles */
 .preview-badge { align-self: flex-start; color: var(--brass-bright); border-color: var(--line-brass); background: var(--brass-wash-1); }
+
+/* ===== Interface components (docs/DECISIONS.md, "Interface components") =====
+   Rectangles are actions and switches (.btn, .seg); pills are labels (.chip); uppercase tracked type is for eyebrows and kinds
+   only. These override components.css for the site; the design system's own rules are unchanged. */
+/* The segmented control: a recessed track, sentence-case labels, the chosen one raised. */
+.seg { gap: 2px; padding: 2px; background: var(--surface-1); }
+.seg button { height: 28px; padding: 0 var(--s-3); border-radius: var(--r-xs); font-size: var(--fs-sm); letter-spacing: 0; text-transform: none; }
+.seg button:focus-visible { outline-offset: -2px; }
+/* A badge inside an eyebrow (Playable, Preview) is a label, not part of the eyebrow's caps. */
+.eyebrow .chip { font-family: var(--font-ui); font-size: var(--fs-xs); letter-spacing: 0; text-transform: none; }

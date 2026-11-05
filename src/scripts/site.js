@@ -8,7 +8,6 @@
     (g) video poster            [data-player]            loads an iframe on click when data-embed is set
     (h) search loader           [data-search-open], "/"   loads search.js (the dialog and /search/ page) on first use
     (i) reveal on scroll        .grid-cards > *, .sec-row  below the first screen, fade and rise in as they come into view
-    (j) card spotlight          a.card, .card.link       a soft brass light under the pointer (--mx, --my; site.css)
 
   Every piece does nothing if its markup is not on the page, and every piece survives missing storage or clipboard.
 */
@@ -28,6 +27,8 @@
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     if (open) nav.setAttribute('data-open', ''); else nav.removeAttribute('data-open');
+    // The open menu is a sheet over the page: the page under it does not scroll (site.css, html.menu-open).
+    document.documentElement.classList.toggle('menu-open', open);
     if (!open && returnFocus) menuBtn.focus();
   }
 
@@ -383,18 +384,5 @@
       el.classList.add('reveal');
       seen.observe(el);
     });
-  }
-
-  // ------------------------------------------------------------------------------------------------ (j) card spotlight
-  // Where the pointer is over a linked card, as --mx and --my (site.css draws the light). One listener for the page; only for
-  // a mouse or a pen that can hover.
-  if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    document.addEventListener('pointermove', function (e) {
-      var card = e.target instanceof Element && e.target.closest('a.card, .card.link');
-      if (!card) return;
-      var r = card.getBoundingClientRect();
-      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-    }, { passive: true });
   }
 })();

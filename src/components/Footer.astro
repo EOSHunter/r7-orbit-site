@@ -1,6 +1,8 @@
 ---
+// The site's footer: the mark and the site's line, a column of the site's pages (the header's nav), a column of links
+// elsewhere, and a last row with the year, Privacy and the footer note. docs/DECISIONS.md, "Design audit, brand".
 import Icon from './Icon.astro';
-import { footerItems, type FooterLink } from '../data/nav';
+import { footerItems, navItems, type FooterLink } from '../data/nav';
 import { site } from '../data/site';
 
 interface Props {
@@ -12,6 +14,13 @@ interface Props {
 // is empty in the settings is already left out (footerLinks in src/lib/site-settings.ts).
 const { links = footerItems } = Astro.props;
 const year = new Date().getFullYear();
+// The Pages column: the header's nav, and Apps (the header reaches it through its Play button, not a nav link), before About.
+const about = navItems.findIndex((item) => item.href === '/about/');
+const pages = navItems.some((item) => item.href === '/apps/')
+  ? navItems
+  : about < 0
+    ? [...navItems, { label: 'Apps', href: '/apps/' }]
+    : [...navItems.slice(0, about), { label: 'Apps', href: '/apps/' }, ...navItems.slice(about)];
 ---
 
 <footer class="site-footer">
@@ -19,12 +28,27 @@ const year = new Date().getFullYear();
     <div class="footer-grid">
       <div class="footer-brand">
         <a class="wordmark" href="/">
-          <img src="/assets/r7-mark.svg" alt="" width="21" height="18" />
+          <img src="/assets/r7-mark.svg" alt="" width="32" height="28" />
           {site.name}
         </a>
         <p>{site.description}</p>
       </div>
+      <nav aria-label="Pages">
+        <p class="eyebrow" aria-hidden="true">
+          Pages
+        </p>
+        <ul class="footer-pages">
+          {pages.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
       <nav aria-label="Footer">
+        <p class="eyebrow" aria-hidden="true">
+          Elsewhere
+        </p>
         <ul class="footer-links">
           {links.map((link) => (
             <li>
@@ -38,6 +62,7 @@ const year = new Date().getFullYear();
       </nav>
       <p class="footer-legal">
         <span>&copy; {year}</span>
+        <a href="/privacy/">Privacy</a>
         {site.footer.note && <span>{site.footer.note}</span>}
       </p>
     </div>

@@ -1,16 +1,23 @@
 ---
-eyebrow: mission control for ai agents
-title: Building with *AI agents*.
-lead: "News, builds and the things in between: videos, projects, code and
-  building with AI."
+eyebrow: "{author.name} · {site.name}"
+title: I direct *AI agents*. They build the games.
+lead: "R7 Orbit is the desktop app I'm building to direct them. This site is
+  where their work goes: games you can play in your browser, the build logs and
+  the videos."
 buttons: []
 waitlist: true
 background: galaxy
 description: "{site.description}"
 sections:
+  - type: apps
+    eyebrow: Play in the browser
+    heading: Apps
+    count: 3
+    moreLabel: All apps
+    moreUrl: /apps/
   - type: pinned
     eyebrow: ""
-    heading: "*Featured* post"
+    heading: Featured post
   - type: feed
     heading: Latest
     count: 6
@@ -18,12 +25,6 @@ sections:
     browseLabel: Browse by kind
     moreLabel: Browse everything
     moreUrl: /latest/
-  - type: apps
-    eyebrow: Play in the browser
-    heading: Apps
-    count: 3
-    moreLabel: All apps
-    moreUrl: /apps/
   - heading: Repos
     eyebrow: Open source
     order: updated

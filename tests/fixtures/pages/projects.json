@@ -1,11 +1,14 @@
 {
   "path": "/projects/",
-  "inputs": "sha256:f0898b6eac9f5306",
+  "inputs": "sha256:ff527edf8ff87316",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,7 +16,6 @@
     "description: Projects I am building with AI: what they are, why I built them and what I learned.",
     "p.eyebrow: Projects",
     "h1: Things I am making",
-    "em: making",
     "p.t-lead: What each project is, why I built it, how it works and what I learned."
   ],
   "lines": [
@@ -21,19 +23,16 @@
     "description: Projects I am building with AI: what they are, why I built them and what I learned.",
     "p.eyebrow: Projects",
     "h1: Things I am making",
-    "em: making",
     "p.t-lead: What each project is, why I built it, how it works and what I learned.",
     "div aria-label: Filter and sort projects",
-    "label.visually-hidden: Search projects",
-    "div aria-label: Sort",
-    "button: Newest",
-    "button: Oldest",
-    "span.eyebrow: Tags",
     "[content]",
     "h2.visually-hidden: Projects",
     "[content]",
     "h2: Nothing matches that.",
     "p: Try fewer words, or clear the filters.",
-    "button.btn: Clear filters"
+    "button.btn: Clear filters",
+    "p.eyebrow: Writing about it",
+    "h2.section-title: Behind Orbit Royale",
+    "[content]"
   ]
 }
