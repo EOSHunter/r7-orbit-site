@@ -100,6 +100,8 @@ main:focus { outline: 0; }
 .page-head { display: grid; gap: var(--s-4); padding-block: var(--s-8) var(--s-6); }
 .page-head .t-lead { max-width: 58ch; margin: 0; }
 .page-head > h1 { max-width: 20ch; }
+/* The icon sits on the line with the label, as it does in a post's head (it dropped onto a line of its own). */
+.page-head > .eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 
 /* ------------------------------------------------------------------------------------------------- Media placeholder */
 /* A photo that doesn't exist yet: the plate, the dot grid and a faded ivory mark. Swap the .media-ph for an <img>. */
@@ -119,7 +121,8 @@ main:focus { outline: 0; }
 .card .kind .ico { color: inherit; }
 .card-foot .ico { color: var(--text-3); transition: transform var(--dur) var(--ease), color var(--dur-fast); }
 a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-bright); }
-.card-foot .status { display: inline-flex; align-items: center; gap: var(--s-2); }
+/* The status mark and its word, wherever they appear (a card, a project's head, its facts): never run together. */
+.status { display: inline-flex; align-items: center; gap: var(--s-2); }
 
 /* The one pinned post: a wide card */
 .pinned { display: grid; }

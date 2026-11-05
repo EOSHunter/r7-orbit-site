@@ -284,3 +284,9 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
   - **The posters' orbit** (the apps' posters circling the R7 mark beside the /apps/ heading): it crowds, or has to leave apps out, as the list grows.
   - Do not bring either back without asking. An effect on the Apps page has to work the same with 2 apps or 20. The code is on the unmerged branch `claude/apps-phase-3`, for reference.
   - **Rolling numbers in stats rows: not built.** No published page shows a stats row yet (no repo pages, no `stats` block in use); build it when one does.
+- **Design audit, quick fixes** (2026-11-05; from a creative-direction audit of the live site):
+  - **Archive toolbars fit the list.** Under 12 posts a list shows only its kind and author switches and the count; the search box, the Newest/Oldest sort and the row of tag chips appear from 12 (`FULL_TOOLBAR` in `ArchiveList.astro`). The Blog and Latest leads no longer promise search or tag filters.
+  - **One Play button on a project page.** In link mode the header's Play is the only one; the Play panel under the cover keeps the note, platforms and controls, with its heading for screen readers only. An embedded game keeps its panel as it was.
+  - **No "Remove my email" under the hero's waitlist form.** The band after a post keeps it, `/waitlist/remove/` is unchanged, and the Privacy page now has a waitlist section (shown only while the waitlist is on) that links to it. Its wording is a draft for the author.
+  - **`/blog/test/` moved** to `/blog/how-i-built-a-browser-game-with-r7-orbit/`, with a 301 from both forms of the old address.
+  - Layout bugs: a page head's eyebrow icon sits on the line with its label; a status mark and its word are spaced everywhere, not only on cards.

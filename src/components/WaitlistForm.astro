@@ -36,7 +36,9 @@ const fields = state.show && {
   buttonLabel: remove ? words.removeButtonLabel : words.buttonLabel,
   successMessage: remove ? words.removeSuccessMessage : words.successMessage,
   source: remove ? undefined : source,
-  removeLink: !remove,
+  // Not under the hero's form: the home page's first screen asks for an address, not how to take one back. The band after a
+  // post keeps the link, and the privacy page points to /waitlist/remove/.
+  removeLink: !remove && variant !== 'hero',
   devNote: state.note === 'dev',
 };
 // The stylesheet without its comments and line breaks: it is printed in the page, next to the form, and nowhere else.

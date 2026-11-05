@@ -25,6 +25,15 @@ test('the old Games hub moved for good: /games and /games/ go to /apps/ with a 3
   expect(redirectOf('/apps')).toBeUndefined();
 });
 
+test('the post published as /blog/test/ moved to its own address with a 301, and the build has it only there', () => {
+  const to = '/blog/how-i-built-a-browser-game-with-r7-orbit/';
+  for (const path of ['/blog/test', '/blog/test/']) {
+    expect(redirectOf(path), path).toEqual({ from: path, to, status: 301 });
+  }
+  expect(existsSync(new URL(`../dist${to}index.html`, import.meta.url))).toBe(true);
+  expect(existsSync(new URL('../dist/blog/test/index.html', import.meta.url))).toBe(false);
+});
+
 test('every rule is well formed: a path, a target, and a status Pages accepts', () => {
   for (const { from, to, status } of rules) {
     expect(from, from).toMatch(/^\//);

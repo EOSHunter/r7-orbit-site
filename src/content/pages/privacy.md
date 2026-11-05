@@ -28,6 +28,15 @@ sections:
     text: |-
       {if newsletter not connected}
       The newsletter isn't connected yet. The sign-up form on this site does not send your address anywhere, and nothing is stored. When it is connected, this page will name the service that holds the list.
+  - type: text
+    text: |-
+      {if waitlist on}
+
+      ## The waitlist
+
+      If you join the waitlist for R7 Orbit, your email address is stored with the date and the page you joined from, in a list kept with Cloudflare, which hosts this site. To keep bots out, the form uses Cloudflare Turnstile, which loads from Cloudflare only once you start using the form.
+
+      You can take your address off the list at any time: [remove my email](/waitlist/remove/).
   - type: heading
     level: 2
     text: Videos and links to other sites

@@ -28,6 +28,10 @@
 /games      /apps/              301
 /games/     /apps/              301
 
+# A post published under a working name moved to its own (2026-11-05): "How I built a browser game with R7 Orbit".
+/blog/test  /blog/how-i-built-a-browser-game-with-r7-orbit/  301
+/blog/test/ /blog/how-i-built-a-browser-game-with-r7-orbit/  301
+
 # The subscribe page was removed with the newsletter (docs/DECISIONS.md). Both forms, so neither depends on how Pages treats the trailing slash.
 /subscribe  /                   301
 /subscribe/ /                   301

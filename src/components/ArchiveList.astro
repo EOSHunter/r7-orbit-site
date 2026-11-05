@@ -55,6 +55,10 @@ const shown = cards.slice(start, start + size);
 const before = cards.slice(0, start);
 const after = cards.slice(start + size);
 const total = cards.length;
+// A short list needs no search box, sort or row of tag chips: the whole list fits on a screen, so they would be machinery for
+// a handful of cards. They appear from this many; the kind and author switches, and the count, show at any length.
+const FULL_TOOLBAR = 12;
+const full = total >= FULL_TOOLBAR;
 ---
 
 {total === 0 ? (
@@ -71,25 +75,27 @@ const total = cards.length;
     data-base={pageUrl(base, 1)}
   >
     <div class="toolbar" role="group" aria-label={`Filter and sort ${what}`}>
-      <div class="toolbar-row">
-        <form class="search" role="search" aria-label={`Search ${what}`}>
-          <Icon name="search" />
-          <label class="visually-hidden" for="archive-search">Search {what}</label>
-          <input
-            class="input"
-            id="archive-search"
-            type="search"
-            name="q"
-            placeholder={`Search ${what}`}
-            autocomplete="off"
-            data-search
-          />
-        </form>
-        <div class="seg" role="group" aria-label="Sort" data-sort>
-          <button class="on" type="button" data-value="newest" aria-pressed="true">Newest</button>
-          <button type="button" data-value="oldest" aria-pressed="false">Oldest</button>
+      {full && (
+        <div class="toolbar-row">
+          <form class="search" role="search" aria-label={`Search ${what}`}>
+            <Icon name="search" />
+            <label class="visually-hidden" for="archive-search">Search {what}</label>
+            <input
+              class="input"
+              id="archive-search"
+              type="search"
+              name="q"
+              placeholder={`Search ${what}`}
+              autocomplete="off"
+              data-search
+            />
+          </form>
+          <div class="seg" role="group" aria-label="Sort" data-sort>
+            <button class="on" type="button" data-value="newest" aria-pressed="true">Newest</button>
+            <button type="button" data-value="oldest" aria-pressed="false">Oldest</button>
+          </div>
         </div>
-      </div>
+      )}
       {kinds.length > 1 && (
         <div class="toolbar-row">
           <span class="eyebrow" id="kinds-label">Kind</span>
@@ -116,7 +122,7 @@ const total = cards.length;
           </div>
         </div>
       )}
-      {tags.length > 0 && (
+      {full && tags.length > 0 && (
         <div class="toolbar-row">
           <span class="eyebrow" id="tags-label">Tags</span>
           <div class="tag-list" role="group" aria-labelledby="tags-label" data-tags-filter>

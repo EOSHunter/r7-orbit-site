@@ -225,9 +225,9 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1, or on in Site settings)
     await expect(form.locator('[data-waitlist-status]')).toHaveAttribute('role', 'status');
     await expect(form.locator('input[name="company"]')).toBeHidden();
     await expect(form.locator('button[type="submit"]')).toHaveText(words.buttonLabel);
-    await expect(form.locator('a.waitlist-remove')).toHaveAttribute('href', '/waitlist/remove/');
-    await expect(form.locator('a.waitlist-remove')).toHaveText(words.removeLinkLabel);
-    for (const target of [input, form.locator('button[type="submit"]'), form.locator('a.waitlist-remove')]) {
+    // The hero asks for an address only; the remove link is the band's, and the privacy page points to /waitlist/remove/.
+    await expect(form.locator('a.waitlist-remove')).toHaveCount(0);
+    for (const target of [input, form.locator('button[type="submit"]')]) {
       expect((await target.boundingBox()).height).toBeGreaterThanOrEqual(44);
     }
     // Tab goes from the box to the button, never into the honeypot.
@@ -326,7 +326,7 @@ test.describe('with the waitlist on (WAITLIST_PREVIEW=1, or on in Site settings)
     });
   }
 
-  for (const path of ['/blog/test/', '/vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit/']) {
+  for (const path of ['/blog/how-i-built-a-browser-game-with-r7-orbit/', '/vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit/']) {
     test(`${path} does not ask for the band, and has none`, async ({ page }) => {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
