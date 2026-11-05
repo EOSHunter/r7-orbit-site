@@ -3,7 +3,7 @@
 // when only one post is published: the latest posts already show it, and the same card twice would be noise.
 import PostCard from '../PostCard.astro';
 import SectionBand from './SectionBand.astro';
-import { featuredPost } from '../../lib/content';
+import { pinnedPost } from '../../lib/content';
 import { getAllPosts } from '../../lib/content-queries';
 import { toCard } from '../../lib/post-cards';
 import type { BlockContext } from './context';
@@ -16,8 +16,8 @@ interface Props {
 
 const { block, ctx } = Astro.props;
 const posts = await getAllPosts();
-const featured = featuredPost(posts);
-const pinned = featured && posts.length > 1 ? await toCard(featured, { pinned: true }) : undefined;
+const featured = pinnedPost(posts);
+const pinned = featured ? await toCard(featured, { pinned: true }) : undefined;
 ---
 
 {

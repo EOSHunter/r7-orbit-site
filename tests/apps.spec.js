@@ -390,7 +390,8 @@ test('/apps/ lists what is published: an empty state (noindex) or the apps with 
     expect(graph.find((n) => n['@type'] === 'ItemList').numberOfItems).toBe(cards);
     await expect(page.locator('[data-apps-empty]')).toHaveCount(0);
   }
-  expect(sitemap).not.toContain('/games/');
+  // The old hub at the root, not a page that merely has /games/ in its path (the games tag is /tags/games/).
+  expect(sitemap).not.toMatch(/<loc>https?:\/\/[^/<]+\/games\/<\/loc>/);
 });
 
 test('the home Apps row shows only when there are apps, at most three, with its heading and a link to /apps/', async ({ page }) => {

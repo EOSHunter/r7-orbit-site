@@ -60,8 +60,7 @@ test('home page: opens with today\'s words, previews the hero and stand-ins for 
   await expect(preview.locator('.hero .t-lead')).toHaveText(fill(home.lead).replace(/\s+/g, ' '));
   // Every row made from the posts says so: a stand-in in its frame, and the note under it.
   await expect(preview.getByText('Pinned post: the post marked Featured, as a large card.')).toBeVisible();
-  await expect(preview.getByText(/^Latest feed: the 8 newest posts of every kind/)).toBeVisible();
-  await expect(preview.getByText(/^Latest posts: 3 newest · project/)).toBeVisible();
+  await expect(preview.getByText(/^Latest feed: the 6 newest posts of every kind/)).toBeVisible();
   await expect(preview.getByText(/^Latest posts: 3 most recently updated · repo/)).toBeVisible();
   await expect(preview.getByText(/^Apps row: the first 3 published apps/)).toBeVisible();
   await expect(preview.getByText(/^Preview: the home page with the site’s own styles/)).toBeVisible();

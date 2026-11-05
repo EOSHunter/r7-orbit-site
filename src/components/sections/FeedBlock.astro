@@ -2,12 +2,14 @@
 // The Latest feed: the newest posts of every kind (the first marked New), a filter by kind once two kinds are among them (site.js,
 // `[data-list]`), links to each kind's archive that has posts, and a link to everything. The anchor is #latest (the home page's
 // "Start with the latest" button points at it), which is why a page holds one (`once` in its definition). The words the author
-// edits are the block's; the filter's own messages ("Nothing matches that.") are the filter's, here.
+// edits are the block's; the filter's own messages ("Nothing matches that.") are the filter's, here. On a page with a Pinned post
+// block, the pinned post is left out of the feed (pinnedPost), so the same card is not shown twice.
 import Icon from '../Icon.astro';
 import PostCard from '../PostCard.astro';
 import { getAllPosts } from '../../lib/content-queries';
 import type { Kind } from '../../lib/cards';
 import { countLabel } from '../../lib/listing';
+import { pinnedPost } from '../../lib/content';
 import { toCards } from '../../lib/post-cards';
 import { titleParts } from '../../lib/text';
 import type { BlockContext } from './context';
@@ -18,10 +20,11 @@ interface Props {
   ctx: BlockContext;
 }
 
-const { block } = Astro.props;
+const { block, ctx } = Astro.props;
 const posts = await getAllPosts();
+const pinned = pinnedPost(posts, ctx.hasPinned);
 
-const latest = await toCards(posts.slice(0, block.count), { filterable: true });
+const latest = await toCards(posts.filter((post) => post !== pinned).slice(0, block.count), { filterable: true });
 if (latest[0]) latest[0] = { ...latest[0], fresh: true };
 
 const kindOrder: Kind[] = ['news', 'blog', 'vlog', 'project', 'repo'];

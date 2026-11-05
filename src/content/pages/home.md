@@ -5,29 +5,19 @@ lead: "News, builds and the things in between: videos, projects, code and
   building with AI."
 buttons: []
 waitlist: true
+background: galaxy
 description: "{site.description}"
 sections:
   - type: pinned
     eyebrow: ""
-    heading: "*Newest* post"
+    heading: "*Featured* post"
   - type: feed
     heading: Latest
-    count: 8
+    count: 6
     emptyHeading: Nothing is posted yet.
     browseLabel: Browse by kind
     moreLabel: Browse everything
     moreUrl: /latest/
-  - heading: Projects
-    eyebrow: Things I am making
-    order: newest
-    count: 3
-    ifEmpty: hide
-    moreUrl: /projects/
-    type: latest
-    moreLabel: All projects
-    look: section
-    kinds:
-      - project
   - type: apps
     eyebrow: Play in the browser
     heading: Apps

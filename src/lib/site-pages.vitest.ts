@@ -126,6 +126,9 @@ describe('pageProblems', () => {
     expect(pageProblems(blog, { ...complete, waitlist: true })[0]).toMatch(/"waitlist" \(the waitlist form in the hero\) is not used/);
     expect(pageProblems(blog, { ...complete, waitlist: false })).toEqual([]);
     expect(pageProblems(sitePage('home'), { title: 'T', description: 'D', waitlist: true })).toEqual([]);
+    // The hero background is the home page's too.
+    expect(pageProblems(sitePage('home'), { title: 'T', description: 'D', background: 'galaxy' })).toEqual([]);
+    expect(pageProblems(blog, { ...complete, background: 'galaxy' })[0]).toMatch(/"background" \(the moving background behind the hero\) is not used/);
   });
 
   it('asks the Apps page for its own words: the empty state button and the card beside a single app', () => {
