@@ -158,8 +158,8 @@ The setting is computing gear, so it fits the site's subject without real brands
 - **Settings:** look sensitivity, invert look, reduced motion (no camera bob or screen shake; on by default when the system
   asks for reduced motion), volume
 - **Desktop controls:** WASD or arrow keys to move, Space to jump, mouse to look (Play goes full screen and locks the mouse), Esc to pause
-- **Phone controls:** a virtual stick on the left, drag on the right half to look, a jump button. Portrait shows a "turn your
-  phone sideways" prompt
+- **Phone controls** (built, then removed 2026-10-28: desktop only): a virtual stick on the left, drag on the right half to
+  look, a jump button. Portrait showed a "turn your phone sideways" prompt
 
 ### Sound (built 2026-10-27, after the author's first full climb: "incredibly silent")
 

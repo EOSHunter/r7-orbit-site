@@ -14,7 +14,6 @@ sections:
       - **Space** jumps. Hold it for a full jump, tap it for a short hop.
       - The **mouse** looks around: Play fills the screen and locks the mouse to the game. **Q** and **E** turn the camera from the keyboard.
       - **Escape** pauses and opens the menu. Press it again to leave full screen.
-      - On a phone held sideways, your left thumb moves, a drag on the right looks around, and the Jump button jumps.
 
       A jump still counts just after you step off an edge, and a jump pressed just before you land happens when you land.
   - type: heading

@@ -10,8 +10,8 @@ started: 2026-10-27
 playUrl: /ascent/
 appType: game
 playMode: link
-platforms: [desktop, mobile]
-playNote: "Needs WebGL. On a phone, hold it sideways."
+platforms: [desktop]
+playNote: "Needs WebGL, a keyboard and a mouse."
 controls:
   - { key: "W, A, S, D or arrow keys", action: "Move, relative to the camera" }
   - { key: "Space", action: "Jump: hold for a full jump, tap for a short hop" }
@@ -35,7 +35,7 @@ You play as a small robot: an ivory head with one brass visor band, a short ante
 4. **Upper air.** Solar panels that break a moment after you land on them, and thin girders.
 5. **Orbit.** Drifting blocks, crumbling panels and girders, up to the ring. Touching it ends the climb, and the finish screen shows your time and falls.
 
-Assist mode, in the pause menu, adds beacons along the way: fall too far and you go back to the last one you touched. The game saves your climb in the browser when you pause or leave, and works on a phone held sideways, with a thumb stick on the left and a Jump button on the right.
+Assist mode, in the pause menu, adds beacons along the way: fall too far and you go back to the last one you touched. The game saves your climb in the browser when you pause or leave. It needs a keyboard and a mouse, so it plays on a computer, not a phone.
 
 > [!WARNING]
 > IMAGE NEEDED: a screenshot of a fan's updraft or a drifting block, from the game's camera, for this section. Replace this note with the picture once the file is in public/media/projects/.
