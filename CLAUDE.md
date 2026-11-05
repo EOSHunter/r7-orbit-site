@@ -73,7 +73,7 @@ src/
   styles/sections.css         the few rules a page of blocks needs on top of site.css and article.css (portrait on the right, full-width image, long addresses)
   styles/markdown.css         Markdown output (code theme from tokens, callouts, figures, anchors); import it where a post body is rendered
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
-  scripts/                    site.js (menu, filters, copy; bundled by Astro), orbit.js (hero and 404 only),
+  scripts/                    site.js (menu, filters, copy, cards rising in on scroll, the card spotlight; bundled by Astro), orbit.js (hero and 404 only),
                               hero-fx.ts + fx/ (the home hero's moving background, the home page's `background` setting: galaxy.ts, a
                               starfield ported from React Bits without React, and shared.ts; licence in fx/LICENSE-react-bits.md),
                               gallery.js (project gallery dialog), image-zoom.js (a post's pictures become buttons that open them larger; ImageZoom.astro), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro),

@@ -543,6 +543,41 @@ figure > .zoom-btn > img, figure > .zoom-btn > picture > img { width: 100%; }
 .series-steps { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 .series-steps:empty { display: none; }
 
+/* ------------------------------------------------------------------------------------------- Motion and texture */
+/* docs/DECISIONS.md, "Site polish (phase 2)". Each is still under reduced motion, and none changes the layout. */
+
+/* A faint, still film grain on the bare background between the cards and panels, so the obsidian is not flat. Under every
+   surface (the root's negative layer), never over text or pictures; an SVG noise in the page, no image to fetch. */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Under the sticky header, content softens as it slides beneath it: a short strip of blur that fades out downward. */
+.site-header::after {
+  content: ''; position: absolute; inset-inline: 0; top: 100%; height: var(--s-4); pointer-events: none;
+  backdrop-filter: blur(6px); mask-image: linear-gradient(to bottom, #000, transparent);
+}
+
+/* Scroll reveal (site.js, (i)): set only on things below the first screen, and taken off when the move is over. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0; transform: translateY(var(--s-4));
+    transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease);
+    transition-delay: calc(var(--reveal-i, 0) * 80ms);
+  }
+  .reveal.revealed { opacity: 1; transform: none; }
+}
+
+/* Card spotlight (site.js, (j)): a soft brass light under the pointer on a linked card, over its hover surface. */
+@media (hover: hover) and (pointer: fine) {
+  a.card:hover, .card.link:hover {
+    background-image: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), var(--brass-wash-3), transparent 70%);
+  }
+}
+
+@media (forced-colors: active) { body::before, .site-header::after { display: none; } }
+
 /* Print: the article alone, on paper. System colour keywords so the dark theme never prints ivory on white. */
 @media print {
   .site-header, .site-footer, .skip-link, .breadcrumb, .toc, .toc-inline, .share, .series-steps, .post-nav-wrap,
@@ -550,6 +585,8 @@ figure > .zoom-btn > img, figure > .zoom-btn > picture > img { width: 100%; }
   *, *::before, *::after { color: CanvasText !important; background: transparent !important; box-shadow: none !important; text-shadow: none !important; }
   html { color-scheme: light !important; }
   html, body { background: Canvas !important; }
+  body::before { display: none; }
+  .reveal { opacity: 1 !important; transform: none !important; }
   .container { max-width: none; padding-inline: 0; }
   .post-layout { display: block; padding: 0; }
   .post-head h1, .post-head .t-lead { max-width: none; }
