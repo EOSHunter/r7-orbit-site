@@ -7,6 +7,8 @@
     (f) table of contents       .toc a[href^="#"]        highlights the heading you are reading
     (g) video poster            [data-player]            loads an iframe on click when data-embed is set
     (h) search loader           [data-search-open], "/"   loads search.js (the dialog and /search/ page) on first use
+    (i) reveal on scroll        .grid-cards > *, .sec-row  below the first screen, fade and rise in as they come into view
+    (j) card spotlight          a.card, .card.link       a soft brass light under the pointer (--mx, --my; site.css)
 
   Every piece does nothing if its markup is not on the page, and every piece survives missing storage or clipboard.
 */
@@ -348,5 +350,51 @@
     };
     document.addEventListener('click', onSearchClick);
     document.addEventListener('keydown', onSearchKey);
+  }
+
+  // ---------------------------------------------------------------------------------------------- (i) reveal on scroll
+  // Cards and section rows that start below the first screen fade and rise in once as they come into view; cards in a row
+  // follow each other by a beat (--reveal-i). Anything on screen when the page opens is left alone, so nothing above the fold
+  // blinks, and the classes go once the move is over, so a card's own hover is untouched. Off under reduced motion, without
+  // IntersectionObserver, and for automated browsers (navigator.webdriver: full-page screenshots and axe see every card;
+  // tests/reveal.spec.js turns it back on).
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!still && 'IntersectionObserver' in window && !navigator.webdriver) {
+    var fold = window.innerHeight;
+    var pending = $$('main .grid-cards > *, main .sections > .sec-row').filter(function (el) {
+      return !el.querySelector('.grid-cards') && el.getBoundingClientRect().top > fold;
+    });
+    var seen = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        seen.unobserve(el);
+        el.classList.add('revealed');
+        setTimeout(function () {
+          el.classList.remove('reveal', 'revealed');
+          el.style.removeProperty('--reveal-i');
+        }, 900);
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    pending.forEach(function (el) {
+      var parent = el.parentElement;
+      var beat = parent && parent.classList.contains('grid-cards') ? Array.prototype.indexOf.call(parent.children, el) % 3 : 0;
+      el.style.setProperty('--reveal-i', String(beat));
+      el.classList.add('reveal');
+      seen.observe(el);
+    });
+  }
+
+  // ------------------------------------------------------------------------------------------------ (j) card spotlight
+  // Where the pointer is over a linked card, as --mx and --my (site.css draws the light). One listener for the page; only for
+  // a mouse or a pen that can hover.
+  if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.addEventListener('pointermove', function (e) {
+      var card = e.target instanceof Element && e.target.closest('a.card, .card.link');
+      if (!card) return;
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    }, { passive: true });
   }
 })();
