@@ -187,6 +187,9 @@ button.chip { background: transparent; cursor: pointer; }
 .post-head .eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); }
 .post-head .eyebrow .sep { color: var(--brass-dim); }
 .post-head h1 { max-width: 18ch; }
+/* From 900px the headline may run the width of the head (about 34ch at the full 68px), so a title of up to about 70
+   characters takes two lines rather than three; the design system's text-wrap: balance evens them out. */
+@media (min-width: 900px) { .post-head h1 { max-width: 34ch; } }
 .post-head .t-lead { max-width: 56ch; margin: 0; }
 
 .byline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); padding-block: var(--s-4); margin-top: var(--s-2); border-block: var(--bw) solid var(--line); }
