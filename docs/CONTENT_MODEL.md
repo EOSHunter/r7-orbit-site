@@ -29,7 +29,7 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | `updated` | date | no | Set when the post is materially changed; shown as "Updated Oct 8" |
 | `summary` | string | yes | 1–2 sentences, ≤ 155 characters. Used on cards, in the meta description |
 | `tags` | string[] | no | 1–4 lowercase tags, hyphenated (`ai-agents`, `evals`, `git`). Reuse existing tags before inventing |
-| `cover` | image path | no | 16:9, ≥ 1280×720. If absent, the plate placeholder is shown (never a stock photo) |
+| `cover` | image path | no | 16:9, ≥ 1280×720. The picture on the post's **card** (and its og:image); a blog or news page does not draw it (its picture is the `featuredImage` behind the headline, decided 2026-11-05). A blog post with no cover shows its featured image on its card. With neither, the plate placeholder is shown (never a stock photo). A project's page does use its cover (it has no featured image) |
 | `coverAlt` | string | if `cover` | Describe what is in the image. Empty string only if purely decorative |
 | `featured` | boolean | no | Pins to the top of the home page. **At most one at a time** (the build should warn if two) |
 | `draft` | boolean | no | Default `false`. `true` = hidden in production, shown in dev with a "Draft" badge. See "Drafts and scheduled posts" |

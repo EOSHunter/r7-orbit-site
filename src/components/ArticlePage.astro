@@ -27,7 +27,6 @@ import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/t
 import { headTitleFor } from '../lib/seo';
 import { sourceForKind } from '../lib/waitlist';
 import { waitlist } from '../lib/waitlist-queries';
-import { SIZES, publicSrcset } from '../lib/media-srcset';
 import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import ImageZoom from './ImageZoom.astro';
@@ -64,8 +63,8 @@ const label = kind === 'news' ? 'News' : 'Blog';
 const minutes = readTime(post);
 const base = (Astro.site ?? new URL(site.url)).href;
 const url = absoluteUrl(Astro.url.pathname, base);
+// The cover: the card's picture and the og:image, never drawn on the page itself.
 const cover = data.cover ? { src: data.cover, alt: data.coverAlt ?? '' } : undefined;
-const coverSrcset = await publicSrcset(cover?.src);
 // Blog only: an optional hero image behind the headline. It is the og:image when the post has no cover of its own.
 const featured = (data as { featuredImage?: ImageMetadata }).featuredImage;
 const featuredAlt = (data as { featuredImageAlt?: string }).featuredImageAlt ?? '';
@@ -151,13 +150,9 @@ const showWaitlist = data.waitlist && waitlist.show;
     </header>
   </ArticleHero>
 
+  <!-- The cover is the card's picture and the og:image, not drawn on the page: the page's picture is the featured image behind
+       the headline (docs/CONTENT_MODEL.md, `cover`). -->
   <div class="container">
-    {cover && (
-      <div class="media framed post-hero">
-        <img src={cover.src} srcset={coverSrcset} sizes={coverSrcset && SIZES.page} alt={cover.alt} width="1280" height="720" />
-      </div>
-    )}
-
     <div class="post-layout">
       <div class="post-main">
         {toc && <TableOfContents headings={headings} variant="inline" />}
