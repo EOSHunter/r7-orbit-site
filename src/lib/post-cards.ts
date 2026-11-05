@@ -1,4 +1,6 @@
 // Maps published posts onto the shapes the cards take. Listing pages (home, archives, tags) use this.
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
 import type { CardData, Cover, ProjectStatus } from './cards';
 import { loadGitHubRepo } from './github';
 import { authorSlugOf } from './authors';
@@ -10,6 +12,14 @@ import { isPlayable } from './play';
 export function coverOf(data: { cover?: string; coverAlt?: string }): Cover | undefined {
   if (!data.cover) return undefined;
   return { src: data.cover, alt: data.coverAlt ?? '', width: 1280, height: 720 };
+}
+
+/** A blog post without a cover shows its featured image on its card instead, cropped to the card's 16:9 at build time. */
+async function featuredCover(data: unknown): Promise<Cover | undefined> {
+  const { featuredImage, featuredImageAlt } = data as { featuredImage?: ImageMetadata; featuredImageAlt?: string };
+  if (!featuredImage) return undefined;
+  const image = await getImage({ src: featuredImage, width: 1280, height: 720, fit: 'cover', format: 'webp' });
+  return { src: image.src, alt: featuredImageAlt ?? '', width: 1280, height: 720 };
 }
 
 // content.config.ts builds each schema from a loosely typed `extra` shape, so the kind-specific fields are not in the inferred
@@ -81,7 +91,7 @@ export async function toCard(post: SitePost, options: CardOptions = {}): Promise
     case 'news':
       return { ...base, kind: 'news', readTime: readTime(post), cover };
     case 'blog':
-      return { ...base, kind: 'blog', readTime: readTime(post), cover };
+      return { ...base, kind: 'blog', readTime: readTime(post), cover: cover ?? (await featuredCover(data)) };
     case 'vlogs': {
       const vlog = { data: data as unknown as VlogFields };
       return {
