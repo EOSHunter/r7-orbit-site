@@ -1,4 +1,6 @@
 ---
+// A blog post's card: kind, title, one line and the date. Tags belong to the post's own page, not the card. Always a picture
+// (or the placeholder plate), so a row of cards keeps one rhythm.
 import CardFoot from './CardFoot.astro';
 import CardMedia from './CardMedia.astro';
 import Icon from './Icon.astro';
@@ -12,11 +14,10 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const tags = post.tags ?? [];
 ---
 
 <a {...cardAttrs(post)}>
-  {(post.cover || post.pinned) && <CardMedia cover={post.cover} />}
+  <CardMedia cover={post.cover} />
   <div class="card-body">
     <span class="kind">
       <Icon name="blog" />
@@ -25,13 +26,6 @@ const tags = post.tags ?? [];
     {post.preview && <PreviewBadge label={post.preview} />}
     <h3 class="card-title serif">{plainTitle(post.title)}</h3>
     <p class="card-text">{post.summary}</p>
-    {tags.length > 0 && (
-      <div class="cluster">
-        {tags.slice(0, 3).map((tag) => (
-          <span class="chip">{tag}</span>
-        ))}
-      </div>
-    )}
     <CardFoot date={post.date} minutes={post.readTime} />
   </div>
 </a>

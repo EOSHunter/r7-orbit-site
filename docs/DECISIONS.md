@@ -290,3 +290,10 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
   - **No "Remove my email" under the hero's waitlist form.** The band after a post keeps it, `/waitlist/remove/` is unchanged, and the Privacy page now has a waitlist section (shown only while the waitlist is on) that links to it. Its wording is a draft for the author.
   - **`/blog/test/` moved** to `/blog/how-i-built-a-browser-game-with-r7-orbit/`, with a 301 from both forms of the old address.
   - Layout bugs: a page head's eyebrow icon sits on the line with its label; a status mark and its word are spaced everywhere, not only on cards.
+- **Design audit, cards** (2026-11-05):
+  - **A post's card has no box.** In a grid (`.grid-cards`), and as the pinned post, a card has no border, background or hover lift: the picture (with the rounded corners) and the type carry it. On hover the picture eases in a little and the title turns brass. App cards keep their box: they hold two buttons, so they are not one link.
+  - **Fewer marks on a card:** kind, title, one line, the date (or a project's status). No tag or stack chips (they are the post's page's), no arrow; "Playable" reads as a word beside the kind. A blog card always has a picture, or the placeholder plate.
+  - **The pinned post is the page's lead:** a large picture beside a large headline.
+  - **The grid fits its count**, so no card is alone on a row: from 640px two columns, an odd count opening with one wide card; from 1000px three, where 1, 4, 7… open with a wide card (its picture beside its words) and 2, 5, 8… end with two halves. `tests/reveal.spec.js` checks that every row reaches the grid's edge. A kind filter hides cards without reflowing the rest.
+  - **Phones get compact rows:** a small picture, kind, title and date; no summary.
+  - **The card spotlight (phase 2) is retired:** it lit the card's box, and the box is gone.

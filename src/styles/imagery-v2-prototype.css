@@ -10,6 +10,13 @@
 .ix-feed-item { display: grid; grid-template-rows: 1fr auto; }
 .ix-variants { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
 .ix-variants .ix-thumb { width: 100%; }
+/* The prototype studies card art at full card size: its cards stay stacked on phones, not the site's compact rows. */
+@media (max-width: 639px) {
+  .grid-cards > .card[class*='ix-'] { display: flex; }
+  .grid-cards > .card[class*='ix-'] .card-media { aspect-ratio: 16 / 9; }
+  .grid-cards > .card[class*='ix-'] .card-body { padding: var(--s-4) 0 0; }
+  .grid-cards > .card[class*='ix-'] .card-text { display: -webkit-box; }
+}
 .ix-variant figcaption { margin: 0; }
 
 /* ----------------------------------------------------------------------------------------------------------- Variety */

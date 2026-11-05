@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { watchPage } from './helpers.js';
 
-// Site polish (phase 2, site.js (i) and (j)). The reveal is off for automated browsers (navigator.webdriver), so the other
+// Site polish (phase 2, site.js (i)). The reveal is off for automated browsers (navigator.webdriver), so the other
 // specs and full-page screenshots see every card; these tests switch it back on, as a visitor's browser would have it.
 const asVisitor = (page) => page.addInitScript(() => Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false }));
 const CARDS = 'main .grid-cards > *';
@@ -34,15 +34,25 @@ test('under reduced motion nothing waits to be revealed', async ({ page }) => {
   await expect(page.locator('.reveal')).toHaveCount(0);
 });
 
-test('a linked card follows the pointer with its light', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto('/', { waitUntil: 'networkidle' });
-  const card = page.locator('main a.card, main .card.link').first();
-  await card.scrollIntoViewIfNeeded();
-  const box = await card.boundingBox();
-  expect(box).not.toBeNull();
-  await page.mouse.move(box.x + 40, box.y + 30);
-  await page.mouse.move(box.x + 60, box.y + 50);
-  await expect.poll(() => card.evaluate((el) => el.style.getPropertyValue('--mx'))).toBe('60px');
-  expect(await card.evaluate((el) => getComputedStyle(el).backgroundImage)).toContain('radial-gradient');
-});
+// Design audit, cards: a grid of cards fits its count, so every row reaches the grid's right edge (no card alone on a row).
+for (const path of ['/', '/blog/', '/latest/', '/projects/', '/vlogs/', '/authors/orion/']) {
+  for (const width of [800, 1280]) {
+    test(`every row of cards on ${path} fills its grid at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path, { waitUntil: 'networkidle' });
+      const short = await page.locator('main .grid-cards').evaluateAll((grids) =>
+        grids.flatMap((grid) => {
+          const cards = [...grid.children].filter((c) => c instanceof HTMLElement && c.offsetParent !== null);
+          const rows = new Map();
+          for (const card of cards) {
+            const top = Math.round(card.getBoundingClientRect().top);
+            rows.set(top, Math.max(rows.get(top) ?? 0, card.getBoundingClientRect().right));
+          }
+          const edge = grid.getBoundingClientRect().right;
+          return [...rows.values()].filter((right) => edge - right > 2).map((right) => `${Math.round(edge - right)}px short`);
+        }),
+      );
+      expect(short).toEqual([]);
+    });
+  }
+}

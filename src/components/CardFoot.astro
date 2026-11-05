@@ -1,5 +1,6 @@
 ---
-import Icon from './Icon.astro';
+// The line at the foot of a card: the date (or a label) and the minutes. No arrow: the whole card is the link, and the title
+// turns brass on hover.
 import { isoDate, shortDate } from '../lib/text';
 
 interface Props {
@@ -23,6 +24,4 @@ const { date, label, minutes } = Astro.props;
     </>
   )}
   <slot />
-  <span class="spacer"></span>
-  <Icon name="arrow" />
 </div>

@@ -13,7 +13,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const stack = post.stack ?? [];
+// Kind (and "Playable"), title, one line and the status. The stack is the project page's, not the card's.
 ---
 
 <a {...cardAttrs(post)}>
@@ -29,17 +29,8 @@ const stack = post.stack ?? [];
     </div>
     <h3 class="card-title serif">{plainTitle(post.title)}</h3>
     <p class="card-text">{post.summary}</p>
-    {stack.length > 0 && (
-      <div class="cluster">
-        {stack.slice(0, 3).map((item) => (
-          <span class="chip mono">{item}</span>
-        ))}
-      </div>
-    )}
     <div class="card-foot">
       <StatusMark status={post.status} />
-      <span class="spacer"></span>
-      <Icon name="arrow" />
     </div>
   </div>
 </a>

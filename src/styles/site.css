@@ -572,11 +572,72 @@ body::before {
   .reveal.revealed { opacity: 1; transform: none; }
 }
 
-/* Card spotlight (site.js, (j)): a soft brass light under the pointer on a linked card, over its hover surface. */
-@media (hover: hover) and (pointer: fine) {
-  a.card:hover, .card.link:hover {
-    background-image: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), var(--brass-wash-3), transparent 70%);
+/* ---------------------------------------------------------------------------------------------- Editorial cards */
+/* docs/DECISIONS.md, "Design audit, cards". A post's card in a grid, and the pinned post, have no box: the picture (with the
+   rounded corners) and the type carry them. Hover lifts nothing; the picture eases in a little and the title turns brass.
+   App cards (.app-card) keep their box: they hold two buttons, so the whole card is not one link. */
+.grid-cards > .card, .card.pinned {
+  background: none; border: 0; border-radius: 0; overflow: visible; box-shadow: none; animation: none;
+}
+.grid-cards > .card .card-media, .card.pinned .card-media { border: 0; border-radius: var(--r-lg); }
+.grid-cards > .card .card-body { padding: var(--s-4) 0 0; gap: var(--s-2); }
+.grid-cards > .card .card-title.serif { font-size: var(--fs-xl); }
+.grid-cards > .card .card-text { -webkit-line-clamp: 2; }
+.grid-cards > .card .card-foot { margin-top: var(--s-1); padding-top: 0; }
+.grid-cards > a.card:hover, a.card.pinned:hover { background: none; box-shadow: none; transform: none; }
+.grid-cards > .card .card-media img, .card.pinned .card-media img { transition: transform var(--dur-slow) var(--ease); }
+.grid-cards > a.card:hover .card-media img, a.card.pinned:hover .card-media img { transform: scale(1.03); }
+.grid-cards > a.card .card-title, a.card.pinned .card-title { transition: color var(--dur-fast) var(--ease); }
+.grid-cards > a.card:is(:hover, :focus-visible) .card-title, a.card.pinned:is(:hover, :focus-visible) .card-title { color: var(--brass-bright); }
+/* The newest post: a brass hairline round its picture, in place of the rail at the edge of a box. */
+.grid-cards > .card.fresh::before { display: none; }
+.grid-cards > .card.fresh .card-media { box-shadow: 0 0 0 var(--bw) var(--line-brass); }
+/* "Playable" reads as a word beside the kind, not a chip. */
+.card .playable-badge { border: 0; background: none; padding: 0; color: var(--brass); }
+
+/* The pinned post: the lead of the page. A large picture beside a large headline. */
+.card.pinned .card-body { padding: var(--s-5) 0 0; }
+.card.pinned .card-title { font-size: var(--fs-2xl); }
+@media (min-width: 900px) {
+  .card.pinned { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--s-7); align-items: center; }
+  .card.pinned .card-media { aspect-ratio: 16 / 10; min-height: 0; border-right: 0; }
+  .card.pinned .card-body { padding: 0; }
+  .card.pinned .card-title { font-size: var(--fs-3xl); }
+}
+
+/* The grid fits the count, so no card is left alone on a row. Phones: compact rows (a small picture, kind, title and date).
+   From 640px, two columns, and an odd count opens with one wide card. From 1000px, three columns (a six-track grid), and the
+   count decides: 1, 4, 7… open with a wide card; 2, 5, 8… end with two halves. A wide card lays its picture beside its words.
+   (A kind filter hides cards without moving the rest: the grid then follows the count it was built with.) */
+.grid-cards { grid-template-columns: minmax(0, 1fr); column-gap: var(--s-6); row-gap: var(--s-6); }
+@media (max-width: 639px) {
+  .grid-cards > .card { display: grid; grid-template-columns: 7rem minmax(0, 1fr); column-gap: var(--s-4); align-items: start; }
+  .grid-cards > .card .card-media { aspect-ratio: 4 / 3; border-radius: var(--r-md); }
+  .grid-cards > .card .card-body { padding: 0; gap: var(--s-1); }
+  .grid-cards > .card .card-title.serif { font-size: var(--fs-lg); }
+  .grid-cards > .card .card-text { display: none; }
+  .grid-cards > .card .play span { width: 32px; height: 32px; }
+  .grid-cards > .card .duration { display: none; }
+}
+@media (min-width: 640px) {
+  .grid-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-7); }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { grid-column: 1 / -1; }
+}
+@media (min-width: 640px) and (max-width: 999px) {
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: var(--s-6); align-items: center; }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child .card-body { padding: 0; }
+}
+@media (min-width: 1000px) {
+  .grid-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .grid-cards > * { grid-column: span 2; }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { grid-column: span 2; }
+  .grid-cards:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2) { grid-column: span 3; }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child {
+    grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--s-7); align-items: center;
   }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-body { padding: 0; }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-title.serif { font-size: var(--fs-2xl); }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-text { -webkit-line-clamp: 3; }
 }
 
 @media (forced-colors: active) { body::before, .site-header::after { display: none; } }
