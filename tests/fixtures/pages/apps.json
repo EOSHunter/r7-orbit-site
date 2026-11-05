@@ -1,11 +1,14 @@
 {
   "path": "/apps/",
-  "inputs": "sha256:317f49bbf80215f1",
+  "inputs": "sha256:02fc52fc88c6ab13",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -21,10 +24,6 @@
     "p.eyebrow: Apps",
     "h1: Apps",
     "p.t-lead: Things I have built that run in your browser. No install.",
-    "[content]",
-    "li: Next upMore apps comingThis is the only one so far. The next is still being built, and it will show up here when it is ready.",
-    "p.eyebrow: Next up",
-    "h2: More apps coming",
-    "p: This is the only one so far. The next is still being built, and it will show up here when it is ready."
+    "[content]"
   ]
 }

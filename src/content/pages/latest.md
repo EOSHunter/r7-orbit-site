@@ -1,5 +1,5 @@
 ---
-title: Everything, *newest first*
+title: Everything, newest first
 seoTitle: Latest
 description: "{site.description}"
 lead: News, writing, videos, projects and repos in one list, newest first.

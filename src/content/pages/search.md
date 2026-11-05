@@ -1,5 +1,5 @@
 ---
-title: Find a *post*
+title: Find a post
 seoTitle: Search
 description: Search every post, video, project and repo on this site.
 sections:

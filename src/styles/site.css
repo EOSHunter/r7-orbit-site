@@ -75,16 +75,26 @@ main:focus { outline: 0; }
 }
 
 /* ---------------------------------------------------------------------------------------------------- Footer */
-.footer-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
-.footer-brand { display: grid; gap: var(--s-3); justify-items: start; }
-.footer-brand p { margin: 0; max-width: 36ch; color: var(--text-3); }
-.footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); align-content: flex-start; }
-.footer-links a { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--text-2); }
-.footer-links a:hover { color: var(--brass-bright); }
-.footer-legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2) var(--s-5); padding-top: var(--s-5); border-top: var(--bw) solid var(--line); font: var(--fs-xs) var(--font-mono); }
+.footer-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7) var(--s-6); padding-top: var(--s-4); }
+.footer-brand { display: grid; gap: var(--s-4); justify-items: start; }
+.footer-brand .wordmark img { height: 28px; }
+.footer-brand p { margin: 0; max-width: 36ch; color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-ui); }
+/* The two link columns (Pages, Elsewhere). Styled by place, not class: tests/site-chrome.js reads <nav aria-label="Footer"> as is. */
+.footer-grid > nav { display: grid; gap: var(--s-4); align-content: start; }
+.footer-pages, .footer-links { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.footer-pages a, .footer-links a { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--text-2); }
+.footer-pages a:hover, .footer-links a:hover { color: var(--brass-bright); }
+.footer-legal { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); padding-top: var(--s-5); border-top: var(--bw) solid var(--line); font: var(--fs-xs) var(--font-mono); }
+.footer-legal a { color: var(--text-3); }
+.footer-legal a:hover { color: var(--brass-bright); }
+.footer-legal > :last-child:not(:nth-child(2)) { margin-left: auto; }
 @media (min-width: 640px) {
-  .footer-grid { grid-template-columns: 1fr auto; align-items: start; }
-  .footer-legal { grid-column: 1 / -1; }
+  .footer-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .footer-brand, .footer-legal { grid-column: 1 / -1; }
+}
+@media (min-width: 900px) {
+  .footer-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .footer-brand { grid-column: auto; }
 }
 
 /* ---------------------------------------------------------------------------------------- Sections and headings */
@@ -93,6 +103,12 @@ main:focus { outline: 0; }
 .section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--s-3) var(--s-5); margin-bottom: var(--s-6); }
 .section-head > div { display: grid; gap: var(--s-2); }
 .section-title { font-size: var(--fs-2xl); line-height: var(--lh-snug); font-weight: var(--fw-medium); }
+/* Desktop: fewer sizes, bigger steps between them, more air between the sections (docs/DECISIONS.md, "Design audit, brand"). */
+@media (min-width: 900px) {
+  .section { padding-block: var(--s-9); }
+  .section-head { margin-bottom: var(--s-7); }
+  .section-title { font-size: var(--fs-3xl); }
+}
 .more-link { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-sm); }
 .more-link .ico { transition: transform var(--dur) var(--ease); }
 .more-link:hover .ico { transform: translateX(2px); }
@@ -139,6 +155,10 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .hero { padding-block: var(--s-8) var(--s-8); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7); align-items: center; }
 .hero .eyebrow { margin-bottom: var(--s-4); }
+/* The hero's line is a sentence, not two words: a step down the display scale, and the brass phrase never split over two
+   lines, so it reads in two lines on a desktop. */
+.hero .t-display { font-size: var(--fs-4xl); }
+.hero .t-display em { white-space: nowrap; }
 .hero .t-lead { margin: var(--s-5) 0 0; max-width: 52ch; }
 .hero .cluster { margin-top: var(--s-6); }
 .hero .orbit { display: none; }
@@ -148,9 +168,6 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .hero-fx.on { opacity: 1; }
 .hero-fx canvas { display: block; width: 100%; height: 100%; }
 .hero:has(.hero-fx.on)::before { opacity: 0; transition: opacity var(--dur-slow) var(--ease); }
-.hero-eyebrow { position: relative; }
-.hero-eyebrow-veil { position: absolute; inset: 0; margin: 0; white-space: nowrap; pointer-events: none; }
-.hero-eyebrow .is-decrypting { color: transparent; }
 /* The brass phrase in the hero headline: a slow sheen of light passes across it every few seconds. Plain brass under reduced
    motion, without background-clip: text, and in forced colours. The padding keeps the italic's overhang inside the clip. */
 @media (prefers-reduced-motion: no-preference) {

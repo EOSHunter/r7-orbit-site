@@ -1,5 +1,5 @@
 ---
-title: What this site *knows about you*
+title: What this site knows about you
 seoTitle: Privacy
 description: What {site.name} collects about you (nothing by itself), where the newsletter form goes, and how to unsubscribe.
 sections:

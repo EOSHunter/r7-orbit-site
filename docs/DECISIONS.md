@@ -297,3 +297,12 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
   - **The grid fits its count**, so no card is alone on a row: from 640px two columns, an odd count opening with one wide card; from 1000px three, where 1, 4, 7… open with a wide card (its picture beside its words) and 2, 5, 8… end with two halves. `tests/reveal.spec.js` checks that every row reaches the grid's edge. A kind filter hides cards without reflowing the rest.
   - **Phones get compact rows:** a small picture, kind, title and date; no summary.
   - **The card spotlight (phase 2) is retired:** it lit the card's box, and the box is gone.
+- **Design audit, brand** (2026-11-05). The wording below is a draft for the author, from facts already on the site:
+  - **The home hero says who and what:** eyebrow `{author.name} · {site.name}`; headline "I direct *AI agents*. They build the games."; lead "R7 Orbit is the desktop app I'm building to direct them. This site is where their work goes: games you can play in your browser, the build logs and the videos." The waitlist stays the hero's one action. The hero headline is a step down the display scale (`--fs-4xl`), so the sentence reads in two lines on a desktop.
+  - **The proof first:** on the home page the Apps row now comes right under the hero, before the featured post and Latest.
+  - **Two hero effects at most:** Galaxy and the shine on the brass phrase stay; the eyebrow that resolved from random letters is gone (three effects on one screen competed). CLAUDE.md, design rule 8.
+  - **The italic brass phrase, kept for moments:** the home hero, the 404 and a name that carries it (R7: *Ascent*). The other page titles and section headings are plain.
+  - **Bigger steps, more air:** from 900px a section title is `--fs-3xl` and sections are `--s-9` apart.
+  - **About leads with Hunter:** a Portrait block (photo, name, the bio from Site settings, word for word), then "The agents" (the Team block without Hunter). The bio is copied into about.md, so an edit to the bio in Site settings does not reach this page by itself.
+  - **The nav** has Apps, and "About R7 Orbit" is "About".
+  - **The footer:** the mark and the site's line, a Pages column (the nav), an Elsewhere column (the footer links), and a last row with the year, Privacy and the note. "Meridian" (r7meridian.app) is left as it was: what it is is for the author to say.

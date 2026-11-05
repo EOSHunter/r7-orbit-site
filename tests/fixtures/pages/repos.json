@@ -1,11 +1,14 @@
 {
   "path": "/repos/",
-  "inputs": "sha256:c945ea11de518634",
+  "inputs": "sha256:ae47b2a00ccdf392",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,7 +16,6 @@
     "description: Open-source repositories from my work with AI, with stats from GitHub.",
     "p.eyebrow: Repos",
     "h1: Code you can use",
-    "em: use",
     "p.t-lead: Open-source repositories, with stats from GitHub refreshed daily."
   ],
   "lines": [
@@ -21,7 +23,6 @@
     "description: Open-source repositories from my work with AI, with stats from GitHub.",
     "p.eyebrow: Repos",
     "h1: Code you can use",
-    "em: use",
     "p.t-lead: Open-source repositories, with stats from GitHub refreshed daily.",
     "h2: No repos yet.",
     "p: Check back soon."

@@ -29,43 +29,7 @@ const lead = home.text('lead');
     <div class="container wide">
       <div class="hero-grid">
         <div>
-          {
-            eyebrow && (
-              <div class="hero-eyebrow">
-                <p class="eyebrow brass" data-decrypt>
-                  {eyebrow}
-                </p>
-              </div>
-            )
-          }
-          {/* The eyebrow resolves from random letters as the page opens: inline, so it starts before the first paint. The letters are
-              drawn in a veil over the real words (hidden from screen readers and removed when done); the words never change. */}
-          <script is:inline>
-            (function () {
-              const words = document.querySelector('[data-decrypt]');
-              if (!words || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-              const text = words.textContent.trim();
-              const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-              const veil = document.createElement('div');
-              veil.className = 'eyebrow brass hero-eyebrow-veil';
-              veil.setAttribute('aria-hidden', 'true');
-              words.after(veil);
-              words.classList.add('is-decrypting');
-              let start = 0;
-              function tick(now) {
-                start = start || now;
-                const p = Math.min(1, (now - start) / 900);
-                const n = Math.floor(p * text.length);
-                let out = '';
-                for (let i = 0; i < text.length; i++) out += i < n || text[i] === ' ' ? text[i] : glyphs[Math.floor(Math.random() * glyphs.length)];
-                veil.textContent = out;
-                if (p < 1) return requestAnimationFrame(tick);
-                veil.remove();
-                words.classList.remove('is-decrypting');
-              }
-              requestAnimationFrame(tick);
-            })();
-          </script>
+          {eyebrow && <p class="eyebrow brass">{eyebrow}</p>}
           <h1 class="t-display" id="hero-h">{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
           {lead && <p class="t-lead">{lead}</p>}
           {buttons.length > 0 && (

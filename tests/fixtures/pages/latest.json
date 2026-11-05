@@ -1,11 +1,14 @@
 {
   "path": "/latest/",
-  "inputs": "sha256:01651e8f23d16ba7",
+  "inputs": "sha256:714a499786d8c300",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,26 +16,18 @@
     "description: News, builds and the things in between: writing, videos, projects and code about building with AI.",
     "p.eyebrow: Latest",
     "h1: Everything, newest first",
-    "em: newest first",
-    "p.t-lead: News, writing, videos, projects and repos in one list. Filter by kind or tag, or search."
+    "p.t-lead: News, writing, videos, projects and repos in one list, newest first."
   ],
   "lines": [
     "title: Latest · R7 Orbit",
     "description: News, builds and the things in between: writing, videos, projects and code about building with AI.",
     "p.eyebrow: Latest",
     "h1: Everything, newest first",
-    "em: newest first",
-    "p.t-lead: News, writing, videos, projects and repos in one list. Filter by kind or tag, or search.",
+    "p.t-lead: News, writing, videos, projects and repos in one list, newest first.",
     "div aria-label: Filter and sort posts",
-    "label.visually-hidden: Search posts",
-    "div aria-label: Sort",
-    "button: Newest",
-    "button: Oldest",
     "span.eyebrow: Kind",
     "[content]",
     "span.eyebrow: By author",
-    "[content]",
-    "span.eyebrow: Tags",
     "[content]",
     "h2.visually-hidden: Posts",
     "[content]",

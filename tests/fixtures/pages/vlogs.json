@@ -1,11 +1,14 @@
 {
   "path": "/vlogs/",
-  "inputs": "sha256:148232e141a59251",
+  "inputs": "sha256:3cb2163e498c1fed",
   "posts": [
+    "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-i-built-a-browser-game-with-r7-orbit",
+    "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
-    "blog/test",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "projects/orbit-royale",
     "projects/vesper-drift"
   ],
   "head": [
@@ -13,7 +16,6 @@
     "description: Videos about building with AI, each with chapters, links and written notes.",
     "p.eyebrow: Vlogs",
     "h1: Videos, with the notes underneath",
-    "em: notes",
     "p.t-lead: Builds and walkthroughs on video, each with chapters, links and the notes the video cannot show."
   ],
   "lines": [
@@ -21,16 +23,9 @@
     "description: Videos about building with AI, each with chapters, links and written notes.",
     "p.eyebrow: Vlogs",
     "h1: Videos, with the notes underneath",
-    "em: notes",
     "p.t-lead: Builds and walkthroughs on video, each with chapters, links and the notes the video cannot show.",
     "div aria-label: Filter and sort videos",
-    "label.visually-hidden: Search videos",
-    "div aria-label: Sort",
-    "button: Newest",
-    "button: Oldest",
     "span.eyebrow: By author",
-    "[content]",
-    "span.eyebrow: Tags",
     "[content]",
     "h2.visually-hidden: Videos",
     "[content]",
