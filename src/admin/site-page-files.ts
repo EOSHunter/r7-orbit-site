@@ -88,6 +88,18 @@ const homeFields: CmsField[] = [
     default: false,
     hint: 'On: the waitlist form for R7 Orbit sits under the lead and the buttons. It only shows while the waitlist is on in Site settings > Waitlist, and its words are set there.',
   }),
+  field({
+    name: 'background',
+    label: 'Hero background',
+    widget: 'select',
+    required: false,
+    default: 'none',
+    options: [
+      { label: 'Galaxy: a slow starfield in ivory and brass', value: 'galaxy' },
+      { label: 'None: the dot grid', value: 'none' },
+    ],
+    hint: 'The moving background behind the headline. It starts after the page has loaded, stays still for visitors who ask their computer for less motion, and is left out where the browser cannot draw it (the dot grid shows then). The preview here does not draw it.',
+  }),
   description(),
   sectionsField({
     label: 'Rows below the hero',

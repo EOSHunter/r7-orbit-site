@@ -35,6 +35,9 @@ export const sitePageFields = {
   /** Home hero: the waitlist form under the lead and buttons. Drawn only while the waitlist is on in the site settings
    *  (src/lib/waitlist.ts); its words are the settings' too. */
   waitlist: z.boolean().optional(),
+  /** Home hero: a moving background behind it (src/scripts/hero-fx.ts). `galaxy`: a slow starfield in ivory and brass;
+   *  `none` or left out: the dot grid alone. */
+  background: z.enum(['galaxy', 'none']).optional(),
   /** Listing pages: blocks above the listing, and below it. */
   introSections: sectionsSchema,
   outroSections: sectionsSchema,
@@ -55,7 +58,7 @@ export type SitePageField = keyof typeof sitePageFields | 'title' | 'seoTitle' |
 export type PageShape = 'home' | 'listing' | 'apps';
 
 const SHAPES: Record<PageShape, { required: SitePageField[]; optional: SitePageField[] }> = {
-  home: { required: ['title', 'description'], optional: ['eyebrow', 'lead', 'buttons', 'waitlist', 'sections'] },
+  home: { required: ['title', 'description'], optional: ['eyebrow', 'lead', 'buttons', 'waitlist', 'background', 'sections'] },
   listing: { required: ['title', 'description', 'lead', 'emptyHeading', 'emptyText'], optional: ['seoTitle', 'introSections', 'outroSections'] },
   apps: {
     required: ['title', 'description', 'lead', 'emptyHeading', 'emptyText', 'emptyLinkLabel', 'soonEyebrow', 'soonTitle', 'soonText'],
@@ -73,6 +76,7 @@ const WHAT: Record<SitePageField, string> = {
   lead: 'the paragraph under the heading',
   buttons: 'the hero buttons',
   waitlist: 'the waitlist form in the hero',
+  background: 'the moving background behind the hero',
   introSections: 'the sections above the list',
   outroSections: 'the sections below the list',
   emptyHeading: 'the heading shown when there is nothing to list',

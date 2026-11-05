@@ -16,6 +16,8 @@ const home = await loadSitePage('home');
 const { title, description, sections, buttons = [] } = home.data;
 // The waitlist form under the buttons: asked for by the page (`waitlist: true`) and shown only while the waitlist is on.
 const heroWaitlist = home.data.waitlist === true && waitlist.show;
+// The moving background behind the hero (scripts/hero-fx.ts), when the page asks for one.
+const background = home.data.background === 'galaxy' ? 'galaxy' : undefined;
 const eyebrow = home.text('eyebrow');
 const lead = home.text('lead');
 ---
@@ -23,10 +25,47 @@ const lead = home.text('lead');
 <BaseLayout title={title} {description} home current="/#latest">
   <script slot="head" type="application/ld+json" set:html={jsonLdString(websiteLd(site))} />
   <section class="hero plate-grid" aria-labelledby="hero-h">
+    {background && <div class="hero-fx" data-hero-fx={background} aria-hidden="true" />}
     <div class="container wide">
       <div class="hero-grid">
         <div>
-          {eyebrow && <p class="eyebrow brass">{eyebrow}</p>}
+          {
+            eyebrow && (
+              <div class="hero-eyebrow">
+                <p class="eyebrow brass" data-decrypt>
+                  {eyebrow}
+                </p>
+              </div>
+            )
+          }
+          {/* The eyebrow resolves from random letters as the page opens: inline, so it starts before the first paint. The letters are
+              drawn in a veil over the real words (hidden from screen readers and removed when done); the words never change. */}
+          <script is:inline>
+            (function () {
+              const words = document.querySelector('[data-decrypt]');
+              if (!words || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+              const text = words.textContent.trim();
+              const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+              const veil = document.createElement('div');
+              veil.className = 'eyebrow brass hero-eyebrow-veil';
+              veil.setAttribute('aria-hidden', 'true');
+              words.after(veil);
+              words.classList.add('is-decrypting');
+              let start = 0;
+              function tick(now) {
+                start = start || now;
+                const p = Math.min(1, (now - start) / 900);
+                const n = Math.floor(p * text.length);
+                let out = '';
+                for (let i = 0; i < text.length; i++) out += i < n || text[i] === ' ' ? text[i] : glyphs[Math.floor(Math.random() * glyphs.length)];
+                veil.textContent = out;
+                if (p < 1) return requestAnimationFrame(tick);
+                veil.remove();
+                words.classList.remove('is-decrypting');
+              }
+              requestAnimationFrame(tick);
+            })();
+          </script>
           <h1 class="t-display" id="hero-h">{titleParts(title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h1>
           {lead && <p class="t-lead">{lead}</p>}
           {buttons.length > 0 && (
@@ -52,4 +91,8 @@ const lead = home.text('lead');
   // A query makes this its own copy, so Astro inlines it in the page instead of fetching a shared chunk after the script that imports it.
   // @ts-expect-error the query suffix has no type declaration
   import '../scripts/orbit.js?home';
+</script>
+
+<script>
+  import '../scripts/hero-fx';
 </script>

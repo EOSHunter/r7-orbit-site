@@ -205,6 +205,12 @@ export function featuredPost<P extends Post>(posts: P[]): P | undefined {
   return sortByDateDesc(posts.filter((p) => p.data.featured))[0];
 }
 
+/** The post a page's Pinned post block shows: the featured one, when the page has the block and more than one post is published
+ *  (with one, the block is left out). The page's Latest feed leaves it out, so the same card is not shown twice. */
+export function pinnedPost<P extends Post>(posts: P[], pageHasPinned = true): P | undefined {
+  return pageHasPinned && posts.length > 1 ? featuredPost(posts) : undefined;
+}
+
 /** Problems that should warn, not fail: two featured posts, repeated title + kind, repeated series order. */
 export function contentWarnings(posts: Post[]): string[] {
   const warnings: string[] = [];

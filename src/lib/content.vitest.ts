@@ -4,6 +4,7 @@ import {
   contentWarnings,
   countWords,
   featuredPost,
+  pinnedPost,
   filterPublished,
   isPublished,
   postUrl,
@@ -205,6 +206,13 @@ describe('adjacentPosts, featuredPost, postUrl', () => {
     ];
     expect(featuredPost(posts)?.id).toBe('b');
     expect(featuredPost([post('c', '2026-03-01')])).toBeUndefined();
+  });
+  it('gives the pinned post only on a page with a Pinned post block and more than one post', () => {
+    const posts = [post('a', '2026-01-01', { featured: true }), post('c', '2026-03-01')];
+    expect(pinnedPost(posts)?.id).toBe('a');
+    expect(pinnedPost(posts, false)).toBeUndefined();
+    expect(pinnedPost([post('a', '2026-01-01', { featured: true })])).toBeUndefined();
+    expect(pinnedPost([post('c', '2026-03-01')])).toBeUndefined();
   });
   it('builds URLs with a trailing slash', () => {
     expect(postUrl({ collection: 'vlogs', id: 'my-video' })).toBe('/vlogs/my-video/');

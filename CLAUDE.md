@@ -74,6 +74,8 @@ src/
   styles/markdown.css         Markdown output (code theme from tokens, callouts, figures, anchors); import it where a post body is rendered
   styles/site.css             site-level layout (from templates/site.css, plus: .media-ph img fix, underlined links in running text, focus ring on text fields)
   scripts/                    site.js (menu, filters, copy; bundled by Astro), orbit.js (hero and 404 only),
+                              hero-fx.ts + fx/ (the home hero's moving background, the home page's `background` setting: galaxy.ts, a
+                              starfield ported from React Bits without React, and shared.ts; licence in fx/LICENSE-react-bits.md),
                               gallery.js (project gallery dialog), image-zoom.js (a post's pictures become buttons that open them larger; ImageZoom.astro), yt-facade.js (loads the YouTube iframe on play), play-facade.js (loads a playable project's game iframe on Play; PlayPanel.astro),
                               waitlist.js (the waitlist forms: loads Turnstile on first interaction, sends with fetch)
   styles/waitlist.css         the waitlist form; printed inline by WaitlistForm only on a page that draws one
@@ -142,7 +144,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 5. **Depth is tone.** Surfaces step `--bg` → `--surface-1` → `--surface-2` → `--surface-3`. Shadows only for floating things (`--shadow-float`, `--shadow-raise`).
 6. **Hairlines and small radii.** 1px borders (`--line*`), radii from `--r-*`. Pills only for chips and dots.
 7. **Type:** Cormorant Garamond for headlines and pull quotes only; Inter for body and UI; JetBrains Mono for code, data and meta. Body copy is 17px/1.7, measure ≤ 68ch (`.prose`). Headlines are sentence case; one italic-brass phrase per headline at most.
-8. **Motion means something** (`--ease`, `--dur*`). Respect `prefers-reduced-motion`. The orbit (`orbit.js`) is used for the hero, loading and the 404 only.
+8. **Motion means something** (`--ease`, `--dur*`). Respect `prefers-reduced-motion`. The orbit (`orbit.js`) is used for the hero, loading and the 404 only. The home hero may also have a moving background (`hero-fx.ts`: the Galaxy starfield), the shine on its brass phrase and the eyebrow that resolves from random letters; each is still under reduced motion, starts after the headline is drawn, and uses the token colours (docs/DECISIONS.md, "Homepage phase 1").
 9. **One theme: dark (obsidian).** The light "Ivory" theme and its toggle were removed; do not reintroduce `data-theme`.
 10. **Logo:** brass mark on dark, ink mark on light. Never recolour, stretch, add effects, or use the ring versions below ~32px. Files in `design-system/assets/` and `brand/`.
 

@@ -31,6 +31,8 @@ export interface BlockContext {
   layout: 'page' | 'column';
   /** An h2 comes before this block on the page (sections-to-content.ts, headingBefore): its own headings are then h3, else h2. */
   afterHeading: boolean;
+  /** The page has a Pinned post block: the Latest feed then leaves the pinned post out. */
+  hasPinned: boolean;
 }
 
 export interface PrepareOptions {
@@ -56,6 +58,7 @@ export async function prepareSections(
   // The headings and their anchors come from the one projection the contents lists use (sections-to-content.ts).
   const found = anchors ? sectionsHeadings(sections) : [];
   const headings: PageHeading[] = found.map(({ depth, slug, text }) => ({ depth, slug, text }));
+  const hasPinned = sections.some((s) => s.type === 'pinned');
 
   for (const [index, section] of sections.entries()) {
     const where = whereOf(source, index, SECTION_LABELS[section.type]);
@@ -63,7 +66,7 @@ export async function prepareSections(
     const data = section as unknown as Record<string, unknown>;
     const html: Record<string, string> = {};
     const sizes = new Map<string, ImageSize>();
-    const ctx: BlockContext = { where, index, source, html, sizes, headings, layout, afterHeading: headingBefore(sections, index) };
+    const ctx: BlockContext = { where, index, source, html, sizes, headings, layout, afterHeading: headingBefore(sections, index), hasPinned };
     contexts.set(section, ctx);
 
     try {

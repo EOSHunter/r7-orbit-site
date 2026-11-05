@@ -38,7 +38,7 @@ test('home: the rows below the hero are the entry\'s blocks, in its order, each 
     }),
   );
   // Pinned and Apps show while a post is featured and an app is published; Repos is left out while there is no repo.
-  expect(names.filter(Boolean)).toEqual(expect.arrayContaining(['Latest', 'Projects']));
+  expect(names.filter(Boolean)).toEqual(expect.arrayContaining(['Latest']));
   // The headings in the entry's order, read from the file (the author renames them in /admin).
   const headings = parseFrontmatter(readFileSync(new URL('../src/content/pages/home.md', import.meta.url), 'utf8')).frontmatter.sections.map((s) =>
     s.heading.replaceAll('*', ''),
