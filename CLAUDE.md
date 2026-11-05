@@ -33,6 +33,7 @@ src/
                               AuthorByline + AuthorAvatar + AgentChip + AuthorBox + AuthorPage (the /authors/<slug>/ page),
                               PostCard (kind switch) -> NewsCard, BlogCard, VlogCard, ProjectCard, RepoCard;
                               AppsSection (type filter) + AppGrid + AppCard + AppsEmpty (the /apps/ hub; it was /games/, which redirects),
+                              AppsOrbit (the apps' posters circling the R7 mark beside the hub's heading; CSS only),
                               Sections + sections/ (a page built from blocks: About, the home page's rows, the blocks around a listing, and a post's body written as sections with layout="column";
                               one <Id>Block.astro per block (WaitlistBlock = the waitlist band, drawn only while the waitlist is on), registry.ts, SectionBand.astro = the home rows' ruled section frame) + AuthorBox, TagIndex (the /tags/ list),
                               PageBlocks (library blocks drawn in place inside a page's own frame: privacy, 404, search),

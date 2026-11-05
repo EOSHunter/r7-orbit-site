@@ -1,0 +1,40 @@
+---
+// The orbit beside the Apps hub's heading: the published apps' posters circling the R7 mark, behind it on the far side of the
+// ring and in front of it on the near side, like the home hero's orbit. Pure CSS (site.css, "Apps orbit": an animated angle and
+// cos()/sin()), so no script; still under reduced motion, and left out below 900px. Decorative: the cards below show the same
+// apps, so it is hidden from screen readers and its pictures have empty alt text. Drawn only with two posters or more.
+// After React Bits' Orbit Images (https://reactbits.dev/animations/orbit-images); written for this site, none of its code.
+import type { AppCardData } from '../lib/cards';
+import { publicSrcset } from '../lib/media-srcset';
+
+interface Props {
+  apps: AppCardData[];
+}
+
+const MAX = 6;
+const covers = Astro.props.apps.flatMap((app) => (app.cover ? [app.cover] : [])).slice(0, MAX);
+const items = await Promise.all(covers.map(async (cover) => ({ ...cover, srcset: await publicSrcset(cover.src) })));
+---
+
+{
+  items.length >= 2 && (
+    <div class="apps-orbit" aria-hidden="true" style={`--n: ${items.length}`}>
+      <span class="apps-orbit-ring" />
+      <img class="apps-orbit-mark" src="/assets/r7-mark.svg" alt="" width="622" height="536" />
+      {items.map((item, i) => (
+        <img
+          class="apps-orbit-cover"
+          src={item.src}
+          srcset={item.srcset}
+          sizes="12rem"
+          alt=""
+          width={item.width}
+          height={item.height}
+          loading="lazy"
+          decoding="async"
+          style={`--i: ${i}`}
+        />
+      ))}
+    </div>
+  )
+}

@@ -483,6 +483,32 @@ html:not(.js) .play-stage, html:not(.js) .play-hint, html:not(.js) .play-section
 .app-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-top: auto; padding-top: var(--s-3); }
 .app-soon { display: grid; align-content: center; justify-items: start; gap: var(--s-3); padding: var(--s-6); border: var(--bw) dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface-1); }
 .app-soon .card-text { display: block; max-width: 40ch; }
+/* Apps orbit (AppsOrbit.astro): the posters circle the R7 mark beside the heading, on a tilted ring. The angle turns once a
+   minute; cos() and sin() place each poster, larger, brighter and in front of the mark on the near side of the ring. Still under
+   reduced motion; not below 900px, where the heading takes the width. The ring's half-width (--rx) plus half a poster's width
+   stays inside the box, so a poster at the end of the ring never makes the page scroll sideways. */
+@property --orbit-turn { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+.apps-orbit { display: none; }
+@media (min-width: 900px) {
+  .apps-head { grid-template-columns: minmax(0, 1fr) minmax(0, 28rem); column-gap: var(--s-7); align-items: center; }
+  .apps-head > :not(.apps-orbit) { grid-column: 1; }
+  .apps-orbit {
+    --rx: 31%; --ry: 17%;
+    display: block; position: relative; grid-column: 2; grid-row: 1 / span 3; width: 100%; aspect-ratio: 16 / 10;
+    rotate: -10deg; animation: apps-orbit 60s linear infinite;
+  }
+  .apps-orbit-ring { position: absolute; inset: calc(50% - var(--ry)) calc(50% - var(--rx)); border: var(--bw) solid var(--line-brass); border-radius: 50%; }
+  .apps-orbit-mark { position: absolute; left: 50%; top: 50%; width: 26%; height: auto; translate: -50% -50%; rotate: 10deg; z-index: 5; }
+  .apps-orbit-cover {
+    --angle: calc(var(--i) / var(--n) * 360deg + var(--orbit-turn)); --near: calc((sin(var(--angle)) + 1) / 2);
+    position: absolute; left: calc(50% + cos(var(--angle)) * var(--rx)); top: calc(50% + sin(var(--angle)) * var(--ry));
+    width: 32%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; translate: -50% -50%; rotate: 10deg;
+    border: var(--bw) solid var(--line-strong); border-radius: var(--r-md); box-shadow: var(--shadow-float);
+    scale: calc(0.7 + 0.3 * var(--near)); opacity: calc(0.5 + 0.5 * var(--near)); z-index: calc(1 + round(var(--near) * 8));
+  }
+}
+@keyframes apps-orbit { to { --orbit-turn: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .apps-orbit { animation: none; } }
 .section-head.flush { margin-bottom: 0; }
 
 .shot { display: block; width: 100%; padding: 0; background: none; border: 0; border-radius: 0; color: inherit; cursor: pointer; }
