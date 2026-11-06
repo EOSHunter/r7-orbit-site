@@ -1,6 +1,6 @@
 {
   "path": "/",
-  "inputs": "sha256:23c0c31dddc68da5",
+  "inputs": "sha256:b9407fa67ef70bd0",
   "posts": [
     "blog/how-ai-agents-built-r7-ascent",
     "blog/how-i-built-a-browser-game-with-r7-orbit",
@@ -9,15 +9,16 @@
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/orbit-royale",
+    "projects/r7-ascent",
     "projects/vesper-drift"
   ],
   "head": [
     "title: R7 Orbit · Mission Control for AI Agents",
     "description: News, builds and the things in between: writing, videos, projects and code about building with AI.",
     "p.eyebrow: Hunter Newton · R7 Orbit",
-    "h1.t-display: I direct AI agents. They build the games.",
+    "h1.t-display: I build software with AI agents.",
     "em: AI agents",
-    "p.t-lead: R7 Orbit is the desktop app I'm building to direct them. This site is where their work goes: games you can play in your browser, the build logs and the videos.",
+    "p.t-lead: R7 Orbit is the desktop app I'm building to direct them. This site is where their work goes: apps and games, the build logs, the videos and the code.",
     "label: Email address",
     "button.btn: Join the waitlist",
     "p: JavaScript is needed to join the waitlist.",
@@ -27,9 +28,9 @@
     "title: R7 Orbit · Mission Control for AI Agents",
     "description: News, builds and the things in between: writing, videos, projects and code about building with AI.",
     "p.eyebrow: Hunter Newton · R7 Orbit",
-    "h1.t-display: I direct AI agents. They build the games.",
+    "h1.t-display: I build software with AI agents.",
     "em: AI agents",
-    "p.t-lead: R7 Orbit is the desktop app I'm building to direct them. This site is where their work goes: games you can play in your browser, the build logs and the videos.",
+    "p.t-lead: R7 Orbit is the desktop app I'm building to direct them. This site is where their work goes: apps and games, the build logs, the videos and the code.",
     "label: Email address",
     "button.btn: Join the waitlist",
     "p: JavaScript is needed to join the waitlist.",

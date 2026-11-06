@@ -1,9 +1,9 @@
 ---
 eyebrow: "{author.name} · {site.name}"
-title: I direct *AI agents*. They build the games.
+title: I build software with *AI agents*.
 lead: "R7 Orbit is the desktop app I'm building to direct them. This site is
-  where their work goes: games you can play in your browser, the build logs and
-  the videos."
+  where their work goes: apps and games, the build logs, the videos and the
+  code."
 buttons: []
 waitlist: true
 background: galaxy
