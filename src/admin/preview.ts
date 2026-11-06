@@ -8,6 +8,7 @@
 // (sections-html.ts) in the post's column; its reading time and contents list come from the site's own projection (post-body.ts).
 import { createElement as h, Fragment, type MouseEvent, type ReactNode } from 'react';
 import type { PreviewTemplateComponentProps } from 'decap-cms-core';
+import { imageCredit } from '../lib/image-credit';
 import { longDate, isoDate, plainTitle, titleParts } from '../lib/text';
 import { bridgeGetAsset } from './asset-bridge';
 import { adminAuthors } from './authors';
@@ -203,7 +204,12 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
             { className: 'article-hero' },
             h('img', { className: 'article-hero-img', src: featured, alt: str(data.featuredImageAlt) }),
             h('div', { className: 'article-hero-shade', 'aria-hidden': true }),
-            h('div', { className: 'container article-hero-body' }, head),
+            h(
+              'div',
+              { className: 'container article-hero-body' },
+              head,
+              h('p', { className: 't-meta article-hero-credit' }, imageCredit(data, authorName)),
+            ),
           )
         : h('div', { className: 'container' }, head),
       h(

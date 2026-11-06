@@ -8,9 +8,11 @@ interface Props {
   image?: ImageMetadata;
   /** Alt text for the image; "" marks it decorative. */
   alt?: string;
+  /** "Image by …" (src/lib/image-credit.ts), shown under the headline block. */
+  credit?: string;
 }
 
-const { image, alt = '' } = Astro.props;
+const { image, alt = '', credit } = Astro.props;
 ---
 
 {
@@ -31,6 +33,7 @@ const { image, alt = '' } = Astro.props;
       <div class="article-hero-shade" aria-hidden="true" />
       <div class="container article-hero-body">
         <slot />
+        {credit && <p class="t-meta article-hero-credit">{credit}</p>}
       </div>
     </div>
   ) : (
@@ -66,6 +69,7 @@ const { image, alt = '' } = Astro.props;
      over a bright screenshot at 320px with --text-3, 3.5:1 at 1280px with --text-2 on Linux; tests/hero-contrast.spec.js). */
   .article-hero-body .breadcrumb [aria-current='page'] { color: var(--text); }
   .article-hero-body .post-head { padding-top: var(--s-7); }
+  .article-hero-credit { margin: var(--s-5) 0 0; text-align: end; }
   .article-hero-body .post-head h1 { text-shadow: 0 1px 24px rgb(9 9 10 / 0.6); }
   /* The dot between the kind and the read time: the brighter brass over a picture, so it keeps 4.5:1 on a light patch of it
      (tests/hero-contrast.spec.js; the battle royale post's hero measured 4.27:1 in plain brass at 1280px). */

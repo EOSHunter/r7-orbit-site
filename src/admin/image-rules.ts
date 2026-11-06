@@ -4,6 +4,7 @@
 // (scripts/media.mjs, src/lib/markdown/remark-image-alt.mjs) because a file can also reach the repository another way.
 // Pure functions here, run under Vitest (image-rules.vitest.ts); main.ts registers the listener.
 import { IMAGE_ALT_PAIRS, isBlank, picturesMissingAlt } from '../lib/front-matter';
+import { agentMissing } from '../lib/image-credit';
 import { bodyImagesMissingAlt, checkSourceFile, missingAltMessage } from '../lib/media-rules.mjs';
 
 interface DraftMediaFile {
@@ -31,6 +32,9 @@ export function imageProblems(data: Record<string, unknown>, mediaFiles: DraftMe
   // The pictures of the form itself (cover, featured image): the build stops on one with no alt key (src/lib/front-matter.ts).
   for (const { image } of picturesMissingAlt(data)) {
     problems.push(`${where}: the ${FIELD_LABELS[image] ?? image} has no alt text. Describe it in "${FIELD_LABELS[image] ?? image} alt text".`);
+  }
+  if (typeof data.featuredImage === 'string' && !isBlank(data.featuredImage) && agentMissing(data)) {
+    problems.push(`${where}: the featured image is credited to an agent, but no agent is named. Fill in "Agent that made the featured image", or choose "Me".`);
   }
   problems.push(...lostUploadProblems(data, mediaFiles));
   return problems;

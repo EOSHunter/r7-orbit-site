@@ -22,6 +22,7 @@ import { assistNote, authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
+import { imageCredit } from '../lib/image-credit';
 import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
 import { headTitleFor } from '../lib/seo';
@@ -83,6 +84,8 @@ const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceNa
 const author = (await getAuthorMap()).get(authorSlugOf(post))!;
 const assist = assistNote(data.aiAssist, author);
 const showWaitlist = data.waitlist && waitlist.show;
+// "Image by" the site's owner by default, not the post's author (who may be an agent).
+const credit = featured ? imageCredit(data as Parameters<typeof imageCredit>[0], site.author.name) : undefined;
 ---
 
 <BaseLayout
@@ -115,7 +118,7 @@ const showWaitlist = data.waitlist && waitlist.show;
 
   <div class="reading-progress" aria-hidden="true"></div>
 
-  <ArticleHero image={featured} alt={featuredAlt}>
+  <ArticleHero image={featured} alt={featuredAlt} credit={credit}>
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <ol>
         <li><a href="/">Home</a></li>

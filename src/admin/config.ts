@@ -332,6 +332,27 @@ const blogFields: CmsField[] = [
     default: '',
     hint: 'Only needed when you add an image. Describe the featured image in one plain sentence; leave it empty only if the image is purely decorative.',
   }),
+  field({
+    name: 'featuredImageBy',
+    label: 'Featured image made by',
+    widget: 'select',
+    // The values are IMAGE_BY (src/lib/image-credit.ts), the same list as the schema's.
+    options: [
+      { label: `Me (${site.author.name})`, value: 'me' },
+      { label: 'An agent', value: 'agent' },
+    ],
+    default: 'me',
+    required: false,
+    hint: `Shown under the headline as "Image by …". Me: "Image by ${site.author.name}". An agent: the name below.`,
+  }),
+  field({
+    name: 'featuredImageAgent',
+    label: 'Agent that made the featured image',
+    widget: 'string',
+    required: false,
+    default: '',
+    hint: 'Only when an agent made the image: its name, shown as "Image by <name>".',
+  }),
   blogCover,
   coverAlt,
   field({

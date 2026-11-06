@@ -6,6 +6,7 @@ import { APP_TYPE_IDS } from './lib/app-types';
 import { sectionsSchema } from './lib/sections';
 import { DEFAULT_AUTHOR } from './lib/authors';
 import { missingAlt, normaliseFrontMatter } from './lib/front-matter';
+import { agentMissing, IMAGE_BY } from './lib/image-credit';
 import { seoTitleMax } from './lib/seo';
 import { sitePageFields } from './lib/site-pages';
 
@@ -161,8 +162,18 @@ const posts = {
       // Optional hero background behind the breadcrumbs and headline: a file under src/assets/, optimised at build time.
       featuredImage: image().optional(),
       featuredImageAlt: z.string().optional(),
+      // The credit under the featured image: "Image by <site owner>" unless an agent made it (src/lib/image-credit.ts).
+      featuredImageBy: z.enum(IMAGE_BY).default('me'),
+      featuredImageAgent: z.string().optional(),
     }),
     (data, ctx) => {
+      if (data.featuredImage && agentMissing(data)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['featuredImageAgent'],
+          message: 'featuredImageAgent is required when featuredImageBy is agent (it is shown as "Image by <agent>")',
+        });
+      }
       if (data.series && data.seriesOrder === undefined) {
         ctx.addIssue({ code: 'custom', path: ['seriesOrder'], message: 'seriesOrder is required when series is set' });
       }
