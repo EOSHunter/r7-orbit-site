@@ -4,7 +4,7 @@ import site from '../data/site.json';
 import { siteSchema, waitlistSchema } from '../lib/site-settings';
 import { buildConfig, CMS_AUTH_URL, CMS_REPO } from './config';
 import { waitlistState } from '../lib/waitlist';
-import { SETTINGS_FILE, settingsCollection, settingsCollections, waitlistKeyError } from './settings';
+import { SETTINGS_FILE, settingsCollection, settingsCollections, siteLinksError, waitlistKeyError } from './settings';
 
 // The Site settings collection against the schema the build reads the file with (src/lib/site-settings.ts): the same fields under the
 // same names, the same rules, and nothing the author should not edit from a browser.
@@ -185,5 +185,36 @@ describe('the waitlist as the editor saves it', () => {
     expect(waitlistState(parsed.waitlist, { dev: false, preview: false })).toEqual({ show: true, siteKey: KEY });
     // A string from a hand edit is refused, not read as on.
     expect(siteSchema.safeParse({ ...site, waitlist: { ...saved, enabled: 'true', turnstileSiteKey: KEY } }).success).toBe(false);
+  });
+});
+
+describe('the check of the nav and footer links (siteLinksError)', () => {
+  // The two deploys that failed on 2026-10-21: Site settings saved with two footer links to the same address.
+  const meridian = { label: 'Meridian', icon: 'link', href: 'https://r7meridian.app/' };
+  const withFooter = (links: unknown[]) => ({ ...site, footer: { ...site.footer, links } });
+
+  it('passes the settings as they are', () => {
+    expect(siteLinksError(site)).toBeUndefined();
+  });
+
+  it('refuses two footer links to one address, as the build does', () => {
+    const data = withFooter([meridian, { ...meridian, label: 'Meridian again' }]);
+    expect(siteSchema.safeParse(data).success).toBe(false);
+    expect(siteLinksError(data)?.message).toBe(
+      'Nav and footer links: two footer links go to https://r7meridian.app/: each address is in the footer once. Fix that, then save.',
+    );
+  });
+
+  it('refuses a footer link with neither an address nor a profile, and a doubled nav link', () => {
+    const data = { ...withFooter([{ label: 'Nowhere', icon: 'link' }]), nav: [...site.nav, { ...site.nav[0] }] };
+    const message = siteLinksError(data)?.message ?? '';
+    expect(message).toContain('"Nowhere" needs either an address or a profile link, not neither');
+    expect(message).toContain(`two nav links go to ${site.nav[0].href}`);
+  });
+
+  it('reads a half-filled form without throwing: a new link with no fields yet, no footer, no data', () => {
+    expect(() => siteLinksError({ nav: [{}], footer: { links: [{}] } })).not.toThrow();
+    expect(siteLinksError({ nav: [{}] })).toBeUndefined();
+    expect(siteLinksError(undefined)).toBeUndefined();
   });
 });

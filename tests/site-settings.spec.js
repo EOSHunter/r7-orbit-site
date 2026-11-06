@@ -185,3 +185,40 @@ test('the Site settings editor saves a file the build reads, and keeps the field
   expect(seen.refused, 'requests to other addresses').toEqual([]);
   expect(await page.evaluate(() => window.__csp ?? []), 'CSP violations').toEqual([]);
 });
+
+test('the Site settings editor will not save nav or footer links the build would stop on', async ({ page }) => {
+  // The deploys that failed on 2026-10-21: the settings were saved with two footer links to the same address. The check that
+  // spans several links (siteLinksError) runs from the footer's Note box when Save is pressed.
+  await page.setViewportSize({ width: 1280, height: 1800 });
+  const seen = await openAdmin(page, { signedIn: true });
+  const first = SETTINGS.footer.links.find((l) => l.href) ?? { label: 'Meridian', icon: 'link', href: 'https://r7meridian.app/' };
+  const doubled = { ...SETTINGS, footer: { ...SETTINGS.footer, links: [...SETTINGS.footer.links, { ...first, label: 'Twice' }] } };
+  expect(siteSchema.safeParse(doubled).success, 'the build refuses this file').toBe(false);
+  // Registered after openAdmin's handler, so it answers first: the settings file the editor opens has the doubled link.
+  const text = JSON.stringify(doubled, null, 2);
+  await page.route('https://api.github.com/repos/EOSHunter/r7-orbit-site/git/blobs/sitefilesha*', (route) =>
+    route.fulfill({ json: { sha: 'sitefilesha', encoding: 'base64', content: Buffer.from(text).toString('base64'), size: text.length } }),
+  );
+  await expect(page.getByText(/blog posts/i).first()).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(() => (location.hash = '#/collections/settings/entries/site'));
+  const tagline = page.getByLabel('Tagline');
+  await expect(tagline).toHaveValue(SETTINGS.tagline, { timeout: 15_000 });
+  await tagline.fill('A tagline changed in the test');
+
+  await page.getByRole('button', { name: /^save$/i }).click();
+  const message = page.getByText(`two footer links go to ${first.href}: each address is in the footer once`, { exact: false });
+  // Refused: the reason is written under the Note, in the Footer group (collapsed, as Decap draws it; the Waitlist key's is the same).
+  await expect(message).toBeAttached({ timeout: 15_000 });
+  await page
+    .locator('div')
+    .filter({ has: page.getByText('Footer', { exact: true }) })
+    .filter({ has: page.getByRole('button', { name: 'Expand' }) })
+    .last()
+    .getByRole('button', { name: 'Expand' })
+    .last()
+    .click();
+  await expect(message).toBeVisible();
+  expect(seen.calls.some((c) => c.method === 'POST' && c.path.endsWith('/pulls')), 'nothing committed').toBe(false);
+  // Decap answers a form with an invalid field by rejecting its save with nothing (an uncaught "undefined"), as for the waitlist key.
+  await expect.poll(() => seen.errors).toEqual(['undefined']);
+});

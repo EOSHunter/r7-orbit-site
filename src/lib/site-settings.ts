@@ -112,42 +112,46 @@ export const siteSchema = z
   })
   .strict()
   .superRefine((site, ctx) => {
-    for (const [index, item] of site.nav.entries()) {
-      if (item.footer && !item.icon) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['nav', index, 'icon'],
-          message: `"${item.label}" is shown in the footer, so it needs an icon`,
-        });
-      }
-    }
-    for (const [index, link] of site.footer.links.entries()) {
-      if (Boolean(link.href) === Boolean(link.social)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['footer', 'links', index],
-          message: `"${link.label}" needs either an address or a profile link, not ${link.href ? 'both' : 'neither'}`,
-        });
-      }
-    }
-    const dupes = (hrefs: string[]) => [...new Set(hrefs.filter((h, i) => hrefs.indexOf(h) !== i))];
-    for (const href of dupes(site.nav.map((i) => i.href))) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['nav'],
-        message: `two nav links go to ${href}: each page is in the nav once`,
-      });
-    }
-    for (const href of dupes(footerLinks(site).map((l) => l.href))) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['footer', 'links'],
-        message: `two footer links go to ${href}: each address is in the footer once`,
-      });
-    }
+    for (const issue of siteLinkIssues(site)) ctx.addIssue({ code: 'custom', ...issue });
   });
 
 export type SiteSettings = z.infer<typeof siteSchema>;
+
+export interface SiteLinkIssue {
+  path: (string | number)[];
+  message: string;
+}
+
+/**
+ * The rules about the nav and footer links that span more than one field, so no field's own pattern can check them. The build
+ * stops on any of them (`siteSchema`), and the Site settings editor runs this same function when Save is pressed
+ * (siteLinksError in src/admin/settings.ts), so a save cannot write a file that fails to deploy (one did on 2026-10-21: two
+ * footer links to the same address).
+ */
+export function siteLinkIssues(site: Pick<SiteSettings, 'nav' | 'footer' | 'links'>): SiteLinkIssue[] {
+  const issues: SiteLinkIssue[] = [];
+  for (const [index, item] of site.nav.entries()) {
+    if (item.footer && !item.icon) {
+      issues.push({ path: ['nav', index, 'icon'], message: `"${item.label}" is shown in the footer, so it needs an icon` });
+    }
+  }
+  for (const [index, link] of site.footer.links.entries()) {
+    if (Boolean(link.href) === Boolean(link.social)) {
+      issues.push({
+        path: ['footer', 'links', index],
+        message: `"${link.label}" needs either an address or a profile link, not ${link.href ? 'both' : 'neither'}`,
+      });
+    }
+  }
+  const dupes = (hrefs: string[]) => [...new Set(hrefs.filter((h, i) => hrefs.indexOf(h) !== i))];
+  for (const href of dupes(site.nav.map((i) => i.href))) {
+    issues.push({ path: ['nav'], message: `two nav links go to ${href}: each page is in the nav once` });
+  }
+  for (const href of dupes(footerLinks(site).map((l) => l.href))) {
+    issues.push({ path: ['footer', 'links'], message: `two footer links go to ${href}: each address is in the footer once` });
+  }
+  return issues;
+}
 export type NavItem = SiteSettings['nav'][number];
 
 /** Reads site.json, or throws one message listing every problem with the field it is in. */

@@ -9,7 +9,7 @@
 import type { CmsCollection, CmsField } from 'decap-cms-core';
 import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
-import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS } from '../lib/site-settings';
+import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS, siteLinkIssues, type SiteSettings } from '../lib/site-settings';
 import { SITE_KEY_PATTERN, WAITLIST_KEY_MISSING, waitlistKeyMissing } from '../lib/waitlist';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
@@ -166,9 +166,10 @@ const settingsFields: CmsField[] = [
       field({
         name: 'note',
         label: 'Note',
-        widget: 'string',
+        // A string box that also checks the nav and footer links when Save is pressed (siteLinksError below).
+        widget: 'site-links-check',
         required: false,
-        hint: 'The short line after the year, e.g. "Made with R7 Orbit". Empty: no note.',
+        hint: 'The short line after the year, e.g. "Made with R7 Orbit". Empty: no note. Saving also checks the nav and footer links; a problem with them is shown here.',
       }),
     ],
   }),
@@ -269,6 +270,24 @@ export const settingsCollections: CmsCollection[] = [settingsCollection];
  * pasting the key the next Save works (a refusal from `preSave` leaves Decap thinking the entry is already in review, and its
  * next save fails).
  */
+/**
+ * The check of the nav and footer links (`siteLinkIssues`, the rules the build applies), run by the footer's Note box (the
+ * `site-links-check` widget, src/admin/site-links-check.ts) when Save is pressed. A field's own check for the reason given
+ * above: a refusal from `preSave` would break the next save. Reads the form as it is, a missing value taken as empty.
+ */
+export function siteLinksError(data: unknown): { type: 'CUSTOM'; message: string } | undefined {
+  const d = (data ?? {}) as { nav?: unknown; footer?: { links?: unknown }; links?: unknown };
+  const list = (value: unknown) => (Array.isArray(value) ? (value as object[]) : []);
+  const site = {
+    nav: list(d.nav).map((item) => ({ label: '', href: '', ...item })),
+    footer: { links: list(d.footer?.links).map((link) => ({ label: '', ...link })), note: '' },
+    links: (d.links ?? {}) as SiteSettings['links'],
+  } as Pick<SiteSettings, 'nav' | 'footer' | 'links'>;
+  const issues = siteLinkIssues(site);
+  if (!issues.length) return undefined;
+  return { type: 'CUSTOM', message: `Nav and footer links: ${issues.map((i) => i.message).join('; ')}. Fix that, then save.` };
+}
+
 export function waitlistKeyError(enabled: unknown, key: unknown): { type: 'CUSTOM'; message: string } | undefined {
   const missing = waitlistKeyMissing({ enabled: enabled === true, turnstileSiteKey: typeof key === 'string' ? key : '' });
   return missing ? { type: 'CUSTOM', message: WAITLIST_KEY_MISSING } : undefined;

@@ -48,6 +48,18 @@ You will need: the GitHub repository (`EOSHunter/r7-orbit-site`), a Cloudflare a
 
 If the build fails, open the build log: the usual cause is a missing `NODE_VERSION` (error mentions the Node version).
 
+### Why deploys have failed, and what stops each now
+
+Every failed deploy from 2026-10-05 to 2026-11-06 (16 of 281) came from a save in /admin writing something the build refuses. The editor now checks each of these before it saves, or the build no longer refuses it:
+
+| When | Cause (from the Cloudflare build log) | What stops it now |
+|---|---|---|
+| 2026-10-05, 2026-10-10 (9) | A cover or featured image saved with no alt text | The editor refuses to save a picture without alt text (`src/admin/image-rules.ts`, since 2026-10-10) |
+| 2026-10-21 (2) | Site settings saved with two footer links to the same address | The editor refuses to save nav or footer links the build would stop on; the reason shows under Footer > Note (`siteLinksError`, `src/admin/settings.ts`, since 2026-11-06) |
+| 2026-11-06 (5) | A featured image replaced in the editor: the old 2.4 MB PNG, used by no page, was still copied into `dist/_astro/` and failed the 2 MB check | The build removes pictures no page uses before that check (`unreferencedPictures`, `scripts/media.mjs`, since 2026-11-06) |
+
+To see why a deploy failed: Cloudflare dashboard > Workers & Pages > r7-orbit-site > the deployment > **Build log**, or run `npm run build` locally on the same commit (it is the same command). `npx wrangler pages deployment list --project-name r7-orbit-site` lists each deploy's status.
+
 What Pages does for you, and why nothing else is configured: static files are served as they are; `/about` is redirected to `/about/` (the site uses trailing slashes, matching `trailingSlash: 'always'` in `astro.config.mjs`); unknown paths get `dist/404.html` with a 404 status. Security and cache headers come from `public/_headers`, and a few redirects (the old feed addresses → `/`, `/admin` → `/admin/`) from `public/_redirects`.
 
 ## 2. Add the custom domain `r7orbit.io` and redirect `www`
