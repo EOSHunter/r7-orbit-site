@@ -12,7 +12,7 @@
 //
 // The rules (formats, limits, messages) are in src/lib/media-rules.mjs, shared with the admin. docs/IMAGES.md explains it all.
 import { createHash } from 'node:crypto';
-import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { readdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -21,12 +21,14 @@ import {
   MAX_WIDTH,
   RECOMPRESS_ABOVE_BYTES,
   REJECTED_EXTENSIONS,
+  TEXT_EXTENSIONS,
   VARIANT_SOURCE_EXTENSIONS,
   checkShippedFile,
   checkSourceFile,
   extensionOf,
   formatBytes,
   isVariant,
+  unreferencedPictures,
   variantPath,
   variantWidths,
 } from '../src/lib/media-rules.mjs';
@@ -135,6 +137,13 @@ async function dist() {
     if (!result) continue;
     await writeFile(file, result.data);
     console.log(`[media] shrunk /${posix(relative(dir, file))}: ${result.from} -> ${result.to}`);
+  }
+  // Pictures Astro copied that no page names (a picture the editor replaced, still in src/assets/): removed, not size-checked.
+  const built = (await walk(join(dir, '_astro'))).filter((f) => IMAGE_EXTENSIONS.includes(extensionOf(f)));
+  const texts = await Promise.all((await walk(dir)).filter((f) => TEXT_EXTENSIONS.includes(extensionOf(f))).map((f) => readFile(f, 'utf8')));
+  for (const file of unreferencedPictures(built, texts)) {
+    await unlink(file);
+    console.log(`[media] removed /${posix(relative(dir, file))}: no page uses it`);
   }
   // Everything that will be served as a picture: public/media (just shrunk) and what Astro made from src/assets.
   const problems = [];

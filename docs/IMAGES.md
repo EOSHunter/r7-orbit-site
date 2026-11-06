@@ -98,6 +98,7 @@ A post's pictures with alt text (its cover and its body's pictures) open in a di
    - blog body Image block or featured image (`src/assets/blog/`): Astro produces 4-5 widths in 3 formats; the reader downloads one of about 15-120 KB;
    - cover, poster, gallery, news/vlog/project body (`public/media/<kind>/`): shrunk to ≤ 2000px and recompressed in `dist/`, typically 300-800 KB, metadata removed;
    - if it is still over 2 MB (a noisy PNG, a huge SVG) the build stops and names the file and the fix.
+   - a picture in `src/assets/` that no page uses any more (the old one, after you replace a featured image) is removed from `dist/_astro/` before that check, so it cannot stop a deploy. Astro copies every file in `src/assets/` because a post body may name any of them (`src/components/article/assets.ts`); `unreferencedPictures` in `src/lib/media-rules.mjs` finds the ones no page, stylesheet or script names. Added 2026-11-06, after two editor saves failed to deploy on an old 2.4 MB screenshot.
 4. **Reader.** Gets the small file. The 6 MB original stays in git only.
 
 Before this work: a 6 MB photo in `public/media/` was served to every reader as 6 MB, with its GPS position inside.

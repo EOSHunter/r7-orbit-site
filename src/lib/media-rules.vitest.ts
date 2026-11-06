@@ -9,6 +9,7 @@ import {
   isVariant,
   safeFileName,
   variantPath,
+  unreferencedPictures,
   variantWidths,
 } from './media-rules.mjs';
 
@@ -119,5 +120,22 @@ describe('smaller copies (srcset)', () => {
     expect(isVariant('/media/a.640w.webp')).toBe(true);
     expect(isVariant('/media/a.webp')).toBe(false);
     expect(isVariant('/media/a-640w.webp')).toBe(false);
+  });
+});
+
+describe('unreferencedPictures', () => {
+  // The deploy that failed on 2026-11-06: the editor replaced a post's featured image, the old PNG stayed in src/assets/blog/,
+  // Astro copied it to dist/_astro/ unlinked, and the 2 MB check stopped the build.
+  const old = 'C:\\site\\dist\\_astro\\screenshot-2026-10-10-002457.BLGx8SKY.png';
+  const used = 'dist/_astro/new-hero.DWP2oF_z_11DPi3.jpg';
+  const page = '<img src="/_astro/new-hero.DWP2oF_z_11DPi3.jpg" alt="">';
+
+  it('names a built picture no page, style or script mentions', () => {
+    expect(unreferencedPictures([old, used], [page, 'body{}'])).toEqual([old]);
+  });
+
+  it('keeps a picture named anywhere: a srcset, a stylesheet, a script', () => {
+    const css = '.hero{background:url(/_astro/screenshot-2026-10-10-002457.BLGx8SKY.png)}';
+    expect(unreferencedPictures([old, used], [page, css])).toEqual([]);
   });
 });

@@ -146,6 +146,25 @@ export function checkShippedFile({ path, size }) {
   ];
 }
 
+/** The files of the finished site that can name a picture: pages, styles, scripts, feeds, the manifest. */
+export const TEXT_EXTENSIONS = ['html', 'css', 'js', 'mjs', 'json', 'xml', 'txt', 'webmanifest', 'svg'];
+
+/**
+ * The pictures Astro built that no file of the site names, so no page can show them. Astro copies every picture a bundled module
+ * imports, used or not, and src/components/article/assets.ts imports all of src/assets/ (so a post body can name any of them).
+ * A picture the editor replaced therefore stays in the output, unlinked; the build deletes these before the size check, so an
+ * old 2.4 MB screenshot nobody shows no longer stops a deploy.
+ * @param {string[]} pictures paths of the pictures in dist/_astro/
+ * @param {string[]} texts the contents of the site's text files (TEXT_EXTENSIONS)
+ * @returns {string[]} the paths in `pictures` whose file name appears in none of `texts`
+ */
+export function unreferencedPictures(pictures, texts) {
+  return pictures.filter((path) => {
+    const name = String(path).split(/[\\/]/).pop() ?? '';
+    return !texts.some((text) => text.includes(name));
+  });
+}
+
 // ---- Alt text -----------------------------------------------------------------------------------------------------------
 
 /** Written as the title of a Markdown image, `![](x.jpg "decorative")`, or as `decorative` on a Figure: the picture is only decoration. */
