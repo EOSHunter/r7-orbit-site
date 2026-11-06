@@ -6,12 +6,18 @@ name: Build
 
 on:
   pull_request:
+  # A work branch pushed without a pull request (an agent's fix, say) is checked too, so its commit can then be moved onto main:
+  # main takes only commits on which this check passed. Not main itself, and not the editor's cms/ branches (their pull request runs it).
+  push:
+    branches-ignore:
+      - main
+      - 'cms/**'
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.head_ref }}
+  group: build-${{ github.event_name }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
