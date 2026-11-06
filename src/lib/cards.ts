@@ -8,6 +8,9 @@ export interface Cover {
   alt: string;
   width: number;
   height: number;
+  /** Smaller copies for a phone, when the picture comes with its own (a blog post's featured image, made by Astro). A cover from
+   *  public/media finds its copies by name instead (src/lib/media-srcset.ts). */
+  srcset?: string;
 }
 
 interface CardBase {

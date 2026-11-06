@@ -146,3 +146,81 @@ test('an upload over the size limit is refused in the picker, with the limit sta
   await expect.poll(() => dialogs.length).toBeGreaterThan(0);
   expect(dialogs[0]).toMatch(/10485|10 ?MB|limit/i);
 });
+
+// The deploys that failed on 2026-11-06: the author chose the same picture for two fields (then the featured image and the cover),
+// under two names, in one edit. Decap keyed an upload by its content, so it committed only the last one; the post named a featured
+// image that never reached the repository and the build stopped (ImageNotFound). Blog posts no longer have a cover, but the same
+// picture can still go in twice: as the featured image and in the body. Both files must be committed (src/admin/decap-patch.mjs).
+test('the same picture as the featured image and in the body, under two names: both files are committed', async ({ page }) => {
+  const seen = await newPost(page, 'blog', 'One picture, two places');
+  await page.getByRole('button', { name: /choose an image/i }).first().click();
+  await page.locator('input[type="file"]').setInputFiles(photo('Hero Shot.png'));
+  await page.getByRole('button', { name: /choose selected/i }).click();
+  await page.getByLabel('Featured image alt text').fill('A town at night');
+  await addBlock(page, 'Image');
+  await chooseInBlock(page, photo('Hero Shot Again.png'));
+  await page.locator('[data-slate-editor]').getByLabel(/decoration only/i).check();
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect.poll(() => saved(seen), { timeout: 15_000 }).toBe(true);
+  const post = contentOf(seen).find((c) => c.includes('featuredImage:'));
+  expect(post).toContain('featuredImage: ../../assets/blog/hero-shot.png');
+  expect(post).toContain('/src/assets/blog/hero-shot-again.png');
+  expect(committed(seen)).toEqual(expect.arrayContaining(['src/assets/blog/hero-shot.png', 'src/assets/blog/hero-shot-again.png']));
+  await expectClean(page, seen);
+});
+
+// The alt text box said "(optional)" and the save then failed without it (2026-11-06). It is required exactly when there is a
+// picture, says so, and says why under the box when Save is pressed (src/admin/image-alt.ts).
+test('the featured image alt text: not called optional, and asked for under the box when there is a picture', async ({ page }) => {
+  const seen = await newPost(page, 'blog', 'Alt text asked for');
+  await page.locator('[data-slate-editor]').first().fill('Some words.');
+  const label = page.locator('label', { hasText: 'Featured image alt text' });
+  await expect(label).toBeVisible();
+  expect(await label.innerText(), 'the visible label').not.toMatch(/optional/i);
+  await expect(page.getByText(/^Needed whenever there is a featured image/)).toBeVisible();
+
+  await page.getByRole('button', { name: /choose an image/i }).first().click();
+  await page.locator('input[type="file"]').setInputFiles(photo('Hero.png'));
+  await page.getByRole('button', { name: /choose selected/i }).click();
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect(page.getByText(/describe the featured image in one plain sentence/i).first()).toBeVisible({ timeout: 10_000 });
+  expect(saved(seen)).toBe(false);
+
+  await page.getByLabel('Featured image alt text').fill('A town at night');
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect.poll(() => saved(seen), { timeout: 15_000 }).toBe(true);
+  // Decap answers a form with an invalid field by rejecting its save with nothing, which the page reports as an uncaught
+  // "undefined" (as in tests/site-settings.spec.js): that one is expected, and nothing else.
+  expect(seen.errors).toEqual(['undefined']);
+  seen.errors.length = 0;
+  await expectClean(page, seen);
+});
+
+// The safety net behind the fix above (src/admin/picture-presence.ts): whatever the cause, a post that names a picture which is
+// neither uploaded in this edit nor in the repository is not saved, and the message names the file.
+test('a post naming a picture that is not uploaded and not in the repository cannot be saved, and says which', async ({ page }) => {
+  const seen = await newPost(page, 'blog', 'A missing picture');
+  await page.route(/\/repos\/EOSHunter\/r7-orbit-site\/contents\/src\/assets\/blog\/gone\.png/, (route) =>
+    route.fulfill({ status: 404, json: { message: 'Not Found' }, headers: { 'access-control-allow-origin': '*' } }),
+  );
+  await page.getByText('Markdown', { exact: true }).first().locator('..').getByRole('switch').click();
+  // The Body in Markdown mode: what is typed is the Markdown itself.
+  const write = async (markdown) => {
+    await page.locator('[data-slate-editor]').first().click();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.insertText(markdown);
+  };
+  await write('Words. ![A town at night](/src/assets/blog/gone.png) ![A field](/src/assets/blog/here.png)');
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect(page.getByText(/src\/assets\/blog\/gone\.png\. Choose it again/).first()).toBeVisible({ timeout: 10_000 });
+  expect(saved(seen)).toBe(false);
+  const asked = seen.calls.filter((c) => c.path.includes('/contents/')).map((c) => `${c.method} ${c.path}`);
+  expect(asked).toEqual(expect.arrayContaining([
+    'HEAD /repos/EOSHunter/r7-orbit-site/contents/src/assets/blog/here.png',
+  ]));
+
+  // Without the missing picture the same post saves.
+  await write('Words. ![A field](/src/assets/blog/here.png)');
+  await page.getByRole('button', { name: /^save$/i }).click();
+  await expect.poll(() => saved(seen), { timeout: 15_000 }).toBe(true);
+});

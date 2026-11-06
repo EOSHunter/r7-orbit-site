@@ -9,7 +9,7 @@
 import type { CmsCollection, CmsField } from 'decap-cms-core';
 import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
-import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS, siteLinkIssues, type SiteSettings } from '../lib/site-settings';
+import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS, siteLinkIssues, siteLinkProblems, type SiteFiles, type SiteSettings } from '../lib/site-settings';
 import { SITE_KEY_PATTERN, WAITLIST_KEY_MISSING, waitlistKeyMissing } from '../lib/waitlist';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
@@ -275,7 +275,7 @@ export const settingsCollections: CmsCollection[] = [settingsCollection];
  * `site-links-check` widget, src/admin/site-links-check.ts) when Save is pressed. A field's own check for the reason given
  * above: a refusal from `preSave` would break the next save. Reads the form as it is, a missing value taken as empty.
  */
-export function siteLinksError(data: unknown): { type: 'CUSTOM'; message: string } | undefined {
+export function siteLinksError(data: unknown, files?: SiteFiles): { type: 'CUSTOM'; message: string } | undefined {
   const d = (data ?? {}) as { nav?: unknown; footer?: { links?: unknown }; links?: unknown };
   const list = (value: unknown) => (Array.isArray(value) ? (value as object[]) : []);
   const site = {
@@ -283,9 +283,15 @@ export function siteLinksError(data: unknown): { type: 'CUSTOM'; message: string
     footer: { links: list(d.footer?.links).map((link) => ({ label: '', ...link })), note: '' },
     links: (d.links ?? {}) as SiteSettings['links'],
   } as Pick<SiteSettings, 'nav' | 'footer' | 'links'>;
-  const issues = siteLinkIssues(site);
+  const issues = siteLinkIssues(site).map((i) => i.message);
+  // With the list of the site's pages (bundled into /admin), a link to a page that does not exist, as the build checks it. Only the
+  // nav and footer here: a picture in the settings may be uploaded in this very save, so it is not in the list yet.
+  if (files) {
+    const full = { ...site, defaultOgImage: '', author: { name: '', bio: '', photo: '' } } as unknown as SiteSettings;
+    issues.push(...siteLinkProblems(full, files).map((p) => p.replace(/^(nav|footer\.links)\.\d+ \("([^"]*)"\): /, '"$2" ')));
+  }
   if (!issues.length) return undefined;
-  return { type: 'CUSTOM', message: `Nav and footer links: ${issues.map((i) => i.message).join('; ')}. Fix that, then save.` };
+  return { type: 'CUSTOM', message: `Nav and footer links: ${issues.join('; ')}. Fix that, then save.` };
 }
 
 export function waitlistKeyError(enabled: unknown, key: unknown): { type: 'CUSTOM'; message: string } | undefined {

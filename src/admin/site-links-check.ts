@@ -4,6 +4,7 @@
 // it writes anything, and shows the message under the box. It sits on the Note because Decap does not call `isValid` on a list
 // of objects (its ListControl checks only the fields inside each item), and the Note is the plain box nearest the links.
 import { Component, createElement as h, type ComponentType } from 'react';
+import files from 'virtual:site-files';
 import { siteLinksError } from './settings';
 
 interface Props {
@@ -18,7 +19,7 @@ export function withSiteLinksCheck<P extends Props>(Control: ComponentType<P>): 
     static displayName = `SiteLinksCheck(${Control.displayName ?? Control.name ?? 'StringControl'})`;
 
     isValid() {
-      const error = siteLinksError(this.props.entry?.getIn(['data'])?.toJS?.());
+      const error = siteLinksError(this.props.entry?.getIn(['data'])?.toJS?.(), files);
       return error ? { error } : true;
     }
 

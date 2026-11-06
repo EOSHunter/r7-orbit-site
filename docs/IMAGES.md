@@ -32,7 +32,6 @@ There are two homes, because the site reads pictures in two ways.
 | --- | --- | --- | --- | --- |
 | Featured image (hero) | blog | `src/assets/blog/x.jpg` | `featuredImage: ../../assets/blog/x.jpg` (relative to the post, which `image()` needs) | yes (`ArticleHero.astro`: 480-2000px, AVIF/WebP/JPG; and a 1200×630 JPG for `og:image`) |
 | Image / Image gallery block in a body | blog | `src/assets/blog/x.jpg` | `<Figure src="/src/assets/blog/x.jpg" … />` | yes (`ArticleImage.astro`: 480-1600px, AVIF/WebP/JPG) |
-| Cover | blog | `public/media/blog/x.jpg` | `cover: /media/blog/x.jpg` | no, but shrunk at build |
 | Cover | news, vlogs, projects, repos | `public/media/<kind>/x.jpg` | `cover: /media/<kind>/x.jpg` | no, but shrunk at build |
 | Vlog poster | vlogs | `public/media/vlogs/x.jpg` | `poster: /media/vlogs/x.jpg` (falls back to `cover`) | no, but shrunk at build |
 | Project gallery | projects | `public/media/projects/x.jpg` | `gallery: [{ src: /media/projects/x.jpg, alt, caption }]` | no, but shrunk at build |
@@ -47,7 +46,7 @@ Older files keep working wherever they are: `public/media/vlogs/building-vesper-
 
 - `media_folder: public/media` / `public_folder: /media` is the global library, the **Media** tab in the editor's top bar.
 - Each collection has its own folder: `media_folder: /public/media/<kind>`, `public_folder: /media/<kind>`. The leading `/` matters: without it Decap reads the folder relative to the post's own file. `mediaFolders(name)` builds the pair; the About page's Pages collection spells out the same pair in `src/admin/pages.ts` (config.ts imports that file, so it cannot import `mediaFolders` back).
-- The blog collection's folder is `/src/assets/blog` for both (so the Image blocks write `/src/assets/blog/x.jpg`), and its `cover` field names `/public/media/blog` itself. `featuredImage` has `media_folder: /src/assets/blog` and `public_folder: ../../assets/blog`.
+- The blog collection's folder is `/src/assets/blog` for both (so the Image blocks write `/src/assets/blog/x.jpg`), and it has no `cover` field (the featured image is the card picture, since 2026-11-06). `featuredImage` has `media_folder: /src/assets/blog` and `public_folder: ../../assets/blog`.
 - Inside one collection every image field and block shares one folder, so a picture uploaded for a poster can be picked again as the cover. Decap's picker shows one folder at a time, so **between** collections a picture is uploaded again (the build warns about identical files, below). The **Media** tab lists and uploads to the global folder.
 
 ### File names (Decap's `slug` setting)
@@ -140,7 +139,7 @@ Found by reading `src/admin/`, `src/content.config.ts`, the components and the c
 9. **Duplicates.** `public/media/projects/vesper-drift/poster.jpg` and `public/media/vlogs/building-vesper-drift/poster.jpg` are the same 63 KB file, and `screenshot-2026-10-03-195701.png` is in both `public/media/` and `src/assets/blog/` (1.4 MB twice). Decap only warns about a same-named file inside one folder. *Now:* `scripts/media.mjs check` prints a warning for identical files (it does not fail).
 10. **Markdown body images are bare.** `![alt](/media/x.jpg)` renders `<img src alt>` with no `width`, `height` or `loading="lazy"` (`docs/CONTENT_MODEL.md` says "width/height are read from the file"; they are not). Not changed here: see Known limits.
 11. **`cover` is drawn at a fixed 1280×720** (`<img width="1280" height="720">` in `ArticlePage.astro`, and `coverOf` in `src/lib/post-cards.ts` for the cards) whatever the real shape, so a non-16:9 cover is distorted or cropped by CSS. The hint says 16:9.
-12. **`cover` and `featuredImage` look alike in the blog form.** Two image fields, two alt fields, two folders. `featuredImage` is the hero behind the headline; `cover` is the thumbnail on cards and the share image (`featuredImage` is used for sharing only when there is no `cover`).
+12. **`cover` and `featuredImage` looked alike in the blog form.** Two image fields, two alt fields, two folders, and the same picture uploaded twice (which Decap then committed once: the deploys of 2026-11-06). *Now:* a blog post has only the featured image, which is also its card and share picture.
 
 ## Known limits
 

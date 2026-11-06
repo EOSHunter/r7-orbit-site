@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
@@ -8,6 +10,7 @@ import remarkFigures from './src/lib/markdown/remark-figures.mjs';
 import remarkImageAlt from './src/lib/markdown/remark-image-alt.mjs';
 import { rehypeBodyHeadings, rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from './src/lib/markdown/rehype-site.mjs';
 import { siteCodeTransformer } from './src/lib/markdown/shiki-transformer.mjs';
+import { decapUploadsByPath } from './src/admin/decap-patch.mjs';
 
 // The 404 page's game is a lazy chunk (docs/RUNNER.md, "On the 404 page"). The page may prefetch it before anyone asks, and a
 // hashed file name is only known once the build has named the chunk, so this virtual module hands the page its final URL
@@ -45,6 +48,32 @@ function runnerChunkUrl() {
           );
         }
       }
+    },
+  };
+}
+
+// The pages and public files of this checkout, for the Site settings editor (src/admin/settings.ts): it names a nav or footer link
+// to a page that does not exist before saving, as the build does (siteFiles in src/lib/site-routes.ts lists them the same way).
+function siteFilesModule() {
+  const id = 'virtual:site-files';
+  const resolved = '\u0000' + id;
+  const filesUnder = (dir) => {
+    try {
+      return readdirSync(dir, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => relative(dir, join(entry.parentPath, entry.name)).replaceAll('\\', '/'));
+    } catch {
+      return [];
+    }
+  };
+  return {
+    name: 'site-files',
+    resolveId: (source) => (source === id ? resolved : null),
+    load(source) {
+      if (source !== resolved) return null;
+      const root = fileURLToPath(new URL('.', import.meta.url));
+      const files = { pages: filesUnder(join(root, 'src/pages')), publicFiles: filesUnder(join(root, 'public')).map((f) => `/${f}`) };
+      return `export default ${JSON.stringify(files)};`;
     },
   };
 }
@@ -96,6 +125,11 @@ export default defineConfig({
     }),
   },
   // No modulepreload helper: it is an extra request on every page, and search.js is the only dynamic import.
-  vite: { build: { modulePreload: false, assetsInlineLimit: 16384 }, plugins: [runnerChunkUrl(), ascentOwnThree()] },
+  // decapUploadsByPath: /admin commits every upload of an edit, even two of the same picture (src/admin/decap-patch.mjs).
+  vite: {
+    build: { modulePreload: false, assetsInlineLimit: 16384 },
+    plugins: [runnerChunkUrl(), ascentOwnThree(), decapUploadsByPath(), siteFilesModule()],
+    optimizeDeps: { rolldownOptions: { plugins: [decapUploadsByPath()] } },
+  },
   devToolbar: { enabled: false },
 });

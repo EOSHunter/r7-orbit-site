@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { cover } = Astro.props;
-const srcset = await publicSrcset(cover?.src);
+const srcset = cover?.srcset ?? (await publicSrcset(cover?.src));
 ---
 
 <div class="card-media">

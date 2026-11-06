@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import {
   IMAGE_EXTENSIONS,
+  MAX_SHIPPED_BYTES,
   MAX_WIDTH,
   RECOMPRESS_ABOVE_BYTES,
   REJECTED_EXTENSIONS,
@@ -26,6 +27,7 @@ import {
   checkShippedFile,
   checkSourceFile,
   extensionOf,
+  fitAttempts,
   formatBytes,
   isVariant,
   unreferencedPictures,
@@ -109,6 +111,32 @@ async function shrink(file) {
   return { data, from: `${meta.width}x${meta.height} ${formatBytes(original.length)}`, to: `${info.width}x${info.height} ${formatBytes(data.length)}` };
 }
 
+/**
+ * A picture still over the size limit after `shrink` (a big PNG screenshot stays a PNG, and can stay over 2 MB) is re-encoded harder,
+ * then made narrower, until it fits: the deploys of 2026-11-06 showed that a picture the author uploads must never stop the build.
+ * The file keeps its name and format. Returns the new bytes, or undefined when it already fits or cannot be read.
+ */
+export async function fitUnderLimit(file) {
+  const original = await readFile(file);
+  if (original.length <= MAX_SHIPPED_BYTES) return undefined;
+  const ext = extensionOf(file);
+  const meta = await sharp(original, { failOn: 'none' }).metadata();
+  if ((meta.pages ?? 1) > 1) return undefined; // animated: left for the check to name
+  for (const { width, quality } of fitAttempts(meta.width ?? MAX_WIDTH)) {
+    let pipeline = sharp(original, { failOn: 'none' }).rotate().resize({ width, withoutEnlargement: true });
+    if (ext === 'png') pipeline = pipeline.png({ palette: true, quality, compressionLevel: 9, effort: 3 });
+    else if (ext === 'webp') pipeline = pipeline.webp({ quality });
+    else if (ext === 'avif') pipeline = pipeline.avif({ quality: Math.round(quality * 0.7) });
+    else if (ext === 'jpg' || ext === 'jpeg') pipeline = pipeline.jpeg({ quality, mozjpeg: true });
+    else return undefined;
+    const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+    if (data.length <= MAX_SHIPPED_BYTES) {
+      return { data, from: `${meta.width}x${meta.height} ${formatBytes(original.length)}`, to: `${info.width}x${info.height} ${formatBytes(data.length)}` };
+    }
+  }
+  return undefined;
+}
+
 /** Writes the smaller WebP copies of one picture from public/ next to it (the widths and names are in media-rules.mjs). */
 async function variants(file) {
   if (!VARIANT_SOURCE_EXTENSIONS.includes(extensionOf(file)) || isVariant(file)) return 0;
@@ -145,9 +173,17 @@ async function dist() {
     await unlink(file);
     console.log(`[media] removed /${posix(relative(dir, file))}: no page uses it`);
   }
-  // Everything that will be served as a picture: public/media (just shrunk) and what Astro made from src/assets.
+  // Everything that will be served as a picture: public/media (just shrunk) and what Astro made from src/assets. One still over
+  // the limit is brought under it rather than stopping the deploy.
   const problems = [];
   const served = [...media, ...(await walk(join(dir, '_astro'))).filter((f) => IMAGE_EXTENSIONS.includes(extensionOf(f)))];
+  for (const file of served) {
+    const fitted = await fitUnderLimit(file);
+    if (fitted) {
+      await writeFile(file, fitted.data);
+      console.log(`[media] fitted /${posix(relative(dir, file))} under ${formatBytes(MAX_SHIPPED_BYTES)}: ${fitted.from} -> ${fitted.to}`);
+    }
+  }
   for (const file of served) {
     problems.push(...checkShippedFile({ path: `/${posix(relative(dir, file))}`, size: (await stat(file)).size }));
   }
@@ -156,9 +192,12 @@ async function dist() {
 }
 
 const mode = process.argv[2];
-if (mode === 'check') await check();
-else if (mode === 'dist') await dist();
-else {
-  console.error('usage: node scripts/media.mjs check | dist');
-  process.exit(2);
+// Run as a script (`node scripts/media.mjs check|dist`), not when a test imports fitUnderLimit.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (mode === 'check') await check();
+  else if (mode === 'dist') await dist();
+  else {
+    console.error('usage: node scripts/media.mjs check | dist');
+    process.exit(2);
+  }
 }

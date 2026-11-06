@@ -104,10 +104,11 @@ function assetResolver(getAsset: GetAsset | undefined, field: unknown): ResolveA
 }
 const fieldNamed = (fields: FieldList | undefined, name: string) => fields?.find((f) => f.get('name') === name);
 
-/** "https://youtu.be/ID", "https://www.youtube.com/watch?v=ID", ".../embed/ID" or a bare id -> the 11-character id. */
+/** "https://youtu.be/ID", "https://www.youtube.com/watch?v=ID", ".../embed/ID", ".../shorts/ID", ".../live/ID" or a bare id -> the
+ *  11-character id. Anything else is kept as typed, and the save check names it (videoProblems in src/admin/content-check.ts). */
 export function youtubeIdFrom(input: unknown): string {
   const s = text(input).trim();
-  const match = /(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([\w-]{11})/.exec(s);
+  const match = /(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/.exec(s);
   return match ? match[1] : s;
 }
 

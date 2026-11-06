@@ -19,10 +19,15 @@ import { framedPreview } from './framed-preview';
 import { dropEmptyImages, imageSaveCheck } from './image-rules';
 import { pagePreview } from './page-previews';
 import { FRAMED_PAGES } from './pages';
+import { contentSaveCheck } from './content-check';
+import { fieldLabels } from './field-labels';
+import { pictureSaveCheck } from './picture-presence';
+import { publishGate } from './publish-gate';
 import { bodyOrSectionsCheck } from './post-body';
 import { POST_PREVIEW_KINDS, postPreview, type PreviewKind } from './post-preview';
 import { blogPreview } from './preview';
 import { globalStyleOf, spriteOf } from './preview-assets';
+import { withImageAltCheck } from './image-alt';
 import { withSiteLinksCheck } from './site-links-check';
 import { withWaitlistKeyCheck } from './waitlist-key';
 import previewCss from './preview.css?inline';
@@ -32,6 +37,9 @@ import { SITE_PAGES } from '../lib/site-pages';
 // browser, so never put a secret in one.
 const authUrl = (import.meta.env.PUBLIC_CMS_AUTH_URL as string | undefined) || CMS_AUTH_URL;
 const local = import.meta.env.DEV;
+const repo = (import.meta.env.PUBLIC_CMS_REPO as string | undefined) || CMS_REPO;
+const branch = (import.meta.env.PUBLIC_CMS_BRANCH as string | undefined) || CMS_BRANCH;
+const config = buildConfig({ local, authUrl, repo, branch });
 
 for (const block of blocks) CMS.registerEditorComponent(block);
 // The Markdown bodies' "Image" block asks for alt text. It has Decap's built-in id, so it replaces the built-in one.
@@ -48,6 +56,8 @@ const stringWidget = CMS.getWidget('string') as { control: never; preview?: neve
 if (stringWidget) CMS.registerWidget('waitlist-key', withWaitlistKeyCheck(stringWidget.control), stringWidget.preview);
 // Site settings > Footer > Note: the string box, refusing to save nav or footer links the build would stop on (siteLinksError).
 if (stringWidget) CMS.registerWidget('site-links-check', withSiteLinksCheck(stringWidget.control), stringWidget.preview);
+// The alt text of the cover and the featured image: the string box, required exactly when its picture is set (image-alt.ts).
+if (stringWidget) CMS.registerWidget('image-alt', withImageAltCheck(stringWidget.control), stringWidget.preview);
 // Leave an emptied image field (and the alt text of a picture that is not there) out of the file, rather than writing `cover: ''`.
 // First, so the checks below read the tidied data.
 CMS.registerEventListener({ name: 'preSave', handler: dropEmptyImages });
@@ -56,6 +66,14 @@ CMS.registerEventListener({ name: 'preSave', handler: dropEmptyImages });
 CMS.registerEventListener({ name: 'preSave', handler: imageSaveCheck });
 // Refuse to save a post written both ways, as sections and as a Body (docs/SECTIONS.md "Posts"); the build stops on one too.
 CMS.registerEventListener({ name: 'preSave', handler: bodyOrSectionsCheck });
+// Refuse to save what the build's own content rules would stop on: the same schemas, the MDX parser, the no-email rule
+// (content-check.ts). The labels let a message name the box the author sees.
+CMS.registerEventListener({ name: 'preSave', handler: contentSaveCheck({ labelsOf: fieldLabels(config), authors: Object.keys(authorNames) }) });
+// Last: refuse to save a post that names a picture neither uploaded in this edit nor in the repository (picture-presence.ts).
+CMS.registerEventListener({ name: 'preSave', handler: pictureSaveCheck({ repo, branch, local }) });
+// Publish merges a save only once GitHub's "Site builds" check passed on it (publish-gate.ts): a save that would fail to deploy
+// cannot reach the live site.
+CMS.registerEventListener({ name: 'prePublish', handler: publishGate({ repo, local }) });
 
 // The preview pane is an iframe, so it starts with no styles. These are the same files the public pages load, in the
 // order BaseLayout and its components import them (sections.css is the About page's), plus the hero's own block, which
@@ -75,11 +93,4 @@ for (const page of SITE_PAGES) CMS.registerPreviewTemplate(page.admin.name, page
 // Privacy, 404 and search: the same preview, with the site settings filled in (framed-preview.ts).
 for (const name of FRAMED_PAGES) CMS.registerPreviewTemplate(name, framedPreview(name, { sprite: spriteOf(spriteSource) }));
 
-CMS.init({
-  config: buildConfig({
-    local,
-    authUrl,
-    repo: (import.meta.env.PUBLIC_CMS_REPO as string | undefined) || CMS_REPO,
-    branch: (import.meta.env.PUBLIC_CMS_BRANCH as string | undefined) || CMS_BRANCH,
-  }),
-});
+CMS.init({ config });

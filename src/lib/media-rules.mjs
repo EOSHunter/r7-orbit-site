@@ -147,6 +147,16 @@ export function checkShippedFile({ path, size }) {
 }
 
 /** The files of the finished site that can name a picture: pages, styles, scripts, feeds, the manifest. */
+/**
+ * The re-encodings tried, in order, on a picture still over MAX_SHIPPED_BYTES after the build shrank it (scripts/media.mjs
+ * `fitUnderLimit`): harder compression at its own width first, then narrower, down to 640px. The first that fits is kept.
+ */
+export function fitAttempts(width) {
+  const own = Math.min(width, MAX_WIDTH);
+  const widths = [own, ...[1600, 1280, 1024, 800, 640].filter((w) => w < own)];
+  return widths.flatMap((w) => [{ width: w, quality: 80 }, { width: w, quality: 65 }]);
+}
+
 export const TEXT_EXTENSIONS = ['html', 'css', 'js', 'mjs', 'json', 'xml', 'txt', 'webmanifest', 'svg'];
 
 /**

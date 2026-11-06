@@ -92,8 +92,10 @@ describe('admin-shaped front matter builds, for every collection', () => {
     it(`${kind}: every optional field of the form written empty is read as not set`, async () => {
       const empty = emptyOptionalFields(adminFields(kind));
       // The form really has the fields this incident was about, so the test cannot pass by testing nothing.
-      expect(Object.keys(empty)).toEqual(expect.arrayContaining(['cover', 'coverAlt', 'seoTitle', 'tags']));
+      // A blog post has the featured image in place of a cover (2026-11-06); the other kinds have the cover.
+      expect(Object.keys(empty)).toEqual(expect.arrayContaining(['seoTitle', 'tags']));
       if (kind === 'blog') expect(Object.keys(empty)).toEqual(expect.arrayContaining(['featuredImage', 'featuredImageAlt']));
+      else expect(Object.keys(empty)).toEqual(expect.arrayContaining(['cover', 'coverAlt']));
       // The fields a post needs keep their values (a vlog's YouTube id is optional in the form, but it or a video address is needed).
       const result = (await schemaOf(kind)).safeParse({ ...empty, ...post(kind) });
       expect(issuesOf(result)).toEqual([]);

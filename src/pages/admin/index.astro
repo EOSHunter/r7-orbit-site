@@ -11,6 +11,14 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Content manager</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style is:global>
+      /* Decap marks every field that is not always required "(optional)". Alt text is required whenever its picture is set
+         (src/admin/image-alt.ts), so its boxes do not say optional. Decap's field ids are `<name>-field-<n>`. */
+      label[for^='coverAlt-field-'] > span,
+      label[for^='featuredImageAlt-field-'] > span {
+        display: none;
+      }
+    </style>
   </head>
   <body>
     <noscript>The content manager needs JavaScript.</noscript>

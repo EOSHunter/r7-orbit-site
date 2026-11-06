@@ -2,7 +2,7 @@
 // Up to three cards by shared tags, then recency (relatedPosts in lib/content, which skips drafts and scheduled posts). Renders nothing when there are none.
 import PostCard from './PostCard.astro';
 import { postUrl } from '../lib/content';
-import { coverOf } from '../lib/post-cards';
+import { coverOf, featuredCover } from '../lib/post-cards';
 import type { CollectionName } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import type { CardData, Kind } from '../lib/cards';
@@ -15,11 +15,12 @@ const { posts } = Astro.props;
 const KIND: Record<CollectionName, Kind> = { news: 'news', blog: 'blog', vlogs: 'vlog', projects: 'project', repos: 'repo' };
 
 // Reading time is left off: related cards are a pointer, not a preview. The cover is kept, as on every other card.
-function toCard(p: SitePost): CardData {
+async function toCard(p: SitePost): Promise<CardData> {
   const base = { href: postUrl(p), title: p.data.title, summary: p.data.summary, date: p.data.date, tags: p.data.tags };
   const kind = KIND[p.collection];
   const cover = coverOf(p.data as { cover?: string; coverAlt?: string });
-  if (kind === 'news' || kind === 'blog') return { ...base, kind, cover };
+  if (kind === 'blog') return { ...base, kind, cover: (await featuredCover(p.data)) ?? cover };
+  if (kind === 'news') return { ...base, kind, cover };
   if (kind === 'vlog') {
     const vlog = p.data as unknown as { duration: string; poster?: string; cover?: string; coverAlt?: string };
     return { ...base, kind, duration: vlog.duration, cover: coverOf({ cover: vlog.poster ?? vlog.cover, coverAlt: vlog.coverAlt }) };
@@ -27,7 +28,7 @@ function toCard(p: SitePost): CardData {
   if (kind === 'project') return { ...base, kind, status: (p.data as unknown as { status: 'idea' }).status, cover };
   return { ...base, kind, repo: (p.data as unknown as { repo: string }).repo };
 }
-const cards = posts.map(toCard);
+const cards = await Promise.all(posts.map(toCard));
 ---
 
 {cards.length > 0 && (

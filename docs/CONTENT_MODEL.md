@@ -29,8 +29,8 @@ The **file name is the slug** (the last part of the URL). Keep it lowercase, wor
 | `updated` | date | no | Set when the post is materially changed; shown as "Updated Oct 8" |
 | `summary` | string | yes | 1–2 sentences, ≤ 155 characters. Used on cards, in the meta description |
 | `tags` | string[] | no | 1–4 lowercase tags, hyphenated (`ai-agents`, `evals`, `git`). Reuse existing tags before inventing |
-| `cover` | image path | no | 16:9, ≥ 1280×720. The picture on the post's **card** (and its og:image); a blog or news page does not draw it (its picture is the `featuredImage` behind the headline, decided 2026-11-05). A blog post with no cover shows its featured image on its card. With neither, the plate placeholder is shown (never a stock photo). A project's page does use its cover (it has no featured image) |
-| `coverAlt` | string | if `cover` | Describe what is in the image. Empty string only if purely decorative |
+| `cover` | image path | no | 16:9, ≥ 1280×720. The picture on the post's **card** (and its og:image); a blog or news page does not draw it (its picture is the `featuredImage` behind the headline, decided 2026-11-05). **A blog post has no cover** (decided 2026-11-06): its `featuredImage` is its card picture and og:image, so one upload does both. The blog schema still reads a `cover` left in an older file or an unpublished edit, and uses it only when there is no featured image.  With neither, the plate placeholder is shown (never a stock photo). A project's page does use its cover (it has no featured image) |
+| `coverAlt` | string | if `cover` | Describe what is in the image. The editor asks for it whenever there is a cover (and does not call it optional: `src/admin/image-alt.ts`); the build accepts `""` for a decorative picture written by hand |
 | `featured` | boolean | no | Pins to the top of the home page. **At most one at a time** (the build should warn if two) |
 | `draft` | boolean | no | Default `false`. `true` = hidden in production, shown in dev with a "Draft" badge. See "Drafts and scheduled posts" |
 | `waitlist` | boolean | no | Default `false`. `true` = the waitlist band for R7 Orbit (heading, sentence, form) after the body, before related posts and previous/next. Drawn only while the waitlist is on in Site settings (`waitlist` below); the band's words are the settings'. The form sends the source `blog` from a blog post or news item, `vlog` from a vlog, `other` from a project or repo. Use it on posts about R7 Orbit (`docs/WAITLIST.md`) |
@@ -115,7 +115,7 @@ Body: 150–500 words. Say what happened, why it matters (or doesn't), and what 
 | `series` | string | no | Name of a series; posts with the same value link to each other |
 | `seriesOrder` | number | if `series` | 1, 2, 3… |
 | `toc` | boolean | no | Default `true` when the post has 3+ `h2` headings |
-| `featuredImage` | image under `src/assets/blog/` | no | The picture behind the breadcrumbs and headline, optimised at build time. Wide (16:9), at least 1600px across |
+| `featuredImage` | image under `src/assets/blog/` | no | The picture behind the breadcrumbs and headline, optimised at build time, and also the post's card picture and og:image (cropped to 16:9 and 1200×630). Wide (16:9), at least 1600px across |
 | `featuredImageAlt` | string | if `featuredImage` | As `coverAlt` |
 | `featuredImageBy` | `me` or `agent` | no | Who made the featured image, shown under the headline block as "Image by …". Default `me`: the site owner's name from `site.json` (`author.name`), not the post's author, who may be an agent. `agent`: the name in `featuredImageAgent` (added 2026-11-06; `src/lib/image-credit.ts`) |
 | `featuredImageAgent` | string | if `featuredImageBy: agent` | The agent's name, e.g. "Image by <name>". The build fails without it, and the editor will not save |

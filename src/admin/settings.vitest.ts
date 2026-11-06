@@ -212,6 +212,15 @@ describe('the check of the nav and footer links (siteLinksError)', () => {
     expect(message).toContain(`two nav links go to ${site.nav[0].href}`);
   });
 
+  it('with the list of pages, refuses a nav or footer link to a page the site does not have, as the build does', () => {
+    const files = { pages: ['index.astro', 'blog/index.astro', 'blog/[slug].astro', 'about.astro'], publicFiles: ['/og-default.png'] };
+    expect(siteLinksError(site, { ...files, pages: [...files.pages, ...site.nav.map((i) => `${i.href.replace(/^\/|\/$/g, '')}/index.astro`)] })).toBeUndefined();
+    const data = { ...site, nav: [{ label: 'About', href: '/about' }, { label: 'Notes', href: '/notes/' }] };
+    expect(siteLinksError(data, files)?.message).toBe(
+      'Nav and footer links: "About" /about is not a page or file of this site; "Notes" /notes/ is not a page or file of this site. Fix that, then save.',
+    );
+  });
+
   it('reads a half-filled form without throwing: a new link with no fields yet, no footer, no data', () => {
     expect(() => siteLinksError({ nav: [{}], footer: { links: [{}] } })).not.toThrow();
     expect(siteLinksError({ nav: [{}] })).toBeUndefined();

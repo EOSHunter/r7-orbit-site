@@ -1,0 +1,29 @@
+# The site builds: the same `npm run build` Cloudflare Pages runs, on every pull request (each save in /admin is one). Kept apart
+# from CI (ci.yml: every test and Lighthouse, long, and with tests that can be flaky) so it is quick and certain, and so it can be
+# the one check GitHub requires before a pull request merges into main: then a save that would not build cannot be published, and
+# the live site never gets a failed deploy, whatever the cause (docs/DEPLOY_CLOUDFLARE.md, "Why deploys have failed").
+name: Build
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  site-builds:
+    name: Site builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build

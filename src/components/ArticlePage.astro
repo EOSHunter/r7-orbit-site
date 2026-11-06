@@ -66,12 +66,13 @@ const base = (Astro.site ?? new URL(site.url)).href;
 const url = absoluteUrl(Astro.url.pathname, base);
 // The cover: the card's picture and the og:image, never drawn on the page itself.
 const cover = data.cover ? { src: data.cover, alt: data.coverAlt ?? '' } : undefined;
-// Blog only: an optional hero image behind the headline. It is the og:image when the post has no cover of its own.
+// Blog only: an optional hero image behind the headline. It is also the og:image (a blog post has no separate cover; one left in
+// an older post's file is used only when there is no featured image).
 const featured = (data as { featuredImage?: ImageMetadata }).featuredImage;
 const featuredAlt = (data as { featuredImageAlt?: string }).featuredImageAlt ?? '';
 const featuredOg = featured ? await getImage({ src: featured, width: 1200, height: 630, fit: 'cover', format: 'jpg' }) : undefined;
-const image = cover ? new URL(cover.src, base).href : featuredOg ? new URL(featuredOg.src, base).href : undefined;
-const imageAlt = cover ? cover.alt : featuredOg ? featuredAlt : undefined;
+const image = featuredOg ? new URL(featuredOg.src, base).href : cover ? new URL(cover.src, base).href : undefined;
+const imageAlt = featuredOg ? featuredAlt : cover ? cover.alt : undefined;
 
 const toc = kind === 'blog' && (data as { toc?: boolean }).toc !== false && (
   (data as { toc?: boolean }).toc === true || headings.filter((h) => h.depth === 2).length >= 3

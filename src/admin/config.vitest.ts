@@ -114,16 +114,25 @@ describe('admin config', () => {
     expect(mediaFolders('about')).toEqual({ media_folder: '/public/media/about', public_folder: '/media/about' });
   });
 
-  it('keeps blog body pictures in src/assets/blog (optimised) and the blog cover, a plain file, in public/media/blog', () => {
+  it('keeps blog body pictures in src/assets/blog (optimised), and a blog post has one picture field: the featured image', () => {
     const blog = blogCollection as unknown as Record<string, string>;
     expect(blog.media_folder).toBe('/src/assets/blog');
     expect(blog.public_folder).toBe('/src/assets/blog');
-    expect(fieldsOf('blog').cover).toMatchObject({ media_folder: '/public/media/blog', public_folder: '/media/blog' });
+    // The featured image is also the card and share picture (2026-11-06): no cover, so no second upload of the same picture.
+    expect(fieldsOf('blog').cover).toBeUndefined();
+    expect(fieldsOf('blog').coverAlt).toBeUndefined();
+    expect(fieldsOf('blog').featuredImage).toBeTruthy();
+  });
+
+  it('asks for alt text whenever its picture is set, without calling it optional', () => {
+    expect(fieldsOf('blog').featuredImageAlt).toMatchObject({ widget: 'image-alt', image: 'featuredImage', required: false });
+    expect(fieldsOf('news').coverAlt).toMatchObject({ widget: 'image-alt', image: 'cover', required: false });
+    expect(String(fieldsOf('news').coverAlt.hint)).toMatch(/^Needed whenever there is a cover image/);
   });
 
   it('limits the size of an upload on every image widget (Decap reads the limit from the widget, not the top level)', () => {
     const limit = 10 * 1024 * 1024;
-    const widgets = [fieldsOf('blog').cover, fieldsOf('blog').featuredImage, fieldsOf('vlogs').poster, fieldsOf('news').cover];
+    const widgets = [fieldsOf('blog').featuredImage, fieldsOf('vlogs').poster, fieldsOf('news').cover];
     for (const w of widgets) expect(w.media_library, String(w.name)).toMatchObject({ config: { max_file_size: limit } });
     const gallery = (fieldsOf('projects').gallery.fields as Field[]).find((f) => f.name === 'src');
     expect(gallery?.media_library).toMatchObject({ config: { max_file_size: limit } });
@@ -196,10 +205,16 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
     for (const c of posts.filter((x) => x.name !== 'blog')) expect(c.extension, c.name).toBe('md');
   });
 
+  // A blog post has no cover field in the editor (its featured image is the card picture), but the schema still reads one, so an
+  // older file or an unpublished edit that has it still builds; the site ignores it while there is a featured image.
+  const NOT_IN_EDITOR: Record<string, string[]> = { blog: ['cover', 'coverAlt'] };
+  const editable = (name: string, shape: Record<string, unknown>) =>
+    Object.keys(shape).filter((key) => !(NOT_IN_EDITOR[name] ?? []).includes(key));
+
   it('has exactly the schema fields (same names) plus the body: nothing missing, nothing extra', async () => {
     const shapes = await schemaShapes();
     for (const c of posts) {
-      expect(Object.keys(byName(c.fields)).sort(), c.name).toEqual([...Object.keys(shapes[c.name]), 'body'].sort());
+      expect(Object.keys(byName(c.fields)).sort(), c.name).toEqual([...editable(c.name, shapes[c.name]), 'body'].sort());
     }
   });
 
@@ -208,6 +223,7 @@ describe('every collection mirrors its schema in src/content.config.ts', () => {
     for (const c of collections) {
       const fields = byName(c.fields);
       for (const [name, type] of Object.entries(shapes[c.name])) {
+        if (NOT_IN_EDITOR[c.name]?.includes(name)) continue;
         // vlogs.youtubeId and videoUrl are each optional but one is needed: the schema checks that, Decap cannot.
         expect(fields[name].required !== false, `${c.name}.${name}`).toBe(!type.isOptional());
       }

@@ -172,16 +172,18 @@ const tags = field({
 });
 const COVER_HINT = `Shown on the post and when it is shared. 16:9, at least 1280px across. Your own image, not stock. Without one the post shows the placeholder. ${IMAGE_FORMATS_HINT}`;
 const cover = imageField('cover', 'Cover image', COVER_HINT);
-// The blog's body and featured image live in src/assets/blog, so its cover (a plain file) names its own folder.
-const blogCover = imageField('cover', 'Cover image', COVER_HINT, mediaFolders('blog'));
-const coverAlt = field({
-  name: 'coverAlt',
-  label: 'Cover image alt text',
-  widget: 'string',
-  required: false,
-  default: '',
-  hint: 'Only needed when you add an image. Describe the cover image in one plain sentence; leave it empty only if the image is purely decorative.',
-});
+// The alt text of a picture field: required exactly when the picture is set (src/admin/image-alt.ts), so not marked "(optional)".
+const imageAlt = (name: string, label: string, image: string, what: string) =>
+  field({
+    name,
+    label,
+    widget: 'image-alt',
+    image,
+    required: false,
+    default: '',
+    hint: `Needed whenever there is a ${what}: describe it in one plain sentence. Leave it empty only when there is no ${what}.`,
+  });
+const coverAlt = imageAlt('coverAlt', 'Cover image alt text', 'cover', 'cover image');
 const featured = field({
   name: 'featured',
   label: 'Feature on the home page',
@@ -321,17 +323,10 @@ const blogFields: CmsField[] = [
   imageField(
     'featuredImage',
     'Featured image',
-    `The hero behind the headline. Wide (16:9) and at least 1600px across. Your own image, not stock. ${IMAGE_FORMATS_HINT}`,
+    `The hero behind the headline, and the picture on the post's card and when it is shared. Wide (16:9) and at least 1600px across. Your own image, not stock. ${IMAGE_FORMATS_HINT}`,
     { media_folder: FEATURED_MEDIA_FOLDER, public_folder: FEATURED_PUBLIC_FOLDER },
   ),
-  field({
-    name: 'featuredImageAlt',
-    label: 'Featured image alt text',
-    widget: 'string',
-    required: false,
-    default: '',
-    hint: 'Only needed when you add an image. Describe the featured image in one plain sentence; leave it empty only if the image is purely decorative.',
-  }),
+  imageAlt('featuredImageAlt', 'Featured image alt text', 'featuredImage', 'featured image'),
   field({
     name: 'featuredImageBy',
     label: 'Featured image made by',
@@ -353,8 +348,7 @@ const blogFields: CmsField[] = [
     default: '',
     hint: 'Only when an agent made the image: its name, shown as "Image by <name>".',
   }),
-  blogCover,
-  coverAlt,
+  // No cover: a blog post's featured image is also its card picture and its share image (src/lib/post-cards.ts).
   field({
     name: 'series',
     label: 'Series',
@@ -862,6 +856,9 @@ export const authorsCollection = {
   // Avatars upload to public/media/authors/ (docs/TEAM.md, "Avatars (to do)").
   ...mediaFolders('authors'),
   create: true,
+  // Posts are credited to an author by slug: deleting one, or changing its slug, would leave them crediting someone the site does not
+  // have, and the build stops (unknownAuthorErrors). So no Delete button, and a save that changes the slug is refused (content-check.ts).
+  delete: false,
   slug: '{{slug}}',
   identifier_field: 'slug',
   summary: '{{slug}} · {{kind}}',

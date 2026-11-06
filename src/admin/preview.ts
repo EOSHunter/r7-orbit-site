@@ -108,7 +108,6 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
       }
     };
     const featured = assetFor('featuredImage', str(data.featuredImage));
-    const cover = assetFor('cover', str(data.cover));
 
     // The same rule as ArticlePage: a contents list for three or more H2s, unless `toc` says otherwise.
     const showToc = data.toc !== false && (data.toc === true || headings.filter((x) => x.depth === 2).length >= 3);
@@ -215,9 +214,6 @@ export function blogPreview({ sprite, authorName, authorNames = {} }: PreviewOpt
       h(
         'div',
         { className: 'container art-template' },
-        cover
-          ? h('div', { className: 'media framed post-hero' }, h('img', { src: cover, alt: str(data.coverAlt), width: 1280, height: 720 }))
-          : null,
         h(
           'div',
           { className: 'post-layout' },

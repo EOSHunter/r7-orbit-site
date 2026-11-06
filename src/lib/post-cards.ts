@@ -13,14 +13,15 @@ export function coverOf(data: { cover?: string; coverAlt?: string }): Cover | un
   return { src: data.cover, alt: data.coverAlt ?? '', width: 1280, height: 720 };
 }
 
-/** A blog post without a cover shows its featured image on its card instead, cropped to the card's 16:9 at build time. */
-async function featuredCover(data: unknown): Promise<Cover | undefined> {
+/** A blog post's card shows its featured image, cropped to the card's 16:9 at build time (a blog post has no separate cover). */
+export async function featuredCover(data: unknown): Promise<Cover | undefined> {
   const { featuredImage, featuredImageAlt } = data as { featuredImage?: ImageMetadata; featuredImageAlt?: string };
   if (!featuredImage) return undefined;
   // Loaded here, not at the top: astro:assets exists only in Astro's build, and the unit tests import this file without it.
   const { getImage } = await import('astro:assets');
-  const image = await getImage({ src: featuredImage, width: 1280, height: 720, fit: 'cover', format: 'webp' });
-  return { src: image.src, alt: featuredImageAlt ?? '', width: 1280, height: 720 };
+  // The same widths as a cover's copies (VARIANT_WIDTHS), so a phone downloads the 480 copy, not the 1280 one.
+  const image = await getImage({ src: featuredImage, width: 1280, height: 720, widths: [480, 720, 960, 1280], fit: 'cover', format: 'webp' });
+  return { src: image.src, alt: featuredImageAlt ?? '', width: 1280, height: 720, srcset: image.srcSet.attribute || undefined };
 }
 
 // content.config.ts builds each schema from a loosely typed `extra` shape, so the kind-specific fields are not in the inferred
@@ -92,7 +93,7 @@ export async function toCard(post: SitePost, options: CardOptions = {}): Promise
     case 'news':
       return { ...base, kind: 'news', readTime: readTime(post), cover };
     case 'blog':
-      return { ...base, kind: 'blog', readTime: readTime(post), cover: cover ?? (await featuredCover(data)) };
+      return { ...base, kind: 'blog', readTime: readTime(post), cover: (await featuredCover(data)) ?? cover };
     case 'vlogs': {
       const vlog = { data: data as unknown as VlogFields };
       return {

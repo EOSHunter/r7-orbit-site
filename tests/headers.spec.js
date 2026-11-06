@@ -139,6 +139,8 @@ test('saving a post with an uploaded image (a blob: URL) works under the admin C
     .click();
   await page.locator('input[type="file"]').setInputFiles({ name: 'pixel.png', mimeType: 'image/png', buffer: PIXEL });
   await page.getByRole('button', { name: /choose selected/i }).click();
+  // A picture needs its alt text before the editor saves (src/admin/image-alt.ts).
+  await page.getByLabel('Featured image alt text').fill('One pixel');
   await page.getByRole('button', { name: /^save$/i }).click();
 
   // Saving in the editorial workflow ends with a pull request, so reaching it means every step before it worked.
