@@ -69,6 +69,9 @@ const { image, alt = '', credit } = Astro.props;
      over a bright screenshot at 320px with --text-3, 3.5:1 at 1280px with --text-2 on Linux; tests/hero-contrast.spec.js). */
   .article-hero-body .breadcrumb [aria-current='page'] { color: var(--text); }
   .article-hero-body .post-head { padding-top: var(--s-7); }
+  /* The eyebrow's read time is small mono text near the top too: as bright as body text (3.65:1 with --text-3 over the
+     "What if you had ten" post's hero at 1280px). */
+  .article-hero-body .post-head .eyebrow { color: var(--text); }
   .article-hero-credit { margin: var(--s-5) 0 0; text-align: end; }
   .article-hero-body .post-head h1 { text-shadow: 0 1px 24px rgb(9 9 10 / 0.6); }
   /* The dot between the kind and the read time: the brighter brass over a picture, so it keeps 4.5:1 on a light patch of it
