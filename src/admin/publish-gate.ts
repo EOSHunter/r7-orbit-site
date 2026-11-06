@@ -18,7 +18,10 @@ interface CheckRun {
 }
 
 /** Why the merge may not go ahead yet, or undefined when the check passed on the branch's latest commit. */
-export function publishBlocker(runs: CheckRun[] | undefined, now = Date.now()): string | undefined {
+export function publishBlocker(runs: CheckRun[] | 'gone' | undefined, now = Date.now()): string | undefined {
+  if (runs === 'gone') {
+    return 'This draft is no longer on GitHub: it was published or removed in another tab, or before this page was loaded. Reload the page to see the post as it is now.';
+  }
   if (!runs) return 'GitHub did not answer about the build check of this save, so it is not published. Try Publish again in a moment.';
   // The newest run first (a re-run adds one).
   const run = [...runs].sort((a, b) => Date.parse(b.started_at ?? '') - Date.parse(a.started_at ?? ''))[0];
@@ -39,16 +42,18 @@ export function publishBlocker(runs: CheckRun[] | undefined, now = Date.now()): 
   );
 }
 
-/** The check runs named BUILD_CHECK on the latest commit of a branch, or undefined when GitHub cannot be asked. */
+/** The check runs named BUILD_CHECK on the latest commit of a branch; 'gone' when the branch does not exist; undefined when
+ *  GitHub cannot be asked. */
 export async function buildCheckRuns(
   { repo, token, branch, fetcher = fetch }: { repo: string; token: string; branch: string; fetcher?: typeof fetch },
-): Promise<CheckRun[] | undefined> {
+): Promise<CheckRun[] | 'gone' | undefined> {
   try {
     const url = `https://api.github.com/repos/${repo}/commits/${encodeURIComponent(branch)}/check-runs?check_name=${encodeURIComponent(BUILD_CHECK)}`;
     const response = await fetcher(url, {
       headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github+json' },
       cache: 'no-store',
     });
+    if (response.status === 404 || response.status === 422) return 'gone';
     if (!response.ok) return undefined;
     const body = (await response.json()) as { check_runs?: CheckRun[] };
     return body.check_runs ?? [];

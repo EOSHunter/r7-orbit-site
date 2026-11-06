@@ -40,6 +40,12 @@ describe('buildCheckRuns', () => {
     expect(asked).toEqual(['https://api.github.com/repos/o/r/commits/cms%2Fblog%2Fa-post/check-runs?check_name=Site%20builds token t']);
   });
 
+  it('says a draft whose branch is gone is gone (published or removed elsewhere)', async () => {
+    const missing = (async () => new Response('{"message":"No commit found for SHA"}', { status: 422 })) as unknown as typeof fetch;
+    expect(await buildCheckRuns({ repo: 'o/r', token: 't', branch: 'cms/blog/a', fetcher: missing })).toBe('gone');
+    expect(publishBlocker('gone')).toMatch(/^This draft is no longer on GitHub.*Reload the page/);
+  });
+
   it('is undefined when GitHub refuses or cannot be reached', async () => {
     const refused = (async () => new Response('{}', { status: 403 })) as unknown as typeof fetch;
     const offline = (async () => {
