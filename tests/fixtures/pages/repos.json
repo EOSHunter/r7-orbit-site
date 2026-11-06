@@ -1,6 +1,6 @@
 {
   "path": "/repos/",
-  "inputs": "sha256:ae47b2a00ccdf392",
+  "inputs": "sha256:54754403ad589c25",
   "posts": [
     "blog/how-ai-agents-built-r7-ascent",
     "blog/how-i-built-a-browser-game-with-r7-orbit",
@@ -9,6 +9,7 @@
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/orbit-royale",
+    "projects/r7-ascent",
     "projects/vesper-drift"
   ],
   "head": [

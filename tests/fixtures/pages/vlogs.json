@@ -1,6 +1,6 @@
 {
   "path": "/vlogs/",
-  "inputs": "sha256:3cb2163e498c1fed",
+  "inputs": "sha256:b70a6d618823cd0e",
   "posts": [
     "blog/how-ai-agents-built-r7-ascent",
     "blog/how-i-built-a-browser-game-with-r7-orbit",
@@ -9,6 +9,7 @@
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/orbit-royale",
+    "projects/r7-ascent",
     "projects/vesper-drift"
   ],
   "head": [

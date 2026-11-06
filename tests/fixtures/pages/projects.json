@@ -1,6 +1,6 @@
 {
   "path": "/projects/",
-  "inputs": "sha256:ff527edf8ff87316",
+  "inputs": "sha256:aa6f23e1b8312fee",
   "posts": [
     "blog/how-ai-agents-built-r7-ascent",
     "blog/how-i-built-a-browser-game-with-r7-orbit",
@@ -9,6 +9,7 @@
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/orbit-royale",
+    "projects/r7-ascent",
     "projects/vesper-drift"
   ],
   "head": [
@@ -25,6 +26,7 @@
     "h1: Things I am making",
     "p.t-lead: What each project is, why I built it, how it works and what I learned.",
     "div aria-label: Filter and sort projects",
+    "span.eyebrow: By author",
     "[content]",
     "h2.visually-hidden: Projects",
     "[content]",

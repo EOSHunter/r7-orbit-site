@@ -1,12 +1,12 @@
-inputs: sha256:6fdb8349006e486c
+inputs: sha256:07bb64356c1fd0d1
 title: Search · R7 Orbit
 description: Search every post, video, project and repo on this site.
 robots: noindex
 p: Search
 h1: Find a post
-input: search "Search posts"
+input: search "Search posts, games and videos"
 p: Type to search…
-p: ↑ ↓ move · Enter opens · Esc closes
+p: ↑↓ moveEnter opensEsc closes
 li: Blog
 a: Blog -> /blog/
 li: Vlogs
