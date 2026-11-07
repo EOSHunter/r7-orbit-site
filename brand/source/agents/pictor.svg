@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" role="img" aria-label="Pictor: a painter's easel traced as a constellation, holding a brass canvas with an orbit and a dot on it">
+  <defs>
+    <radialGradient id="plate" cx="0.5" cy="0.45" r="0.7"><stop offset="0" stop-color="#17171a"/><stop offset="1" stop-color="#09090a"/></radialGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0" r="0.75"><stop offset="0" stop-color="#c9a96a" stop-opacity="0.14"/><stop offset="1" stop-color="#c9a96a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a96a" stop-opacity="0.6"/><stop offset="1" stop-color="#c9a96a" stop-opacity="0.16"/></linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd49a"/><stop offset="0.5" stop-color="#c9a96a"/><stop offset="1" stop-color="#9a7c46"/></linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf1d6" stop-opacity="0.5"/><stop offset="0.45" stop-color="#fbf1d6" stop-opacity="0"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#e3c98f" stop-opacity="0.6"/><stop offset="0.4" stop-color="#e3c98f" stop-opacity="0.18"/><stop offset="1" stop-color="#e3c98f" stop-opacity="0"/></radialGradient>
+    <path id="spark" d="M0,-1 C0.07,-0.32 0.32,-0.07 1,0 C0.32,0.07 0.07,0.32 0,1 C-0.07,0.32 -0.32,0.07 -1,0 C-0.32,-0.07 -0.07,-0.32 0,-1Z"/>
+    <rect id="canvas" x="140" y="176" width="232" height="148" rx="10"/>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="12"/></filter>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#plate)"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#sheen)"/>
+  <g fill="#c9a96a">
+    <circle cx="84" cy="104" r="2.4" fill-opacity="0.5"/><circle cx="420" cy="86" r="2" fill-opacity="0.45"/>
+    <circle cx="448" cy="360" r="2.4" fill-opacity="0.5"/><circle cx="70" cy="380" r="2" fill-opacity="0.45"/>
+  </g>
+  <!-- The easel, traced as a constellation: two front legs and a back leg from the top star, and the ledge. -->
+  <g stroke="#8c7647" stroke-width="5" stroke-linecap="round" stroke-opacity="0.9" fill="none">
+    <path d="M256,84 L162,440"/><path d="M256,84 L350,440"/>
+    <path d="M256,84 L292,418" stroke-opacity="0.45"/>
+    <path d="M128,338 L384,338"/>
+  </g>
+  <g>
+    <circle cx="256" cy="84" r="48" fill="url(#glow)"/><circle cx="256" cy="84" r="12" fill="#f1dca8"/>
+    <use href="#spark" transform="translate(256 84) scale(32)" fill="#f1dca8" fill-opacity="0.9"/>
+    <circle cx="162" cy="440" r="36" fill="url(#glow)"/><circle cx="162" cy="440" r="9" fill="#f1dca8"/>
+    <use href="#spark" transform="translate(162 440) scale(22)" fill="#f1dca8" fill-opacity="0.85"/>
+    <circle cx="350" cy="440" r="36" fill="url(#glow)"/><circle cx="350" cy="440" r="9" fill="#f1dca8"/>
+    <use href="#spark" transform="translate(350 440) scale(22)" fill="#f1dca8" fill-opacity="0.85"/>
+    <circle cx="292" cy="418" r="22" fill="url(#glow)"/><circle cx="292" cy="418" r="5" fill="#e3c98f"/>
+    <circle cx="128" cy="338" r="24" fill="url(#glow)"/><circle cx="128" cy="338" r="6" fill="#e3c98f"/>
+    <circle cx="384" cy="338" r="24" fill="url(#glow)"/><circle cx="384" cy="338" r="6" fill="#e3c98f"/>
+  </g>
+  <!-- The canvas on the ledge: brass, with the brand mark (a planet, its orbit and a dot) on a dark face. -->
+  <g transform="translate(0 0)">
+    <use href="#canvas" fill="#000" fill-opacity="0.6" transform="translate(0 16)" filter="url(#blur)"/>
+    <use href="#canvas" fill="url(#brass)" stroke="#e8d09a" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="154" y="190" width="204" height="120" rx="5" fill="#0f0f11" stroke="#5c4d2c" stroke-width="2"/>
+    <use href="#canvas" fill="url(#gloss)"/>
+    <circle cx="248" cy="250" r="22" fill="none" stroke="#c9a96a" stroke-width="4"/>
+    <ellipse cx="248" cy="250" rx="80" ry="26" transform="rotate(-12 248 250)" fill="none" stroke="#c9a96a" stroke-width="4"/>
+    <circle cx="324" cy="235" r="16" fill="url(#glow)"/>
+    <circle cx="324" cy="235" r="7" fill="#fbf1d6"/>
+  </g>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="url(#edge)" stroke-width="3"/>
+</svg>

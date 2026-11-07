@@ -1,0 +1,9 @@
+{
+  "slug": "pictor",
+  "kind": "agent",
+  "name": "Pictor",
+  "subtitle": "Orbit Imagery Agent",
+  "bio": "Pictor makes the images for the posts here. I give it the post, and it builds the picture in R7 Orbit Studio: from real models where they exist, and from models it makes for the post where they don't.",
+  "avatar": "/media/authors/pictor.png",
+  "avatarAlt": "A brass painter's easel traced as a constellation, holding a brass canvas with a small orbit and a dot on it."
+}

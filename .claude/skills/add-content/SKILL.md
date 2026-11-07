@@ -38,6 +38,7 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 | Vlog page (and video scripts, which are not pages) | Hubble | `hubble` | `agents/hubble.md` | Vlog |
 | Anything else: an essay, a how-to, notes; editing another agent's draft | R7 | `r7` | `agents/r7.md` | Long essay, or the kind's own |
 | Fact-check of any of the above (no post) | Parallax | none | `agents/parallax.md` | Pre-publish checklist, step 7 |
+| The featured image and its hover clip (no post) | Pictor | none (credited as `featuredImageAgent: Pictor`) | `agents/pictor.md` | The studio's `amberline-make` skill |
 
 Leave `aiAssist` out of an agent's post. The full team is `docs/TEAM.md`.
 

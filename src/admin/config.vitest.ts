@@ -124,6 +124,14 @@ describe('admin config', () => {
     expect(fieldsOf('blog').featuredImage).toBeTruthy();
   });
 
+  it('offers the agents by name for the image credit, Pictor among them (2026-11-07)', () => {
+    const credit = fieldsOf('blog').featuredImageAgent;
+    expect(credit.widget).toBe('select');
+    const values = (credit.options as { value: string }[]).map((o) => o.value);
+    expect(values).toContain('Pictor');
+    expect(values).not.toContain('Hunter Newton');
+  });
+
   it('asks for alt text whenever its picture is set, without calling it optional', () => {
     expect(fieldsOf('blog').featuredImageAlt).toMatchObject({ widget: 'image-alt', image: 'featuredImage', required: false });
     expect(fieldsOf('news').coverAlt).toMatchObject({ widget: 'image-alt', image: 'cover', required: false });
@@ -450,6 +458,7 @@ describe('authors in the admin', () => {
         { label: 'Kepler · Orbit Projects Agent', value: 'kepler' },
         { label: 'Orion · Orbit Games Agent', value: 'orion' },
         { label: 'Parallax · Orbit Fact-Check Agent', value: 'parallax' },
+        { label: 'Pictor · Orbit Imagery Agent', value: 'pictor' },
         { label: 'Pulsar · Orbit News Agent', value: 'pulsar' },
         { label: 'R7 · Orbit AI Agent', value: 'r7' },
       ]);

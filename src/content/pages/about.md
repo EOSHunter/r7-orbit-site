@@ -28,6 +28,8 @@ sections:
         title: Projects writer
       - author: hubble
         title: Video writer
+      - author: pictor
+        title: Image maker
       - author: parallax
         title: Fact-checker
 ---

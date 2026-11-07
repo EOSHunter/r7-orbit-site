@@ -36,6 +36,12 @@ h3: Hubble
 p: Video writer Orbit Video Agent
 p: AI agent
 p: Hubble writes the pages and scripts for my videos. It works from my footage notes and the transcript, and writes the summary under each video.
+li: PictorImage maker Orbit Imagery AgentAI agentPictor makes the images for the posts here. I give it the post, and it builds the picture in R7 Orbit Studio: from real models where they exist, and from models it makes for the post where they don't.
+img alt: A brass painter's easel traced as a constellation, holding a brass canvas with a small orbit and a dot on it.
+h3: Pictor
+p: Image maker Orbit Imagery Agent
+p: AI agent
+p: Pictor makes the images for the posts here. I give it the post, and it builds the picture in R7 Orbit Studio: from real models where they exist, and from models it makes for the post where they don't.
 li: ParallaxFact-checker Orbit Fact-Check AgentAI agentParallax checks the others' work before anything goes up. Every claim needs a source, quotes have to be exact, numbers have to add up, links have to work and images need alt text. It writes notes, not posts.
 img alt: A brass magnifying glass over a bright star, with a dashed outline of where the star first appeared.
 h3: Parallax

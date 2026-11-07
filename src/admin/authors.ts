@@ -13,5 +13,8 @@ export const adminAuthors = sortAuthors(Object.values(files).map((data) => resol
 /** Options for the `author` select: the name (and subtitle) shown, the slug stored. */
 export const authorOptions = adminAuthors.map((a) => ({ label: a.subtitle ? `${a.name} · ${a.subtitle}` : a.name, value: a.slug }));
 
+/** Options for the image credit (`featuredImageAgent`): every agent, its name stored (the credit line prints the name). */
+export const agentNameOptions = adminAuthors.filter((a) => a.kind === 'agent').map((a) => ({ label: a.subtitle ? `${a.name} · ${a.subtitle}` : a.name, value: a.name }));
+
 /** slug -> name, for the preview pane. */
 export const authorNames: Record<string, string> = Object.fromEntries(adminAuthors.map((a) => [a.slug, a.name]));

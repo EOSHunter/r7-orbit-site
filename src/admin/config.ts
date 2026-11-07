@@ -10,7 +10,7 @@ import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { seoTitleMax } from '../lib/seo';
 import { pageCollections } from './pages';
 import { sectionsField } from './sections-config';
-import { authorOptions, DEFAULT_AUTHOR } from './authors';
+import { agentNameOptions, authorOptions, DEFAULT_AUTHOR } from './authors';
 // ---- Site settings (src/admin/settings.ts) ----
 import { settingsCollections } from './settings';
 // ---- end site settings ----
@@ -353,10 +353,12 @@ const blogFields: CmsField[] = [
   field({
     name: 'featuredImageAgent',
     label: 'Agent that made the featured image',
-    widget: 'string',
+    // The agents' names, from src/content/authors/ (Pictor makes the post images); a new agent appears after the next deploy.
+    widget: 'select',
+    options: agentNameOptions,
     required: false,
     default: '',
-    hint: 'Only when an agent made the image: its name, shown as "Image by <name>".',
+    hint: 'Only when an agent made the image (usually Pictor, the imagery agent): shown as "Image by <name>".',
   }),
   // No cover: a blog post's featured image is also its card picture and its share image (src/lib/post-cards.ts).
   field({
