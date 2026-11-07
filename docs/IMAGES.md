@@ -102,6 +102,19 @@ A post's pictures with alt text (its cover and its body's pictures) open in a di
 
 Before this work: a 6 MB photo in `public/media/` was served to every reader as 6 MB, with its GPS position inside.
 
+## Hover clips
+
+A card can play a short clip while a reader points at it or focuses it with the keyboard (decided 2026-11-07). The picture stays the still: the clip's first frame is the same image, so the clip fades in over it without a jump, plays once (about 2.5 s), holds its last frame, and fades back to the still when the pointer or focus leaves.
+
+| | |
+| --- | --- |
+| Front matter | `coverMotion: /media/motion/<post>/hover.mp4` (any kind). A `hover.webm` beside it is used first when it is there. The post needs a still: a blog post's featured image, or a cover. |
+| Files | `public/media/motion/<post>/hover.mp4` and `hover.webm`, about 250-300 kB each at 800x450. Made with Amberline Studio's hover preset (`node compositor/animate.ts projects/<id>-hover.scene.json --width 800`), added through git (the editor's field takes the path, not an upload). The picture guard ignores videos; the 2 MB limit is for pictures. |
+| Loading | Nothing with the page: the `<video>` has no source until the first hover or focus (`src/scripts/card-motion.js` adds them), as the site's rule for video asks. On a fast line the clip starts within a moment; until it can play the still shows. |
+| Who sees it | A mouse or pen that can hover, or keyboard focus. Not on touch-only devices (a tap is not a hover), not with reduced motion (the CSS hides the video too), not in print. The video is `aria-hidden` and not focusable: the card's link is still its title, and the still keeps its alt text. |
+| Code | `CardMedia.astro` (the video), `src/scripts/card-motion.js` (bundled), `site.css` ("Hover clips"), `motionOf()` in `src/lib/post-cards.ts` (stops the build, naming the post, when the MP4 is not in public/), the schema's `coverMotion`, the editor's "Hover clip (MP4)" field. Tests: `src/lib/post-cards-motion.vitest.ts`, `tests/card-motion.spec.js`. |
+| With the picture family | An Amberline image already carries the orbit and dot in the picture, so when the card overlay of `docs/IMAGE_STYLE.md` is built, a post with a hover clip should get the Plain look. |
+
 ## How the admin enforces it
 
 | Rule | Where | What the author sees |

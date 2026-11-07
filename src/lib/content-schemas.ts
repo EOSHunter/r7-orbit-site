@@ -53,6 +53,12 @@ export function postSchemas<R extends z.ZodType, I extends z.ZodType>({
     tags: z.array(slug).max(6).default([]),
     cover: z.string().optional(),
     coverAlt: z.string().optional(),
+    // A hover clip for the card (docs/IMAGES.md "Hover clips"): an MP4 under /media/, with a WebM of the same name beside it
+    // when there is one. Plays while a reader points at or focuses the card; the cover (or featured image) is the still.
+    coverMotion: z
+      .string()
+      .regex(/^\/media\/[a-z0-9][a-z0-9._/-]*\.mp4$/, 'coverMotion is an MP4 under /media/, e.g. /media/motion/my-post/hover.mp4')
+      .optional(),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
     // The waitlist band for R7 Orbit after the body (src/components/WaitlistForm.astro). Drawn only while the waitlist is on in the

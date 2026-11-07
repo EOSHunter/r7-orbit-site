@@ -17,5 +17,14 @@ const srcset = cover?.srcset ?? (await publicSrcset(cover?.src));
   ) : (
     <MediaPlaceholder />
   )}
+  {cover?.motion && (
+    // No <source> yet: nothing is fetched until the reader points at or focuses the card (card-motion.js adds them).
+    <video class="card-motion" muted playsinline preload="none" disablepictureinpicture aria-hidden="true" tabindex="-1" width="800" height="450"
+      data-mp4={cover.motion.mp4} data-webm={cover.motion.webm}></video>
+  )}
   <slot />
 </div>
+
+<script>
+  import '../scripts/card-motion.js';
+</script>

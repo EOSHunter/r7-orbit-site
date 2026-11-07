@@ -3,11 +3,19 @@ import type { AppType } from './app-types';
 /** What a card needs. Phase 3 maps content-collection entries onto these shapes. */
 export type Kind = 'news' | 'blog' | 'vlog' | 'project' | 'repo';
 
+/** A hover clip: played over the still while the card is pointed at or focused (src/scripts/card-motion.js). */
+export interface CoverMotion {
+  mp4: string;
+  /** Same clip as WebM, when the file is there (found by name). */
+  webm?: string;
+}
+
 export interface Cover {
   src: string;
   alt: string;
   width: number;
   height: number;
+  motion?: CoverMotion;
   /** Smaller copies for a phone, when the picture comes with its own (a blog post's featured image, made by Astro). A cover from
    *  public/media finds its copies by name instead (src/lib/media-srcset.ts). */
   srcset?: string;

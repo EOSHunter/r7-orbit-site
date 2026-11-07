@@ -184,6 +184,15 @@ const imageAlt = (name: string, label: string, image: string, what: string) =>
     hint: `Needed whenever there is a ${what}: describe it in one plain sentence. Leave it empty only when there is no ${what}.`,
   });
 const coverAlt = imageAlt('coverAlt', 'Cover image alt text', 'cover', 'cover image');
+// The card's hover clip (docs/IMAGES.md "Hover clips"); the schema's rule is the same pattern.
+const coverMotion = field({
+  name: 'coverMotion',
+  label: 'Hover clip (MP4)',
+  widget: 'string',
+  required: false,
+  pattern: ['^/media/[a-z0-9][a-z0-9._/-]*\\.mp4$', 'An MP4 under /media/, e.g. /media/motion/my-post/hover.mp4'],
+  hint: 'Optional. A short clip from Amberline Studio (hover.mp4, with hover.webm beside it) that plays while a reader points at the card. The picture above stays the still. Add the files to public/media/motion/<post>/ through git.',
+});
 const featured = field({
   name: 'featured',
   label: 'Feature on the home page',
@@ -327,6 +336,7 @@ const blogFields: CmsField[] = [
     { media_folder: FEATURED_MEDIA_FOLDER, public_folder: FEATURED_PUBLIC_FOLDER },
   ),
   imageAlt('featuredImageAlt', 'Featured image alt text', 'featuredImage', 'featured image'),
+  coverMotion,
   field({
     name: 'featuredImageBy',
     label: 'Featured image made by',
@@ -409,6 +419,7 @@ const newsFields: CmsField[] = [
   tags,
   cover,
   coverAlt,
+  coverMotion,
   featured,
   draft,
   waitlist,
@@ -475,6 +486,7 @@ const vlogFields: CmsField[] = [
   tags,
   cover,
   coverAlt,
+  coverMotion,
   featured,
   draft,
   waitlist,
@@ -640,6 +652,7 @@ const projectFields: CmsField[] = [
   tags,
   cover,
   coverAlt,
+  coverMotion,
   featured,
   draft,
   waitlist,
@@ -698,6 +711,7 @@ const repoFields: CmsField[] = [
   tags,
   cover,
   coverAlt,
+  coverMotion,
   featured,
   draft,
   waitlist,

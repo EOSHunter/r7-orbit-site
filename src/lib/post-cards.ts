@@ -1,6 +1,8 @@
 // Maps published posts onto the shapes the cards take. Listing pages (home, archives, tags) use this.
 import type { ImageMetadata } from 'astro';
-import type { CardData, Cover, ProjectStatus } from './cards';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { CardData, Cover, CoverMotion, ProjectStatus } from './cards';
 import { loadGitHubRepo } from './github';
 import { authorSlugOf } from './authors';
 import { postUrl, previewLabel, readTime } from './content';
@@ -76,7 +78,28 @@ export interface CardOptions {
   pinned?: boolean;
 }
 
+/** The hover clip named by `coverMotion`, with its WebM twin when that file exists. The build stops, naming the post, when the
+ *  MP4 is not in public/. `root` is the repository (tests pass a temporary folder). */
+export function motionOf(path: string | undefined, where: string, root = process.cwd()): CoverMotion | undefined {
+  if (!path) return undefined;
+  if (!existsSync(join(root, 'public', path))) {
+    throw new Error(`${where}: coverMotion ${path} is not in public/ (put the clip at public${path}, or remove the field)`);
+  }
+  const webm = path.replace(/\.mp4$/, '.webm');
+  return { mp4: path, ...(existsSync(join(root, 'public', webm)) ? { webm } : {}) };
+}
+
 export async function toCard(post: SitePost, options: CardOptions = {}): Promise<CardData> {
+  const card = await cardOf(post, options);
+  const where = `src/content/${post.collection}/${post.id}`;
+  const motion = motionOf((post.data as { coverMotion?: string }).coverMotion, where);
+  if (!motion) return card;
+  const cover = 'cover' in card ? card.cover : undefined;
+  if (!cover) throw new Error(`${where}: coverMotion needs a still to show before and after the clip (a featured image or a cover)`);
+  return { ...card, cover: { ...cover, motion } } as CardData;
+}
+
+async function cardOf(post: SitePost, options: CardOptions): Promise<CardData> {
   const { data } = post;
   const base = {
     href: postUrl(post),
