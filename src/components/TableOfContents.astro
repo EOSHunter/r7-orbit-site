@@ -1,6 +1,7 @@
 ---
 // Headings from Astro's render(): h2 at the top level, h3 nested under the h2 before it.
 // Wide screens: sticky sidebar (.toc). Below that: a <details> above the body. site.js highlights the current section.
+// The sidebar takes an optional `before` slot, drawn above "On this page" (a blog post's picture, ArticlePage.astro).
 interface Props {
   headings: { depth: number; slug: string; text: string }[];
   /** `aside` is the sticky sidebar; `inline` is the <details> shown on smaller screens. */
@@ -19,6 +20,7 @@ for (const h of headings) {
 {tree.length > 0 && (
   variant === 'aside' ? (
     <aside class="toc toc-aside">
+      <slot name="before" />
       <nav aria-label="On this page">
         <p class="eyebrow">On this page</p>
         <ol>

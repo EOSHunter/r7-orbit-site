@@ -313,6 +313,13 @@ a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
   .toc { display: block; position: sticky; top: calc(var(--header-h) + var(--s-6)); align-self: start; }
 }
 .toc .eyebrow { margin-bottom: var(--s-3); }
+/* The post's picture, small, above "On this page" (ArticlePage.astro); a hover clip plays over it like on a card. */
+.toc-picture { margin-bottom: var(--s-6); }
+/* An agent's images on its author page (AuthorPage.astro). */
+.author-images { margin-top: var(--s-8); }
+.author-images .section-title { margin-bottom: var(--s-2); }
+.author-images .grid-cards { margin-top: var(--s-5); }
+.toc-picture .card-media { border: 0; border-radius: var(--r-md); box-shadow: 0 0 0 var(--bw) var(--line); }
 .toc ol { list-style: none; margin: 0; padding: 0; border-left: var(--bw) solid var(--line); }
 .toc a { display: block; margin-left: calc(var(--bw) * -1); padding: var(--s-2) var(--s-4); border-left: var(--bw) solid transparent; color: var(--text-3); font-size: var(--fs-sm); line-height: 1.4; }
 .toc a:hover { color: var(--text); }

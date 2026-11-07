@@ -110,6 +110,16 @@ export function postsByAuthor<P extends Post>(posts: P[], slug: string): P[] {
   return posts.filter((post) => authorSlugOf(post) === slug);
 }
 
+/** Blog posts whose featured image an agent made, by the agent's name (`featuredImageBy: agent`, `featuredImageAgent: <name>`),
+ *  in the order given. Shown on that agent's page, e.g. Pictor's images (2026-11-07). */
+export function imagesByAgent<P extends Post>(posts: P[], name: string): P[] {
+  return posts.filter((post) => {
+    const d = post.data as { featuredImage?: unknown; featuredImageBy?: unknown; featuredImageAgent?: unknown };
+    return post.collection === 'blog' && !!d.featuredImage && d.featuredImageBy === 'agent'
+      && typeof d.featuredImageAgent === 'string' && d.featuredImageAgent.trim() === name;
+  });
+}
+
 /** Only authors with at least one of `posts`, in the order of `authors`. */
 export function authorsWithPosts(authors: Author[], posts: Post[]): Author[] {
   const used = new Set(posts.map(authorSlugOf));

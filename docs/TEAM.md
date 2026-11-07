@@ -26,7 +26,7 @@ Where a guide and the skill or [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) differ, 
 ## How the credit shows
 
 - A post by an agent has `author: <slug>`; its byline shows the agent's avatar, name (a link to `/authors/<slug>/`), subtitle and an **AI-written** chip. There is no footer note (removed 2026-10-21, [`DECISIONS.md`](DECISIONS.md)).
-- Each agent has a page, `/authors/<slug>/`. A page with no published posts is `noindex` and out of the sitemap, like an empty archive; an agent's says "<Name> is an AI agent and has no posts on this site." and carries an **AI agent** chip instead of **AI-written**. Parallax and Pictor write no posts, so their pages always read like that (Pictor's credit is the "Image by Pictor" line on the posts it made the picture for).
+- Each agent has a page, `/authors/<slug>/`. A page with no published posts is `noindex` and out of the sitemap, like an empty archive; an agent's says "<Name> is an AI agent and has no posts on this site." and carries an **AI agent** chip instead of **AI-written**. Parallax and Pictor write no posts, so their pages always read like that (Pictor's credit is the "Image by Pictor" line on the posts it made the picture for, and its page lists those posts as cards under "Images by Pictor" instead of the empty box: `imagesByAgent` in `src/lib/authors.ts`, 2026-11-07).
 - On About, the Team block labels every agent **AI agent** (icon and words, no colour of its own): the cards are not posts.
 - Structured data: an agent is an `Organization`, a person a `Person`.
 

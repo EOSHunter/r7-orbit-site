@@ -3,8 +3,11 @@
 // published post by this author across all kinds, through the same ArchiveList (filters, paging, empty state) as the archives.
 // A page with no posts is noindex and out of the sitemap (src/lib/sitemap.ts), like an empty archive; an agent with none (Parallax
 // writes notes, not posts) is labelled "AI agent" instead of "AI-written" and its page says plainly that it has no posts.
+// An agent credited for featured images (Pictor) shows those posts first, as cards (picture, hover clip, link), under
+// "Images by <name>"; with images and no posts, the empty "no posts" box is left out.
 import AgentChip from './AgentChip.astro';
 import ArchiveList from './ArchiveList.astro';
+import PostCard from './PostCard.astro';
 import AuthorAvatar from './AuthorAvatar.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
@@ -20,16 +23,19 @@ interface Props {
   author: Author;
   /** Every published post by this author, newest first. */
   posts: SitePost[];
+  /** Published blog posts whose featured image this agent made (page 1 only). */
+  images?: SitePost[];
   page: number;
   pages: number;
   /** Kept out of search engines. Default: when the author has no published posts (the styleguide fixture also sets it). */
   noindex?: boolean;
 }
 
-const { author, posts, page, pages, noindex = posts.length === 0 } = Astro.props;
+const { author, posts, images = [], page, pages, noindex = posts.length === 0 } = Astro.props;
 const base = Astro.site?.href ?? site.url;
 
 const cards = await toCards(posts, { filterable: true });
+const imageCards = await toCards(images);
 const kinds: Kind[] = (['news', 'blog', 'vlog', 'project', 'repo'] as const).filter((k) => cards.some((c) => c.kind === k));
 const tags = tagCounts(posts).map((t) => t.tag);
 const ld = [
@@ -70,7 +76,17 @@ const ld = [
       </div>
     </header>
 
-    <ArchiveList
+    {imageCards.length > 0 && (
+      <section class="author-images" aria-labelledby="author-images-h">
+        <h2 class="section-title" id="author-images-h">Images by {author.name}</h2>
+        <p class="t-meta">{imageCards.length} {imageCards.length === 1 ? 'image' : 'images'}, each made for the post it opens.</p>
+        <div class="grid-cards">
+          {imageCards.map((card) => <PostCard post={card} />)}
+        </div>
+      </section>
+    )}
+
+    {(posts.length > 0 || imageCards.length === 0) && <ArchiveList
       cards={cards}
       start={(page - 1) * PAGE_SIZE}
       size={PAGE_SIZE}
@@ -84,7 +100,7 @@ const ld = [
       empty={noPostsText(author)}
       emptyText={isAgent(author) ? '' : undefined}
       what="posts"
-    />
+    />}
   </div>
   <div class="archive-end"></div>
 </BaseLayout>

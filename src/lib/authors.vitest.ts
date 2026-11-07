@@ -10,6 +10,7 @@ import {
   authorProfilePageLd,
   authorSlugOf,
   authorsWithPosts,
+  imagesByAgent,
   initials,
   isAgent,
   postsByAuthor,
@@ -129,6 +130,23 @@ describe('who a post is credited to', () => {
     expect(postsByAuthor(posts, 'r7').map((p) => p.id)).toEqual(['a', 'c']);
     expect(postsByAuthor(posts, 'hunter-newton').map((p) => p.id)).toEqual(['b']);
     expect(postsByAuthor(posts, 'nobody')).toEqual([]);
+  });
+
+  it("finds the blog posts whose featured image an agent made, by the agent's name", () => {
+    const credited = (collection: CollectionName, id: string, by?: string, agent?: string, image = true): Post => {
+      const p = post(collection, id);
+      return { ...p, data: { ...p.data, ...(image ? { featuredImage: {} } : {}), ...(by ? { featuredImageBy: by } : {}), ...(agent ? { featuredImageAgent: agent } : {}) } } as Post;
+    };
+    const posts = [
+      credited('blog', 'a', 'agent', 'Pictor'),
+      credited('blog', 'b', 'me'),
+      credited('blog', 'c', 'agent', ' Pictor '),
+      credited('blog', 'd', 'agent', 'Orion'),
+      credited('blog', 'e', 'agent', 'Pictor', false),
+      credited('news', 'f', 'agent', 'Pictor'),
+    ];
+    expect(imagesByAgent(posts, 'Pictor').map((p) => p.id)).toEqual(['a', 'c']);
+    expect(imagesByAgent(posts, 'Nobody')).toEqual([]);
   });
 });
 
