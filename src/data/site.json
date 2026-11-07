@@ -52,16 +52,6 @@
         "label": "YouTube",
         "social": "youtube",
         "icon": "vlog"
-      },
-      {
-        "label": "Meridian",
-        "icon": "link",
-        "href": "https://r7meridian.app/"
-      },
-      {
-        "label": "Orbit Royale",
-        "icon": "link",
-        "href": "https://royale.r7orbit.io/"
       }
     ],
     "note": "Made with R7 Orbit"
