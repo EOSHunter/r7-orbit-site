@@ -21,6 +21,7 @@ html:not(.js) [data-filter], html:not(.js) [data-sort], html:not(.js) .toolbar, 
 :root {
   --header-h: 56px;      /* matches .site-header .bar in components.css */
   --toc-w: 14rem;
+  --toc-w-picture: 19rem; /* the sidebar when it carries the post's picture (ArticlePage.astro) */
   --side-w: 20rem;
 }
 
@@ -311,6 +312,7 @@ a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
 @media (min-width: 1200px) {
   .post-layout { grid-template-columns: minmax(0, 44rem) var(--toc-w); justify-content: space-between; gap: var(--s-8); }
   .toc { display: block; position: sticky; top: calc(var(--header-h) + var(--s-6)); align-self: start; }
+  .post-layout:has(.toc-picture) { grid-template-columns: minmax(0, 44rem) var(--toc-w-picture); }
 }
 .toc .eyebrow { margin-bottom: var(--s-3); }
 /* The post's picture, small, above "On this page" (ArticlePage.astro); a hover clip plays over it like on a card. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { imageProblems } from '../admin/image-rules';
-import { agentMissing, imageCredit } from './image-credit';
+import { agentMissing, imageCredit, imageCreditHref, imageCreditName } from './image-credit';
 
 describe('imageCredit', () => {
   it('credits the site’s owner by default', () => {
@@ -40,5 +40,18 @@ describe('the editor’s save check', () => {
     expect(imageProblems({ ...post, featuredImageBy: 'agent', featuredImageAgent: 'Orbit Agent' })).toEqual([]);
     expect(imageProblems({ ...post, featuredImageBy: 'me' })).toEqual([]);
     expect(imageProblems({ title: 'T', featuredImageBy: 'agent' })).toEqual([]);
+  });
+});
+
+describe('where the credit links (2026-11-07)', () => {
+  const agents = [{ name: 'Pictor', path: '/authors/pictor/' }, { name: 'Orion', path: '/authors/orion/' }];
+  it("links an agent's name to its author page, and the owner to About", () => {
+    expect(imageCreditName({ featuredImageBy: 'agent', featuredImageAgent: ' Pictor ' }, 'Hunter Newton')).toBe('Pictor');
+    expect(imageCreditHref({ featuredImageBy: 'agent', featuredImageAgent: 'Pictor' }, 'Hunter Newton', agents)).toBe('/authors/pictor/');
+    expect(imageCreditHref({ featuredImageBy: 'me' }, 'Hunter Newton', agents)).toBe('/about/');
+    expect(imageCreditHref({}, 'Hunter Newton', agents)).toBe('/about/');
+  });
+  it('falls back to About for an agent with no author page', () => {
+    expect(imageCreditHref({ featuredImageBy: 'agent', featuredImageAgent: 'Someone New' }, 'Hunter Newton', agents)).toBe('/about/');
   });
 });

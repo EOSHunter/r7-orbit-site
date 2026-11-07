@@ -23,7 +23,7 @@ import { assistNote, authorSlugOf } from '../lib/authors';
 import { getAuthorMap } from '../lib/authors-queries';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
-import { imageCredit } from '../lib/image-credit';
+import { imageCreditHref, imageCreditName } from '../lib/image-credit';
 import { motionOf } from '../lib/post-cards';
 import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
@@ -84,11 +84,14 @@ const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
 const related = relatedPosts(post, everything);
 const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string }) : undefined;
 
-const author = (await getAuthorMap()).get(authorSlugOf(post))!;
+const authorMap = await getAuthorMap();
+const author = authorMap.get(authorSlugOf(post))!;
 const assist = assistNote(data.aiAssist, author);
 const showWaitlist = data.waitlist && waitlist.show;
 // "Image by" the site's owner by default, not the post's author (who may be an agent).
-const credit = featured ? imageCredit(data as Parameters<typeof imageCredit>[0], site.author.name) : undefined;
+const creditData = data as Parameters<typeof imageCreditName>[0];
+const credit = featured ? imageCreditName(creditData, site.author.name) : undefined;
+const creditHref = featured ? imageCreditHref(creditData, site.author.name, [...authorMap.values()].filter((a) => a.kind === 'agent')) : undefined;
 // The same picture, small, above "On this page" in the sidebar (wide screens only, where the sidebar is drawn), so it is seen
 // clearly and not only behind the headline. With a hover clip it plays on hover like a card (card-motion.js). Decorative: the hero
 // already carries the alt text.
@@ -126,7 +129,7 @@ const sideMotion = sidePicture ? motionOf((data as { coverMotion?: string }).cov
 
   <div class="reading-progress" aria-hidden="true"></div>
 
-  <ArticleHero image={featured} alt={featuredAlt} credit={credit}>
+  <ArticleHero image={featured} alt={featuredAlt} credit={credit} creditHref={creditHref}>
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <ol>
         <li><a href="/">Home</a></li>

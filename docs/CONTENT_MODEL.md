@@ -118,7 +118,7 @@ Body: 150–500 words. Say what happened, why it matters (or doesn't), and what 
 | `toc` | boolean | no | Default `true` when the post has 3+ `h2` headings |
 | `featuredImage` | image under `src/assets/blog/` | no | The picture behind the breadcrumbs and headline, optimised at build time, and also the post's card picture and og:image (cropped to 16:9 and 1200×630). Wide (16:9), at least 1600px across |
 | `featuredImageAlt` | string | if `featuredImage` | As `coverAlt` |
-| `featuredImageBy` | `me` or `agent` | no | Who made the featured image, shown under the headline block as "Image by …". Default `me`: the site owner's name from `site.json` (`author.name`), not the post's author, who may be an agent. `agent`: the name in `featuredImageAgent` (added 2026-11-06; `src/lib/image-credit.ts`) |
+| `featuredImageBy` | `me` or `agent` | no | Who made the featured image, shown under the headline block as "Image by …". Default `me`: the site owner's name from `site.json` (`author.name`), not the post's author, who may be an agent. `agent`: the name in `featuredImageAgent` (added 2026-11-06; `src/lib/image-credit.ts`). The name is a link: an agent's goes to its author page, the owner's to About (2026-11-07) |
 | `featuredImageAgent` | string | if `featuredImageBy: agent` | The agent's name, e.g. "Image by Pictor" (Pictor, the imagery agent, makes the post images). In the editor it is a list of the agents in `src/content/authors/` (2026-11-07). The build fails without it, and the editor will not save |
 
 Body: Markdown/MDX. Headings from `##` down (the title is the `h1`). See "Markdown the site understands" below.
