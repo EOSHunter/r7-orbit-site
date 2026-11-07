@@ -67,3 +67,15 @@ test('with reduced motion a hover clip never shows or loads', async ({ page }) =
   expect(await video.locator('source').count()).toBe(0);
   await expect(video.locator('xpath=..')).not.toHaveClass(/is-playing/);
 });
+
+test('cards do not zoom on hover: the picture stays still and only a hover clip moves', async ({ page }) => {
+  await page.goto('/blog/', { waitUntil: 'networkidle' });
+  const card = page.locator('.grid-cards > a.card').filter({ has: page.locator('.card-media img') }).first();
+  test.skip((await card.count()) === 0, 'no card with a picture');
+  await card.scrollIntoViewIfNeeded();
+  await card.hover();
+  await page.waitForTimeout(700); // longer than any transition
+  await expect(card.locator('.card-media img').first()).toHaveCSS('transform', 'none');
+  const clip = card.locator('video.card-motion');
+  if (await clip.count()) await expect(clip).toHaveCSS('transform', 'none');
+});
