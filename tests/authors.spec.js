@@ -75,12 +75,14 @@ test('R7 page lists R7\'s posts of every kind, and only those', async ({ page })
   for (const path of r7Posts) await expect(page.locator(`[data-items] a[href="${path}"]`)).toHaveCount(1);
 });
 
-test('Hunter Newton page: his name, bio and photo come from site.json, with no AI-written label', async ({ page }) => {
+test('Hunter Newton page: his name, bio and photo come from his author file, or site.json where it has none, with no AI-written label', async ({ page }) => {
   await page.goto('/authors/hunter-newton/');
   const head = page.locator('[data-author-page="hunter-newton"]');
-  await expect(head.getByRole('heading', { level: 1, name: site.author.name })).toBeVisible();
-  await expect(head.locator('.t-lead')).toHaveText(site.author.bio);
-  await expect(head.locator('.avatar img')).toHaveAttribute('src', site.author.photo);
+  // The same fallback as resolveAuthor in src/lib/authors.ts: a field set in the author file (the editor writes it) wins.
+  const file = authorFile('hunter-newton');
+  await expect(head.getByRole('heading', { level: 1, name: file.name ?? site.author.name })).toBeVisible();
+  await expect(head.locator('.t-lead')).toHaveText(file.bio ?? site.author.bio);
+  await expect(head.locator('.avatar img')).toHaveAttribute('src', file.avatar ?? site.author.photo);
   await expect(head.locator('.chip.ai-written')).toHaveCount(0);
   const cards = page.locator('[data-items] [data-item]');
   await expect(cards).toHaveCount(personPosts.length);
