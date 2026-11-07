@@ -28,6 +28,9 @@ const isAgentSlug = (slug) => authorFile(slug).kind === 'agent';
 const agentPosts = postPaths.filter((p) => isAgentSlug(credited(p)));
 const r7Posts = postPaths.filter((p) => credited(p) === 'r7');
 const personPosts = postPaths.filter((p) => credited(p) === 'hunter-newton');
+/** Cards /latest/ shows before any filter: one page (PAGE_SIZE in src/lib/listing.ts); a filter pulls in the other pages' cards. */
+const PAGE_SIZE = 12;
+const firstPage = Math.min(postPaths.length, PAGE_SIZE);
 
 const jsonLd = (page) =>
   page.$$eval('script[type="application/ld+json"]', (els) =>
@@ -221,7 +224,7 @@ test('/latest/ has a By author filter with every author who has posts; picking o
   await expect(filter.getByRole('button')).toHaveText(['All', site.author.name, ...agentNames]);
   const visible = () => page.locator('[data-items] [data-item]:not([hidden])');
   const total = postPaths.length;
-  await expect(visible()).toHaveCount(total);
+  await expect(visible()).toHaveCount(firstPage);
 
   await filter.getByRole('button', { name: 'R7' }).click();
   await expect(filter.getByRole('button', { name: 'R7' })).toHaveAttribute('aria-pressed', 'true');
@@ -235,7 +238,7 @@ test('/latest/ has a By author filter with every author who has posts; picking o
   expect(await visible().evaluateAll((els) => els.map((e) => e.dataset.author))).toEqual(Array(personPosts.length).fill('hunter-newton'));
 
   await filter.getByRole('button', { name: 'All' }).click();
-  await expect(visible()).toHaveCount(total);
+  await expect(visible()).toHaveCount(firstPage);
   expect(page.url()).not.toContain('author=');
 });
 
@@ -252,12 +255,12 @@ test('the filter is read from the address, and works together with the kind filt
   await expect(page.locator('[data-filter="author"] button[aria-pressed="true"]')).toHaveText('All');
 });
 
-test('without JavaScript the toolbar is hidden and every card is listed, like the other filters', async ({ browser, baseURL }) => {
+test('without JavaScript the toolbar is hidden and every card on the page is listed, like the other filters', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
   const page = await context.newPage();
   await page.goto('/latest/');
   await expect(page.locator('.toolbar')).toBeHidden();
-  await expect(page.locator('[data-items] [data-item]')).toHaveCount(postPaths.length);
+  await expect(page.locator('[data-items] [data-item]')).toHaveCount(firstPage);
   await context.close();
 });
 
