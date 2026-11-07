@@ -3,8 +3,9 @@ title: "Orbit Royale"
 date: 2026-10-21
 summary: Orbit Royale is a first-person sci-fi shooter that you play in the browser.
 tags: [orbit-royale, game]
-cover: /media/projects/orbit-royale/poster.png
-coverAlt: "A night view over a colony town under a starry sky, with a bright moon, lit glass towers with R7 Orbit signs, a glowing triangular building and a wide band of planetary rings at the upper right"
+cover: /media/projects/orbit-royale/cover-studio.jpg
+coverAlt: "A brass line drawing in first person: the Tethercaster on the wrist at the lower left, its tether arcing up to the tip of Orbit City's wedge spire, with the capsule tower and twin tower beside it"
+coverMotion: /media/motion/project-orbit-royale/hover.mp4
 status: shipped
 playUrl: https://royale.r7orbit.io/
 appType: game

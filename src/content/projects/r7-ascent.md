@@ -19,8 +19,9 @@ controls:
   - { key: "Q and E", action: "Turn the camera from the keyboard" }
   - { key: "Esc", action: "Pause and open the menu; again to leave full screen" }
 author: kepler
-cover: /media/blog/r7-ascent-server-stack.jpg
-coverAlt: "The robot on a navy block between towers of server racks lit with green and blue status lights, with heat sinks on the blocks around it and a glowing fan ring below"
+cover: /media/projects/r7-ascent/cover-studio.jpg
+coverAlt: "A brass line drawing of R7: Ascent's five zones stacked into one climb, from the workshop floor to the drifting rocks and the ring at the top, with the robot on an orbit line that arches over them"
+coverMotion: /media/motion/project-r7-ascent/hover.mp4
 draft: false
 ---
 

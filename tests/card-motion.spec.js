@@ -79,3 +79,16 @@ test('cards do not zoom on hover: the picture stays still and only a hover clip 
   const clip = card.locator('video.card-motion');
   if (await clip.count()) await expect(clip).toHaveCSS('transform', 'none');
 });
+
+test('a playable project card shows a brass play mark that fades while the card is pointed at', async ({ page }) => {
+  await page.goto('/projects/', { waitUntil: 'networkidle' });
+  const card = page.locator('.grid-cards > a.card').filter({ has: page.locator('.card-play') }).first();
+  test.skip((await card.count()) === 0, 'no playable project');
+  const mark = card.locator('.card-play');
+  await expect(mark).toHaveAttribute('aria-hidden', 'true');
+  await expect(mark).toHaveCSS('opacity', '1');
+  await expect(mark.locator('svg')).toHaveCSS('color', 'rgb(227, 201, 143)'); // --brass-bright
+  await card.scrollIntoViewIfNeeded();
+  await card.hover();
+  await expect(mark).toHaveCSS('opacity', '0');
+});

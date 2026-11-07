@@ -4,8 +4,9 @@ seoTitle: "Vesper Drift, a browser space game"
 date: 2026-10-05
 summary: A browser game where you start as a drifting pebble and grow through 12 forms, from Meteorite to Black Hole, absorbing what is smaller.
 tags: [vesper-drift, r7-orbit, ai-agents, games]
-cover: /media/projects/vesper-drift/poster.jpg
-coverAlt: "Vesper Drift at stage 12: a black hole with a lensed accretion disc and the HUD"
+cover: /media/projects/vesper-drift/cover-studio.jpg
+coverAlt: "A brass line drawing of a small rock on an arc falling toward a black hole with a tilted, glowing disc, with a dashed orbit and its dots around it. The bodies are models built for this image from the game's own settings"
+coverMotion: /media/motion/project-vesper-drift/hover.mp4
 status: shipped
 stack: [JavaScript, Three.js, WebGL2]
 role: Directed the AI agents

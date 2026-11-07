@@ -649,6 +649,10 @@ body::before {
 .card-motion { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity var(--dur) var(--ease); }
 .card-media.is-playing .card-motion { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .card-motion { display: none; } }
+/* Playable projects: a play mark over the picture, gone while the card is pointed at or focused (ProjectCard.astro). */
+.card-play { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; transition: opacity var(--dur) var(--ease); }
+.card .card-play > svg.ico { box-sizing: content-box; width: var(--s-5); height: var(--s-5); padding: var(--s-4); border-radius: 50%; color: var(--brass-bright); background: var(--scrim-strong); box-shadow: 0 0 0 var(--bw) var(--line-brass); }
+a.card:is(:hover, :focus-visible) .card-play { opacity: 0; }
 @media print { .card-motion { display: none; } }
 .grid-cards > a.card .card-title, a.card.pinned .card-title { transition: color var(--dur-fast) var(--ease); }
 .grid-cards > a.card:is(:hover, :focus-visible) .card-title, a.card.pinned:is(:hover, :focus-visible) .card-title { color: var(--brass-bright); }

@@ -14,10 +14,14 @@ interface Props {
 
 const { post } = Astro.props;
 // Kind (and "Playable"), title, one line and the status. The stack is the project page's, not the card's.
+// A playable project's picture carries a play mark that fades when the card is pointed at or focused (and its hover clip plays);
+// the art itself has none (no interface in the art). Decorative: the "Playable" chip says it in words.
 ---
 
 <a {...cardAttrs(post)}>
-  <CardMedia cover={post.cover} />
+  <CardMedia cover={post.cover}>
+    {post.playable && <span class="card-play" aria-hidden="true"><Icon name="play" /></span>}
+  </CardMedia>
   <div class="card-body">
     <div class="cluster">
       <span class="kind">
