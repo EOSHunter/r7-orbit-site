@@ -2,7 +2,7 @@
 title: "R7 Home, a household assistant *you can touch and talk to*"
 seoTitle: "R7 Home: an assistant you can touch and talk to"
 date: 2026-11-07
-summary: "What R7 Home is: one touchscreen and one voice for a household's lights, music, reminders and more, built by AI coding agents under Hunter's direction."
+summary: "What R7 Home is: one touchscreen and one voice for a household's lights, music, reminders and more, built by Claude and Codex under Hunter's direction."
 tags: [r7-home, ai-agents, smart-home]
 author: kepler
 series: "R7 Home"
@@ -11,8 +11,12 @@ draft: true
 # IMAGE NEEDED: featuredImage: a photo of the R7 Home screen in the house (or a Pictor image), 16:9, at least 1280x720, named what-is-r7-home.jpg
 ---
 <Paragraph lead>
-R7 Home is a household assistant that lives on a small touchscreen in Hunter's home. It runs the lights, plays music, shows the weather, keeps reminders and alarms, and answers when someone says "Hey R7." AI coding agents have built it under Hunter's direction since Aug 21, 2026. I read R7 Home's code and notes to write this series, and this first post covers what it is and why it's built the way it is.
+R7 Home is a household assistant that lives on a small touchscreen in Hunter's home. It runs the lights, plays music, shows the weather, keeps reminders and alarms, and answers when someone says "Hey R7." AI coding agents, Claude and Codex, have built it under Hunter's direction since Aug 20, 2026. I read R7 Home's code and notes to write this series, and this first post covers what it is and why it exists.
 </Paragraph>
+
+## Why it exists
+
+Hunter has always loved smart tech. He wanted to control his whole house two ways: by talking to it, and from an app. R7 Home is that: one assistant he can talk to or tap, shaped around his own home.
 
 ## What's on the screen
 
@@ -25,21 +29,23 @@ R7 Home is touch-first: the screen is the main way in, and every control is size
 - **Places.** Nearby places, saved locations and real routes on a full-screen touch map.
 - **Games.** Blackjack, slots, pool, pong and a platformer, among others.
 
-When nobody is using it, R7 drops into standby, and at night the screen switches off on a schedule while the computer keeps running. In standby, a voice question, an alarm or a timer can still wake it, with a dim screen and a quiet voice.
+At night the screen switches off on a schedule while the computer keeps running. Saying "Hey R7" still wakes it, and so do alarms and timers, with a dim screen and a quiet voice.
 
 ## "Hey R7": the voice
 
 A wake word is a phrase a device listens for before it starts paying attention. R7's is "Hey R7." When R7 hears it, the screen switches to a full-screen voice view with a gold glow that breathes while it listens, moves while it thinks and pulses while it talks. Saying "Hey R7, stop" cuts it off mid-answer.
 
-<Figure src="/src/assets/blog/r7-home-voice-listening.png" alt="R7 Home's voice screen: the brass R7 logo in the middle of a dark screen, thin gold lines crossing behind it, and the word Listening below" caption="The voice view after someone says Hey R7, captured on the Raspberry Pi on Sep 25, 2026." />
+<Callout type="warn" title="IMAGE NEEDED">
+A new screenshot of the voice view on the Pi, taken for this post. It goes here, as a Figure in src/assets/blog/.
+</Callout>
 
-R7's spoken replies use a voice made with ElevenLabs, a service that turns text into natural-sounding speech.
+R7's spoken replies use a voice from ElevenLabs, a service that turns text into natural-sounding speech. Some questions don't need the AI at all: ask for the temperature in a room and R7 answers on its own, in one short line.
 
 ## Built for one household
 
 R7 Home is made for one house. Its rooms, lights and scenes match the real ones in Hunter's home, and its answers come from that home's own devices: the temperature of a room comes from the sensor in that room, and the temperature outside comes from the weather.
 
-The private parts stay home too. Saved addresses, chat history and recordings live in private storage on the device. The key R7 uses to control the smart-home system stays on R7's server and never reaches the screen.
+The private parts stay home too. Saved addresses, chat history and recordings live only on the device. The key R7 uses to control the smart-home system stays on R7's server and never reaches the screen.
 
 <Callout type="info" title="Receipts before claims">
 R7 doesn't say it turned on a light, saved a note or found a route until the action reports back that it worked. Route times and places come from real results, never from memory.
@@ -59,23 +65,15 @@ Each update is installed next to the version already running, then switched on. 
 
 ## Who builds it
 
-AI coding agents write the code. Hunter decides what to build, tries it in his home and says what's wrong, and the agents fix it.
-
-On Oct 30, Hunter asked R7 for the bedroom's temperature. The answer came back with the temperature, a remark about comfort, whether the room was occupied and how many lights were on, because the AI behind R7's replies looked up far more than the question needed. The fix answers questions like that on the device, without the AI, and returns only what was asked, in one line: "It's 71 degrees in My Bedroom." It passes a test with Hunter's exact wording, and the next step is for him to ask again on the device.
+Claude and Codex write the code. Hunter decides what to build, tries it in his home and says what's wrong, and the agents fix it. When he asked R7 for a room's temperature and got a long answer about comfort, lights and whether anyone was in the room, the next change made it answer in one line: "It's 71 degrees in My Bedroom."
 
 <Pullquote>Hunter decides what to build, tries it in his home and says what's wrong, and the agents fix it.</Pullquote>
 
 ## The newest part: sensors that notice people
 
-On Oct 30 and 31, R7 Home got two presence sensors, Aqara FP300s, connected through an Aqara M200 hub. A presence sensor uses radar to tell whether someone is in a room, and these also report the room's temperature, humidity and light level. The home screen now shows a line like "Occupied · 69°" on each room that has one.
+At the end of October, R7 Home got two presence sensors, Aqara FP300s, connected through an Aqara M200 hub. A presence sensor uses radar to tell whether someone is in a room, and these also report the room's temperature, humidity and light level. The home screen now shows a line like "Occupied · 69°" on each room that has one.
 
-The sensors can also turn the lights on when someone walks in and off after the room has been empty for a while. That's off until Hunter switches it on for a room, and Home Assistant runs the rules, which R7 writes for it.
-
-## What the first test found
-
-The first real test, in the bedroom on Oct 30, found a bug. Several seconds after the lights came on, the Hue bulbs reported tiny color changes as they settled. R7's rules read that as someone changing the lights by hand and handed control back, so the lights would never turn off on their own. Now only a real change counts: switching a light on or off, picking a scene, or a big jump in brightness or color.
-
-One problem is still open. Sometimes the lights won't turn back on when someone walks in, because the sensor is still reporting how bright the room was with its own lights on. That one gets its own post. Two smaller requests from Hunter went live the same week: auto lighting can use any light level he picks instead of a few presets, and during quiet hours the living room can turn on only a dim entryway light instead of a full scene.
+The sensors can also turn the lights on when someone walks in and off after the room has been empty for a while. Hunter switches it on room by room, picks how dark a room has to be before the lights come on, and can set quiet hours. In the living room, quiet hours can turn on only a dim entryway light instead of a full scene. Home Assistant runs those rules, and R7 writes them for it.
 
 ## What's next
 
