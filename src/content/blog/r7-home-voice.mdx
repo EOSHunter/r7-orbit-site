@@ -29,7 +29,7 @@ After "Hey R7", a request goes through three steps:
 2. **Deciding.** R7 works out what you want. Simple requests it handles on its own: lights, brightness, scenes, which rooms are occupied, a room's temperature or humidity, the weather and music. Anything else goes to an OpenAI GPT model, which can use R7's tools for reminders, saved places, song requests, Thoughts and Hunter's PC.
 3. **Speaking.** ElevenLabs, a service that turns text into natural-sounding speech, reads the answer aloud in R7's voice.
 
-Requests handled on the device skip the AI entirely, so "set the living room to Relax" happens fast and costs nothing.
+Requests R7 handles on its own skip the GPT model, so "set the living room to Relax" comes back faster and costs less.
 
 <Callout type="info" title="One voice for R7">
 R7's voice is called R7 Home 2, made with ElevenLabs. It's the same voice that narrates R7's platformer, so R7 sounds like itself everywhere.
@@ -37,7 +37,7 @@ R7's voice is called R7 Home 2, made with ElevenLabs. It's the same voice that n
 
 ## The voice screen
 
-When R7 hears its name, the screen switches to a full-screen view with the R7 logo and two gold lines. The status underneath says Listening, Thinking or Speaking, and a glow around the edge breathes slowly while it listens, moves while it thinks and pulses faster while it talks.
+When R7 hears its name, the screen switches to a full-screen view with the R7 logo and two gold lines. The status underneath says Listening, Thinking or Speaking, and a glow around the edge breathes slowly while it listens, dims while it thinks and pulses faster while it talks.
 
 <ImageRow images={[
   { src: "/src/assets/blog/r7-home-voice-listening.jpg", alt: "The voice view with the word Listening under the gold R7 logo, and thin gold lines curving out to both edges of the screen", caption: "Listening" },
@@ -64,7 +64,7 @@ A few rules keep the voice trustworthy:
 
 - **Finish the sentence.** R7 shouldn't cut off its own answers partway through.
 - **Never repeat an action.** If the speech fails after R7 has turned on a light or set a reminder, the action still counts, and R7 won't do it twice or undo it.
-- **Say why, instead of going silent.** When R7 can't answer, for example because the service that turns speech into text has run out of credits, it now says so in a short line. That change went in on Oct 31, after exactly that left a request with no answer at all.
+- **Say why, instead of going silent.** When R7 can't answer, for example because the service that turns speech into text has run out of credits, it should say so in a short line. A fix for that was written on Oct 31, after exactly that left a request with no answer at all, and it isn't installed on the Pi yet.
 
 ## Still being worked on
 
