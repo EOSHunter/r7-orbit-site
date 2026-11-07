@@ -119,7 +119,8 @@ test('an author with no posts shows the empty state and the initials avatar (fix
 
 test('the picture at the head of an author page is as tall as the name, subtitle and bio beside it, and square', async ({ page }) => {
   // Asked for 2026-11-07: the agents' icons were much shorter than the text next to them.
-  for (const slug of ['pictor', 'kepler', 'hunter-newton']) {
+  // One of each kind of picture: an agent's own art (Pictor, Kepler), the mark on a plate (R7, an SVG), a photo (Hunter Newton).
+  for (const slug of ['pictor', 'kepler', 'r7', 'hunter-newton']) {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`/authors/${slug}/`);
     const box = async (sel) => page.locator(`.author-head ${sel}`).first().boundingBox();
