@@ -5,6 +5,9 @@
   Left alone: decorative pictures (alt=""), pictures already inside a link or a button (cards, the video and game posters,
   the project gallery, which has its own), avatars, the hero behind a headline, and small pictures. The large copy is the
   same srcset with a larger sizes (ZOOM_SIZES), so the browser fetches a bigger file only when the dialog opens. No network otherwise.
+  Also a link marked data-zoom-link (the post's featured picture above "On this page"): it points at the full-size file, so it
+  works without JavaScript; here a plain click opens that file in the dialog instead, first in the order, with data-zoom-alt as
+  its alt text and data-zoom-caption as its caption. A click with a modifier (new tab or window) is left to the link.
 */
 (function () {
   'use strict';
@@ -28,13 +31,15 @@
   var main = document.getElementById('main');
   if (!main) return;
 
-  var pictures = Array.prototype.filter.call(main.querySelectorAll('img'), function (img) {
+  var links = Array.prototype.slice.call(main.querySelectorAll('a[data-zoom-link]'));
+  var pictures = links.concat(Array.prototype.filter.call(main.querySelectorAll('img'), function (img) {
     var alt = (img.getAttribute('alt') || '').trim();
     if (!alt || img.closest(SKIP)) return false;
     var drawn = img.getBoundingClientRect().width || Number(img.getAttribute('width')) || 0;
     return drawn >= MIN_WIDTH;
-  });
+  }));
   if (!pictures.length) return;
+  var isLink = function (el) { return el.tagName === 'A'; };
 
   var index = 0;
   var opener = null;
@@ -48,6 +53,19 @@
   function show(i) {
     index = (i + pictures.length) % pictures.length;
     var img = pictures[index];
+    count.textContent = pictures.length > 1 ? index + 1 + ' of ' + pictures.length : '';
+    nav.hidden = pictures.length < 2;
+    if (isLink(img)) {
+      var full = document.createElement('img');
+      full.src = img.getAttribute('href');
+      full.alt = img.getAttribute('data-zoom-alt') || '';
+      full.width = Number(img.getAttribute('data-zoom-width')) || 1920;
+      full.height = Number(img.getAttribute('data-zoom-height')) || 1080;
+      full.decoding = 'async';
+      stage.replaceChildren(full);
+      caption.textContent = img.getAttribute('data-zoom-caption') || '';
+      return;
+    }
     var source = img.parentElement && img.parentElement.tagName === 'PICTURE' ? img.parentElement : img;
     var copy = source.cloneNode(true);
     var copies = copy.tagName === 'PICTURE' ? copy.querySelectorAll('source, img') : [copy];
@@ -59,11 +77,21 @@
     big.removeAttribute('class');
     stage.replaceChildren(copy);
     caption.textContent = captionOf(img);
-    count.textContent = pictures.length > 1 ? index + 1 + ' of ' + pictures.length : '';
-    nav.hidden = pictures.length < 2;
   }
 
   pictures.forEach(function (img, i) {
+    if (isLink(img)) {
+      img.setAttribute('aria-haspopup', 'dialog');
+      img.addEventListener('click', function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        opener = img;
+        show(i);
+        dialog.showModal();
+        closeBtn.focus();
+      });
+      return;
+    }
     var target = img.parentElement && img.parentElement.tagName === 'PICTURE' ? img.parentElement : img;
     var button = document.createElement('button');
     button.type = 'button';

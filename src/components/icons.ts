@@ -12,6 +12,7 @@ export const ICON_NAMES = [
   'search',
   'menu',
   'close',
+  'expand',
   'external',
   'github',
   'clock',

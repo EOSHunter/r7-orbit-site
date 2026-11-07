@@ -94,8 +94,10 @@ const credit = featured ? imageCreditName(creditData, site.author.name) : undefi
 const creditHref = featured ? imageCreditHref(creditData, site.author.name, [...authorMap.values()].filter((a) => a.kind === 'agent')) : undefined;
 // The same picture, small, above "On this page" in the sidebar (wide screens only, where the sidebar is drawn), so it is seen
 // clearly and not only behind the headline. With a hover clip it plays on hover like a card (card-motion.js). Decorative: the hero
-// already carries the alt text.
+// already carries the alt text. It is also a link to the picture at full size: image-zoom.js opens it in the post's picture dialog
+// (ImageZoom.astro), first, before the body's pictures; without JavaScript the link opens the file itself.
 const sidePicture = featured && toc ? await getImage({ src: featured, width: 640, height: 360, fit: 'cover', format: 'webp' }) : undefined;
+const fullPicture = sidePicture && featured ? await getImage({ src: featured, width: Math.min(featured.width, 1920), format: 'webp' }) : undefined;
 const sideMotion = sidePicture ? motionOf((data as { coverMotion?: string }).coverMotion, `${kind}/${post.id}`) : undefined;
 ---
 
@@ -204,7 +206,20 @@ const sideMotion = sidePicture ? motionOf((data as { coverMotion?: string }).cov
         <TableOfContents headings={headings} variant="aside">
           {sidePicture && (
             <div slot="before" class="toc-picture">
-              <CardMedia cover={{ src: sidePicture.src, alt: '', width: 640, height: 360, motion: sideMotion }} />
+              <a
+                class="toc-picture-open"
+                href={fullPicture!.src}
+                data-zoom-link
+                data-zoom-alt={featuredAlt}
+                data-zoom-caption={credit ? `Image by ${credit}` : ''}
+                data-zoom-width={featured!.width}
+                data-zoom-height={featured!.height}
+                aria-label={featuredAlt ? `Enlarge: ${featuredAlt}` : 'Enlarge the picture'}
+              >
+                <CardMedia cover={{ src: sidePicture.src, alt: '', width: 640, height: 360, motion: sideMotion }}>
+                  <span class="toc-picture-hint" aria-hidden="true"><Icon name="expand" small /></span>
+                </CardMedia>
+              </a>
             </div>
           )}
         </TableOfContents>
