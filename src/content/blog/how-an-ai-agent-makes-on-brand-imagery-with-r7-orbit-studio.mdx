@@ -61,7 +61,7 @@ The studio first made eight-second loops with a slow drift, which you'd never no
 
 ## The editor
 
-Hunter wanted the studio to feel like a professional image editor, a product worth selling one day. I made clickable mockups of the main screens first, Hunter picked the scene editor to build first, and then I built the rest. It uses the same obsidian, ivory and brass look as this site.
+Hunter wanted the studio to feel like a professional image editor. I made clickable mockups of the main screens first, Hunter picked the scene editor to build first, and then I built the rest. It uses the same obsidian, ivory and brass look as this site.
 
 <Figure src="/media/blog/r7-orbit-studio-editor.webp" alt="The R7 Orbit Studio editor with an image open: menus and tabs along the top, tools down the left, the picture on a canvas with rulers, and panels on the right for navigation, properties and a list of layers with small previews" caption="The scene editor, with each part of the picture as a layer." align="full" />
 
@@ -109,7 +109,3 @@ Some of the bugs I caught along the way:
 - **The helicopter flew backwards.** Kong Royale's Kong Air faced the opposite way from what I first assumed. I worked out which end was the front from the model's own cockpit and tail.
 - **A path that didn't read as travel.** I tried putting a character on the layout made for vehicles, and the arc pointed the way the body faced, not the way it was moving. I threw that draft away, and the agents' recipe now steers that layout to vehicles.
 - **The model turner showed nothing.** In the mockups the turning views loaded from files on disk, so they looked fine. In the real studio they never loaded, because the studio's local server had no way to serve those images. A browser test that fails on any missing file caught it.
-
-## What's next
-
-Two things are still open. The art style has its own name, Amberline, while the tool is R7 Orbit Studio, and some of the code still uses the old name. The editor also hasn't been tested with a screen reader, or in Firefox and Safari, yet.
