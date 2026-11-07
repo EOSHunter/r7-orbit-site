@@ -13,9 +13,12 @@ interface Props {
   large?: boolean;
   /** Among a page's blocks (AuthorBox, the Team block): load it when it nears the screen. */
   lazy?: boolean;
+  /** At the head of the author's own page, where it grows to the height of the text beside it (implies large). */
+  head?: boolean;
 }
 
-const { author, large = false, lazy = false } = Astro.props;
+const { author, head = false, lazy = false } = Astro.props;
+const large = head || (Astro.props.large ?? false);
 const mark = isAgent(author);
 const own = mark && !!author.avatar?.startsWith('/media/');
 const kind = author.avatar ? (own ? 'art' : mark ? 'mark' : 'photo') : 'initials';
@@ -28,7 +31,7 @@ const alt = (large && author.avatar && author.avatarAlt) || '';
     <img
       src={author.avatar}
       srcset={srcset}
-      sizes={srcset && (large ? SIZES.avatarLarge : SIZES.avatar)}
+      sizes={srcset && (head ? SIZES.avatarHead : large ? SIZES.avatarLarge : SIZES.avatar)}
       alt={alt}
       loading={lazy ? 'lazy' : undefined}
     />

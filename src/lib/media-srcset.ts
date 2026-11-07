@@ -30,4 +30,6 @@ export const SIZES = {
   /** An author's photo as an avatar (.avatar in site.css: --s-5 + --s-2), and the large one on the author's page (--s-8 + --s-5). */
   avatar: '32px',
   avatarLarge: '88px',
+  /** The author page's head: from 40rem it is as tall as the name, subtitle and bio beside it (.author-head in site.css), about 200px. */
+  avatarHead: '(min-width: 40rem) 240px, 88px',
 } as const;

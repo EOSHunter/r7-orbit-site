@@ -300,6 +300,12 @@ button.chip { background: transparent; cursor: pointer; }
 .author-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-5) var(--s-6); padding-block: var(--s-6); }
 .author-head-body { display: grid; gap: var(--s-3); min-width: 0; flex: 1 1 18rem; }
 .author-head-body h1 { max-width: none; }
+/* From 40rem the picture is as tall as the name, subtitle and bio beside it: a grid row stretches it and aspect-ratio keeps it
+   square. Below that the head stacks and the picture keeps the large size. min-width keeps it at least that big anywhere. */
+@media (min-width: 40rem) {
+  .author-head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch; }
+  .author-head > .avatar.lg { width: auto; height: auto; min-width: var(--avatar); aspect-ratio: 1; }
+}
 .author-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); margin: 0; }
 
 a.chip.link { min-height: 28px; padding-inline: var(--s-3); }

@@ -117,6 +117,22 @@ test('an author with no posts shows the empty state and the initials avatar (fix
   await expect(page.locator('[data-item]')).toHaveCount(0);
 });
 
+test('the picture at the head of an author page is as tall as the name, subtitle and bio beside it, and square', async ({ page }) => {
+  // Asked for 2026-11-07: the agents' icons were much shorter than the text next to them.
+  for (const slug of ['pictor', 'kepler', 'hunter-newton']) {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(`/authors/${slug}/`);
+    const box = async (sel) => page.locator(`.author-head ${sel}`).first().boundingBox();
+    const [pic, body] = [await box('> .avatar'), await box('.author-head-body')];
+    expect(Math.abs(pic.height - body.height), `${slug}: picture vs text height`).toBeLessThanOrEqual(2);
+    expect(Math.abs(pic.width - pic.height), `${slug}: square`).toBeLessThanOrEqual(1);
+    await page.setViewportSize({ width: 375, height: 800 });
+    const small = await box('> .avatar');
+    expect(small.width, `${slug}: phone keeps the large size`).toBeLessThan(120);
+    expect(Math.abs(small.width - small.height)).toBeLessThanOrEqual(1);
+  }
+});
+
 test('there is no /authors/ index page', async ({ request }) => {
   expect((await request.get('/authors/')).status()).toBe(404);
 });
