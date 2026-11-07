@@ -8,7 +8,8 @@ author: kepler
 series: "R7 Home"
 seriesOrder: 5
 draft: true
-# IMAGE NEEDED: featuredImage: R7 Home's Games page with the player picker, chip balance and the game cards, 16:9, at least 1280x720, named r7-home-games-page.jpg
+featuredImage: ../../assets/blog/r7-home-games-page.jpg
+featuredImageAlt: "The Games page in R7 Home: an active player picker, an R7 Chips balance with an Add Chips button, and a grid of game cards for Blackjack, Minesweeper, Snake, Memory, R7 Pong, Daily R7 Challenge, R7 Crash and R7 Slots"
 ---
 <Paragraph lead>
 R7 Home's screen does more than run the house. Tap Games and you get a casino with pretend chips, pool and pong against R7, two classics, and two bigger games starring R7 itself: a platformer and a world you explore together. Most of it arrived in one busy week, Sep 8 to 12, 2026.
@@ -32,9 +33,7 @@ The casino games use R7 Chips, which are pretend. Nobody can buy them or cash th
 
 A music button in all three plays a casino playlist through R7's Spotify controls.
 
-<Callout type="warn" title="IMAGE NEEDED">
-A game of Blackjack in progress, with cards on the table and the chip buttons along the bottom. Named r7-home-games-blackjack.jpg, placed here as a Figure.
-</Callout>
+<Figure src="/src/assets/blog/r7-home-games-blackjack.jpg" alt="R7 Blackjack: a dark table with gold trim, the dealer's four cards making 18 above the player's two cards making soft 14, a hand info panel saying the dealer wins, and wager buttons from 10 to Max beside a red Deal button" caption="A hand of Blackjack. The dealer won this one." align="full" />
 
 ## Pool, pong and the classics
 
@@ -47,9 +46,10 @@ These games skip the chips.
 
 Everything works by touch, with no keyboard needed. Two more cards, Snake and a Daily R7 Challenge, are on the page and still say "Coming soon."
 
-<Callout type="warn" title="IMAGE NEEDED">
-Two screenshots side by side for an ImageRow: R7 Pool mid-game and R7 Pong mid-game. Named r7-home-games-pool.jpg and r7-home-games-pong.jpg.
-</Callout>
+<ImageRow images={[
+  { src: "/src/assets/blog/r7-home-games-pool.jpg", alt: "R7 Pool: a 3D green table with gold rails, the cue ball lined up on a rack of balls, a cue contact dial on the left and a power bar on the right", caption: "R7 Pool, 8-Ball" },
+  { src: "/src/assets/blog/r7-home-games-pong.jpg", alt: "R7 Pong: a 3D arena with a gold paddle on the left, a white paddle on the right, the ball in play and a score of 0 to 0 in a first-to-7 match", caption: "R7 Pong against R7" },
+]} />
 
 <Divider variant="orbit" />
 
@@ -63,9 +63,7 @@ It plays on the Pi inside R7 Home, and there's a Windows version too. The game i
 
 <Pullquote>R7, the facility's dryly funny AI, guides him through test chambers, because it wants to understand how people solve problems they've never seen before.</Pullquote>
 
-<Callout type="warn" title="IMAGE NEEDED">
-A chamber from R7: The Last Iteration with the player mid-level and R7's subtitle portrait visible. Named r7-home-games-last-iteration.jpg, placed here as a Figure.
-</Callout>
+<Figure src="/src/assets/blog/r7-home-games-last-iteration.jpg" alt="A pixel-art cave chamber in R7: The Last Iteration called Upward Thinking: Ret stands beside two crates labeled A and B below a raised ledge with a control and a door, while R7's little robot face in the subtitle bar tells him he can lift the boxes" caption="Chamber 36, where R7 explains how to stack the boxes." align="full" />
 
 ## R7 World
 
@@ -73,9 +71,7 @@ R7 World is a voxel game, built from blocks you can dig and place. You and R7 ar
 
 It runs on the Pi itself, in Godot, and only there. Its card on the Games page has a Play button that starts it on the Pi, and the robot and the station were built in Blender, a free 3D modeling program. R7 World started on Sep 11, 2026, and is also still a prototype.
 
-<Callout type="warn" title="IMAGE NEEDED">
-R7 World with the R7 robot standing near the field station and the toolbar at the bottom. Named r7-home-games-r7-world.jpg, placed here as a Figure.
-</Callout>
+<Figure src="/src/assets/blog/r7-home-games-r7-world.jpg" alt="R7 World's title menu on a sunny voxel landscape: a menu with Continue, World setup, Settings and Return to R7 Home on the left, and on the right the white R7 robot with a screen for a face, standing in the grass in front of the field station" caption="R7 World's menu, with R7 waiting by the field station." align="full" />
 
 ## The screen stays awake
 

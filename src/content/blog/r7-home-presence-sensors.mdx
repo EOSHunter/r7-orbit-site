@@ -8,7 +8,8 @@ author: kepler
 series: "R7 Home"
 seriesOrder: 4
 draft: true
-# IMAGE NEEDED: featuredImage: R7 Home's room page for a room with a sensor, showing the Room sensor tiles (temperature, humidity, light level, battery), 16:9, at least 1280x720, named r7-home-presence-room-sensor.jpg
+featuredImage: ../../assets/blog/r7-home-presence-room-sensor.jpg
+featuredImageAlt: "The Living Room page in R7 Home: Not occupied and Auto lighting On under the room name, then a Room sensor section with four tiles for temperature, humidity, light level and battery, and the time they last updated"
 ---
 <Paragraph lead>
 At the end of October, R7 Home got two presence sensors. Now the dashboard shows which rooms are occupied and how warm and humid each one is, R7 can answer "is anyone in the living room?", and the lights can turn on when someone walks in. Claude built the whole feature in two days, on Oct 30 and 31, 2026, with Hunter testing it in his home as it went.
@@ -35,9 +36,7 @@ R7 never asks the sensors over and over for new readings. Home Assistant tells i
 
 The home screen had no spare room for a new section, so each room tile with a sensor got one more line instead, like "Occupied · 69°". The Rooms page adds humidity and light level, and a "Low battery" note when a sensor drops to 20% or below. A room's own page has a Room sensor section with all four readings and when they last updated.
 
-<Callout type="warn" title="IMAGE NEEDED">
-The R7 Home home screen with the room tiles showing their presence lines (for example "Occupied · 69°"). Named r7-home-presence-home-tiles.jpg, placed here as a Figure.
-</Callout>
+<Figure src="/src/assets/blog/r7-home-presence-home-tiles.jpg" alt="The R7 Home home screen: a greeting, the clock and the weather at the top, three room tiles for My Bedroom, Living Room and Kitchen, each with a brightness slider and a presence line such as Occupied with the temperature, then quick-action buttons for scenes and a music card" caption="The home screen, with a presence line under each room." align="full" />
 
 When R7 can't trust a reading, it says so. A sensor that drops offline shows as unavailable, never as an empty room. If Home Assistant itself goes down, every presence line reads "Unavailable · Home Assistant offline" and the old numbers are hidden instead of passing as live.
 
@@ -53,9 +52,7 @@ It's off until Hunter switches it on, room by room, from R7's Automations page. 
 - **Quiet hours**, with any start and end time. In the living room, quiet hours can light only a dim entryway light instead of the full scene.
 - **Pause** for one, two or four hours.
 
-<Callout type="warn" title="IMAGE NEEDED">
-R7's Automations page with a room's presence lighting settings open (turn on when entering, light level, delay, quiet hours). Named r7-home-presence-automations.jpg, placed here as a Figure.
-</Callout>
+<Figure src="/src/assets/blog/r7-home-presence-automations.jpg" alt="The Living Room's presence lighting settings on the Automations page: a default scene picked from seven, a vacancy timeout from 1 to 15 minutes, Turn on when someone enters switched on, a light level the room has to be darker than, and quiet hours that turn on only the entryway lights, dimmed" caption="The living room's presence lighting settings." align="full" />
 
 The lights stay polite. If someone changes them by hand, the automation hands them back and won't turn them off later. If someone switches the lights off, the next person to walk in starts fresh. Each room also shows a "Last:" line that says what the automation did most recently and why, such as turning the lights off after a few minutes without anyone there.
 
