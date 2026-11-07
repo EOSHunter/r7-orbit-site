@@ -633,14 +633,12 @@ body::before {
 .grid-cards > .card .card-text { -webkit-line-clamp: 2; }
 .grid-cards > .card .card-foot { margin-top: var(--s-1); padding-top: 0; }
 .grid-cards > a.card:hover, a.card.pinned:hover { background: none; box-shadow: none; transform: none; }
-.grid-cards > .card .card-media img, .card.pinned .card-media img { transition: transform var(--dur-slow) var(--ease); }
-.grid-cards > a.card:hover .card-media img, a.card.pinned:hover .card-media img { transform: scale(1.03); }
+/* No zoom on hover (the author's call, 2026-11-07): a card with a hover clip plays it; every card's title turns brass. */
 
 /* Hover clips (docs/IMAGES.md "Hover clips"; src/scripts/card-motion.js): the clip lies exactly over the still, cropped the same way,
-   invisible until it is playing, then fades in; leaving fades back to the still. The card's zoom on hover applies to both. */
-.card-motion { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity var(--dur) var(--ease), transform var(--dur-slow) var(--ease); }
+   invisible until it is playing, then fades in; leaving fades back to the still. Neither the still nor the clip zooms. */
+.card-motion { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity var(--dur) var(--ease); }
 .card-media.is-playing .card-motion { opacity: 1; }
-.grid-cards > a.card:hover .card-motion, a.card.pinned:hover .card-motion { transform: scale(1.03); }
 @media (prefers-reduced-motion: reduce) { .card-motion { display: none; } }
 @media print { .card-motion { display: none; } }
 .grid-cards > a.card .card-title, a.card.pinned .card-title { transition: color var(--dur-fast) var(--ease); }
