@@ -81,7 +81,7 @@ const card = (p: SitePost<'vlogs'>): VlogCardData => {
     date: p.data.date,
     tags: p.data.tags,
     duration: durationOf(p),
-    cover: coverOf({ cover: poster ?? cover, coverAlt }),
+    cover: coverOf({ cover: cover ?? poster, coverAlt }), // as on every vlog card: the cover, then the poster
   };
 };
 const related = relatedPosts(post, vlogs, 3);

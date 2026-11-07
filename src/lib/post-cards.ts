@@ -123,7 +123,8 @@ async function cardOf(post: SitePost, options: CardOptions): Promise<CardData> {
         ...base,
         kind: 'vlog',
         duration: vlog.data.duration,
-        cover: coverOf({ cover: vlog.data.poster ?? vlog.data.cover, coverAlt: vlog.data.coverAlt }),
+        // The card shows the cover (the post's picture, which may have a hover clip); the poster is the player's thumbnail.
+        cover: coverOf({ cover: vlog.data.cover ?? vlog.data.poster, coverAlt: vlog.data.coverAlt }),
       };
     }
     case 'projects': {

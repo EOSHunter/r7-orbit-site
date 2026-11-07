@@ -130,7 +130,7 @@ Body: Markdown/MDX. Headings from `##` down (the title is the `h1`). See "Markdo
 | `youtubeId` | string | yes (or `videoUrl`) | The 11-character id, e.g. `dQw4w9WgXcQ` |
 | `videoUrl` | URL | alt | For non-YouTube hosts |
 | `duration` | string (`m:ss` or `h:mm:ss`) | yes | Shown on the poster and in structured data |
-| `poster` | image path | no | Falls back to `cover`, then to YouTube's thumbnail (downloaded at build, not hotlinked) |
+| `poster` | image path | no | The player's thumbnail. Falls back to `cover`, then to YouTube's thumbnail (downloaded at build, not hotlinked). Cards show `cover` (with its `coverMotion`) and fall back to `poster` |
 | `chapters` | `{ t: string, title: string }[]` | no | `t` is `m:ss`. Rendered as a list that seeks the video when clicked |
 | `transcript` | boolean | no | `true` if the body contains a `## Transcript` section; it is placed in a `<details>`. Not allowed with `sections` |
 | `transcriptText` | Markdown | no | Only with `sections`: the transcript, shown in the same `<details>`. The build refuses it on a vlog with a Markdown body |

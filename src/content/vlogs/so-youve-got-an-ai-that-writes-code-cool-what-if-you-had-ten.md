@@ -11,9 +11,9 @@ tags:
   - ai-agents
   - claude
   - codex
-cover: /media/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/poster.png
-coverAlt: "The R7 Orbit app on a dark canvas: a project at the centre with agent
-  cards around it and a dispatch box at the bottom"
+cover: /media/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/cover-studio.jpg
+coverAlt: "A brass line drawing of a laptop showing a screenshot of R7 Orbit's canvas with agent cards around a project, and orbit rings centred on the canvas running on past the laptop"
+coverMotion: /media/motion/vlog-so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/hover.mp4
 draft: false
 waitlist: true
 author: hunter-newton

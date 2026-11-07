@@ -11,9 +11,9 @@ tags:
   - vesper-drift
   - r7-orbit
   - ai-agents
-cover: /media/vlogs/building-vesper-drift/poster.jpg
-coverAlt: "Vesper Drift at stage 12: a black hole with a lensed accretion disc
-  and the HUD"
+cover: /media/vlogs/building-vesper-drift/cover-studio.jpg
+coverAlt: "A brass line drawing of a video camera on a tripod filming a desktop monitor that shows a screenshot of Vesper Drift's evolution choice, with dashed arcs for the camera's view and an orbit line running behind the monitor"
+coverMotion: /media/motion/vlog-building-a-browser-game-with-ai-agents-in-r7-orbit/hover.mp4
 featured: true
 draft: false
 updated: 2026-10-05
