@@ -105,6 +105,7 @@ const ld = [
       </>
     )
   }
-  {outroSections.length > 0 && <Sections sections={outroSections} source={`${source} (outroSections)`} />}
+  <!-- The space under the list comes before the blocks below it, so the last row of cards never touches their rule. -->
   <div class="archive-end"></div>
+  {outroSections.length > 0 && <Sections sections={outroSections} source={`${source} (outroSections)`} />}
 </BaseLayout>
