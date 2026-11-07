@@ -124,8 +124,14 @@ test('the picture at the head of an author page is as tall as the name, subtitle
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`/authors/${slug}/`);
     const box = async (sel) => page.locator(`.author-head ${sel}`).first().boundingBox();
-    const [pic, body] = [await box('> .avatar'), await box('.author-head-body')];
-    expect(Math.abs(pic.height - body.height), `${slug}: picture vs text height`).toBeLessThanOrEqual(2);
+    const pic = await box('> .avatar');
+    // The text itself, from the top of the name to the bottom of the bio: the text column stretches to the row, so its own box
+    // would match a picture of any size (how R7's oversized mark first got past this test).
+    const text = await page.locator('.author-head-body').evaluate((el) => {
+      const kids = [...el.children].map((k) => k.getBoundingClientRect());
+      return kids.at(-1).bottom - kids[0].top;
+    });
+    expect(Math.abs(pic.height - text), `${slug}: picture vs text height`).toBeLessThanOrEqual(2);
     expect(Math.abs(pic.width - pic.height), `${slug}: square`).toBeLessThanOrEqual(1);
     await page.setViewportSize({ width: 375, height: 800 });
     const small = await box('> .avatar');

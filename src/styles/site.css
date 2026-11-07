@@ -298,7 +298,7 @@ button.chip { background: transparent; cursor: pointer; }
 .author-note-body p { margin: 0; color: var(--text-2); font-size: var(--fs-md); max-width: 62ch; }
 .author-note-body .author-note-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); color: var(--text); font-size: var(--fs-sm); }
 .author-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-5) var(--s-6); padding-block: var(--s-6); }
-.author-head-body { display: grid; gap: var(--s-3); min-width: 0; flex: 1 1 18rem; }
+.author-head-body { display: grid; align-content: start; gap: var(--s-3); min-width: 0; flex: 1 1 18rem; }
 .author-head-body h1 { max-width: none; }
 /* From 40rem the picture is as tall as the name, subtitle and bio beside it: a grid row stretches it and aspect-ratio keeps it
    square. Below that the head stacks and the picture keeps the large size. min-width keeps it at least that big anywhere.
