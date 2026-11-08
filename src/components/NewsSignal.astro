@@ -1,0 +1,48 @@
+---
+// A news item's picture (src/lib/news-signal.ts): the topic's object from R7 Orbit Studio inside pulse rings, a faint scanning
+// beam and a dot on a ring, all drawn here except the object. `card` is 16:9 for cards; `banner` is a slim 4:1 strip for the top of
+// a news item. The rings, beam and dot vary with `seed` (the item's address). Pointing at the card sends one pulse out (CSS; none
+// under reduced motion). Decorative unless `alt` is given: the item's title and topic say what it is about.
+import { NEWS_TOPICS, beamPath, signal, type NewsTopic, type NewsVariant } from '../lib/news-signal';
+
+interface Props {
+  topic: NewsTopic;
+  seed: string;
+  variant?: NewsVariant;
+  alt?: string;
+}
+
+const { topic, seed, variant = 'card', alt } = Astro.props;
+if (!(topic in NEWS_TOPICS)) throw new Error(`NewsSignal: unknown topic "${topic}" (one of ${Object.keys(NEWS_TOPICS).join(', ')})`);
+const s = signal(seed, variant);
+const gid = `ns-${variant}-${topic}-${seed.replace(/[^a-z0-9]/gi, '')}`.slice(0, 60);
+---
+
+<svg
+  class:list={['news-signal', `news-signal-${variant}`]}
+  viewBox={`0 0 ${s.width} ${s.height}`}
+  preserveAspectRatio="xMidYMid slice"
+  role={alt ? 'img' : undefined}
+  aria-label={alt}
+  aria-hidden={alt ? undefined : 'true'}
+  style={`--ns-cx: ${s.cx}px; --ns-cy: ${s.cy}px`}
+>
+  <defs>
+    <radialGradient id={`${gid}-glow`} cx={s.cx} cy={s.cy} r={s.rings[3].r} gradientUnits="userSpaceOnUse">
+      <stop offset="0" class="ns-glow-in" />
+      <stop offset="1" class="ns-glow-out" />
+    </radialGradient>
+    <radialGradient id={`${gid}-beam`} cx={s.cx} cy={s.cy} r={s.beam.r} gradientUnits="userSpaceOnUse">
+      <stop offset="0.15" class="ns-beam-in" />
+      <stop offset="1" class="ns-beam-out" />
+    </radialGradient>
+  </defs>
+  <rect width={s.width} height={s.height} fill={`url(#${gid}-glow)`} />
+  <path class="ns-beam" d={beamPath(s.cx, s.cy, s.beam.r, s.beam.from, s.beam.to)} fill={`url(#${gid}-beam)`} />
+  <g class="ns-rings">
+    {s.rings.map((ring) => <circle class:list={['ns-ring', ring.dashed && 'ns-dashed']} cx={s.cx} cy={s.cy} r={ring.r} style={`opacity: ${ring.opacity}`} />)}
+    <circle class="ns-pulse" cx={s.cx} cy={s.cy} r={s.rings[0].r} />
+  </g>
+  <circle class="ns-dot" cx={s.dot.x} cy={s.dot.y} r={s.dot.r} />
+  <image href={`/media/news/topics/${topic}.webp`} x={s.cx - s.object / 2} y={s.cy - s.object / 2} width={s.object} height={s.object} />
+</svg>

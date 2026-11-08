@@ -849,3 +849,22 @@ html.js .search-kinds { display: none; }
 .seg button:focus-visible { outline-offset: -2px; }
 /* A badge inside an eyebrow (Playable, Preview) is a label, not part of the eyebrow's caps. */
 .eyebrow .chip { font-family: var(--font-ui); font-size: var(--fs-xs); letter-spacing: 0; text-transform: none; }
+
+/* ------------------------------------------------------------------------------------------- News pictures */
+/* "Pulsar's signals" (NewsSignal.astro, src/lib/news-signal.ts): a topic's object inside pulse rings, a scanning beam and a dot.
+   Pointing at its card sends one pulse out from the object; nothing moves under reduced motion. */
+.news-signal { display: block; width: 100%; height: 100%; background: var(--bg); }
+.news-signal .ns-glow-in { stop-color: var(--brass); stop-opacity: 0.12; }
+.news-signal .ns-glow-out { stop-color: var(--brass); stop-opacity: 0; }
+.news-signal .ns-beam-in { stop-color: var(--brass-bright); stop-opacity: 0.22; }
+.news-signal .ns-beam-out { stop-color: var(--brass-bright); stop-opacity: 0; }
+.news-signal .ns-ring { fill: none; stroke: var(--brass); stroke-width: 3; }
+.news-signal .ns-dashed { stroke-dasharray: 18 14; }
+.news-signal .ns-rings { filter: drop-shadow(0 0 6px var(--line-brass)); }
+.news-signal .ns-dot { fill: var(--brass-highlight); filter: drop-shadow(0 0 10px var(--brass)); }
+.news-signal .ns-pulse { fill: none; stroke: var(--brass-bright); stroke-width: 3; opacity: 0; transform-box: view-box; transform-origin: var(--ns-cx) var(--ns-cy); }
+@media (prefers-reduced-motion: no-preference) {
+  :is(.card:hover, .card:focus-visible, .ns-frame:hover) .ns-pulse { animation: ns-pulse 1.4s var(--ease) 1; }
+}
+@keyframes ns-pulse { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(3.6); } }
+

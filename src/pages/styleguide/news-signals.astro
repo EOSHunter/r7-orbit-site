@@ -1,0 +1,88 @@
+---
+// "Pulsar's signals": the news picture for each of the seven topics, as cards and as the slim banner at the top of a news item,
+// and one topic with four different addresses, to show how items of one topic differ. For review before any news item uses
+// them (asked for 2026-11-07). Sample titles and sources, not real news; not linked from anywhere and kept out of search engines.
+import NewsSignal from '../../components/NewsSignal.astro';
+import Icon from '../../components/Icon.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { NEWS_TOPICS, type NewsTopic } from '../../lib/news-signal';
+
+const SAMPLE: Record<NewsTopic, { title: string; source: string }> = {
+  models: { title: 'A sample model release', source: 'A lab' },
+  tools: { title: 'A sample tool update to try', source: 'A changelog' },
+  trends: { title: 'A sample survey of developers', source: 'A report' },
+  games: { title: 'A sample engine update', source: 'An engine blog' },
+  home: { title: 'A sample smart home release', source: 'A release note' },
+  policy: { title: 'A sample rule change', source: 'A regulator' },
+  orbit: { title: 'A sample R7 Orbit update', source: 'R7 Orbit' },
+};
+const topics = Object.keys(NEWS_TOPICS) as NewsTopic[];
+---
+
+<BaseLayout title="News pictures" description="The seven news topics' pictures, for review. Not part of the site." noindex>
+  <div class="container wide ns-guide">
+    <header class="page-head">
+      <p class="eyebrow">Styleguide</p>
+      <h1>News pictures</h1>
+      <p class="t-lead">Each topic's object comes from R7 Orbit Studio; the rings, beam and dot are drawn by the site and change with each item's address. Point at a card to see its pulse. Sample titles, not real news.</p>
+    </header>
+
+    <section class="section">
+      <h2 class="section-title">Cards</h2>
+      <div class="grid-cards">
+        {
+          topics.map((topic) => (
+            <a class="card ns-frame" href="#banners">
+              <div class="card-media">
+                <NewsSignal topic={topic} seed={`/news/sample-${topic}/`} />
+              </div>
+              <div class="card-body">
+                <span class="kind"><Icon name="news" />News</span>
+                <h3 class="card-title">{SAMPLE[topic].title}</h3>
+                <p class="card-text">{NEWS_TOPICS[topic]} · from {SAMPLE[topic].source}</p>
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="section" id="banners">
+      <h2 class="section-title">Banners at the top of a news item</h2>
+      <div class="ns-banners">
+        {
+          topics.map((topic) => (
+            <figure class="ns-frame ns-banner">
+              <NewsSignal topic={topic} seed={`/news/sample-${topic}/`} variant="banner" />
+              <figcaption class="t-meta">{NEWS_TOPICS[topic]}</figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">One topic, four items</h2>
+      <div class="ns-variants">
+        {
+          ['/news/a/', '/news/second-item/', '/news/third-item-about-models/', '/news/2026-11-07-release/'].map((seed) => (
+            <figure class="ns-frame card-media">
+              <NewsSignal topic="models" seed={seed} />
+              <figcaption class="t-meta">{seed}</figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .ns-guide { padding-bottom: var(--s-9); }
+  .ns-banners { display: grid; gap: var(--s-5); }
+  .ns-banner { margin: 0; border: var(--bw) solid var(--line); border-radius: var(--r-md); overflow: hidden; aspect-ratio: 4 / 1; position: relative; }
+  .ns-banner figcaption { position: absolute; left: var(--s-4); bottom: var(--s-3); }
+  .ns-variants { display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+  .ns-variants figure { margin: 0; position: relative; border-radius: var(--r-md); overflow: hidden; }
+  .ns-variants figcaption { position: absolute; left: var(--s-3); bottom: var(--s-2); }
+</style>

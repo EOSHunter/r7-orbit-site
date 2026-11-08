@@ -91,6 +91,7 @@ const routes = [
   { path: '/styleguide/playable/', noindex: true }, // fixture for tests/playable.spec.js: a playable project with a fake play URL
   { path: '/styleguide/sections/', noindex: true }, // fixture: every page block (the About page's model), drawn by Sections
   { path: '/styleguide/listing/', noindex: true }, // fixture for tests/site-pages.spec.js: an archive with blocks above and below its list
+  { path: '/styleguide/news-signals/', noindex: true }, // the seven news topics' pictures, for review (NewsSignal.astro)
   { path: '/styleguide/nav/', noindex: true }, // fixture for tests/site-settings.spec.js: the nav with every label renamed
   { path: '/styleguide/imagery/', noindex: true }, // prototype: three directions for article imagery over the real covers (docs/IMAGE_STYLE.md)
   { path: '/styleguide/imagery/v2/', noindex: true }, // prototype, round 2: variety, the editor's picker, the brand in the words, agent cards
