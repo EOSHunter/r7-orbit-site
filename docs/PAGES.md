@@ -64,7 +64,7 @@ Everything below the hero is a list of blocks in `home.md`, in the order below; 
 
 States: filter with no results (can't happen on the home page since "All" is default; if a kind has no posts it isn't shown). Loading: none (static).
 
-Done when: LCP element is the hero headline or the pinned card media (not the orbit); the orbit doesn't block interaction; filter works without JS as plain links to the archive pages (progressive enhancement).
+Done when: LCP element is the hero headline or the pinned card media (not the hero picture); the hero picture (`HeroLaunch.astro`: wide screens only, no JavaScript, a still version under reduced motion) doesn't block interaction; filter works without JS as plain links to the archive pages (progressive enhancement).
 
 ## Archive `/<kind>/`
 

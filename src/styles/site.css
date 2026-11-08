@@ -218,22 +218,18 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
   .hero .orbit { display: block; --orbit-size: min(100%, 22rem); margin-inline: auto; }
 }
 @media (min-width: 1480px) { .hero .orbit { --orbit-size: min(100%, 26rem); } }
-/* The hero's picture (HeroLaunch.astro): the projects on their ring, the R7 mark, and agents that launch once when the page
-   opens. Wide screens only, like the orbit it replaced. Its edges fade into the hero, so the square never shows. */
+/* The hero's picture (HeroLaunch.astro): the R7 mark, agents that launch once to the projects on the ring, then the projects
+   travelling round it. Wide screens only, like the orbit it replaced. Its edges fade into the hero, so the square never shows. */
 .hero-launch { display: none; }
 @media (min-width: 900px) {
   .hero-launch {
     display: block; position: relative; width: min(100%, 40rem); aspect-ratio: 1600 / 1400; margin-inline: auto;
     -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent); mask-image: radial-gradient(closest-side, #000 70%, transparent);
   }
-  .hero-launch-art, .hero-launch-fx { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-launch-art, .hero-launch-fx, .hero-launch-mark { position: absolute; inset: 0; width: 100%; height: 100%; }
 }
-.hl-trail { fill: none; stroke: var(--brass); stroke-width: 3; stroke-linecap: round; opacity: 0.85; }
-.hl-moving .hl-trail { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hl-draw var(--hl-flight) cubic-bezier(0.45, 0, 0.2, 1) var(--hl-begin) forwards; }
-@keyframes hl-draw { to { stroke-dashoffset: 0; } }
+/* The moving layer is its own SVG file (src/lib/hero-launch.ts): its trails and agents are styled inside it. */
 .hl-mark path { fill: var(--void); stroke: var(--brass-bright); stroke-width: 9; stroke-linejoin: round; }
-.hl-still { display: none; }
-@media (prefers-reduced-motion: reduce) { .hl-moving { display: none; } .hl-still { display: inline; } }
 
 /* ------------------------------------------------------------------------------------------- Feed controls (home) */
 .feed-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-4); margin-bottom: var(--s-5); }
