@@ -1,0 +1,73 @@
+{
+  "canvas": [
+    1600,
+    1400
+  ],
+  "hub": [
+    800,
+    700
+  ],
+  "agents": [
+    {
+      "project": "royale",
+      "label": "Orbit Royale",
+      "x": 214.0,
+      "y": 758.0,
+      "land": [
+        214.0,
+        566.2
+      ],
+      "path": "M692.8 675.5 A417.4 417.4 0 0 1 214.0 566.2",
+      "nearSide": false
+    },
+    {
+      "project": "ascent",
+      "label": "R7: Ascent",
+      "x": 656.4,
+      "y": 480.7,
+      "land": [
+        656.4,
+        312.1
+      ],
+      "path": "M761.8 596.8 A258.1 258.1 0 0 0 656.4 312.1",
+      "nearSide": false
+    },
+    {
+      "project": "vesper",
+      "label": "Vesper Drift",
+      "x": 1104.7,
+      "y": 415.6,
+      "land": [
+        1104.7,
+        239.3
+      ],
+      "path": "M860.7 608.2 A376.0 376.0 0 0 1 1104.7 239.3",
+      "nearSide": false
+    },
+    {
+      "project": "home",
+      "label": "R7 Home",
+      "x": 1247.5,
+      "y": 779.9,
+      "land": [
+        1247.5,
+        572.6
+      ],
+      "path": "M905.8 669.9 A302.0 302.0 0 0 0 1247.5 572.6",
+      "nearSide": true
+    },
+    {
+      "project": "studio",
+      "label": "R7 Orbit Studio",
+      "x": 477.3,
+      "y": 983.5,
+      "land": [
+        477.3,
+        776.2
+      ],
+      "path": "M692.9 725.3 A188.3 188.3 0 0 1 477.3 776.2",
+      "nearSide": true
+    }
+  ],
+  "note": "Written by R7 Orbit Studio (authored/home-hero/layout.py) with the art in src/assets/home/hero-launch.jpg: positions are on its 1600x1400 canvas."
+}

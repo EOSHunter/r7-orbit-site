@@ -1,0 +1,70 @@
+---
+// The home page hero's picture (wide screens): Hunter's projects on a tilted orbit ring, drawn in R7 Orbit Studio
+// (authored/home-hero/layout.py: the drop transport, the climber, the black hole, the R7 Home display, the studio easel), the
+// R7 mark at the hub, and agents that launch from it once when the page opens, each drawing its brass trail on its own arc and
+// hovering over a project. No JavaScript: the trails are CSS, the agents SVG animateMotion (SMIL). Under reduced motion the
+// moving copy is not drawn and a still copy shows every trail and agent where it ends. Decorative: the headline beside it says
+// what the page is. On phones it is not drawn at all (the <picture> gives them a 1px placeholder, so nothing large is fetched).
+import { getImage } from 'astro:assets';
+import art from '../assets/home/hero-launch.jpg';
+import data from '../data/home-hero.json';
+
+const [W, H] = data.canvas;
+const [hx, hy] = data.hub;
+const AGENT = 120; // the sprite's size on the canvas
+const START = 0.5; // seconds after the page opens
+const GAP = 0.35; // between launches
+const FLIGHT = 1.7; // each agent's flight
+const sizes = '(min-width: 1480px) 640px, (min-width: 900px) 46vw, 1px';
+// WebP only: the art's grain makes AVIF larger than WebP here (measured 2026-11-07: 292 kB against 224 kB at 1280px).
+const webp = await Promise.all([640, 960, 1280].map((width) => getImage({ src: art, width, format: 'webp', quality: 72 })));
+const srcset = (set: { src: string; attributes: Record<string, unknown> }[], widths = [640, 960, 1280]) =>
+  set.map((img, i) => `${img.src} ${widths[i]}w`).join(', ');
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+// The R7 mark (from scripts/orbit.js), 610 x 524 units, drawn about 250 wide over the hub.
+const LOGO = [
+  'M598 0H65L166 98.5H351.5L208 242V407.5L324.5 524V273.5L598 0Z',
+  'M162 231.5L208 185.5H0C31.7749 216.5 95.9597 279.6 98.5 284C101.04 288.4 141.892 285.833 162 284V231.5Z',
+  'M366.5 284L434.5 225L610 407.5H483L366.5 284Z',
+];
+const markScale = 250 / 610;
+const mark = `translate(${hx - (610 * markScale) / 2} ${hy - (524 * markScale) / 2}) scale(${markScale})`;
+const agents = data.agents.map((a, i) => ({ ...a, id: `hl-path-${i}`, begin: START + i * GAP }));
+---
+
+<div class="hero-launch" aria-hidden="true">
+  <picture>
+    <source media="(min-width: 900px)" type="image/webp" srcset={srcset(webp)} sizes={sizes} />
+    <img class="hero-launch-art" src={BLANK} alt="" width={W} height={H} decoding="async" />
+  </picture>
+  <svg class="hero-launch-fx" viewBox={`0 0 ${W} ${H}`} focusable="false">
+    <g class="hl-moving">
+      {
+        agents.map((a) => (
+          <g class="hl-agent" style={`--hl-begin: ${a.begin}s; --hl-flight: ${FLIGHT}s`}>
+            <path id={a.id} class="hl-trail" d={a.path} pathLength="1" />
+            <image href="/media/home/hero-agent.png" x={-AGENT / 2} y={-AGENT / 2} width={AGENT} height={AGENT} opacity="0">
+              <set attributeName="opacity" to="1" begin={`${a.begin}s`} fill="freeze" />
+              <animateMotion dur={`${FLIGHT}s`} begin={`${a.begin}s`} fill="freeze" calcMode="spline" keyTimes="0;1" keyPoints="0;1" keySplines="0.45 0 0.2 1">
+                <mpath href={`#${a.id}`} />
+              </animateMotion>
+            </image>
+          </g>
+        ))
+      }
+    </g>
+    <g class="hl-still">
+      {
+        agents.map((a) => (
+          <g>
+            <path class="hl-trail" d={a.path} />
+            <image href="/media/home/hero-agent.png" x={a.land[0] - AGENT / 2} y={a.land[1] - AGENT / 2} width={AGENT} height={AGENT} />
+          </g>
+        ))
+      }
+    </g>
+    <g class="hl-mark" transform={mark}>
+      {LOGO.map((d) => <path d={d} />)}
+    </g>
+  </svg>
+</div>

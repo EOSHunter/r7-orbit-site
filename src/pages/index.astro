@@ -4,6 +4,7 @@
 // docs/SECTIONS.md): Pinned post, Latest feed, Latest posts (Projects, Repos), Apps row. The blocks query the posts when the site
 // is built.
 import Sections from '../components/Sections.astro';
+import HeroLaunch from '../components/HeroLaunch.astro';
 import WaitlistForm from '../components/WaitlistForm.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site';
@@ -43,19 +44,13 @@ const lead = home.text('lead');
           )}
           {heroWaitlist && <WaitlistForm variant="hero" source="hero" />}
         </div>
-        <div class="orbit" data-orbit="busy"></div>
+        <HeroLaunch />
       </div>
     </div>
   </section>
 
   <Sections {sections} source="home.md" />
 </BaseLayout>
-
-<script>
-  // A query makes this its own copy, so Astro inlines it in the page instead of fetching a shared chunk after the script that imports it.
-  // @ts-expect-error the query suffix has no type declaration
-  import '../scripts/orbit.js?home';
-</script>
 
 <script>
   import '../scripts/hero-fx';
