@@ -8,12 +8,13 @@ summary: "TODO: one or two sentences, what the reader gets, 155 characters or fe
 sourceUrl: https://example.com/TODO-source # TODO: the primary source
 sourceName: "TODO: who published it"
 # take: "TODO: one sentence, the view you were given in the brief; never invent one"
+topic: models # TODO: models, tools, trends, games, home, policy or orbit (it draws the item's picture)
 tags: [] # TODO: 1-4 existing tags
 author: r7 # TODO: your own author slug once it exists; r7 until then
 draft: true
+# Only with a picture of the story's own that the author supplied; otherwise `topic` draws it:
 # cover: /media/news/TODO-name.jpg
 # coverAlt: "TODO: what the picture shows and why it is here"
-# heroless: TODO: why there is no picture, if there is none
 sections:
   - type: lead
     text: "TODO: what happened, who did it, when, in one or two sentences. Link it: [TODO: the source](https://example.com/TODO-source)."

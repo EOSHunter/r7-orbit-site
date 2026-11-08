@@ -1,9 +1,9 @@
 ---
 // "Pulsar's signals": the news picture for each of the seven topics, as cards and as the slim banner at the top of a news item,
 // and one topic with four different addresses, to show how items of one topic differ. For review before any news item uses
-// them (asked for 2026-11-07). Sample titles and sources, not real news; not linked from anywhere and kept out of search engines.
+// them (asked for 2026-11-07); the cards are the real NewsCard, so this is what a news item with that `topic` looks like. Sample titles and sources, not real news; not linked from anywhere and kept out of search engines.
 import NewsSignal from '../../components/NewsSignal.astro';
-import Icon from '../../components/Icon.astro';
+import NewsCard from '../../components/NewsCard.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { NEWS_TOPICS, type NewsTopic } from '../../lib/news-signal';
 
@@ -32,16 +32,16 @@ const topics = Object.keys(NEWS_TOPICS) as NewsTopic[];
       <div class="grid-cards">
         {
           topics.map((topic) => (
-            <a class="card ns-frame" href="#banners">
-              <div class="card-media">
-                <NewsSignal topic={topic} seed={`/news/sample-${topic}/`} />
-              </div>
-              <div class="card-body">
-                <span class="kind"><Icon name="news" />News</span>
-                <h3 class="card-title">{SAMPLE[topic].title}</h3>
-                <p class="card-text">{NEWS_TOPICS[topic]} · from {SAMPLE[topic].source}</p>
-              </div>
-            </a>
+            <NewsCard
+              post={{
+                kind: 'news',
+                href: `/news/sample-${topic}/`,
+                title: SAMPLE[topic].title,
+                summary: `${NEWS_TOPICS[topic]} · from ${SAMPLE[topic].source}. A sample, not real news.`,
+                date: '2026-11-07',
+                topic,
+              }}
+            />
           ))
         }
       </div>

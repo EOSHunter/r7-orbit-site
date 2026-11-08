@@ -6,6 +6,7 @@ date: <YYYY-MM-DD>
 summary: "<1-2 sentences, 155 chars or fewer, hard limit 180>"
 sourceUrl: https://<the thing being discussed; required>
 sourceName: "<Anthropic, arXiv, The Verge...; required>"
+topic: <models | tools | trends | games | home | policy | orbit>   # the kind of news; draws the picture when there is no cover
 tags: [<lowercase-hyphenated>]
 author: r7                    # ONLY for an AI-written piece; otherwise delete (default hunter-newton)
 draft: true

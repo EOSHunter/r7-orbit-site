@@ -1,5 +1,6 @@
 // Maps published posts onto the shapes the cards take. Listing pages (home, archives, tags) use this.
 import type { ImageMetadata } from 'astro';
+import type { NewsTopic } from './news-signal';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CardData, Cover, CoverMotion, ProjectStatus } from './cards';
@@ -114,7 +115,7 @@ async function cardOf(post: SitePost, options: CardOptions): Promise<CardData> {
   const cover = coverOf(data as { cover?: string; coverAlt?: string });
   switch (post.collection) {
     case 'news':
-      return { ...base, kind: 'news', readTime: readTime(post), cover };
+      return { ...base, kind: 'news', readTime: readTime(post), cover, topic: (data as { topic?: NewsTopic }).topic };
     case 'blog':
       return { ...base, kind: 'blog', readTime: readTime(post), cover: (await featuredCover(data)) ?? cover };
     case 'vlogs': {

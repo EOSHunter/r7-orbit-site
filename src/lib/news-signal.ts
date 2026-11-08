@@ -13,6 +13,7 @@ export const NEWS_TOPICS = {
   orbit: 'R7 Orbit',
 } as const;
 export type NewsTopic = keyof typeof NEWS_TOPICS;
+export const NEWS_TOPIC_KEYS = Object.keys(NEWS_TOPICS) as [NewsTopic, ...NewsTopic[]];
 export type NewsVariant = 'card' | 'banner';
 
 export interface Ring {

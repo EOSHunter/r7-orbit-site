@@ -6,6 +6,7 @@ import type { ImageMetadata } from 'astro';
 import ArticleHero from './ArticleHero.astro';
 import ArticleJsonLd from './ArticleJsonLd.astro';
 import CardMedia from './CardMedia.astro';
+import NewsSignal from './NewsSignal.astro';
 import AuthorByline from './AuthorByline.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
@@ -24,6 +25,7 @@ import { getAuthorMap } from '../lib/authors-queries';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { imageCreditHref, imageCreditName } from '../lib/image-credit';
+import type { NewsTopic } from '../lib/news-signal';
 import { motionOf } from '../lib/post-cards';
 import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
@@ -82,7 +84,9 @@ const toc = kind === 'blog' && (data as { toc?: boolean }).toc !== false && (
 const series = kind === 'blog' ? seriesFor(post, sameKind as SitePost<'blog'>[]) : undefined;
 const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
 const related = relatedPosts(post, everything);
-const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string }) : undefined;
+const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string; topic?: NewsTopic; cover?: string }) : undefined;
+// A news item with a topic and no cover opens with the topic's picture as a slim banner, the same picture as its card.
+const newsBanner = news?.topic && !news.cover ? news.topic : undefined;
 
 const authorMap = await getAuthorMap();
 const author = authorMap.get(authorSlugOf(post))!;
@@ -195,6 +199,12 @@ const zoomLink = fullPicture && featured
           </div>
         )}
         {toc && <TableOfContents headings={headings} variant="inline" />}
+
+        {newsBanner && (
+          <div class="news-banner">
+            <NewsSignal topic={newsBanner} seed={Astro.url.pathname} variant="banner" />
+          </div>
+        )}
 
         {news && (
           <aside class="source-box" aria-label="Source">

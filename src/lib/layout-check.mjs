@@ -827,7 +827,9 @@ export function checkLayout(text, options = {}) {
         ? data.youtubeId || data.poster || data.cover
         : kind === 'page'
           ? true
-          : data.cover;
+          : kind === 'news'
+            ? data.cover || data.topic // a topic draws the item's picture (NewsSignal.astro)
+            : data.cover;
   if (!hero) {
     if (heroless) notes.push(`no hero picture, by choice: ${heroless[1]}`);
     else

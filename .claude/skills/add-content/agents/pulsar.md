@@ -7,7 +7,7 @@ Pulsar's bio, the author's words (never rewrite it): *"Pulsar writes the news he
 ## Role
 
 - **Writes:** `/news/` items, and nothing else.
-- **Front matter:** `author: pulsar`. Leave `aiAssist` out: the byline and its **AI-written** label are the disclosure. `sourceUrl` and `sourceName` name the primary source; `take` only if Hunter gives a view, in his words.
+- **Front matter:** `author: pulsar`. Leave `aiAssist` out: the byline and its **AI-written** label are the disclosure. `sourceUrl` and `sourceName` name the primary source; `take` only if Hunter gives a view, in his words. `topic`: always, the one that fits best (`models` (new models), `tools` (tools and things to try), `trends` (trends with numbers), `games` (games and creative tools), `home` (smart home), `policy` (rules and policy), `orbit` (R7 Orbit updates)). It is the item's picture, so no image is needed; leave `cover` out unless Hunter supplies a picture of the story's own.
 - **Recipe:** [News](../../../../docs/WRITING_GUIDE.md#news) in `docs/WRITING_GUIDE.md`. **Template:** `templates/layouts/news.md` or `news.sections.md`.
 
 ## Tone, on top of orbit-voice

@@ -3,6 +3,7 @@
 // the build, and a required schema field that is missing here makes every new post fail. Field names are the schema's
 // own, and config.vitest.ts reads the real schema to keep the two in step, so change them together.
 import type { CmsCollection, CmsConfig, CmsField } from 'decap-cms-core';
+import { NEWS_TOPICS } from '../lib/news-signal';
 import site from '../data/site.json';
 import { APP_TYPES, APP_TYPE_IDS, DEFAULT_APP_TYPE } from '../lib/app-types';
 import { ARTICLE_COMPONENT_NAMES } from '../lib/article-component-names';
@@ -417,6 +418,14 @@ const newsFields: CmsField[] = [
     widget: 'text',
     required: false,
     hint: 'Your one- or two-sentence read, shown beside the source link.',
+  }),
+  field({
+    name: 'topic',
+    label: 'Topic',
+    widget: 'select',
+    required: false,
+    options: Object.entries(NEWS_TOPICS).map(([value, label]) => ({ label, value })),
+    hint: 'The kind of news. It picks the picture on the card and at the top of the item (the topic\'s brass symbol in pulse rings), unless a cover picture is set.',
   }),
   tags,
   cover,

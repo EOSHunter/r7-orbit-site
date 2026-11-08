@@ -3,6 +3,7 @@
 // them on a post or page when Save is pressed and refuses to save what the build would stop on. Astro's two helpers are passed in:
 // `image()` (a file under src/assets) and `reference('authors')`; the editor passes stand-ins that read the path and the slug as text.
 import { z } from 'astro/zod';
+import { NEWS_TOPIC_KEYS } from './news-signal';
 import site from '../data/site.json';
 import { APP_TYPE_IDS } from './app-types';
 import { sectionsSchema } from './sections';
@@ -96,6 +97,8 @@ export function postSchemas<R extends z.ZodType, I extends z.ZodType>({
       sourceUrl: z.url(),
       sourceName: z.string().min(1),
       take: z.string().optional(),
+      // The kind of news: picks the item's picture (NewsSignal.astro) when it has no `cover` of its own.
+      topic: z.enum(NEWS_TOPIC_KEYS).optional(),
     }),
     blog: post(
       {

@@ -6,6 +6,7 @@ waitlist: true
 sourceUrl: https://example.com/fixture-source/
 sourceName: Example source
 take: A fixture take, shown beside the source link as on any news item.
+topic: models
 tags:
   - fixture-sections
 author: r7

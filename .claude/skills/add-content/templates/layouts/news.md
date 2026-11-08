@@ -7,14 +7,13 @@ summary: "TODO: one or two sentences, what the reader gets, 155 characters or fe
 sourceUrl: https://example.com/TODO-source # TODO: the primary source (the announcement, the paper, the changelog)
 sourceName: "TODO: who published it (Anthropic, arXiv, GitHub...)"
 # take: "TODO: one sentence, the view you were given in the brief; never invent one. Delete the line if there is none."
+topic: models # TODO: the kind of news: models, tools, trends, games, home, policy or orbit (it draws the item's picture)
 tags: [] # TODO: 1-4 existing tags (see /tags/)
 author: r7 # TODO: your own author slug once src/content/authors/<slug>.json exists; r7 until then. Hunter's own text: delete the line
 draft: true
-# Picture: one lead picture or none. With a file the author supplied (public/media/news/):
+# Picture: `topic` above draws it. Only with a picture of the story's own that the author supplied (public/media/news/):
 # cover: /media/news/TODO-name.jpg
 # coverAlt: "TODO: what the picture shows and why it is here"
-# Without one, keep the reason on this line (the layout check reads it) and say it in your report:
-# heroless: TODO: why there is no picture (a short item with no image of its own)
 ---
 TODO: the lead. One or two sentences: what happened, who did it, when. Link the claim to [TODO: the source, named](https://example.com/TODO-source).
 

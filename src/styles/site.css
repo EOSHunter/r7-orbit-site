@@ -867,4 +867,6 @@ html.js .search-kinds { display: none; }
   :is(.card:hover, .card:focus-visible, .ns-frame:hover) .ns-pulse { animation: ns-pulse 1.4s var(--ease) 1; }
 }
 @keyframes ns-pulse { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(3.6); } }
+/* At the top of a news item (ArticlePage.astro): a slim 4:1 strip above the source box. */
+.news-banner { aspect-ratio: 4 / 1; margin-bottom: var(--s-6); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 0 0 var(--bw) var(--line); }
 

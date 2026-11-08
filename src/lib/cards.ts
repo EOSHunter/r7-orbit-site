@@ -1,4 +1,5 @@
 import type { AppType } from './app-types';
+import type { NewsTopic } from './news-signal';
 
 /** What a card needs. Phase 3 maps content-collection entries onto these shapes. */
 export type Kind = 'news' | 'blog' | 'vlog' | 'project' | 'repo';
@@ -44,6 +45,8 @@ export interface NewsCardData extends CardBase {
   kind: 'news';
   readTime?: number;
   cover?: Cover;
+  /** The kind of news: without a cover, the card shows this topic's picture (NewsSignal.astro). */
+  topic?: NewsTopic;
 }
 
 export interface BlogCardData extends CardBase {
