@@ -198,20 +198,8 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .hero-fx.on { opacity: 1; }
 .hero-fx canvas { display: block; width: 100%; height: 100%; }
 .hero:has(.hero-fx.on)::before { opacity: 0; transition: opacity var(--dur-slow) var(--ease); }
-/* The brass phrase in the hero headline: a slow sheen of light passes across it every few seconds. Plain brass under reduced
-   motion, without background-clip: text, and in forced colours. The padding keeps the italic's overhang inside the clip. */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (background-clip: text) {
-    .hero h1 em {
-      padding-inline: 0.06em; margin-inline: -0.06em; color: transparent; -webkit-background-clip: text; background-clip: text;
-      background: linear-gradient(105deg, var(--brass-bright) 42%, var(--brass-highlight) 50%, var(--brass-bright) 58%) 100% 0 / 300% 100%;
-      -webkit-background-clip: text; background-clip: text; animation: hero-shine 8s var(--ease) 1.5s infinite;
-    }
-  }
-}
-/* Between 100% and 0% the gradient always covers the whole phrase; past either end part of it would have no colour. */
-@keyframes hero-shine { 0% { background-position: 100% 0; } 35%, 100% { background-position: 0% 0; } }
-@media (forced-colors: active) { .hero h1 em { background: none; color: CanvasText; } }
+/* The brass phrase in the hero headline is plain brass. Its moving sheen was removed on 2026-11-07 when the hero picture
+   (HeroLaunch.astro) started moving: two effects at most on one screen (CLAUDE.md, design rule 8). */
 @media (min-width: 900px) {
   .hero { padding-block: var(--s-9) var(--s-8); }
   .hero-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: var(--s-8); }
