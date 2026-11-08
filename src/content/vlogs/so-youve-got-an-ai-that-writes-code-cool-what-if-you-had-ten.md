@@ -12,10 +12,12 @@ tags:
   - claude
   - codex
 cover: /media/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/cover-studio.jpg
-coverAlt: "A brass line drawing of a laptop showing a screenshot of R7 Orbit's canvas with agent cards around a project, and orbit rings centred on the canvas running on past the laptop"
+coverAlt: A brass line drawing of a laptop showing a screenshot of R7 Orbit's
+  canvas with agent cards around a project, and orbit rings centred on the
+  canvas running on past the laptop
 coverMotion: /media/motion/vlog-so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/hover.mp4
 draft: false
 waitlist: true
-author: hunter-newton
+author: hubble
 ---
 [So you've got an AI that writes code. Cool. What if you had ten?](/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/)
