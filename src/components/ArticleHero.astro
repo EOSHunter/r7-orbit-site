@@ -84,6 +84,11 @@ const { image, alt = '', credit, creditHref } = Astro.props;
   .article-hero-body .avatar img { filter: none; }
   .article-hero-body a.chip.link { background: rgb(9 9 10 / 0.45); }
   @media (min-width: 900px) { .article-hero-body .post-head { padding-top: var(--s-8); } }
+  /* Phones and tablets: a darker veil, so the headline sits on a near-solid ground. The picture itself opens the article just
+     below (ArticlePage.astro, .post-picture), so it is not lost. Asked for 2026-11-07: some heroes were hard to read on a phone. */
+  @media (max-width: 1199px) {
+    .article-hero-shade { background: linear-gradient(to bottom, rgb(9 9 10 / 0.8) 0%, rgb(9 9 10 / 0.86) 45%, rgb(9 9 10 / 0.95) 100%); }
+  }
   @media (forced-colors: active) { .article-hero-shade { background: Canvas; opacity: 0.85; } }
   @media print { .article-hero-img, .article-hero-shade { display: none; } .article-hero-body { --text: CanvasText; --text-2: CanvasText; --text-3: CanvasText; } }
 </style>

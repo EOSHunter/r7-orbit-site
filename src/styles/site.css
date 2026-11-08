@@ -329,12 +329,16 @@ a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
 .author-images { margin-top: var(--s-8); }
 .author-images .section-title { margin-bottom: var(--s-2); }
 .author-images .grid-cards { margin-top: var(--s-5); }
-.toc-picture .card-media { border: 0; border-radius: var(--r-md); box-shadow: 0 0 0 var(--bw) var(--line); }
+.toc-picture .card-media, .post-picture .card-media { border: 0; border-radius: var(--r-md); box-shadow: 0 0 0 var(--bw) var(--line); }
+/* The same picture at the top of the article where the sidebar is not drawn (ArticlePage.astro); hidden where it is. */
+.post-picture { margin-bottom: var(--s-6); }
+@media (min-width: 1200px) { .post-layout:has(.toc-picture) .post-picture { display: none; } }
 /* It opens larger (image-zoom.js): a zoom cursor, and a small expand mark in the corner on hover or focus. */
 .toc-picture-open { display: block; border-radius: var(--r-md); cursor: zoom-in; }
 .toc-picture-open:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 .toc-picture-hint { position: absolute; top: var(--s-2); right: var(--s-2); z-index: 1; display: grid; place-items: center; width: var(--s-6); height: var(--s-6); border-radius: var(--r-sm); background: var(--scrim-strong); color: var(--brass-bright); opacity: 0; transition: opacity var(--dur) var(--ease); }
 .toc-picture-open:hover .toc-picture-hint, .toc-picture-open:focus-visible .toc-picture-hint { opacity: 1; }
+@media (hover: none) { .toc-picture-hint { opacity: 1; } } /* a touch screen has no hover: always show that it opens larger */
 .toc ol { list-style: none; margin: 0; padding: 0; border-left: var(--bw) solid var(--line); }
 .toc a { display: block; margin-left: calc(var(--bw) * -1); padding: var(--s-2) var(--s-4); border-left: var(--bw) solid transparent; color: var(--text-3); font-size: var(--fs-sm); line-height: 1.4; }
 .toc a:hover { color: var(--text); }
@@ -688,12 +692,15 @@ a.card:is(:hover, :focus-visible) .card-play { opacity: 0; }
 /* The grid fits the count, so no card is left alone on a row. Phones: compact rows (a small picture, kind, title and date).
    From 640px, two columns, and an odd count opens with one wide card. From 1000px, three columns (a six-track grid), and the
    count decides: 1, 4, 7… open with a wide card; 2, 5, 8… end with two halves. A wide card lays its picture beside its words.
-   (A kind filter hides cards without moving the rest: the grid then follows the count it was built with.) */
+   (A kind filter hides cards without moving the rest: the grid then follows the count it was built with.)
+   Only a card with a picture lays out picture and words side by side: a card without one (the About page's team cards) keeps
+   its words full width, or they were squeezed into the picture's column (fixed 2026-11-07). :where() keeps the old
+   specificity, so a page's own card rules still win over these. */
 .grid-cards { grid-template-columns: minmax(0, 1fr); column-gap: var(--s-6); row-gap: var(--s-6); }
 @media (max-width: 639px) {
-  .grid-cards > .card { display: grid; grid-template-columns: 7rem minmax(0, 1fr); column-gap: var(--s-4); align-items: start; }
+  .grid-cards > .card:where(:has(> .card-media)) { display: grid; grid-template-columns: 7rem minmax(0, 1fr); column-gap: var(--s-4); align-items: start; }
   .grid-cards > .card .card-media { aspect-ratio: 4 / 3; border-radius: var(--r-md); }
-  .grid-cards > .card .card-body { padding: 0; gap: var(--s-1); }
+  .grid-cards > .card:where(:has(> .card-media)) .card-body { padding: 0; gap: var(--s-1); }
   .grid-cards > .card .card-title.serif { font-size: var(--fs-lg); }
   .grid-cards > .card .card-text { display: none; }
   .grid-cards > .card .play span { width: 32px; height: 32px; }
@@ -704,18 +711,19 @@ a.card:is(:hover, :focus-visible) .card-play { opacity: 0; }
   .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { grid-column: 1 / -1; }
 }
 @media (min-width: 640px) and (max-width: 999px) {
-  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: var(--s-6); align-items: center; }
-  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child .card-body { padding: 0; }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child:where(:has(> .card-media)) { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: var(--s-6); align-items: center; }
+  .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child:where(:has(> .card-media)) .card-body { padding: 0; }
 }
 @media (min-width: 1000px) {
   .grid-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .grid-cards > * { grid-column: span 2; }
   .grid-cards:has(> :last-child:nth-child(odd)) > .card:first-child { grid-column: span 2; }
   .grid-cards:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2) { grid-column: span 3; }
-  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child {
-    grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--s-7); align-items: center;
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child { grid-column: 1 / -1; }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child:where(:has(> .card-media)) {
+    display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: var(--s-7); align-items: center;
   }
-  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-body { padding: 0; }
+  .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child:where(:has(> .card-media)) .card-body { padding: 0; }
   .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-title.serif { font-size: var(--fs-2xl); }
   .grid-cards:has(> :last-child:nth-child(3n + 1)) > .card:first-child .card-text { -webkit-line-clamp: 3; }
 }

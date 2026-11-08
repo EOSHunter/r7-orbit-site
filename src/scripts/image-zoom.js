@@ -31,7 +31,11 @@
   var main = document.getElementById('main');
   if (!main) return;
 
-  var links = Array.prototype.slice.call(main.querySelectorAll('a[data-zoom-link]'));
+  // The featured picture can be linked twice (at the top on narrow screens, above the contents on wide ones): one entry per file.
+  var allLinks = Array.prototype.slice.call(main.querySelectorAll('a[data-zoom-link]'));
+  var links = allLinks.filter(function (a, i) {
+    return allLinks.findIndex(function (b) { return b.getAttribute('href') === a.getAttribute('href'); }) === i;
+  });
   var pictures = links.concat(Array.prototype.filter.call(main.querySelectorAll('img'), function (img) {
     var alt = (img.getAttribute('alt') || '').trim();
     if (!alt || img.closest(SKIP)) return false;
@@ -79,19 +83,21 @@
     caption.textContent = captionOf(img);
   }
 
+  allLinks.forEach(function (link) {
+    var i = pictures.findIndex(function (p) { return isLink(p) && p.getAttribute('href') === link.getAttribute('href'); });
+    link.setAttribute('aria-haspopup', 'dialog');
+    link.addEventListener('click', function (e) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      opener = link;
+      show(i);
+      dialog.showModal();
+      closeBtn.focus();
+    });
+  });
+
   pictures.forEach(function (img, i) {
-    if (isLink(img)) {
-      img.setAttribute('aria-haspopup', 'dialog');
-      img.addEventListener('click', function (e) {
-        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        e.preventDefault();
-        opener = img;
-        show(i);
-        dialog.showModal();
-        closeBtn.focus();
-      });
-      return;
-    }
+    if (isLink(img)) return; // handled above, with its twin
     var target = img.parentElement && img.parentElement.tagName === 'PICTURE' ? img.parentElement : img;
     var button = document.createElement('button');
     button.type = 'button';

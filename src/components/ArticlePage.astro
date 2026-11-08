@@ -96,9 +96,23 @@ const creditHref = featured ? imageCreditHref(creditData, site.author.name, [...
 // clearly and not only behind the headline. With a hover clip it plays on hover like a card (card-motion.js). Decorative: the hero
 // already carries the alt text. It is also a link to the picture at full size: image-zoom.js opens it in the post's picture dialog
 // (ImageZoom.astro), first, before the body's pictures; without JavaScript the link opens the file itself.
+// Where the sidebar is not drawn (narrower than 1200px, or a post without contents), the same picture opens the article instead,
+// full width above the text (topPicture): on a phone the headline's picture is only a dim veil, so this is where it is seen.
 const sidePicture = featured && toc ? await getImage({ src: featured, width: 640, height: 360, fit: 'cover', format: 'webp' }) : undefined;
-const fullPicture = sidePicture && featured ? await getImage({ src: featured, width: Math.min(featured.width, 1920), format: 'webp' }) : undefined;
-const sideMotion = sidePicture ? motionOf((data as { coverMotion?: string }).coverMotion, `${kind}/${post.id}`) : undefined;
+const topPicture = featured ? await getImage({ src: featured, width: 1280, height: 720, fit: 'cover', format: 'webp' }) : undefined;
+const fullPicture = featured ? await getImage({ src: featured, width: Math.min(featured.width, 1920), format: 'webp' }) : undefined;
+const sideMotion = featured ? motionOf((data as { coverMotion?: string }).coverMotion, `${kind}/${post.id}`) : undefined;
+const zoomLink = fullPicture && featured
+  ? {
+      href: fullPicture.src,
+      'data-zoom-link': true,
+      'data-zoom-alt': featuredAlt,
+      'data-zoom-caption': credit ? `Image by ${credit}` : '',
+      'data-zoom-width': featured.width,
+      'data-zoom-height': featured.height,
+      'aria-label': featuredAlt ? `Enlarge: ${featuredAlt}` : 'Enlarge the picture',
+    }
+  : undefined;
 ---
 
 <BaseLayout
@@ -171,6 +185,15 @@ const sideMotion = sidePicture ? motionOf((data as { coverMotion?: string }).cov
   <div class="container">
     <div class="post-layout">
       <div class="post-main">
+        {topPicture && zoomLink && (
+          <div class="post-picture">
+            <a class="toc-picture-open" {...zoomLink}>
+              <CardMedia cover={{ src: topPicture.src, alt: '', width: 1280, height: 720, motion: sideMotion }}>
+                <span class="toc-picture-hint" aria-hidden="true"><Icon name="expand" small /></span>
+              </CardMedia>
+            </a>
+          </div>
+        )}
         {toc && <TableOfContents headings={headings} variant="inline" />}
 
         {news && (
@@ -206,16 +229,7 @@ const sideMotion = sidePicture ? motionOf((data as { coverMotion?: string }).cov
         <TableOfContents headings={headings} variant="aside">
           {sidePicture && (
             <div slot="before" class="toc-picture">
-              <a
-                class="toc-picture-open"
-                href={fullPicture!.src}
-                data-zoom-link
-                data-zoom-alt={featuredAlt}
-                data-zoom-caption={credit ? `Image by ${credit}` : ''}
-                data-zoom-width={featured!.width}
-                data-zoom-height={featured!.height}
-                aria-label={featuredAlt ? `Enlarge: ${featuredAlt}` : 'Enlarge the picture'}
-              >
+              <a class="toc-picture-open" {...zoomLink}>
                 <CardMedia cover={{ src: sidePicture.src, alt: '', width: 640, height: 360, motion: sideMotion }}>
                   <span class="toc-picture-hint" aria-hidden="true"><Icon name="expand" small /></span>
                 </CardMedia>
