@@ -105,7 +105,7 @@ In `npm run dev`, drafts and scheduled posts are shown so they can be previewed,
 | `sourceUrl` | URL | yes | The thing being discussed |
 | `sourceName` | string | yes | e.g. "Anthropic", "arXiv", "The Verge" |
 | `take` | string | no | One-sentence verdict shown as a pull line ("My read: …") |
-| `topic` | enum | no (set it) | The kind of news: `models` (new models), `tools` (tools and things to try), `trends` (trends with numbers), `games` (games and creative tools), `home` (smart home), `policy` (rules and policy), `orbit` (R7 Orbit updates). Without a `cover`, it is the item's picture: the topic's brass symbol (R7 Orbit Studio, `public/media/news/topics/`) in pulse rings, on its card and as a slim banner at the top of the item (`NewsSignal.astro`; the rings vary with the address). Every topic: `/styleguide/news-signals/` |
+| `topic` | enum | no (set it) | The kind of news: `models` (new models), `tools` (tools and things to try), `trends` (trends with numbers), `games` (games and creative tools), `home` (smart home), `policy` (rules and policy), `orbit` (R7 Orbit updates), `security` (security incidents and investigations), `business` (companies, deals and listings). Without a `cover`, it is the item's picture: the topic's brass symbol (R7 Orbit Studio, `public/media/news/topics/`) in pulse rings, on its card and as a slim banner at the top of the item (`NewsSignal.astro`; the rings vary with the address). Every topic: `/styleguide/news-signals/` |
 
 Body: 150–500 words. Say what happened, why it matters (or doesn't), and what the author would do about it.
 

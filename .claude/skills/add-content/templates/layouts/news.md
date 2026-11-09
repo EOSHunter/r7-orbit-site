@@ -7,7 +7,7 @@ summary: "TODO: one or two sentences, what the reader gets, 155 characters or fe
 sourceUrl: https://example.com/TODO-source # TODO: the primary source (the announcement, the paper, the changelog)
 sourceName: "TODO: who published it (Anthropic, arXiv, GitHub...)"
 # take: "TODO: one sentence, the view you were given in the brief; never invent one. Delete the line if there is none."
-topic: models # TODO: the kind of news: models, tools, trends, games, home, policy or orbit (it draws the item's picture)
+topic: models # TODO: the kind of news: models, tools, trends, games, home, policy, orbit, security or business (it draws the item's picture)
 tags: [] # TODO: 1-4 existing tags (see /tags/)
 author: r7 # TODO: your own author slug once src/content/authors/<slug>.json exists; r7 until then. Hunter's own text: delete the line
 draft: true

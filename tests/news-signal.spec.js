@@ -6,8 +6,8 @@ import { test, expect } from '@playwright/test';
 test('a news card with a topic shows its picture; the topics page shows all seven', async ({ page }) => {
   await page.goto('/styleguide/news-signals/');
   const cards = page.locator('.grid-cards > a.card');
-  await expect(cards).toHaveCount(7);
-  for (const topic of ['models', 'tools', 'trends', 'games', 'home', 'policy', 'orbit']) {
+  await expect(cards).toHaveCount(9);
+  for (const topic of ['models', 'tools', 'trends', 'games', 'home', 'policy', 'orbit', 'security', 'business']) {
     const card = page.locator(`a.card[href="/news/sample-${topic}/"]`);
     await expect(card.locator('.card-media svg.news-signal image')).toHaveAttribute('href', `/media/news/topics/${topic}.webp`);
   }

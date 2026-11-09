@@ -1,5 +1,5 @@
 ---
-// "Pulsar's signals": the news picture for each of the seven topics, as cards and as the slim banner at the top of a news item,
+// "Pulsar's signals": the news picture for each of the nine topics, as cards and as the slim banner at the top of a news item,
 // and one topic with four different addresses, to show how items of one topic differ. For review before any news item uses
 // them (asked for 2026-11-07); the cards are the real NewsCard, so this is what a news item with that `topic` looks like. Sample titles and sources, not real news; not linked from anywhere and kept out of search engines.
 import NewsSignal from '../../components/NewsSignal.astro';
@@ -15,11 +15,13 @@ const SAMPLE: Record<NewsTopic, { title: string; source: string }> = {
   home: { title: 'A sample smart home release', source: 'A release note' },
   policy: { title: 'A sample rule change', source: 'A regulator' },
   orbit: { title: 'A sample R7 Orbit update', source: 'R7 Orbit' },
+  security: { title: 'A sample security incident', source: 'An incident report' },
+  business: { title: 'A sample company filing', source: 'A filing' },
 };
 const topics = Object.keys(NEWS_TOPICS) as NewsTopic[];
 ---
 
-<BaseLayout title="News pictures" description="The seven news topics' pictures, for review. Not part of the site." noindex>
+<BaseLayout title="News pictures" description="The news topics' pictures, for review. Not part of the site." noindex>
   <div class="container wide ns-guide">
     <header class="page-head">
       <p class="eyebrow">Styleguide</p>

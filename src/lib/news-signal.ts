@@ -11,6 +11,8 @@ export const NEWS_TOPICS = {
   home: 'Smart home',
   policy: 'Rules and policy',
   orbit: 'R7 Orbit',
+  security: 'Security',
+  business: 'Business',
 } as const;
 export type NewsTopic = keyof typeof NEWS_TOPICS;
 export const NEWS_TOPIC_KEYS = Object.keys(NEWS_TOPICS) as [NewsTopic, ...NewsTopic[]];

@@ -75,7 +75,7 @@ Word counts are body words (what the reading time counts: not code, alt text or 
 Short and level: what happened, why it matters, where it comes from. **150-400 words.** Template: `news.md` or `news.sections.md`.
 
 1. **Front matter:** title that says the thing; `summary` that is the news in one sentence; `sourceUrl` + `sourceName` (the page draws them as the Source box); `take` only if the brief gives a view.
-2. **Picture:** set `topic` (one of `models` (new models), `tools` (tools and things to try), `trends` (trends with numbers), `games` (games and creative tools), `home` (smart home), `policy` (rules and policy), `orbit` (R7 Orbit updates)): it draws the item's picture, on its card and at the top of the item. A `cover` replaces it only when a real picture of the story's own belongs there (see [Images](#images)); `# heroless: <why>` is now only for an item that fits no topic.
+2. **Picture:** set `topic` (one of `models` (new models), `tools` (tools and things to try), `trends` (trends with numbers), `games` (games and creative tools), `home` (smart home), `policy` (rules and policy), `orbit` (R7 Orbit updates), `security` (security incidents and investigations), `business` (companies, deals and listings)): it draws the item's picture, on its card and at the top of the item. A `cover` replaces it only when a real picture of the story's own belongs there (see [Images](#images)); `# heroless: <why>` is now only for an item that fits no topic.
 3. **Lead:** one or two sentences, the claim linked to its source.
 4. **Callout (`> [!NOTE]` or a `callout` block): the key fact.** The number, the date or the change, linked.
 5. `## What happened`: one or two short paragraphs; a list when a release has several changes.

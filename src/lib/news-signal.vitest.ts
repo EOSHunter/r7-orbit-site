@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { NEWS_TOPICS, beamPath, hash, signal } from './news-signal';
 
 describe('news pictures (Pulsar\'s signals)', () => {
-  it('has the seven topics', () => {
-    expect(Object.keys(NEWS_TOPICS)).toEqual(['models', 'tools', 'trends', 'games', 'home', 'policy', 'orbit']);
+  it('has the nine topics', () => {
+    expect(Object.keys(NEWS_TOPICS)).toEqual(['models', 'tools', 'trends', 'games', 'home', 'policy', 'orbit', 'security', 'business']);
   });
 
   it('is the same picture for the same address, and a different one for another', () => {
