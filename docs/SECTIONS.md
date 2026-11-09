@@ -176,6 +176,37 @@ sections:
     attribution: Someone Specific
 ```
 
+#### Social post (`post`)
+
+A post from X, Bluesky, LinkedIn, a forum or another feed, as a card in the site's own style: initials, name, handle, where it was posted, the words, the date and a link to the original. No logo, no embed.
+
+Sits: In the reading column, with the other text blocks.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `text` | Markdown editor | yes | The post, word for word. Links are fine. |
+| `name` | One line | yes | Who posted it, as their profile shows the name. At most 80 characters. |
+| `platform` | One line | yes | Where it was posted: X, Bluesky, LinkedIn, Mastodon, GitHub, a forum. At most 40 characters. |
+| `handle` | One line | no | Optional. @name, as the platform shows it. At most 80 characters. |
+| `role` | One line | no | Optional. A few words from a source, e.g. "Anthropic". At most 80 characters. |
+| `date` | One line (checked) | no | Optional. Written 2026-11-04. |
+| `url` | One line (checked) | no | The https address of the post itself. |
+| `quoted` | Several lines | no | Optional. A post it quotes or replies to, word for word. A blank line starts a new paragraph. |
+| `quotedLabel` | One line | no | Optional. E.g. "Quoted reply"; "Quoted post" when empty. At most 40 characters. |
+| `quotedDate` | One line (checked) | no | Optional. Written 2026-10-30. |
+| `quotedUrl` | One line (checked) | no | Optional. Its https address. |
+
+```yaml
+sections:
+  - type: post
+    text: A short post, quoted word for word.
+    name: Someone Specific
+    platform: X
+    handle: "@someone"
+    date: "2026-11-04"
+    url: "https://example.com/post"
+```
+
 #### Pull quote (`pullquote`)
 
 A line from the text set large between two hairlines. Screen readers skip it (it repeats the text), so use Quote for words that appear nowhere else.

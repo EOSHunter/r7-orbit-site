@@ -56,6 +56,7 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   lead: { text: (d) => [markdownToText(d.text)] },
   text: { text: (d) => [markdownToText(d.text)] },
   quote: { text: (d) => [markdownToText(d.text), d.attribution ?? ''] },
+  post: { text: (d) => [d.name, markdownToText(d.text), d.quoted ?? ''] },
   // It repeats a line of the text above (screen readers skip it too), so it is not counted.
   pullquote: nothing,
   callout: { text: (d) => [d.title ?? '', markdownToText(d.text)] },

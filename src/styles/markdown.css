@@ -59,3 +59,24 @@
 .prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: var(--fs-md); }
 .prose th, .prose td { padding: var(--s-2) var(--s-3); border-bottom: var(--bw) solid var(--line); text-align: left; vertical-align: top; }
 .prose th { color: var(--text-2); font-weight: var(--fw-medium); }
+
+/* Post card: a quoted social post (src/lib/post-card.mjs, docs/ARTICLE_COMPONENTS.md "Post"). The site's own card, not the platform's look. */
+.post-card, .prose .post-card { clear: both; margin: var(--s-6) 0; padding: var(--s-4) var(--s-5); overflow: visible; background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); font-family: var(--font-ui); }
+.post-card .post-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); margin: 0; padding: 0; border: 0; min-width: 0; }
+.post-card .post-card-avatar { --avatar: calc(var(--s-6) + var(--s-2)); flex: none; display: grid; place-items: center; width: var(--avatar); height: var(--avatar); border: var(--bw) solid var(--line-brass); border-radius: var(--r-full); background: var(--brass-wash-3); font: var(--fw-medium) var(--fs-sm) var(--font-mono); color: var(--brass-bright); }
+.post-card .post-card-who { display: flex; flex-direction: column; flex: 1 1 0; min-width: calc(var(--s-10) + var(--s-5)); line-height: var(--lh-ui); }
+.post-card .post-card-name { font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--text); overflow-wrap: break-word; }
+.post-card .post-card-meta { font: var(--fs-sm) var(--font-mono); color: var(--text-3); overflow-wrap: break-word; }
+.post-card .post-card-platform { flex: none; margin-left: auto; padding: var(--s-1) var(--s-3); border: var(--bw) solid var(--line-strong); border-radius: var(--r-full); font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-2); }
+.post-card .post-card-text { margin: var(--s-4) 0 0; padding: 0; border: 0; border-radius: 0; font: var(--fw-regular) var(--fs-base)/var(--lh-prose) var(--font-ui); font-style: normal; color: var(--text); overflow-wrap: anywhere; }
+.post-card .post-card-text > * { margin: 0; }
+.post-card .post-card-text > * + * { margin-top: var(--s-3); }
+.post-card .post-card-quoted { padding: var(--s-3) var(--s-4); border: var(--bw) solid var(--line); border-radius: var(--r-md); font-size: var(--fs-md); color: var(--text-2); }
+.post-card .post-card-quoted > * { margin: 0; }
+.post-card .post-card-quoted > * + * { margin-top: var(--s-2); }
+.post-card .post-card-quoted-label { font: var(--fs-xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.post-card .post-card-quoted-label a { color: inherit; }
+.post-card .post-card-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s-2) var(--s-4); margin: var(--s-4) 0 0; padding-top: var(--s-3); border-top: var(--bw) solid var(--line); font-size: var(--fs-sm); }
+.post-card .post-card-foot time { font-family: var(--font-mono); color: var(--text-3); }
+.post-card .post-card-link { margin-left: auto; color: var(--brass); }
+.post-card .post-card-link:hover { color: var(--brass-bright); }
