@@ -877,6 +877,11 @@ html.js .search-kinds { display: none; }
 }
 @keyframes ns-pulse { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(3.6); } }
 /* At the top of a news item (ArticlePage.astro): a slim 4:1 strip above the source box. */
+/* A news item's picture at the top: the same as its card (cover), with its credit. */
+.news-hero { margin: 0 0 var(--s-6); }
+.news-hero img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-md); box-shadow: 0 0 0 var(--bw) var(--line); background: var(--surface-1); }
+.news-hero figcaption { margin-top: var(--s-2); font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.news-hero figcaption a { color: inherit; }
 .news-banner { aspect-ratio: 4 / 1; margin-bottom: var(--s-6); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 0 0 var(--bw) var(--line); }
 
 

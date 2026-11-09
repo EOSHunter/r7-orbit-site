@@ -58,3 +58,21 @@ for (const width of [375, 1280]) {
     expect(results.violations.map((v) => `${v.id}: ${v.nodes[0]?.html}`)).toEqual([]);
   });
 }
+
+test('a news item opens with the same picture as its card, credited, and no banner', async ({ page }) => {
+  await page.goto('/news/');
+  const cards = await page.locator('main a.card[href^="/news/"]').evaluateAll((all) =>
+    all.map((c) => ({ href: c.getAttribute('href'), src: c.querySelector('.card-media img')?.getAttribute('src') ?? '' })).filter((c) => c.src),
+  );
+  expect(cards.length).toBeGreaterThan(0);
+  for (const card of cards) {
+    await page.goto(card.href);
+    const hero = page.locator('figure.news-hero');
+    await expect(hero, card.href).toHaveCount(1);
+    await expect(hero.locator('img'), card.href).toHaveAttribute('src', card.src);
+    await expect(hero.locator('figcaption'), card.href).toHaveText(/^Image: \S/);
+    await expect(page.locator('.news-banner'), card.href).toHaveCount(0);
+    // The picture is not repeated in the body.
+    await expect(page.locator(`.prose img[src="${card.src}"]`), card.href).toHaveCount(0);
+  }
+});
