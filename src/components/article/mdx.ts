@@ -9,6 +9,7 @@ import Heading from './Heading.astro';
 import ImageRow from './ImageRow.astro';
 import OrbitDiagram from './OrbitDiagram.astro';
 import Paragraph from './Paragraph.astro';
+import Post from './Post.astro';
 import Prose from './Prose.astro';
 import Pullquote from './Pullquote.astro';
 import Quote from './Quote.astro';
@@ -29,6 +30,7 @@ export const articleComponents = {
   ImageRow,
   OrbitDiagram,
   Paragraph,
+  Post,
   Prose,
   Pullquote,
   Quote,

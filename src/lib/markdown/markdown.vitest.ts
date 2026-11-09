@@ -97,3 +97,54 @@ describe('hot-linked images', () => {
     expect(await render('![x](/media/a.png) [a link](https://example.com)')).toMatch(/href="https:\/\/example\.com"/);
   });
 });
+
+describe('post cards', () => {
+  const post = [
+    '> [!POST] Addy Osmani · @addyosmani · X · Anthropic · 2026-11-04 · https://x.com/addyosmani/status/2117848568535106001',
+    '> You can name a game to describe what you want.',
+    '>',
+    '> A second paragraph with [a link](https://example.com/).',
+  ].join('\n');
+
+  it('turns [!POST] into a figure with the head, the text in a blockquote and the foot', async () => {
+    const html = await render(post);
+    expect(html).toMatch(/^<figure class="post-card">\s*<figcaption class="post-card-head">/);
+    expect(html).toContain('<span class="post-card-avatar" aria-hidden="true">AO</span>');
+    expect(html).toContain('<span class="post-card-name">Addy Osmani</span>');
+    expect(html).toContain('<span class="post-card-meta">@addyosmani · Anthropic</span>');
+    expect(html).toContain('<span class="post-card-platform">Post on X</span>');
+    expect(html).toMatch(/<blockquote class="post-card-text" cite="https:\/\/x\.com\/addyosmani\/status\/2117848568535106001">\s*<p>You can name a game to describe what you want\.<\/p>/);
+    expect(html).toContain('<a href="https://example.com/">a link</a>');
+    expect(html).toMatch(/<p class="post-card-foot"><time datetime="2026-11-04">Nov 4, 2026<\/time><a class="post-card-link" href="https:\/\/x\.com\/addyosmani\/status\/2117848568535106001" rel="noopener">View the post on X<\/a><\/p>\s*<\/figure>$/);
+    expect(html).not.toContain('[!POST]');
+  });
+
+  it('draws a blockquote inside the card as the quoted post, with its [!QUOTED] line as the label', async () => {
+    const html = await render(`${post}\n>\n> > [!QUOTED] Quoted reply · 2026-10-30\n> > We added two sentences.`);
+    expect(html).toMatch(/<div class="post-card-quoted">\s*<p class="post-card-quoted-label">Quoted reply · <time datetime="2026-10-30">Oct 30, 2026<\/time><\/p>\s*<p>We added two sentences\.<\/p>\s*<\/div>\s*<\/blockquote>/);
+  });
+
+  it('labels a quoted post "Quoted post" when it has no [!QUOTED] line, and leaves the foot out with no date or address', async () => {
+    const html = await render('> [!POST] Someone · Bluesky\n> Text.\n>\n> > Inner text.');
+    expect(html).toContain('<p class="post-card-quoted-label">Quoted post</p>');
+    expect(html).not.toContain('post-card-foot');
+    expect(html).not.toContain('cite=');
+  });
+
+  it('escapes what the header says', async () => {
+    const html = await render('> [!POST] A <b>name</b> · X\n> Text.');
+    expect(html).not.toContain('<b>');
+  });
+
+  it('fails the build, with a reason, on a card without a platform, with a bad date or address, or without text', async () => {
+    await expect(render('> [!POST] Only A Name\n> Text.')).rejects.toThrow(/needs the platform/);
+    await expect(render('> [!POST] Name · X · 2026-13-04\n> Text.')).rejects.toThrow(/must be written 2026-11-04/);
+    await expect(render('> [!POST] Name · X · http://example.com/\n> Text.')).rejects.toThrow(/https:\/\//);
+    await expect(render('> [!POST] Name · X')).rejects.toThrow(/text is missing/);
+  });
+
+  it('leaves other callouts and pull quotes alone', async () => {
+    expect(await render('> [!NOTE]\n> Check this.')).toContain('class="callout brass"');
+    expect(await render('> Words.\n> — Someone')).toContain('<cite>Someone</cite>');
+  });
+});

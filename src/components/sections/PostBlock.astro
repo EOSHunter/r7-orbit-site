@@ -1,0 +1,26 @@
+---
+// The Post article component: a quoted social post as the site's own card.
+import Post from '../article/Post.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'post'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+---
+
+<Post
+  name={block.name}
+  platform={block.platform}
+  handle={block.handle}
+  role={block.role}
+  date={block.date}
+  href={block.url}
+  quoted={block.quoted}
+  quotedLabel={block.quotedLabel}
+  quotedDate={block.quotedDate}
+  quotedHref={block.quotedUrl}><Fragment set:html={ctx.html.text} /></Post
+>

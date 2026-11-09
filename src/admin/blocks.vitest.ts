@@ -40,6 +40,21 @@ describe('blocks', () => {
     ['Callout', { type: 'warn', title: 'Careful', body: 'Two lines.\n\nWith **markdown** and `code`.' }],
     ['Quote', { body: 'A quote.', cite: 'Someone', href: 'https://example.com/q' }],
     [
+      'Post',
+      {
+        body: 'You can name a game to describe what you want.',
+        name: 'Addy Osmani',
+        platform: 'X',
+        handle: '@addyosmani',
+        role: 'Anthropic',
+        date: '2026-11-04',
+        href: 'https://x.com/addyosmani/status/2117848568535106001',
+        quoted: 'We added "two sentences" {to the prompt}.',
+        quotedLabel: 'Quoted reply',
+        quotedDate: '2026-10-30',
+      },
+    ],
+    [
       'ImageGallery',
       {
         images: [
