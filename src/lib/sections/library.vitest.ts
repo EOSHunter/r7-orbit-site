@@ -18,7 +18,7 @@ describe('the block library', () => {
   it('covers every component the site draws as a block', () => {
     expect([...SECTION_TYPES].sort()).toEqual(
       [
-        'heading', 'lead', 'text', 'image', 'image-row', 'gallery', 'portrait', 'columns', 'callout', 'quote', 'pullquote', 'code', 'video',
+        'heading', 'lead', 'text', 'image', 'image-row', 'gallery', 'portrait', 'columns', 'callout', 'quote', 'post', 'pullquote', 'code', 'video',
         'game', 'toc', 'divider', 'button', 'links', 'stats', 'latest', 'author', 'spacer', 'feed', 'pinned', 'apps', 'waitlist', 'team',
       ].sort(),
     );

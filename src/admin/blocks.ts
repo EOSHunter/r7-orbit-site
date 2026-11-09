@@ -18,6 +18,7 @@ import {
   figureHtml,
   imageRowHtml,
   orbitDiagramHtml,
+  postHtml,
   pullquoteHtml,
   quoteHtml,
   statDialHtml,
@@ -205,6 +206,35 @@ const quote: BlockEditorComponentOptions = {
   fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
   toBlock: (d: BlockData) => wrap('Quote', [stringAttr('cite', d.cite), stringAttr('href', d.href)], d.body),
   toPreview: preview((d) => quoteHtml(d)),
+};
+
+// A quoted social post (src/lib/post-card.mjs): the site's own card, for X, Bluesky, LinkedIn, a forum... The words are copied
+// exactly; the quoted post is one paragraph of plain text (an attribute keeps a single line).
+const post: BlockEditorComponentOptions = {
+  id: 'Post',
+  label: 'Social post',
+  fields: [
+    field({ name: 'body', label: 'Post text', widget: 'text', hint: 'The post, word for word. Markdown links are fine.' }),
+    field({ name: 'name', label: 'Name', widget: 'string', hint: 'Who posted it, as their profile shows the name.' }),
+    field({ name: 'platform', label: 'Platform', widget: 'string', hint: 'Where it was posted: X, Bluesky, LinkedIn, Mastodon, GitHub, a forum.' }),
+    field({ name: 'handle', label: 'Handle', widget: 'string', required: false, hint: 'Optional. @name, as the platform shows it.' }),
+    field({ name: 'role', label: 'Who they are', widget: 'string', required: false, hint: 'Optional. A few words from a source, e.g. "Anthropic".' }),
+    field({ name: 'date', label: 'Date', widget: 'string', required: false, hint: 'Optional. Written 2026-11-04.' }),
+    field({ name: 'href', label: 'Link to the post', widget: 'string', required: false, hint: 'The https address of the post itself.' }),
+    field({ name: 'quoted', label: 'Quoted post', widget: 'text', required: false, hint: 'Optional. A post it quotes or replies to, word for word, as one paragraph.' }),
+    field({ name: 'quotedLabel', label: 'Quoted post: label', widget: 'string', required: false, hint: 'Optional. E.g. "Quoted reply"; "Quoted post" when empty.' }),
+    field({ name: 'quotedDate', label: 'Quoted post: date', widget: 'string', required: false, hint: 'Optional. Written 2026-10-30.' }),
+    field({ name: 'quotedHref', label: 'Quoted post: link', widget: 'string', required: false, hint: 'Optional. Its https address.' }),
+  ],
+  pattern: withChildren('Post'),
+  fromBlock: (m) => ({ ...parseAttrs(m[1]), body: m[2].trim() }),
+  toBlock: (d: BlockData) =>
+    wrap(
+      'Post',
+      ['name', 'platform', 'handle', 'role', 'date', 'href', 'quoted', 'quotedLabel', 'quotedDate', 'quotedHref'].map((key) => stringAttr(key, d[key])),
+      d.body,
+    ),
+  toPreview: preview((d) => postHtml(d)),
 };
 
 const imageGallery: BlockEditorComponentOptions = {
@@ -506,6 +536,7 @@ export const blocks: BlockEditorComponentOptions[] = [
   figure,
   callout,
   quote,
+  post,
   imageGallery,
   twoColumn,
   videoEmbed,

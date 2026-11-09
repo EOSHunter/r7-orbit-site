@@ -22,6 +22,7 @@ const EXPECTED: Record<SectionType, { text: string[] }> = {
   lead: { text: ['A lead paragraph sets the scene', 'with bold and a link if needed'] },
   text: { text: ['Plain paragraphs, bold, italic, inline code and a link.', 'a list item', 'A second paragraph'] },
   quote: { text: ['A short quotation, set in the display face.', 'Someone Specific'] },
+  post: { text: ['Someone Specific', 'A short post, quoted word for word.', ''] },
   pullquote: { text: [] },
   callout: { text: ['A tip with a title', 'Tips are brass. This one has bold in it.'] },
   code: { text: [] },

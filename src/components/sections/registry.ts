@@ -6,6 +6,7 @@ import HeadingBlock from './HeadingBlock.astro';
 import LeadBlock from './LeadBlock.astro';
 import TextBlock from './TextBlock.astro';
 import QuoteBlock from './QuoteBlock.astro';
+import PostBlock from './PostBlock.astro';
 import PullquoteBlock from './PullquoteBlock.astro';
 import CalloutBlock from './CalloutBlock.astro';
 import CodeBlock from './CodeBlock.astro';
@@ -35,6 +36,7 @@ export const renderers: Record<SectionType, AstroComponentFactory> = {
   lead: LeadBlock,
   text: TextBlock,
   quote: QuoteBlock,
+  post: PostBlock,
   pullquote: PullquoteBlock,
   callout: CalloutBlock,
   code: CodeBlock,

@@ -35,6 +35,7 @@ import {
   YOUTUBE_ID_PATTERN,
 } from './fields';
 import { WAITLIST_SOURCES } from '../waitlist';
+import { POST_DATE_PATTERN } from '../post-card.mjs';
 
 
 /** Where a block sits on the page. `prose` is the reading column; `wide` and `full` leave it (one block, one row); `band` is a
@@ -169,6 +170,39 @@ const quote = defineBlock(
   {
     text: text({ label: 'Quote', widget: 'text', format: 'markdown', hint: 'What was said. Markdown is fine.' }),
     attribution: text({ label: 'Who said it', optional: true }),
+  },
+);
+
+// A quoted social post as the site's own card (src/lib/post-card.mjs, the Post article component).
+const socialPost = defineBlock(
+  'post',
+  {
+    label: 'Social post',
+    group: 'Text',
+    description: "A post from X, Bluesky, LinkedIn, a forum or another feed, as a card in the site's own style: initials, name, handle, where it was posted, the words, the date and a link to the original. No logo, no embed.",
+    summary: 'Post: {{fields.name}} on {{fields.platform}}',
+    placement: 'prose',
+    example: {
+      text: 'A short post, quoted word for word.',
+      name: 'Someone Specific',
+      platform: 'X',
+      handle: '@someone',
+      date: '2026-11-04',
+      url: 'https://example.com/post',
+    },
+  },
+  {
+    text: text({ label: 'Post text', widget: 'markdown', hint: 'The post, word for word. Links are fine.' }),
+    name: text({ label: 'Name', max: 80, hint: 'Who posted it, as their profile shows the name.' }),
+    platform: text({ label: 'Platform', max: 40, hint: 'Where it was posted: X, Bluesky, LinkedIn, Mastodon, GitHub, a forum.' }),
+    handle: text({ label: 'Handle', optional: true, max: 80, hint: 'Optional. @name, as the platform shows it.' }),
+    role: text({ label: 'Who they are', optional: true, max: 80, hint: 'Optional. A few words from a source, e.g. "Anthropic".' }),
+    date: pattern({ label: 'Date', optional: true, pattern: POST_DATE_PATTERN, message: 'write the date like 2026-11-04', hint: 'Optional. Written 2026-11-04.' }),
+    url: pattern({ label: 'Link to the post', optional: true, pattern: HTTPS_PATTERN, message: HTTPS_MESSAGE, hint: 'The https address of the post itself.' }),
+    quoted: text({ label: 'Quoted post', optional: true, widget: 'text', hint: 'Optional. A post it quotes or replies to, word for word. A blank line starts a new paragraph.' }),
+    quotedLabel: text({ label: 'Quoted post: label', optional: true, max: 40, hint: 'Optional. E.g. "Quoted reply"; "Quoted post" when empty.' }),
+    quotedDate: pattern({ label: 'Quoted post: date', optional: true, pattern: POST_DATE_PATTERN, message: 'write the date like 2026-10-30', hint: 'Optional. Written 2026-10-30.' }),
+    quotedUrl: pattern({ label: 'Quoted post: link', optional: true, pattern: HTTPS_PATTERN, message: HTTPS_MESSAGE, hint: 'Optional. Its https address.' }),
   },
 );
 
@@ -830,6 +864,7 @@ export const definitions = [
   lead,
   body,
   quote,
+  socialPost,
   pullquote,
   callout,
   code,

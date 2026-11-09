@@ -9,6 +9,7 @@
 // the one icon a block needs (the play triangle) is drawn inline here.
 
 import { agentCardsHtml, orbitDiagramHtml, orbitDividerHtml, ringPhrase, statDialHtml } from '../lib/article-brand';
+import { plainParagraphs, postCardHtml } from '../lib/post-card.mjs';
 
 export const escapeHtml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -99,6 +100,20 @@ export function quoteHtml(d: Record<string, unknown>): string {
   const href = text(d.href);
   const who = cite ? (href && safeHref(href) ? `<a href="${escapeHtml(href)}">${escapeHtml(cite)}</a>` : escapeHtml(cite)) : '';
   return `<figure class="art-quote"><blockquote>${blocksHtml(text(d.body))}</blockquote>${who ? `<figcaption>${who}</figcaption>` : ''}</figure>`;
+}
+
+/** The Post component's card (src/lib/post-card.mjs, the same markup as the site), or what to fix when a field is wrong. */
+export function postHtml(d: Record<string, unknown>): string {
+  try {
+    return postCardHtml(
+      { name: text(d.name), platform: text(d.platform), handle: text(d.handle), role: text(d.role), date: text(d.date), url: text(d.href) },
+      blocksHtml(text(d.body)),
+      { quoted: { label: text(d.quotedLabel), date: text(d.quotedDate), url: text(d.quotedHref) }, quotedHtml: plainParagraphs(text(d.quoted)) },
+    );
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.replace(/^post card[^:]*: /, '') : String(error);
+    return `<div class="callout bad art-callout" role="note"><p class="art-callout-title"><strong>Fix before saving.</strong></p><div class="art-callout-body"><p>Social post: ${escapeHtml(reason)}.</p></div></div>`;
+  }
 }
 
 export function imageRowHtml(images: Record<string, unknown>[], resolve: ResolveAsset): string {

@@ -1,0 +1,40 @@
+---
+// A quoted social post as a card in the site's own style (no platform logo, no embed script, initials instead of a photo).
+// The markup is src/lib/post-card.mjs, shared with `> [!POST]` in Markdown, the `post` page block and the editor's preview.
+// The post's text is the default slot; a post it quotes goes in `quoted` (plain text, blank lines between paragraphs), labelled by
+// `quotedLabel`.
+import '../../styles/markdown.css';
+import { plainParagraphs, postCardHtml } from '../../lib/post-card.mjs';
+
+interface Props {
+  /** Who posted it, as their profile shows the name. */
+  name: string;
+  /** Where: X, Bluesky, LinkedIn, Mastodon, GitHub, a forum's name. */
+  platform: string;
+  /** `@addyosmani`, as the platform shows it. */
+  handle?: string;
+  /** A few words on who they are, from a source ("Anthropic"). */
+  role?: string;
+  /** `2026-11-04`. */
+  date?: string;
+  /** The post's own address (https). */
+  href?: string;
+  /** The text of a post this one quotes or replies to (plain text; a blank line starts a new paragraph). */
+  quoted?: string;
+  /** What the quoted post is ("Quoted reply"); "Quoted post" when empty. */
+  quotedLabel?: string;
+  quotedDate?: string;
+  quotedHref?: string;
+}
+
+const { name, platform, handle, role, date, href, quoted, quotedLabel, quotedDate, quotedHref } = Astro.props;
+const body = await Astro.slots.render('default');
+const quotedHtml = plainParagraphs(quoted);
+---
+
+<Fragment
+  set:html={postCardHtml({ name, platform, handle, role, date, url: href }, body, {
+    quoted: { label: quotedLabel, date: quotedDate, url: quotedHref },
+    quotedHtml,
+  })}
+/>

@@ -29,6 +29,7 @@ import {
   figureHtml,
   inlineMarkdown,
   PLACEHOLDER,
+  postHtml,
   quoteHtml,
   videoHtml,
   type ResolveAsset,
@@ -175,6 +176,7 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
   lead: (d) => `<p class="art-p art-lead">${inlineMarkdown(d.text)}</p>`,
   text: (d) => markdownHtml(d.text),
   quote: (d) => quoteHtml({ body: d.text, cite: d.attribution }),
+  post: (d) => postHtml({ ...d, body: d.text, href: d.url, quotedHref: d.quotedUrl }),
   pullquote: (d) => `<aside class="art-pullquote"><p>${escapeHtml(d.text)}</p>${d.attribution ? `<p class="art-pullquote-cite">${escapeHtml(d.attribution)}</p>` : ''}</aside>`,
   callout: (d) => calloutHtml({ type: d.kind, title: d.title, body: d.text }),
   code: (d) =>

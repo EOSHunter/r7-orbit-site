@@ -60,7 +60,7 @@ A post's body is **either** Markdown/MDX **or** a `sections` list, never both (t
 | project, app, game | `.md` | Markdown **or** sections | No (the page renders plain Markdown: `<Callout>` and the rest are not drawn there) | No (`toc` block in sections) |
 | repo | `.md` | Markdown or sections, only with `readme: local` | No | No |
 
-What plain Markdown gives you on every kind: `##`/`###` headings with anchors, pictures `![alt](/media/<kind>/x.jpg)` with an italic caption line under them, callouts `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, a quote with a final `— Name` line (serif quote style), fenced code with a language and `title="file.ts"`, tables, lists and footnotes ([`CONTENT_MODEL.md`](CONTENT_MODEL.md#markdown-the-site-understands)).
+What plain Markdown gives you on every kind: `##`/`###` headings with anchors, pictures `![alt](/media/<kind>/x.jpg)` with an italic caption line under them, callouts `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, a social post card `> [!POST]` (see **Post** below), a quote with a final `— Name` line (serif quote style), fenced code with a language and `title="file.ts"`, tables, lists and footnotes ([`CONTENT_MODEL.md`](CONTENT_MODEL.md#markdown-the-site-understands)).
 
 What sections give you on every kind: the blocks in [`SECTIONS.md`](SECTIONS.md) (picture, row, gallery, columns, button, game, stats, links, video…). Two limits: a `text` block keeps paragraphs, lists, links, bold, italic, code and `##`/`###`, but **drops tables and raw HTML** (use `columns` or a list); there is no placeholder plate (a picture block needs a real file).
 
@@ -151,6 +151,7 @@ Every prop and field below is checked against the source: the components in `src
 | Gallery | 4-24 screenshots of a project, opened full size | A post's main argument (readers skip galleries) |
 | Callout | The key fact, a tip, a warning; the verdict | Every other paragraph; more than one per ~400 words |
 | Quote | Someone else's words, verbatim, attributed and linked | Your own words (that is a pull quote) |
+| Post / post | A post from X, Bluesky, LinkedIn or a forum, verbatim, linked to the original | A screenshot of the post; a long thread (quote the line, link the rest) |
 | Pullquote | A line from your own text, repeated large | Words not already in the text (screen readers skip it) |
 | Code | A short, real, runnable snippet | Long files; invented code; output that teaches nothing |
 | TwoColumn / columns | A comparison of two things; text beside a small aside | Long prose (it halves the measure) |
@@ -244,6 +245,18 @@ Worth an evening if you like slow puzzles. [Play Lantern Tiles in your browser](
 ```mdx
 <Quote cite="Vesper Drift's direction docs" href="/blog/test/">The game should read like a calm astrophotograph you can play.</Quote>
 ```
+
+**Post.** A quoted social post as the site's own card: initials (no photo from elsewhere), name, handle, where it was posted, the words, the date and a link to the original. No platform logo and no embed script. Words verbatim; the role ("Anthropic") only from a source. Works on every kind, news included:
+
+```md
+> [!POST] Addy Osmani · @addyosmani · X · Anthropic · 2026-11-04 · https://x.com/addyosmani/status/2117848568535106001
+> You can name a game to describe what you want…
+>
+> > [!QUOTED] Quoted reply · 2026-10-30
+> > We added two sentences to Claude Code's prompt…
+```
+
+The `[!POST]` line: parts split by ` · `; an `https://` part is the link, `2026-11-04` the date, `@name` the handle, and the other parts in order the name, the platform and an optional role. A blockquote inside is the post it quotes; its `[!QUOTED]` line (optional) gives a label, a date and a link. A wrong date, an `http://` link, or a card with no platform or no text stops the build with the reason. MDX `<Post name="…" platform="X" handle="@…" role="…" date="2026-11-04" href="https://…" quoted="…" quotedLabel="Quoted reply" quotedDate="…">text</Post>`. Sections `post`: `text`, `name`, `platform`, `handle`, `role`, `date`, `url`, `quoted`, `quotedLabel`, `quotedDate`, `quotedUrl`.
 
 **Pullquote.** MDX `<Pullquote>`: `cite`, `ring` (one to three of its words, copied exactly; once a post). Sections `pullquote`: `text` (200 characters at most), `attribution`. The text must already be in the post.
 

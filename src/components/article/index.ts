@@ -11,6 +11,7 @@ export { default as ImageRow } from './ImageRow.astro';
 export { default as ImageGallery } from './ImageRow.astro';
 export { default as OrbitDiagram } from './OrbitDiagram.astro';
 export { default as Paragraph } from './Paragraph.astro';
+export { default as Post } from './Post.astro';
 export { default as Prose } from './Prose.astro';
 export { default as Pullquote } from './Pullquote.astro';
 export { default as Quote } from './Quote.astro';

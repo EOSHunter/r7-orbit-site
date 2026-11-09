@@ -4,6 +4,7 @@ export const ARTICLE_COMPONENT_NAMES = [
   'Figure',
   'Callout',
   'Quote',
+  'Post',
   'ImageGallery',
   'TwoColumn',
   'VideoEmbed',

@@ -2,7 +2,7 @@
 
 Building blocks for blog and news articles, in `src/components/article/`. Styles: `src/styles/article.css` (tokens only). Live demo with every component: `/styleguide/article-components/` (source: `src/components/article/demo/article-components-demo.mdx`).
 
-**Also as page blocks.** The shared block library (`src/lib/sections/`, [`SECTIONS.md`](SECTIONS.md)) wraps these same components (Figure, ImageRow, Callout, Quote, Pullquote, CodeBlock, VideoEmbed, TwoColumn, Toc, Paragraph, Divider) so a page such as About can be built from them in the admin; a page block is a thin component in `src/components/sections/` that passes the block's fields to the one here. Change a component here and the page blocks follow.
+**Also as page blocks.** The shared block library (`src/lib/sections/`, [`SECTIONS.md`](SECTIONS.md)) wraps these same components (Figure, ImageRow, Callout, Quote, Post, Pullquote, CodeBlock, VideoEmbed, TwoColumn, Toc, Paragraph, Divider) so a page such as About can be built from them in the admin; a page block is a thin component in `src/components/sections/` that passes the block's fields to the one here. Change a component here and the page blocks follow.
 
 When to use which, with recipes per kind and density rules: [`WRITING_GUIDE.md`](WRITING_GUIDE.md).
 
@@ -24,6 +24,7 @@ When to use which, with recipes per kind and density rules: [`WRITING_GUIDE.md`]
 | `ImageRow` / `ImageGallery` | `images` (2-3 of `{src, alt, caption, decorative?}`), `caption` | Stacks below 600px. Not the lightbox `Gallery`. |
 | `Callout` | `type` info/warn/tip, `title` | Same classes as `> [!NOTE]`. |
 | `Quote` | `cite`, `href` | Inline quotation. |
+| `Post` | `name`, `platform` (required), `handle`, `role`, `date` (2026-11-04), `href` (https), `quoted`, `quotedLabel`, `quotedDate`, `quotedHref` | A quoted social post as the site's own card: initials, name, handle, "Post on X", the words (the slot), the date and "View the post on X". No logo, no embed, no photo from elsewhere. Same markup as `> [!POST]` in Markdown and the `post` block: `src/lib/post-card.mjs`. Syntax in [`WRITING_GUIDE.md`](WRITING_GUIDE.md) (**Post**). |
 | `Pullquote` | `cite`, `ring` | Large display quote; `aria-hidden` (repeats body text). `ring`: one to three of its words, copied exactly, get the brand ring (once a post; the build fails if they are not in the quote). |
 | `CodeBlock` | `code`, `lang`, `title` | Same bar and copy button as fenced code. |
 | `VideoEmbed` | `id`, `title`, `poster`, `duration`, `chapters`, `caption` | Wraps `YouTubeFacade` (click to load). |
