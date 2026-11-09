@@ -1,8 +1,8 @@
 ---
 title: Apps
 seoTitle: Apps
-description: "Small apps I built that run in your browser. No install: pick one and open it."
-lead: Things I have built that run in your browser. No install.
+description: "Games and apps my AI agents built. They run in your browser: no install, pick one and open it."
+lead: Games and apps my agents built. They run in your browser, no install.
 emptyHeading: No apps yet.
 emptyText: Nothing is here yet. The first app will appear on this page when it is ready.
 emptyLinkLabel: See the projects

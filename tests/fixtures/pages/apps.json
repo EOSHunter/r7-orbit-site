@@ -1,11 +1,23 @@
 {
   "path": "/apps/",
-  "inputs": "sha256:9ef5dda343b57dd3",
+  "inputs": "sha256:cb6440ecc9fd0fb9",
   "posts": [
+    "news/2026-11-07-anthropic-agent-skills-agentic-ai-foundation",
+    "news/2026-11-07-github-copilot-xcode-jetbrains-air",
+    "news/2026-11-07-home-assistant-2026-11-marketplace",
+    "news/2026-11-08-anthropic-ipo-amended-filing",
+    "news/2026-11-08-nvidia-board-investigation-jensen-huang",
+    "news/2026-11-08-workos-runaway-ai-hacking-agent",
     "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-an-ai-agent-makes-on-brand-imagery-with-r7-orbit-studio",
     "blog/how-i-built-a-browser-game-with-r7-orbit",
     "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
+    "blog/r7-home-assistant",
+    "blog/r7-home-games",
+    "blog/r7-home-presence-sensors",
+    "blog/r7-home-voice",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "blog/what-is-r7-home",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/orbit-royale",
@@ -14,17 +26,17 @@
   ],
   "head": [
     "title: Apps · R7 Orbit",
-    "description: Small apps I built that run in your browser. No install: pick one and open it.",
+    "description: Games and apps my AI agents built. They run in your browser: no install, pick one and open it.",
     "p.eyebrow: Apps",
     "h1: Apps",
-    "p.t-lead: Things I have built that run in your browser. No install."
+    "p.t-lead: Games and apps my agents built. They run in your browser, no install."
   ],
   "lines": [
     "title: Apps · R7 Orbit",
-    "description: Small apps I built that run in your browser. No install: pick one and open it.",
+    "description: Games and apps my AI agents built. They run in your browser: no install, pick one and open it.",
     "p.eyebrow: Apps",
     "h1: Apps",
-    "p.t-lead: Things I have built that run in your browser. No install.",
+    "p.t-lead: Games and apps my agents built. They run in your browser, no install.",
     "[content]"
   ]
 }

@@ -1,4 +1,4 @@
-inputs: sha256:07bb64356c1fd0d1
+inputs: sha256:7638c7acf2192928
 title: Search · R7 Orbit
 description: Search every post, video, project and repo on this site.
 robots: noindex

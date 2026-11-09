@@ -2,7 +2,8 @@
 eyebrow: directing ai agents · {site.name}
 title: I build software with *AI agents*.
 lead: "R7 Orbit is the desktop app I'm building to direct them. This site is
-  where their work goes: apps, games, the build logs and the videos."
+  where their work goes: the apps and games they build, and the posts and
+  video notes they write."
 buttons: []
 waitlist: true
 background: galaxy

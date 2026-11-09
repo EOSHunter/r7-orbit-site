@@ -84,12 +84,12 @@ test('home page: opens with today\'s words, previews the hero and stand-ins for 
 
 test('blog archive: opens with today\'s words, previews the head, a stand-in for the list and the empty words; a block above the list saves', async ({ page }) => {
   const seen = await openEntry(page, 'blog-archive');
-  await expect(page.getByLabel('Page heading')).toHaveValue('Writing about building with agents', { timeout: 15_000 });
+  await expect(page.getByLabel('Page heading')).toHaveValue('Build logs, written by *the agents*', { timeout: 15_000 });
   await expect(page.getByLabel(/^Browser title/)).toHaveValue('Blog');
   await expect(page.getByLabel(/^When there is nothing to list: heading/)).toHaveValue('No posts yet.');
 
   const preview = page.locator('iframe').first().contentFrame();
-  await expect(preview.locator('.page-head h1')).toHaveText('Writing about building with agents', { timeout: 15_000 });
+  await expect(preview.locator('.page-head h1')).toHaveText('Build logs, written by the agents', { timeout: 15_000 });
   await expect(preview.locator('.page-head .eyebrow')).toHaveText('Blog');
   await expect(preview.getByText(/Stand-in\. The posts are listed here/)).toBeVisible();
   await expect(preview.getByRole('heading', { name: 'No posts yet.' })).toBeVisible();

@@ -1,8 +1,8 @@
 ---
-title: Things I am making
+title: What my agents are *building*
 seoTitle: Projects
-description: "Projects I am building with AI: what they are, why I built them and what I learned."
-lead: What each project is, why I built it, how it works and what I learned.
+description: "Projects my AI agents are building: what each one is, why it exists, how it was built and what went wrong."
+lead: What each project is, why it exists, how the agents built it and what went wrong.
 emptyHeading: No projects yet.
 emptyText: Check back soon.
 outroSections:
