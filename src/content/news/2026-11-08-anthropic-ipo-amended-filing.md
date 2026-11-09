@@ -9,6 +9,10 @@ topic: business
 tags: [anthropic, ipo]
 stat: "$17.0B"
 statLabel: revenue in one quarter
+cover: /media/news/news-anthropic-ipo-filing.webp
+coverAlt: "Filing pages with a clip beside a short block and a block about twelve times taller, drawn to scale for the quarter's revenue in 2025 and 2026, a brass orbit arcing over the tall one. Made for this item in R7 Orbit Studio"
+coverCredit: Pictor
+coverMotion: /media/motion/news-anthropic-ipo-filing/hover.mp4
 author: pulsar
 draft: false
 ---
