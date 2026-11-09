@@ -20,6 +20,9 @@ Anthropic has loosened a rule in Claude Code that was turning down game projects
 
 Anthropic had added a short rule to Claude Code's prompt for Opus 5.5 to steer Claude away from recreating specific existing games. Osmani wrote that the rule also kicked in when people named a game only to describe the mechanics they wanted, so Claude Code pushed back on projects it should have built ([Addy Osmani on X](https://x.com/addyosmani/status/2117848568535106001)).
 
+> [!POST] Addy Osmani · @addyosmani · X · Anthropic · 2026-11-04 · https://x.com/addyosmani/status/2117848568535106001
+> You can name a game to describe what you want…
+
 In an Oct 30, 2026 reply quoted in the same post, Osmani said the rule was two sentences, added because using Claude to infringe IP is against Anthropic's usage policy ([Addy Osmani on X](https://x.com/addyosmani/status/2117848568535106001)). Tom's Hardware links the original block to a rise in AI-assisted cloning and reverse engineering of games, including people who reverse engineered demos from small developers and threatened to release AI-finished copies unless paid ([Tom's Hardware](https://www.tomshardware.com/tech-industry/artificial-intelligence/anthropic-loosens-game-restrictions-claude-will-now-offer-to-build-original-game-in-same-genre-if-asked-to-copy)).
 
 ## Why it matters
