@@ -114,6 +114,19 @@ function matching(label: string, re: RegExp, message: string, optional: boolean 
 }
 
 /** Text that must look a certain way (an address, a tag, an id). */
+/** A day, written 2026-11-04. */
+export const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A day, written 2026-11-04. YAML reads an unquoted 2026-11-04 as a date, and the editor writes it unquoted, so a date is turned
+ * back into that text before the check: the block always gets `2026-11-04`.
+ */
+export function day<const O extends boolean = false>({ label, hint, optional }: { label: string; hint?: string; optional?: O }): Str<O> {
+  const toText = (v: unknown) => (v instanceof Date && !Number.isNaN(v.getTime()) ? v.toISOString().slice(0, 10) : v);
+  // The inner check takes "" when the field is optional, as every optional text box does (the editor writes an empty box as "").
+  return withMetaAs<Str<O>>(z.preprocess(toText, matching(label, DAY_PATTERN, 'write the date like 2026-11-04', optional)), { label, hint, pattern: DAY_PATTERN.source });
+}
+
 export function pattern<const O extends boolean = false, const F extends string | undefined = undefined>({
   label,
   hint,

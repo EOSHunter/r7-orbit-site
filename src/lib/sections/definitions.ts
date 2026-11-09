@@ -17,6 +17,7 @@ import {
   choice,
   choices,
   count,
+  day,
   flag,
   HTTPS_PATTERN,
   HTTPS_MESSAGE,
@@ -35,7 +36,6 @@ import {
   YOUTUBE_ID_PATTERN,
 } from './fields';
 import { WAITLIST_SOURCES } from '../waitlist';
-import { POST_DATE_PATTERN } from '../post-card.mjs';
 
 
 /** Where a block sits on the page. `prose` is the reading column; `wide` and `full` leave it (one block, one row); `band` is a
@@ -197,11 +197,11 @@ const socialPost = defineBlock(
     platform: text({ label: 'Platform', max: 40, hint: 'Where it was posted: X, Bluesky, LinkedIn, Mastodon, GitHub, a forum.' }),
     handle: text({ label: 'Handle', optional: true, max: 80, hint: 'Optional. @name, as the platform shows it.' }),
     role: text({ label: 'Who they are', optional: true, max: 80, hint: 'Optional. A few words from a source, e.g. "Anthropic".' }),
-    date: pattern({ label: 'Date', optional: true, pattern: POST_DATE_PATTERN, message: 'write the date like 2026-11-04', hint: 'Optional. Written 2026-11-04.' }),
+    date: day({ label: 'Date', optional: true, hint: 'Optional. Written 2026-11-04.' }),
     url: pattern({ label: 'Link to the post', optional: true, pattern: HTTPS_PATTERN, message: HTTPS_MESSAGE, hint: 'The https address of the post itself.' }),
     quoted: text({ label: 'Quoted post', optional: true, widget: 'text', hint: 'Optional. A post it quotes or replies to, word for word. A blank line starts a new paragraph.' }),
     quotedLabel: text({ label: 'Quoted post: label', optional: true, max: 40, hint: 'Optional. E.g. "Quoted reply"; "Quoted post" when empty.' }),
-    quotedDate: pattern({ label: 'Quoted post: date', optional: true, pattern: POST_DATE_PATTERN, message: 'write the date like 2026-10-30', hint: 'Optional. Written 2026-10-30.' }),
+    quotedDate: day({ label: 'Quoted post: date', optional: true, hint: 'Optional. Written 2026-10-30.' }),
     quotedUrl: pattern({ label: 'Quoted post: link', optional: true, pattern: HTTPS_PATTERN, message: HTTPS_MESSAGE, hint: 'Optional. Its https address.' }),
   },
 );
