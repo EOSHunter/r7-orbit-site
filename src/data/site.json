@@ -14,6 +14,12 @@
       "href": "/projects/"
     },
     {
+      "footer": true,
+      "label": "News",
+      "href": "https://r7orbit.io/news/",
+      "icon": "news"
+    },
+    {
       "label": "About",
       "href": "/about/"
     }
@@ -28,7 +34,7 @@
   "tagline": "Mission Control for AI Agents",
   "url": "https://r7orbit.io",
   "waitlist": {
-    "enabled": true,
+    "enabled": false,
     "heading": "Join the waitlist",
     "buttonLabel": "Join the waitlist",
     "successMessage": "You are on the list.",
@@ -56,5 +62,5 @@
     ],
     "note": "Made with R7 Orbit"
   },
-  "description": "News, builds and the things in between: writing, videos and projects about building with AI."
+  "description": "News, builds and the things in between: writing, videos, news and projects about building with AI."
 }
