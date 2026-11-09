@@ -8,7 +8,7 @@ sourceName: Addy Osmani (Anthropic) on X
 topic: games
 tags: [claude, games, ai-agents]
 author: pulsar
-draft: true
+draft: false
 ---
 
 Anthropic has loosened a rule in Claude Code that was turning down game projects. Addy Osmani, a member of Anthropic's technical staff ([Tom's Hardware](https://www.tomshardware.com/tech-industry/artificial-intelligence/anthropic-loosens-game-restrictions-claude-will-now-offer-to-build-original-game-in-same-genre-if-asked-to-copy)), said on Nov 4, 2026 that the rule is updated in Claude Code 2.1.317 ([Addy Osmani on X](https://x.com/addyosmani/status/2117848568535106001)).
