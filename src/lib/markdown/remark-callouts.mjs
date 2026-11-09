@@ -14,7 +14,7 @@ const MARKER = /^\[!(NOTE|TIP|WARNING)\][ \t]*\r?\n?/i;
 const ATTRIBUTION = /(?:^|\n)[—―][ \t]*(\S[^\n]*)$/;
 
 function walk(node, fn) {
-  if (node.data?.postCard) return;
+  if (node.data?.postCard || node.data?.newsBlock) return;
   fn(node);
   if (Array.isArray(node.children)) for (const child of [...node.children]) walk(child, fn);
 }

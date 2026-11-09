@@ -3,6 +3,7 @@
 import { createMarkdownProcessor, rehypeHeadingIds } from '@astrojs/markdown-remark';
 import remarkCallouts from '../../lib/markdown/remark-callouts.mjs';
 import remarkFigures from '../../lib/markdown/remark-figures.mjs';
+import remarkNewsBlocks from '../../lib/markdown/remark-news-blocks.mjs';
 import remarkImageAlt from '../../lib/markdown/remark-image-alt.mjs';
 import { rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from '../../lib/markdown/rehype-site.mjs';
 import { siteCodeTransformer } from '../../lib/markdown/shiki-transformer.mjs';
@@ -29,7 +30,7 @@ export async function renderMarkdown(markdown: string, fileURL?: URL): Promise<s
   if (!markdown.trim()) return '';
   processor ??= createMarkdownProcessor({
     // `always`: this renders a piece of a vlog body, so the file path is not known, but the alt rule still holds.
-    remarkPlugins: [[remarkImageAlt, { always: true }], remarkCallouts, remarkFigures],
+    remarkPlugins: [[remarkImageAlt, { always: true }], remarkNewsBlocks, remarkCallouts, remarkFigures],
     rehypePlugins: [rehypeHeadingIds, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },
   });

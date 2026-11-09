@@ -2,12 +2,13 @@ import { rehypeHeadingIds, createMarkdownProcessor } from '@astrojs/markdown-rem
 import { describe, expect, it } from 'vitest';
 import remarkCallouts from './remark-callouts.mjs';
 import remarkFigures from './remark-figures.mjs';
+import remarkNewsBlocks from './remark-news-blocks.mjs';
 import { rehypeBodyHeadings, rehypeCodeBlocks, rehypeHeadingAnchors, rehypeNoHotlinks } from './rehype-site.mjs';
 import { siteCodeTransformer } from './shiki-transformer.mjs';
 
 async function render(markdown: string): Promise<string> {
   const processor = await createMarkdownProcessor({
-    remarkPlugins: [remarkCallouts, remarkFigures],
+    remarkPlugins: [remarkNewsBlocks, remarkCallouts, remarkFigures],
     rehypePlugins: [rehypeHeadingIds, rehypeBodyHeadings, rehypeHeadingAnchors, rehypeCodeBlocks, rehypeNoHotlinks],
     shikiConfig: { theme: 'css-variables', transformers: [siteCodeTransformer] },
   });
@@ -146,5 +147,60 @@ describe('post cards', () => {
   it('leaves other callouts and pull quotes alone', async () => {
     expect(await render('> [!NOTE]\n> Check this.')).toContain('class="callout brass"');
     expect(await render('> Words.\n> — Someone')).toContain('<cite>Someone</cite>');
+  });
+});
+
+describe('news blocks', () => {
+  it('turns [!NUMBERS] into a row of numbers with labels, and keeps the source line as the caption', async () => {
+    const html = await render('> [!NUMBERS]\n> - **1,724** Linux flaws reproduced\n> - **948** with [working exploits](https://example.com/a)\n>\n> Source: [OpenAI](https://openai.com/x)');
+    expect(html).toMatch(/^<figure class="key-numbers">\s*<dl class="key-numbers-list">/);
+    expect(html).toMatch(/<div class="key-number">\s*<dt>Linux flaws reproduced<\/dt>\s*<dd>1,724<\/dd>\s*<\/div>/);
+    expect(html).toContain('<dt>with <a href="https://example.com/a">working exploits</a></dt>');
+    expect(html).toMatch(/<figcaption class="key-numbers-source">Source: <a href="https:\/\/openai\.com\/x">OpenAI<\/a><\/figcaption>/);
+  });
+
+  it('refuses a [!NUMBERS] line without a bold number, and one number alone', async () => {
+    await expect(render('> [!NUMBERS]\n> - 948 exploits\n> - **2** things')).rejects.toThrow(/number in bold/);
+    await expect(render('> [!NUMBERS]\n> - **948** exploits')).rejects.toThrow(/two to four/);
+  });
+
+  it('draws [!CHART] as a titled table of bars, percentages out of 100, the bold line marked as the story\'s bar', async () => {
+    const html = await render('> [!CHART] ExploitGym score\n> - GPT-5.6 Cyber: 32.1%\n> - **GPT-6 Cyber: 48.5%**\n>\n> Source: [OpenAI](https://openai.com/x)');
+    expect(html).toMatch(/^<figure class="bar-chart">\s*<figcaption class="bar-chart-title">ExploitGym score<\/figcaption>/);
+    expect(html).toContain('<tr><th scope="row">GPT-5.6 Cyber</th><td><span class="bar-track" aria-hidden="true"><span class="bar" style="--bar: 32.1%"></span></span><span class="bar-value">32.1%</span></td></tr>');
+    expect(html).toContain('<tr class="is-key"><th scope="row">GPT-6 Cyber</th>');
+    expect(html).toContain('style="--bar: 48.5%"');
+    expect(html).toMatch(/<p class="bar-chart-source">Source: <a href="https:\/\/openai\.com\/x">OpenAI<\/a><\/p>/);
+  });
+
+  it('scales other units to the largest bar, and refuses a chart without a title, a source, or with mixed units', async () => {
+    const html = await render('> [!CHART] Cost\n> - A: 2 dollars\n> - B: 8 dollars\n>\n> Source: a test');
+    expect(html).toContain('style="--bar: 25%"');
+    expect(html).toContain('<span class="bar-value">8 dollars</span>');
+    await expect(render('> [!CHART]\n> - A: 1%\n> - B: 2%\n>\n> Source: x')).rejects.toThrow(/give it a title/);
+    await expect(render('> [!CHART] T\n> - A: 1%\n> - B: 2%')).rejects.toThrow(/source line/);
+    await expect(render('> [!CHART] T\n> - A: 1%\n> - B: 2 ms\n>\n> Source: x')).rejects.toThrow(/same unit/);
+    await expect(render('> [!CHART] T\n> - A one\n> - B: 2%\n>\n> Source: x')).rejects.toThrow(/Label: 48\.5%/);
+  });
+
+  it('turns the list under ## Sources into source cards, the first marked as the primary source', async () => {
+    const html = await render('## Sources\n\n- [GPT-6 Cyber: aligned agents (OpenAI)](https://openai.com/index/x/)\n- [A story](https://www.axios.com/2026/x)');
+    expect(html).toContain('<ul class="source-cards">');
+    expect(html).toMatch(/<a class="source-card" href="https:\/\/openai\.com\/index\/x\/" rel="noopener"><span class="source-card-mark" aria-hidden="true">O<\/span><span class="source-card-text"><span class="source-card-title">GPT-6 Cyber: aligned agents<\/span><span class="source-card-meta">OpenAI · Primary source<\/span><\/span><svg/);
+    expect(html).toContain('<span class="source-card-meta">axios.com</span>');
+  });
+
+  it('leaves a Sources list alone when an item is more than one link', async () => {
+    const html = await render('## Sources\n\n- [One](https://a.example/) and some words\n- [Two](https://b.example/)');
+    expect(html).not.toContain('source-card');
+  });
+
+  it('adds a credit to a figure, with or without a caption, and leaves an image with other text alone', async () => {
+    expect(await render('![A chart](/media/news/a.webp)\n*The scores.*\nImage: [OpenAI](https://openai.com/x)')).toMatch(
+      /<figure><img src="\/media\/news\/a\.webp" alt="A chart"><figcaption>The scores\. <span class="fig-credit">Image: <a href="https:\/\/openai\.com\/x">OpenAI<\/a><\/span><\/figcaption><\/figure>/,
+    );
+    expect(await render('![A chart](/media/news/a.webp)\nChart: OpenAI')).toContain('<figcaption><span class="fig-credit">Chart: OpenAI</span></figcaption>');
+    expect(await render('![A chart](/media/news/a.webp)\n*Caption*')).toContain('<figcaption>Caption</figcaption>');
+    expect(await render('![A chart](/media/news/a.webp) and words')).not.toContain('<figure');
   });
 });

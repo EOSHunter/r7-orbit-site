@@ -80,3 +80,54 @@
 .post-card .post-card-foot time { font-family: var(--font-mono); color: var(--text-3); }
 .post-card .post-card-link { margin-left: auto; color: var(--brass); }
 .post-card .post-card-link:hover { color: var(--brass-bright); }
+
+/* News blocks (src/lib/markdown/remark-news-blocks.mjs, docs/WRITING_GUIDE.md): key numbers, a bar chart, source cards. */
+.key-numbers, .prose .key-numbers { clear: both; margin: var(--s-6) 0; overflow: visible; background: none; border: 0; border-radius: 0; }
+.key-numbers .key-numbers-title { margin: 0 0 var(--s-2); font: var(--fs-xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.key-numbers .key-numbers-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: var(--s-3); margin: 0; }
+.key-numbers .key-number { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: var(--s-2); padding: var(--s-4); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md); }
+.key-numbers dd { margin: 0; font: var(--fw-medium) var(--fs-3xl)/var(--lh-tight) var(--font-display); color: var(--brass-bright); font-variant-numeric: lining-nums; }
+.key-numbers dt { margin: 0; font: var(--fs-sm)/var(--lh-ui) var(--font-ui); color: var(--text-2); }
+.key-numbers .key-numbers-source { margin: var(--s-2) 0 0; padding: 0; border: 0; font-size: var(--fs-sm); color: var(--text-3); }
+
+.bar-chart, .prose .bar-chart { clear: both; margin: var(--s-6) 0; padding: var(--s-4) var(--s-5); overflow: visible; background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); }
+.bar-chart .bar-chart-title { margin: 0 0 var(--s-3); padding: 0; border: 0; font: var(--fw-medium) var(--fs-md) var(--font-ui); color: var(--text); }
+.bar-chart .bar-chart-rows { display: table; width: 100%; margin: 0; border-collapse: collapse; font-size: var(--fs-sm); }
+.bar-chart th, .bar-chart td { padding: var(--s-1) 0; border: 0; vertical-align: middle; }
+.bar-chart th { width: 34%; padding-right: var(--s-4); font-weight: var(--fw-regular); color: var(--text-2); text-align: left; overflow-wrap: anywhere; }
+.bar-chart td { display: flex; align-items: center; gap: var(--s-3); }
+.bar-chart .bar-track { flex: 1; height: var(--s-2); overflow: hidden; background: var(--brass-wash-2); border-radius: var(--r-full); }
+.bar-chart .bar { display: block; width: var(--bar); height: 100%; background: var(--brass-dim); border-radius: inherit; }
+.bar-chart .bar-value { min-width: 6ch; font-family: var(--font-mono); color: var(--text-2); text-align: right; }
+.bar-chart .is-key th { color: var(--text); }
+.bar-chart .is-key .bar { background: var(--brass); }
+.bar-chart .is-key .bar-value { color: var(--brass-bright); }
+.bar-chart .bar-chart-source { margin: var(--s-3) 0 0; font-size: var(--fs-xs); color: var(--text-3); }
+.bar-chart .bar-chart-source a { color: inherit; }
+@media (max-width: 560px) {
+  /* Narrow: each number is a row (the number, then what it counts), and each bar gets the full width under its label. */
+  .key-numbers .key-numbers-list { grid-template-columns: minmax(0, 1fr); gap: var(--s-2); }
+  .key-numbers .key-number { flex-direction: row-reverse; justify-content: flex-end; align-items: baseline; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+  .key-numbers dd { flex: none; font-size: var(--fs-2xl); }
+  .bar-chart, .prose .bar-chart { padding: var(--s-4); }
+  .bar-chart .bar-chart-rows, .bar-chart tbody, .bar-chart tr { display: block; }
+  .bar-chart tr + tr { margin-top: var(--s-3); }
+  .bar-chart th { display: block; width: auto; padding: 0 0 var(--s-1); }
+  .bar-chart td { padding: 0; }
+}
+
+.source-cards, .prose .source-cards { display: grid; gap: var(--s-2); margin: var(--s-4) 0 0; padding: 0; list-style: none; }
+.source-cards > li, .prose .source-cards > li { margin: 0; }
+.source-card, .prose .source-card { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4); color: var(--text); text-decoration: none; background: var(--surface-1); border: var(--bw) solid var(--line-strong); border-radius: var(--r-lg); transition: border-color var(--dur) var(--ease); }
+.source-card:hover, .prose .source-card:hover, .source-card:focus-visible { border-color: var(--line-brass); }
+.source-card .source-card-mark { --mark: calc(var(--s-6) + var(--s-1)); flex: none; display: grid; place-items: center; width: var(--mark); height: var(--mark); border: var(--bw) solid var(--line-brass); border-radius: var(--r-md); background: var(--brass-wash-1); font: var(--fw-medium) var(--fs-sm) var(--font-mono); color: var(--brass-bright); }
+.source-card .source-card-text { display: grid; flex: 1; gap: var(--s-1); min-width: 0; }
+.source-card .source-card-title { font-size: var(--fs-md); line-height: var(--lh-snug); overflow-wrap: break-word; transition: color var(--dur) var(--ease); }
+.source-card:hover .source-card-title, .source-card:focus-visible .source-card-title { color: var(--brass-bright); }
+.source-card .source-card-meta { font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.source-card .source-card-arrow { flex: none; color: var(--brass); }
+@media (prefers-reduced-motion: reduce) { .source-card, .source-card .source-card-title { transition: none; } }
+
+/* The credit after an official picture's caption ("Image: OpenAI", docs/IMAGES.md "Official images") */
+.fig-credit { font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.fig-credit a { color: inherit; }

@@ -80,7 +80,32 @@ Short and level: what happened, why it matters, where it comes from. **150-400 w
 4. **Callout (`> [!NOTE]` or a `callout` block): the key fact.** The number, the date or the change, linked.
 5. `## What happened`: one or two short paragraphs; a list when a release has several changes.
 6. `## Why it matters`: one or two short paragraphs; only reasons the sources or brief give; say what is not known.
-7. `## Sources`: a list of links (Markdown) or a `links` block (sections), the primary source first. Every news item ends here.
+7. `## Sources`: a list of links (Markdown) or a `links` block (sections), the primary source first. Every news item ends here. In Markdown each item written `[Title (Publisher)](https://…)` is drawn as a **source card** (publisher, title, an arrow), the first one labelled "Primary source"; a list with anything but one link per item stays a plain list.
+
+**Make it visual** (one or two of these, not all; they replace words, they do not add to them):
+
+- **Key numbers** `> [!NUMBERS]`: two to four numbers from the source, each line `- **948** with working exploits`, then a `Source: [Name](https://…)` line. For a story whose point is a few figures.
+- **Chart** `> [!CHART] Title`: the source's own figures redrawn as bars, each line `- GPT-5.6 Cyber: 32.1%`, the line the story is about in bold (`- **GPT-6 Cyber: 48.5%**`), one unit for all bars, then a `Source:` line. Percentages are drawn out of 100, other units against the largest bar. Only numbers the source gives; never estimated.
+- **An official image** from the announcement, credited (`docs/IMAGES.md`, rule 7): a product screenshot, the company's chart, a photo from its press kit. Under the lead or in "What happened".
+- **A post card** `> [!POST]` for a quote from X, Bluesky or a forum (**Post** below).
+- **A video** from the source: a `video` block (sections) with the company's own YouTube id; it loads only on click.
+
+```md
+> [!NUMBERS]
+> - **1,724** Linux flaws reproduced
+> - **948** with working exploits
+> - **304** disclosed to maintainers
+>
+> Source: [OpenAI](https://openai.com/index/introducing-gpt-6-cyber/)
+
+> [!CHART] ExploitGym score
+> - GPT-5.6 Cyber: 32.1%
+> - **GPT-6 Cyber: 48.5%**
+>
+> Source: [OpenAI](https://openai.com/index/introducing-gpt-6-cyber/)
+```
+
+A wrong line in either stops the build with the reason (a number not in bold, one number alone, bars in mixed units, a chart with no title or no source).
 
 No pull quote, no divider, no contents list: it is too short for them.
 
