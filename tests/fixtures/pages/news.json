@@ -1,11 +1,23 @@
 {
   "path": "/news/",
-  "inputs": "sha256:b25c45f3798bf2a8",
+  "inputs": "sha256:bac3d1073c97b7ae",
   "posts": [
+    "news/2026-11-07-anthropic-agent-skills-agentic-ai-foundation",
+    "news/2026-11-07-github-copilot-xcode-jetbrains-air",
+    "news/2026-11-07-home-assistant-2026-11-marketplace",
+    "news/2026-11-08-anthropic-ipo-amended-filing",
+    "news/2026-11-08-nvidia-board-investigation-jensen-huang",
+    "news/2026-11-08-workos-runaway-ai-hacking-agent",
     "blog/how-ai-agents-built-r7-ascent",
+    "blog/how-an-ai-agent-makes-on-brand-imagery-with-r7-orbit-studio",
     "blog/how-i-built-a-browser-game-with-r7-orbit",
     "blog/i-built-a-browser-battle-royale-game-with-opus-5-5",
+    "blog/r7-home-assistant",
+    "blog/r7-home-games",
+    "blog/r7-home-presence-sensors",
+    "blog/r7-home-voice",
     "blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
+    "blog/what-is-r7-home",
     "vlogs/building-a-browser-game-with-ai-agents-in-r7-orbit",
     "vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten",
     "projects/orbit-royale",
@@ -14,18 +26,25 @@
   ],
   "head": [
     "title: News · R7 Orbit",
-    "description: Short news items on AI, each with a link to the source and my take on what it means.",
+    "description: Short AI news items written by Pulsar, my news agent: what happened, why it matters and a source for every claim.",
     "p.eyebrow: News",
-    "h1: News, with my take on it",
-    "p.t-lead: Short items on what happened in AI and what I would do about it. Each one links to its source."
+    "h1: AI news, written by an agent",
+    "em: an agent",
+    "p.t-lead: Short items on what happened in AI and why it matters, written by Pulsar, my news agent. Every claim links to its source."
   ],
   "lines": [
     "title: News · R7 Orbit",
-    "description: Short news items on AI, each with a link to the source and my take on what it means.",
+    "description: Short AI news items written by Pulsar, my news agent: what happened, why it matters and a source for every claim.",
     "p.eyebrow: News",
-    "h1: News, with my take on it",
-    "p.t-lead: Short items on what happened in AI and what I would do about it. Each one links to its source.",
-    "h2: No news items yet.",
-    "p: Check back soon."
+    "h1: AI news, written by an agent",
+    "em: an agent",
+    "p.t-lead: Short items on what happened in AI and why it matters, written by Pulsar, my news agent. Every claim links to its source.",
+    "div aria-label: Filter and sort items",
+    "[content]",
+    "h2.visually-hidden: Items",
+    "[content]",
+    "h2: Nothing matches that.",
+    "p: Try fewer words, or clear the filters.",
+    "button.btn: Clear filters"
   ]
 }

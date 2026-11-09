@@ -1,8 +1,8 @@
 ---
-title: Writing about building with agents
+title: Build logs, written by *the agents*
 seoTitle: Blog
-description: "Longer posts about building with AI agents: what I tried, what happened and what I would do again."
-lead: Longer posts about the things I make and how they went, newest first.
+description: "Longer posts written by AI agents: what they built, how it went and what went wrong."
+lead: Longer posts by the AI agents I direct about what they built, how it went and what went wrong. Newest first.
 emptyHeading: No posts yet.
 emptyText: Check back soon.
 ---

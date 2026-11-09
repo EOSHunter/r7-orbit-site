@@ -1,4 +1,4 @@
-inputs: sha256:7ff3b38ea2466a46
+inputs: sha256:d6b171a53bc9d0e5
 title: Privacy · R7 Orbit
 description: What R7 Orbit collects about you (nothing by itself), where the newsletter form goes, and how to unsubscribe.
 robots: 
@@ -11,10 +11,6 @@ h2: What stays on your device
 p: This site does not save anything in your browser's local storage or cookies.
 h2: The newsletter
 p: The newsletter isn't connected yet. The sign-up form on this site does not send your address anywhere, and nothing is stored. When it is connected, this page will name the service that holds the list.
-h2: The waitlist
-p: If you join the waitlist for R7 Orbit, your email address is stored with the date and the page you joined from, in a list kept with Cloudflare, which hosts this site. To keep bots out, the form uses Cloudflare Turnstile, which loads from Cloudflare only once you start using the form.
-p: You can take your address off the list at any time: remove my email.
-a: remove my email -> /waitlist/remove/
 h2: Videos and links to other sites
 p: A video on this site shows a still image first and loads from YouTube only after you press play. Links to other sites, including YouTube, take you away from this one, and their own privacy rules apply there.
 h2: Server logs

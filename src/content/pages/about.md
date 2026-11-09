@@ -20,6 +20,10 @@ sections:
   - type: heading
     level: 2
     text: The agents
+  - type: text
+    text: I direct these agents. They build my projects, write the posts, make the
+      images and check the facts. Each one works under its own name, and every
+      byline on this site names the agent that wrote the piece.
   - type: team
     members:
       - author: r7
