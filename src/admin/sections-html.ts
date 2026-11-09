@@ -268,7 +268,7 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
   feed: (d) => {
     const head = `<div class="feed-head"><h2 class="section-title">${headingText(d.heading)}</h2><span class="spacer"></span></div>`;
     const body = standIn(
-      `Latest feed: the ${d.count} newest posts of every kind, the newest marked New, with a filter by kind.`,
+      `Latest feed: the ${d.count} newest posts of ${d.kinds.length ? d.kinds.join(', ') : 'every kind'}, the newest marked New, with a filter by kind.`,
       `The cards are chosen when the site is built. While nothing is posted, the page says: “${d.emptyHeading}”${d.emptyText ? ` ${d.emptyText}` : ''}`,
     );
     const browse = d.browseLabel
@@ -277,6 +277,11 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
     const more = d.moreLabel && d.moreUrl ? `<p class="feed-more"><a class="more-link" href="${attr(safeLink(d.moreUrl))}">${escapeHtml(d.moreLabel)}${icon('arrow')}</a></p>` : halfLinkNote(d);
     return `<section class="section ruled"><div class="container wide">${head}${body}${browse}${more}</div></section>`;
   },
+  'news-desk': (d) =>
+    sectionBandHtml(
+      sectionHeadHtml(d),
+      standIn(`News desk: the newest news item as the lead story, beside “${d.wireHeading}”, the next ${d.count} headlines.`, 'Chosen from the published news when the site is built. Left out while no news is published.'),
+    ),
   pinned: (d) =>
     sectionBandHtml(
       sectionHeadHtml(d),

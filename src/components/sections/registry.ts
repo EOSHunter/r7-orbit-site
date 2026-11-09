@@ -25,6 +25,7 @@ import TocBlock from './TocBlock.astro';
 import StatsBlock from './StatsBlock.astro';
 import LatestBlock from './LatestBlock.astro';
 import FeedBlock from './FeedBlock.astro';
+import NewsDeskBlock from './NewsDeskBlock.astro';
 import PinnedBlock from './PinnedBlock.astro';
 import AppsBlock from './AppsBlock.astro';
 import AuthorBlock from './AuthorBlock.astro';
@@ -55,6 +56,7 @@ export const renderers: Record<SectionType, AstroComponentFactory> = {
   stats: StatsBlock,
   latest: LatestBlock,
   feed: FeedBlock,
+  'news-desk': NewsDeskBlock,
   pinned: PinnedBlock,
   apps: AppsBlock,
   author: AuthorBlock,

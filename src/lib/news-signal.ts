@@ -23,6 +23,18 @@ export const NEWS_TOPICS = {
   business: 'Business',
 } as const;
 export type NewsTopic = keyof typeof NEWS_TOPICS;
+/** The short label over a news card's picture (its kicker). */
+export const NEWS_TOPIC_KICKERS: Record<NewsTopic, string> = {
+  models: 'Models',
+  tools: 'Tools',
+  trends: 'Trends',
+  games: 'Games',
+  home: 'Smart home',
+  policy: 'Policy',
+  orbit: 'R7 Orbit',
+  security: 'Security',
+  business: 'Business',
+};
 export const NEWS_TOPIC_KEYS = Object.keys(NEWS_TOPICS) as [NewsTopic, ...NewsTopic[]];
 export type NewsVariant = 'card' | 'banner';
 

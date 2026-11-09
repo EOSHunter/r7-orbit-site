@@ -101,6 +101,20 @@ export function postSchemas<R extends z.ZodType, I extends z.ZodType>({
       topic: z.enum(NEWS_TOPIC_KEYS).optional(),
       // An object made for this one item (public/media/news/symbols/<symbol>.webp): no two items share a picture.
       symbol: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'a symbol is lowercase words joined by hyphens').optional(),
+      // Who made the cover when it is an official image from the announcement (docs/IMAGES.md rule 7): shown on the card as
+      // "Image: <name>". Required with a cover on a news item, so an official picture is never shown uncredited.
+      coverCredit: z.string().min(1).max(40).optional(),
+      // The card's big number when there is no cover (docs/WRITING_GUIDE.md, "Card picture"): a figure from the item's own sourced
+      // text, a few characters ("$17.0B", "948"), and `statLabel`, a few words on what it counts.
+      stat: z.string().min(1).max(10).optional(),
+      statLabel: z.string().min(1).max(40).optional(),
+    }, (data, ctx) => {
+      if (Boolean(data.stat) !== Boolean(data.statLabel)) {
+        ctx.addIssue({ code: 'custom', path: [data.stat ? 'statLabel' : 'stat'], message: 'a card number needs both stat (the number, e.g. $17.0B) and statLabel (what it counts)' });
+      }
+      if (data.cover && !data.coverCredit) {
+        ctx.addIssue({ code: 'custom', path: ['coverCredit'], message: 'a news cover is an official image: name who made it in coverCredit (shown as "Image: <name>")' });
+      }
     }),
     blog: post(
       {

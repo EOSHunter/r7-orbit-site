@@ -7,6 +7,9 @@ sourceUrl: https://www.home-assistant.io/blog/2026/11/04/release-202611/
 sourceName: Home Assistant
 topic: home
 tags: [smart-home, home-assistant]
+cover: /media/news/home-assistant-marketplace.webp
+coverAlt: "The Marketplace's Browse tab in Home Assistant, its projects grouped into Installed and New"
+coverCredit: Home Assistant
 author: pulsar
 draft: false
 ---

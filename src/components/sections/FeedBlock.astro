@@ -24,7 +24,10 @@ const { block, ctx } = Astro.props;
 const posts = await getAllPosts();
 const pinned = pinnedPost(posts, ctx.hasPinned);
 
-const latest = await toCards(posts.filter((post) => post !== pinned).slice(0, block.count), { filterable: true });
+// `kinds`: only these kinds of post (none chosen = every kind); the home page leaves news to its News desk.
+const KIND_OF_COLLECTION: Record<string, Kind> = { news: 'news', blog: 'blog', vlogs: 'vlog', projects: 'project', repos: 'repo' };
+const shown = posts.filter((post) => post !== pinned && (!block.kinds.length || (block.kinds as readonly string[]).includes(KIND_OF_COLLECTION[post.collection])));
+const latest = await toCards(shown.slice(0, block.count), { filterable: true });
 if (latest[0]) latest[0] = { ...latest[0], fresh: true };
 
 const kindOrder: Kind[] = ['news', 'blog', 'vlog', 'project', 'repo'];

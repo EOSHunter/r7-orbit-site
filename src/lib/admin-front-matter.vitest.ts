@@ -139,7 +139,9 @@ describe('pictures and alt text, in every kind of post', () => {
   for (const kind of KINDS) {
     for (const [image, alt] of pairsOf(kind)) {
       describe(`${kind}: ${image}`, () => {
-        const parse = async (extra: Record<string, unknown>) => (await schemaOf(kind)).safeParse(post(kind, extra));
+        // A news cover is an official image and needs its credit (coverCredit, tested below); these cases are about the alt text.
+        const credit = kind === 'news' && image === 'cover' ? { coverCredit: 'An example' } : {};
+        const parse = async (extra: Record<string, unknown>) => (await schemaOf(kind)).safeParse(post(kind, { ...credit, ...extra }));
         const path = image === 'featuredImage' ? '../../assets/blog/a.png' : '/media/a.png';
 
         it('empty or only spaces, with no alt: valid, and not set', async () => {
@@ -247,5 +249,17 @@ describe('every real content file parses (what the build reads)', () => {
       }
     }
     expect(problems).toEqual([]);
+  });
+});
+
+describe('a news card picture', () => {
+  it('needs a credit with a cover, and both halves of a card number', async () => {
+    const schema = await schemaOf('news');
+    expect(issuesOf(schema.safeParse(post('news', { cover: '/media/a.png', coverAlt: 'A chart' })))).toEqual([
+      'coverCredit: a news cover is an official image: name who made it in coverCredit (shown as "Image: <name>")',
+    ]);
+    expect(issuesOf(schema.safeParse(post('news', { cover: '/media/a.png', coverAlt: 'A chart', coverCredit: 'OpenAI' })))).toEqual([]);
+    expect(issuesOf(schema.safeParse(post('news', { stat: '$17.0B' })))).toEqual(['statLabel: a card number needs both stat (the number, e.g. $17.0B) and statLabel (what it counts)']);
+    expect(issuesOf(schema.safeParse(post('news', { stat: '$17.0B', statLabel: 'revenue in one quarter' })))).toEqual([]);
   });
 });

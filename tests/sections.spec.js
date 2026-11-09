@@ -40,6 +40,7 @@ const PRESENT = {
   latest: '.latest-posts .grid-cards .card',
   // The home page's blocks are made from the posts: they draw while the site has posts, a featured one and an app (it does today).
   feed: 'section#latest[data-list] .feed-head h2',
+  'news-desk': 'section.news-desk .desk-lead',
   pinned: 'section[data-pinned] .card',
   apps: 'section[data-apps-teaser] .app-card',
   author: 'aside.author-box',

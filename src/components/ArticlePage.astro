@@ -85,8 +85,9 @@ const series = kind === 'blog' ? seriesFor(post, sameKind as SitePost<'blog'>[])
 const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
 const related = relatedPosts(post, everything);
 const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string; topic?: NewsTopic; symbol?: string; cover?: string }) : undefined;
-// A news item with a topic and no cover opens with the topic's picture as a slim banner, the same picture as its card.
-const newsBanner = news?.topic && !news.cover ? news.topic : undefined;
+// A news item with a topic opens with the topic's picture as a slim banner (its card may show an official image or a big number
+// instead: the banner keeps the item page in the site's own look).
+const newsBanner = news?.topic;
 
 const authorMap = await getAuthorMap();
 const author = authorMap.get(authorSlugOf(post))!;

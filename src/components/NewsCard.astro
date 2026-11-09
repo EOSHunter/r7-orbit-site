@@ -1,11 +1,16 @@
 ---
+// A news card. Its picture, in order (docs/WRITING_GUIDE.md, "Card picture"): the item's official image (`cover`, credited
+// "Image: <coverCredit>"), else its big number (`stat`), else the topic's brass signal (NewsSignal). Each carries the topic's label,
+// so neighbouring cards differ by more than their titles.
 import CardFoot from './CardFoot.astro';
 import CardMedia from './CardMedia.astro';
 import NewsSignal from './NewsSignal.astro';
+import NewsStat from './NewsStat.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
 import { cardAttrs } from './cardAttrs';
 import type { NewsCardData } from '../lib/cards';
+import { NEWS_TOPIC_KICKERS } from '../lib/news-signal';
 import { plainTitle } from '../lib/text';
 
 interface Props {
@@ -13,17 +18,28 @@ interface Props {
 }
 
 const { post } = Astro.props;
+const kicker = post.topic ? NEWS_TOPIC_KICKERS[post.topic] : undefined;
 ---
 
 <a {...cardAttrs(post)}>
   {
-    // Without a picture of its own, the topic's picture (the same one at the top of the item: the seed is its address).
-    !post.cover && post.topic ? (
+    post.cover ? (
+      <CardMedia cover={post.cover}>
+        {kicker && <span class="news-kicker">{kicker}</span>}
+        {post.coverCredit && <span class="news-credit">Image: {post.coverCredit}</span>}
+      </CardMedia>
+    ) : post.stat ? (
+      <div class="card-media news-stat-media">
+        <NewsStat stat={post.stat} kicker={kicker} />
+      </div>
+    ) : post.topic ? (
+      // The topic's picture (the same one at the top of the item: the seed is its address).
       <div class="card-media">
         <NewsSignal topic={post.topic} symbol={post.symbol} seed={post.href} />
+        {kicker && <span class="news-kicker">{kicker}</span>}
       </div>
     ) : (
-      <CardMedia cover={post.cover} />
+      <CardMedia />
     )
   }
   <div class="card-body">

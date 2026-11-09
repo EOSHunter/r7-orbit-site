@@ -41,6 +41,7 @@ const EXPECTED: Record<SectionType, { text: string[] }> = {
   stats: { text: [] },
   latest: { text: [] },
   feed: { text: [] },
+  'news-desk': { text: [] },
   pinned: { text: [] },
   apps: { text: [] },
   author: { text: [] },

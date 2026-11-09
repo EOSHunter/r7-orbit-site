@@ -879,3 +879,53 @@ html.js .search-kinds { display: none; }
 /* At the top of a news item (ArticlePage.astro): a slim 4:1 strip above the source box. */
 .news-banner { aspect-ratio: 4 / 1; margin-bottom: var(--s-6); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 0 0 var(--bw) var(--line); }
 
+
+/* ------------------------------------------------------------------------------------------------- News cards and the news desk */
+/* A news card's picture (NewsCard.astro): the topic's label over it, and an official image's credit (docs/IMAGES.md rule 7). */
+.news-kicker { position: absolute; top: var(--s-2); left: var(--s-2); z-index: 1; padding: var(--s-1) var(--s-2); border-radius: var(--r-full); background: var(--header-veil); font: var(--fw-medium) var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--brass-bright); pointer-events: none; }
+.news-credit { position: absolute; right: var(--s-2); bottom: var(--s-2); z-index: 1; padding: var(--s-1) var(--s-2); border-radius: var(--r-sm); background: var(--header-veil); font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-2); pointer-events: none; }
+
+/* The big number (NewsStat.astro): drawn by the site, the brass figure on the plate with the orbit's ring and dot in a corner. */
+.news-stat-media { background: var(--plate-gradient); }
+.news-stat { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--s-1); padding: var(--s-4) var(--s-5); overflow: hidden; }
+.news-stat-kicker { font: var(--fw-medium) var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--brass-bright); }
+.news-stat-value { font: var(--fw-semibold) var(--fs-4xl)/var(--lh-tight) var(--font-display); color: var(--brass-bright); font-variant-numeric: lining-nums; }
+.news-stat-label { max-width: 22ch; font-size: var(--fs-sm); line-height: var(--lh-snug); color: var(--text-2); }
+.news-stat-orbit { position: absolute; top: calc(var(--s-4) * -1); right: calc(var(--s-5) * -1); width: 55%; color: var(--line-brass); }
+.news-stat-orbit .news-stat-dot { fill: var(--brass-highlight); }
+
+/* The news desk (NewsDeskBlock.astro): the lead story beside the wire. */
+.desk-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+@media (min-width: 900px) { .desk-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: var(--s-7); } }
+.desk-lead { display: grid; gap: var(--s-3); align-content: start; color: var(--text); text-decoration: none; }
+.desk-lead .card-media { border: 0; border-radius: var(--r-lg); box-shadow: 0 0 0 var(--bw) var(--line); }
+.desk-lead .news-stat-value { font-size: var(--fs-5xl); }
+.desk-lead-title { margin: 0; font: var(--fw-medium) var(--fs-2xl)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); text-wrap: balance; transition: color var(--dur) var(--ease); }
+.desk-lead-title em { color: var(--brass-bright); }
+.desk-lead:hover .desk-lead-title, .desk-lead:focus-visible .desk-lead-title { color: var(--brass-bright); }
+.desk-lead-dek { margin: 0; max-width: 60ch; color: var(--text-2); }
+.desk-byline { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); margin: 0; font: var(--fs-xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+/* A lead with no picture of its own: its headline on ivory, the one ivory surface on the page. */
+.desk-lead-headline { display: grid; align-content: end; gap: var(--s-2); min-height: calc(var(--s-10) + var(--s-9)); padding: var(--s-5); border-radius: var(--r-lg); background: var(--text); color: var(--bg); }
+.desk-lead-headline .news-stat-kicker { color: var(--brass-deep); }
+.desk-lead-headline .desk-lead-title { font-size: var(--fs-3xl); }
+.desk-lead-headline .desk-lead-title em { color: var(--brass-shadow); }
+.desk-lead:hover .desk-lead-headline .desk-lead-title, .desk-lead:focus-visible .desk-lead-headline .desk-lead-title { color: var(--bg); text-decoration: underline; text-decoration-thickness: var(--bw); text-underline-offset: 0.15em; }
+
+.desk-wire-title { margin: 0 0 var(--s-2); font: var(--fw-medium) var(--fs-xl) var(--font-display); }
+.desk-wire-list { margin: 0; padding: 0; list-style: none; }
+.desk-wire-list li { border-top: var(--bw) solid var(--line); }
+.desk-wire-list a { display: grid; gap: var(--s-1); padding: var(--s-3) 0; color: var(--text); text-decoration: none; }
+.desk-wire-meta { display: flex; gap: var(--s-2); font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.desk-wire-kicker { color: var(--brass-bright); }
+.desk-wire-headline { font-size: var(--fs-md); line-height: var(--lh-snug); transition: color var(--dur) var(--ease); }
+.desk-wire-list a:hover .desk-wire-headline, .desk-wire-list a:focus-visible .desk-wire-headline { color: var(--brass-bright); }
+@media (prefers-reduced-motion: reduce) { .desk-lead-title, .desk-wire-headline { transition: none; } }
+/* Phones: a card's picture is a small thumbnail beside its title (the 7rem column above), so the big number shrinks to the figure
+   alone, and the topic label and credit stay off it (the card's text names the story; the item page credits the image). */
+@media (max-width: 639px) {
+  .grid-cards > .card .news-stat { justify-content: center; align-items: center; padding: var(--s-2); }
+  .grid-cards > .card .news-stat-value { font-size: var(--fs-xl); }
+  .grid-cards > .card .news-stat-kicker, .grid-cards > .card .news-stat-label, .grid-cards > .card .news-stat-orbit,
+  .grid-cards > .card .news-kicker, .grid-cards > .card .news-credit { display: none; }
+}

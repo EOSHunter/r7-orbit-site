@@ -7,6 +7,8 @@ sourceUrl: https://www.anthropic.com/news/s1-sec
 sourceName: Anthropic
 topic: business
 tags: [anthropic, ipo]
+stat: "$17.0B"
+statLabel: revenue in one quarter
 author: pulsar
 draft: false
 ---
