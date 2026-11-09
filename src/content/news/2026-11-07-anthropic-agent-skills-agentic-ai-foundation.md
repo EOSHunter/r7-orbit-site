@@ -10,6 +10,10 @@ symbol: skill-folder
 tags: [ai-agents, claude]
 stat: "70+"
 statLabel: agent platforms have added it
+cover: /media/news/news-agent-skills-foundation.webp
+coverAlt: "A folder with a page sticking out of it, inside three brass orbits dotted with small nodes: one skill format, many platforms. Made for this item in R7 Orbit Studio"
+coverCredit: Pictor
+coverMotion: /media/motion/news-agent-skills-foundation/hover.mp4
 author: pulsar
 draft: false
 ---

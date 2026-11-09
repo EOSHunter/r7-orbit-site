@@ -7,6 +7,10 @@ sourceUrl: https://x.com/addyosmani/status/2117848568535106001
 sourceName: Addy Osmani (Anthropic) on X
 topic: games
 tags: [claude, games, ai-agents]
+cover: /media/news/news-claude-code-game-rule.webp
+coverAlt: "A dim arrowhead fighter and a brighter ringed craft of a different design on one brass orbit line: the game you name and the original one built instead. Models made for this item in R7 Orbit Studio"
+coverCredit: Pictor
+coverMotion: /media/motion/news-claude-code-game-rule/hover.mp4
 author: pulsar
 draft: false
 ---

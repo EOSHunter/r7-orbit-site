@@ -256,7 +256,7 @@ describe('a news card picture', () => {
   it('needs a credit with a cover, and both halves of a card number', async () => {
     const schema = await schemaOf('news');
     expect(issuesOf(schema.safeParse(post('news', { cover: '/media/a.png', coverAlt: 'A chart' })))).toEqual([
-      'coverCredit: a news cover is an official image: name who made it in coverCredit (shown as "Image: <name>")',
+      'coverCredit: name who made the news cover in coverCredit (the company for an official image, Pictor for a Studio scene; shown as "Image: <name>")',
     ]);
     expect(issuesOf(schema.safeParse(post('news', { cover: '/media/a.png', coverAlt: 'A chart', coverCredit: 'OpenAI' })))).toEqual([]);
     expect(issuesOf(schema.safeParse(post('news', { stat: '$17.0B' })))).toEqual(['statLabel: a card number needs both stat (the number, e.g. $17.0B) and statLabel (what it counts)']);

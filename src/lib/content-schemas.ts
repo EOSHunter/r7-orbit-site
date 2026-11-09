@@ -113,7 +113,7 @@ export function postSchemas<R extends z.ZodType, I extends z.ZodType>({
         ctx.addIssue({ code: 'custom', path: [data.stat ? 'statLabel' : 'stat'], message: 'a card number needs both stat (the number, e.g. $17.0B) and statLabel (what it counts)' });
       }
       if (data.cover && !data.coverCredit) {
-        ctx.addIssue({ code: 'custom', path: ['coverCredit'], message: 'a news cover is an official image: name who made it in coverCredit (shown as "Image: <name>")' });
+        ctx.addIssue({ code: 'custom', path: ['coverCredit'], message: 'name who made the news cover in coverCredit (the company for an official image, Pictor for a Studio scene; shown as "Image: <name>")' });
       }
     }),
     blog: post(
