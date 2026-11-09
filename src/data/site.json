@@ -14,14 +14,14 @@
       "href": "/projects/"
     },
     {
-      "label": "About",
-      "href": "/about/"
-    },
-    {
       "footer": true,
       "label": "News",
       "href": "https://r7orbit.io/news/",
       "icon": "news"
+    },
+    {
+      "label": "About",
+      "href": "/about/"
     }
   ],
   "defaultOgImageAlt": "R7 Orbit: the R7 mark inside a ring with one orbiting dot, beside the words \"News, builds and the things in between.\"",
