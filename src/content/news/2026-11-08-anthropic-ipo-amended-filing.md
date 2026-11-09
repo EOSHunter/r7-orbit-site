@@ -13,8 +13,11 @@ draft: false
 
 Anthropic filed to go public on Oct 26, 2026 and plans to list its Class A common stock on the Nasdaq Global Select Market under the symbol "ANT" ([Anthropic](https://www.anthropic.com/news/s1-sec)).
 
-> [!NOTE]
-> An amended filing on Nov 2 adds revenue of $16.96 billion for the three months to Sep 30, 2026, against $1.38 billion for the same months of 2025, according to Stock Titan's reading of the filing ([Stock Titan](https://www.stocktitan.net/articles/anthropic-ipo-amended-s1-2026-guide)).
+> [!CHART] Revenue for the three months to Sep 30
+> - 2025: $1.38 billion
+> - **2026: $16.96 billion**
+>
+> Source: the amended filing of Nov 2, as read by [Stock Titan](https://www.stocktitan.net/articles/anthropic-ipo-amended-s1-2026-guide).
 
 ## What happened
 

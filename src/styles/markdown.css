@@ -107,8 +107,9 @@
 @media (max-width: 560px) {
   /* Narrow: each number is a row (the number, then what it counts), and each bar gets the full width under its label. */
   .key-numbers .key-numbers-list { grid-template-columns: minmax(0, 1fr); gap: var(--s-2); }
-  .key-numbers .key-number { flex-direction: row-reverse; justify-content: flex-end; align-items: baseline; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
-  .key-numbers dd { flex: none; font-size: var(--fs-2xl); }
+  .key-numbers .key-number { display: grid; grid-template-columns: fit-content(60%) minmax(0, 1fr); align-items: baseline; gap: var(--s-3); padding: var(--s-3) var(--s-4); }
+  .key-numbers dd { grid-row: 1; grid-column: 1; font-size: var(--fs-2xl); }
+  .key-numbers dt { grid-row: 1; grid-column: 2; }
   .bar-chart, .prose .bar-chart { padding: var(--s-4); }
   .bar-chart .bar-chart-rows, .bar-chart tbody, .bar-chart tr { display: block; }
   .bar-chart tr + tr { margin-top: var(--s-3); }
@@ -127,6 +128,19 @@
 .source-card .source-card-meta { font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
 .source-card .source-card-arrow { flex: none; color: var(--brass); }
 @media (prefers-reduced-motion: reduce) { .source-card, .source-card .source-card-title { transition: none; } }
+
+/* Timeline: dated steps on a hairline, each with a brass dot (the orbit's node); the last step's dot is filled. */
+.timeline, .prose .timeline { clear: both; margin: var(--s-6) 0; overflow: visible; background: none; border: 0; border-radius: 0; }
+.timeline .timeline-title { margin: 0 0 var(--s-3); font: var(--fs-xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.timeline .timeline-steps, .prose .timeline .timeline-steps { position: relative; display: grid; gap: var(--s-4); margin: 0; padding: 0 0 0 var(--s-5); list-style: none; }
+.timeline .timeline-steps::before { content: ''; position: absolute; top: var(--s-2); bottom: var(--s-2); left: calc(var(--s-1) - var(--bw) / 2); width: var(--bw); background: var(--line-brass); }
+.timeline .timeline-step, .prose .timeline .timeline-step { position: relative; display: grid; gap: var(--s-1); margin: 0; }
+.timeline .timeline-step::before { content: ''; position: absolute; top: calc(var(--s-1) + var(--bw)); left: calc(var(--s-5) * -1); width: var(--s-2); height: var(--s-2); box-sizing: border-box; border: var(--bw) solid var(--brass); border-radius: var(--r-full); background: var(--bg); }
+.timeline .timeline-step:last-child::before { background: var(--brass-highlight); border-color: var(--brass-highlight); }
+.timeline .timeline-date { font: var(--fw-medium) var(--fs-xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--brass-bright); }
+.timeline .timeline-text { color: var(--text); }
+.timeline .timeline-source { margin: var(--s-3) 0 0; padding: 0; border: 0; font-size: var(--fs-sm); color: var(--text-3); }
+.timeline .timeline-source a { color: inherit; }
 
 /* The credit after an official picture's caption ("Image: OpenAI", docs/IMAGES.md "Official images") */
 .fig-credit { font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }

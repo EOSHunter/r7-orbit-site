@@ -20,6 +20,10 @@ Home Assistant 2026.11, out on Nov 4, 2026, makes HACS (the Home Assistant Commu
 
 The Marketplace sits under Settings > Marketplace and comes with Home Assistant, so there is nothing to set up. Installing a new integration from it no longer needs a restart, and the release notes say everything in it is free ([Home Assistant](https://www.home-assistant.io/blog/2026/11/04/release-202611/)).
 
+![The Marketplace's Browse tab, its projects grouped into Installed and New, with the Group by menu open on Status, Type, Source and Don't group](/media/news/home-assistant-marketplace.webp)
+*The Marketplace's Browse tab, from the release notes.*
+Screenshot: [Home Assistant](https://www.home-assistant.io/blog/2026/11/04/release-202611/)
+
 The same release adds ([Home Assistant](https://www.home-assistant.io/blog/2026/11/04/release-202611/)):
 
 - **Matter cameras.** Matter 1.5 makes cameras part of the standard, and Home Assistant now supports them, with live video streamed over WebRTC between the browser and the camera.
