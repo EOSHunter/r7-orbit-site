@@ -4,12 +4,14 @@
 //                                      source line
 //   > [!CHART] ExploitGym score        a bar chart redrawn from a source's figures, each `- GPT-6 Cyber: 48.5%` (bold = the bar the
 //                                      story is about), then a source line
+//   > [!TIMELINE]                      dated steps of a story, each `- **Oct 25** The agent first gets in`, then a source line
 //   ## Sources + a list of links       each `[Title (Publisher)](https://…)` becomes a source card; the first is the primary source
 // A wrong line stops the build with the reason, like the post card. Pure: no Astro.
 import { initials } from '../post-card.mjs';
 
 const NUMBERS = /^\[!NUMBERS\][ \t]*/i;
 const CHART = /^\[!CHART\][ \t]*/i;
+const TIMELINE = /^\[!TIMELINE\][ \t]*/i;
 
 /** A hast element. */
 const el = (tagName, properties, children) => ({ type: 'element', tagName, properties, children });
@@ -87,7 +89,7 @@ function asNumbers(node) {
 
 // ---- [!CHART] -----------------------------------------------------------------------------------------------------------
 
-const BAR = /^(.+?):\s*(-?[\d,]*\.?\d+)\s*(%|[^\d\s:][^:]*)?$/;
+const BAR = /^(.+?):\s*([$€£]?)(-?[\d,]*\.?\d+)\s*(%|[^\d\s:][^:]*)?$/;
 
 /** One `- Label: 48.5%` line: its label, value, unit and whether it is the story's bar (the whole line in bold). */
 export function chartLine(item) {
@@ -96,9 +98,11 @@ export function chartLine(item) {
   const line = inlineText(key ? kids[0].children : kids).trim();
   const match = BAR.exec(line);
   if (!match) throw new Error(`[!CHART]: write each bar as "- Label: 48.5%" (got "${line}")`);
-  const value = Number(match[2].replace(/,/g, ''));
+  const [, label, currency, number, unit = ''] = match;
+  const value = Number(number.replace(/,/g, ''));
   if (value < 0) throw new Error(`[!CHART]: "${line}": bars start at zero, so negative values cannot be drawn`);
-  return { label: match[1].trim(), value, shown: `${match[2]}${match[3] === '%' ? '%' : match[3] ? ` ${match[3].trim()}` : ''}`, unit: match[3]?.trim() ?? '', key };
+  const shown = `${currency}${number}${unit === '%' ? '%' : unit ? ` ${unit.trim()}` : ''}`;
+  return { label: label.trim(), value, shown, unit: `${currency}${unit.trim()}`, key };
 }
 
 /** Bar widths: a share of 100 for percentages, of the largest value otherwise. Rounded to a tenth. */
@@ -133,6 +137,31 @@ function asChart(node) {
     raw(el('figcaption', { className: ['bar-chart-title'] }, [tx(title)])),
     raw(el('table', { className: ['bar-chart-rows'] }, [el('tbody', {}, rows)])),
     wrap('p', 'bar-chart-source', note.flatMap((p, i) => (i ? [tx(' '), ...p.children] : p.children))),
+  ];
+  return true;
+}
+
+// ---- [!TIMELINE] --------------------------------------------------------------------------------------------------------
+
+function asTimeline(node) {
+  const title = takeHeader(node, TIMELINE);
+  if (title === undefined) return false;
+  const { items, note } = listAndNote(node, '[!TIMELINE]');
+  if (items.length < 2 || items.length > 8) throw new Error(`[!TIMELINE]: two to eight dated steps, not ${items.length}`);
+  if (!note.length) throw new Error('[!TIMELINE]: end it with a source line, e.g. "Source: [WorkOS](https://…)"');
+  const steps = items.map((item) => {
+    const kids = [...firstParagraph(item).children];
+    const when = kids[0]?.type === 'strong' ? inlineText(kids.shift().children).trim() : '';
+    if (!when) throw new Error(`[!TIMELINE]: start each step with its date in bold, e.g. "- **Oct 25** The agent first gets in" (got "${inlineText(kids)}")`);
+    if (kids[0]?.type === 'text') kids[0] = tx(kids[0].value.replace(/^[\s:–—-]+/, ''));
+    if (!inlineText(kids).trim()) throw new Error(`[!TIMELINE]: "${when}" needs a few words saying what happened`);
+    return wrap('li', 'timeline-step', [wrap('span', 'timeline-date', [tx(when)]), wrap('span', 'timeline-text', kids)]);
+  });
+  node.data = { hName: 'figure', hProperties: { className: ['timeline'] }, newsBlock: true };
+  node.children = [
+    ...(title ? [wrap('p', 'timeline-title', [tx(title)])] : []),
+    wrap('ol', 'timeline-steps', steps),
+    wrap('figcaption', 'timeline-source', note.flatMap((p, i) => (i ? [tx(' '), ...p.children] : p.children))),
   ];
   return true;
 }
@@ -193,7 +222,7 @@ export default function remarkNewsBlocks() {
     const visit = (node) => {
       if (!Array.isArray(node.children) || node.data?.newsBlock) return;
       node.children.forEach((child, i) => {
-        if (child.type === 'blockquote' && (asNumbers(child) || asChart(child))) return;
+        if (child.type === 'blockquote' && (asNumbers(child) || asChart(child) || asTimeline(child))) return;
         if (child.type === 'heading' && child.depth === 2 && inlineText(child.children).trim().toLowerCase() === 'sources') {
           const next = node.children[i + 1];
           if (next?.type === 'list') asSourceCards(next);

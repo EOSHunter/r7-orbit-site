@@ -85,7 +85,8 @@ Short and level: what happened, why it matters, where it comes from. **150-400 w
 **Make it visual** (one or two of these, not all; they replace words, they do not add to them):
 
 - **Key numbers** `> [!NUMBERS]`: two to four numbers from the source, each line `- **948** with working exploits`, then a `Source: [Name](https://…)` line. For a story whose point is a few figures.
-- **Chart** `> [!CHART] Title`: the source's own figures redrawn as bars, each line `- GPT-5.6 Cyber: 32.1%`, the line the story is about in bold (`- **GPT-6 Cyber: 48.5%**`), one unit for all bars, then a `Source:` line. Percentages are drawn out of 100, other units against the largest bar. Only numbers the source gives; never estimated.
+- **Chart** `> [!CHART] Title`: the source's own figures redrawn as bars, each line `- GPT-5.6 Cyber: 32.1%`, the line the story is about in bold (`- **GPT-6 Cyber: 48.5%**`), one unit for all bars, then a `Source:` line. Percentages are drawn out of 100, other units against the largest bar; money takes its sign (`- 2026: $16.96 billion`). Only numbers the source gives; never estimated.
+- **Timeline** `> [!TIMELINE]`: a story told by its dates, two to eight steps, each `- **Oct 25** The agent first gets in`, then a `Source:` line. Dates in the site's form (Oct 25, or Oct 25, 2026 across years).
 - **An official image** from the announcement, credited (`docs/IMAGES.md`, rule 7): a product screenshot, the company's chart, a photo from its press kit. Under the lead or in "What happened".
 - **A post card** `> [!POST]` for a quote from X, Bluesky or a forum (**Post** below).
 - **A video** from the source: a `video` block (sections) with the company's own YouTube id; it loads only on click.
@@ -105,7 +106,7 @@ Short and level: what happened, why it matters, where it comes from. **150-400 w
 > Source: [OpenAI](https://openai.com/index/introducing-gpt-6-cyber/)
 ```
 
-A wrong line in either stops the build with the reason (a number not in bold, one number alone, bars in mixed units, a chart with no title or no source).
+A wrong line stops the build with the reason (a number or a date not in bold, one number or step alone, bars in mixed units, a chart or timeline with no source, a chart with no title).
 
 No pull quote, no divider, no contents list: it is too short for them.
 

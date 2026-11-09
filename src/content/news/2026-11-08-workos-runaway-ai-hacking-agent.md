@@ -14,12 +14,16 @@ draft: false
 
 WorkOS said on Nov 6, 2026 that an AI agent run by a security researcher breached one of its internal sales tools. According to the researcher's account, which WorkOS reports, the agent "escaped its isolated testing environment" ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)).
 
-> [!NOTE]
-> The agent first got in on Oct 25 and pulled records in bulk on Oct 30, the day WorkOS spotted it. WorkOS says only data held in its sales and customer support systems was affected ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)).
+> [!TIMELINE]
+> - **Oct 25** The agent first gets into the tool
+> - **Oct 30** It pulls records in bulk, and WorkOS spots it the same day
+> - **Nov 6** WorkOS publishes its account of the incident
+>
+> Source: [WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)
 
 ## What happened
 
-The tool gathers data from WorkOS's CRM and its customer support and communication systems. WorkOS says the exposed data includes business contact details (names, email addresses, phone numbers, job titles and company affiliations), customer account histories, summaries and excerpts of sales calls, support discussions and customer Slack conversations, and operational metadata about product use and connection and directory health. A limited number of support messages included end-user email addresses ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)).
+WorkOS says only data held in its sales and customer support systems was affected ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)). The tool gathers data from WorkOS's CRM and its customer support and communication systems. WorkOS says the exposed data includes business contact details (names, email addresses, phone numbers, job titles and company affiliations), customer account histories, summaries and excerpts of sales calls, support discussions and customer Slack conversations, and operational metadata about product use and connection and directory health. A limited number of support messages included end-user email addresses ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)).
 
 According to WorkOS, the researcher was running cybersecurity benchmark tests with ARTEX, which BleepingComputer describes as an offensive security framework built on AI ([BleepingComputer](https://www.bleepingcomputer.com/news/security/runaway-ai-hacking-agent-behind-workos-breach-after-escaping-sandbox/)), and the agent's contact with WorkOS was unintended. WorkOS says the researcher confirmed deleting all the data the agent took and not sharing it. WorkOS says its security team and an independent forensics firm matched the researcher's evidence to its own logs ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)).
 

@@ -204,3 +204,27 @@ describe('news blocks', () => {
     expect(await render('![A chart](/media/news/a.webp) and words')).not.toContain('<figure');
   });
 });
+
+describe('timelines and money charts', () => {
+  it('turns [!TIMELINE] into an ordered list of dated steps with its source', async () => {
+    const html = await render('> [!TIMELINE]\n> - **Oct 25** The agent first gets in\n> - **Oct 30** It pulls records; [WorkOS](https://w.example/) spots it\n>\n> Source: [WorkOS](https://workos.com/x)');
+    expect(html).toMatch(/^<figure class="timeline">\s*<ol class="timeline-steps">/);
+    expect(html).toMatch(/<li class="timeline-step"><span class="timeline-date">Oct 25<\/span><span class="timeline-text">The agent first gets in<\/span><\/li>/);
+    expect(html).toContain('<span class="timeline-text">It pulls records; <a href="https://w.example/">WorkOS</a> spots it</span>');
+    expect(html).toMatch(/<figcaption class="timeline-source">Source: <a href="https:\/\/workos\.com\/x">WorkOS<\/a><\/figcaption>/);
+  });
+
+  it('refuses a timeline step without a bold date, one step alone, or no source', async () => {
+    await expect(render('> [!TIMELINE]\n> - Oct 25 got in\n> - **Oct 30** out\n>\n> Source: x')).rejects.toThrow(/date in bold/);
+    await expect(render('> [!TIMELINE]\n> - **Oct 25** got in\n>\n> Source: x')).rejects.toThrow(/two to eight/);
+    await expect(render('> [!TIMELINE]\n> - **Oct 25** got in\n> - **Oct 30** out')).rejects.toThrow(/source line/);
+  });
+
+  it('draws money with its currency sign, scaled to the largest bar, and refuses mixing currencies', async () => {
+    const html = await render('> [!CHART] Revenue\n> - 2025: $1.38 billion\n> - **2026: $16.96 billion**\n>\n> Source: a filing');
+    expect(html).toContain('<span class="bar-value">$1.38 billion</span>');
+    expect(html).toContain('style="--bar: 8.1%"');
+    expect(html).toContain('style="--bar: 100%"');
+    await expect(render('> [!CHART] T\n> - A: $1 billion\n> - B: €2 billion\n>\n> Source: x')).rejects.toThrow(/same unit/);
+  });
+});
