@@ -17,7 +17,14 @@ How a picture gets from the author's computer to a reader: where it is stored, w
 3. **Names:** lowercase letters, digits, hyphens (also `_` and `.`); no spaces or capitals. Decap does the renaming on upload.
 4. **Alt text:** every picture in a post body has it, or is marked *decoration only*. The admin refuses to save without it; the build stops without it.
 5. **Local only:** a picture is a file in this repository. A body that points at another site's image fails the build (`rehypeNoHotlinks`; `resolveImage` for the article components).
-6. **Your own pictures, not stock**, as everywhere else (`CLAUDE.md`).
+6. **Your own pictures, not stock**, as everywhere else (`CLAUDE.md`). One exception, below: **official images** in news.
+7. **Official images (news, 2026-11-09):** a news item may show a picture or chart **from the announcement it reports on**: the company's or project's own announcement page, press kit or newsroom, or its own video. Never another outlet's picture (an agency or stock photo on a news site is not official), never a picture of a private person, never a logo used as decoration. Save it to `public/media/news/` under a clean name (no hot-linking), give it alt text that says what it shows, and credit it on the line under the picture: `Image: [OpenAI](https://…the page it came from)` (also `Chart:`, `Screenshot:`, `Video:`). Hunter approves each one when he reviews the draft. A chart the source only gives as numbers is better redrawn with `[!CHART]` (`docs/WRITING_GUIDE.md`).
+
+```md
+![OpenAI's chart of ExploitGym scores: GPT-6 Cyber at 48.5%, GPT-5.6 Cyber at 32.1%](/media/news/gpt-6-cyber-exploitgym.webp)
+*ExploitGym scores, from OpenAI's announcement.*
+Image: [OpenAI](https://openai.com/index/introducing-gpt-6-cyber/)
+```
 
 ## Where each picture lives
 
