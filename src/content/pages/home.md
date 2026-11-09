@@ -15,11 +15,22 @@ sections:
     count: 3
     moreLabel: All apps
     moreUrl: /apps/
+  - type: news-desk
+    eyebrow: News
+    heading: The *news* desk
+    wireHeading: The wire
+    count: 5
+    moreLabel: All news
+    moreUrl: /news/
   - type: pinned
     eyebrow: ""
     heading: Featured post
   - type: feed
-    heading: Latest
+    heading: From the build log
+    kinds:
+      - blog
+      - vlog
+      - project
     count: 6
     emptyHeading: Nothing is posted yet.
     browseLabel: Browse by kind

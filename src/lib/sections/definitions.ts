@@ -721,6 +721,10 @@ const feed = defineBlock(
   },
   {
     heading: text({ label: 'Heading', max: 80, hint: 'e.g. Latest. Put one phrase in *asterisks* for the italic brass accent.' }),
+    kinds: choices(POST_KINDS, { news: 'News', blog: 'Blog', vlog: 'Vlogs', project: 'Projects', repo: 'Repos' }, {
+      label: 'Kinds',
+      hint: 'Which kinds of post the feed shows. Choose none for every kind. With a News desk on the page, leave News out so the same stories are not shown twice.',
+    }),
     count: count({ label: 'How many', min: 1, max: 12, fallback: 8, hint: 'Between 1 and 12. The newest is marked New.' }),
     emptyHeading: text({ label: 'When nothing is posted: heading', max: 100, hint: 'Shown instead of the cards while the site has no posts at all.' }),
     emptyText: text({ label: 'When nothing is posted: text', widget: 'text', optional: true, max: 300, hint: 'Optional. A sentence under that heading.' }),
@@ -834,6 +838,27 @@ const team = defineBlock(
   },
 );
 
+// The news desk (NewsDeskBlock.astro): the newest news item as the lead story beside a list of the next headlines.
+const newsDesk = defineBlock(
+  'news-desk',
+  {
+    label: 'News desk',
+    group: 'From the site',
+    description: 'The newest news item as the lead story (its official image, its big number, or its headline on ivory), beside the wire: the next headlines with their topic and date, and a link to all news. Draws nothing while no news is published.',
+    summary: 'News desk: a lead story and {{fields.count}} headlines',
+    placement: 'band',
+    example: { heading: 'The *news* desk', wireHeading: 'The wire', count: 5, moreLabel: 'All news', moreUrl: '/news/' },
+    previewNote: 'The stories are chosen from the published news when the site is built, so the preview shows a stand-in.',
+  },
+  {
+    eyebrow: text({ label: 'Eyebrow', optional: true, max: 40, hint: 'Optional. A small word over the heading, e.g. News.' }),
+    heading: text({ label: 'Heading', max: 80, hint: 'e.g. The news desk. Put one phrase in *asterisks* for the italic brass accent.' }),
+    wireHeading: text({ label: 'Headline list title', max: 40, hint: 'Over the list of headlines beside the lead story, e.g. The wire.' }),
+    count: count({ label: 'Headlines beside the lead', min: 2, max: 8, fallback: 5, hint: 'Between 2 and 8, after the lead story.' }),
+    ...moreFields('All news'),
+  },
+);
+
 // The waitlist form for R7 Orbit (src/components/WaitlistForm.astro, docs/PAGES.md "Waitlist"): the band with the heading, sentence and
 // form from Site settings > Waitlist. Draws nothing while the waitlist is off; its only field is where the signups are counted from.
 const waitlist = defineBlock(
@@ -883,6 +908,7 @@ export const definitions = [
   stats,
   latest,
   feed,
+  newsDesk,
   pinned,
   appsRow,
   author,

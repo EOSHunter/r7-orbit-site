@@ -1,0 +1,98 @@
+---
+// The news desk (docs/SECTIONS.md, `news-desk`): the newest news item as the lead story, beside "the wire", a list of the next
+// headlines with their topic and date, and a link to all news. The lead shows the item's card picture (official image, big number
+// or brass signal, as NewsCard); a lead with no image and no number is set as its headline on ivory instead. Draws nothing while
+// no news is published. Drafts and future-dated items are left out, as everywhere else (getPosts).
+import CardMedia from '../CardMedia.astro';
+import Icon from '../Icon.astro';
+import NewsStat from '../NewsStat.astro';
+import { getPosts } from '../../lib/content-queries';
+import { getAuthorMap } from '../../lib/authors-queries';
+import type { NewsCardData } from '../../lib/cards';
+import { NEWS_TOPIC_KICKERS } from '../../lib/news-signal';
+import { toCards } from '../../lib/post-cards';
+import { isoDate, plainTitle, shortDate, titleParts } from '../../lib/text';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'news-desk'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const cards = (await toCards((await getPosts('news')).slice(0, block.count + 1))) as NewsCardData[];
+const [lead, ...wire] = cards;
+const authors = await getAuthorMap();
+const by = lead?.author ? authors.get(lead.author)?.name : undefined;
+const kicker = (card: NewsCardData) => (card.topic ? NEWS_TOPIC_KICKERS[card.topic] : 'News');
+const id = `news-desk-${ctx.index}`;
+---
+
+{lead && (
+  <section class="section ruled news-desk" aria-labelledby={`${id}-h`}>
+    <div class="container wide">
+      <div class="section-head">
+        <div>
+          {block.eyebrow && <p class="eyebrow">{block.eyebrow}</p>}
+          <h2 class="section-title" id={`${id}-h`}>{titleParts(block.heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>
+        </div>
+        {block.moreLabel && block.moreUrl && (
+          <a class="more-link" href={block.moreUrl}>
+            {block.moreLabel}
+            <Icon name="arrow" />
+          </a>
+        )}
+      </div>
+
+      <div class="desk-grid">
+        <a class="desk-lead" href={lead.href}>
+          {lead.cover ? (
+            <CardMedia cover={{ ...lead.cover, motion: undefined }}>
+              <span class="news-kicker">{kicker(lead)}</span>
+              {lead.coverCredit && <span class="news-credit">Image: {lead.coverCredit}</span>}
+            </CardMedia>
+          ) : lead.stat ? (
+            <div class="card-media news-stat-media">
+              <NewsStat stat={lead.stat} kicker={kicker(lead)} />
+            </div>
+          ) : null}
+          {lead.cover || lead.stat ? (
+            <h3 class="desk-lead-title">{titleParts(lead.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h3>
+          ) : (
+            // No picture of its own: the headline is the picture, on ivory (the lead only, so it stands apart).
+            <div class="desk-lead-headline">
+              <span class="news-stat-kicker">{kicker(lead)}</span>
+              <h3 class="desk-lead-title">{titleParts(lead.title).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h3>
+            </div>
+          )}
+          <p class="desk-lead-dek">{lead.summary}</p>
+          <p class="desk-byline">
+            {by && <span>Filed by {by}</span>}
+            <time datetime={isoDate(lead.date)}>{shortDate(lead.date)}</time>
+          </p>
+        </a>
+
+        {wire.length > 0 && (
+          <div class="desk-wire">
+            <h3 class="desk-wire-title">{block.wireHeading}</h3>
+            <ol class="desk-wire-list">
+              {wire.map((card) => (
+                <li>
+                  <a href={card.href}>
+                    <span class="desk-wire-meta">
+                      <span class="desk-wire-kicker">{kicker(card)}</span>
+                      <time datetime={isoDate(card.date)}>{shortDate(card.date)}</time>
+                    </span>
+                    <span class="desk-wire-headline">{plainTitle(card.title)}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+)}
+

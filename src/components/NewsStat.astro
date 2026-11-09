@@ -1,0 +1,20 @@
+---
+// A news item's big number as its picture: the topic's label, the figure in brass display type, what it counts, and the orbit's
+// ring and dot (the brand element) in a corner. Drawn by the site, so it needs no image rights. Used by NewsCard and the news desk.
+interface Props {
+  stat: { value: string; label: string };
+  kicker?: string;
+}
+
+const { stat, kicker } = Astro.props;
+---
+
+<div class="news-stat">
+  {kicker && <span class="news-stat-kicker">{kicker}</span>}
+  <span class="news-stat-value">{stat.value}</span>
+  <span class="news-stat-label">{stat.label}</span>
+  <svg class="news-stat-orbit" viewBox="0 0 120 60" aria-hidden="true" focusable="false">
+    <ellipse cx="60" cy="30" rx="56" ry="18" fill="none" stroke="currentColor" stroke-width="0.6"></ellipse>
+    <circle cx="111" cy="23" r="2.4" class="news-stat-dot"></circle>
+  </svg>
+</div>

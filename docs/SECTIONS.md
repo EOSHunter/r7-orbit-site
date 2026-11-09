@@ -620,6 +620,7 @@ Sits: A full-width section with its own spacing, in a row of its own. In the edi
 | Field | Box | Required | Notes |
 | --- | --- | --- | --- |
 | `heading` | One line | yes | e.g. Latest. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `kinds` | Several choices | no | Which kinds of post the feed shows. Choose none for every kind. With a News desk on the page, leave News out so the same stories are not shown twice. Choices: `news`, `blog`, `vlog`, `project`, `repo`. |
 | `count` | Number | no | Between 1 and 12. The newest is marked New. Default `8`. 1 to 12. |
 | `emptyHeading` | One line | yes | Shown instead of the cards while the site has no posts at all. At most 100 characters. |
 | `emptyText` | Several lines | no | Optional. A sentence under that heading. At most 300 characters. |
@@ -636,6 +637,31 @@ sections:
     browseLabel: Browse by kind
     moreLabel: Browse everything
     moreUrl: /latest/
+```
+
+#### News desk (`news-desk`)
+
+The newest news item as the lead story (its official image, its big number, or its headline on ivory), beside the wire: the next headlines with their topic and date, and a link to all news. Draws nothing while no news is published.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The stories are chosen from the published news when the site is built, so the preview shows a stand-in.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small word over the heading, e.g. News. At most 40 characters. |
+| `heading` | One line | yes | e.g. The news desk. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `wireHeading` | One line | yes | Over the list of headlines beside the lead story, e.g. The wire. At most 40 characters. |
+| `count` | Number | no | Between 2 and 8, after the lead story. Default `5`. 2 to 8. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All news". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
+
+```yaml
+sections:
+  - type: news-desk
+    heading: "The *news* desk"
+    wireHeading: The wire
+    count: 5
+    moreLabel: All news
+    moreUrl: /news/
 ```
 
 #### Pinned post (`pinned`)

@@ -8,6 +8,8 @@ sourceName: Anthropic
 topic: tools
 symbol: skill-folder
 tags: [ai-agents, claude]
+stat: "70+"
+statLabel: agent platforms have added it
 author: pulsar
 draft: false
 ---

@@ -19,7 +19,7 @@ describe('the block library', () => {
     expect([...SECTION_TYPES].sort()).toEqual(
       [
         'heading', 'lead', 'text', 'image', 'image-row', 'gallery', 'portrait', 'columns', 'callout', 'quote', 'post', 'pullquote', 'code', 'video',
-        'game', 'toc', 'divider', 'button', 'links', 'stats', 'latest', 'author', 'spacer', 'feed', 'pinned', 'apps', 'waitlist', 'team',
+        'game', 'toc', 'divider', 'button', 'links', 'stats', 'latest', 'author', 'spacer', 'feed', 'news-desk', 'pinned', 'apps', 'waitlist', 'team',
       ].sort(),
     );
   });
@@ -83,7 +83,7 @@ describe('the block library', () => {
   });
 
   it('states what a preview approximates, for the blocks that need the built site', () => {
-    for (const id of ['latest', 'feed', 'pinned', 'apps', 'stats', 'game', 'video', 'code', 'gallery', 'toc', 'waitlist']) {
+    for (const id of ['latest', 'feed', 'news-desk', 'pinned', 'apps', 'stats', 'game', 'video', 'code', 'gallery', 'toc', 'waitlist']) {
       expect(definitions.find((d) => d.id === id)?.previewNote, id).toMatch(/\S/);
     }
   });

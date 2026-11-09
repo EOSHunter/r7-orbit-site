@@ -43,6 +43,7 @@ const SHOWS = {
   stats: '.stats',
   latest: '.latest-posts',
   feed: '.sec-row-band .feed-head h2',
+  'news-desk': '.sec-row-band .empty',
   pinned: '.sec-row-band section.section:not(.ruled) .section-head',
   apps: '.sec-row-band section.section.ruled .section-head',
   author: '.author-box',

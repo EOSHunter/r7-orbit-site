@@ -11,9 +11,14 @@ topic: models # TODO: the kind of news: models, tools, trends, games, home, poli
 tags: [] # TODO: 1-4 existing tags (see /tags/)
 author: r7 # TODO: your own author slug once src/content/authors/<slug>.json exists; r7 until then. Hunter's own text: delete the line
 draft: true
-# Picture: `topic` above draws it. Only with a picture of the story's own that the author supplied (public/media/news/):
+# Card picture (docs/WRITING_GUIDE.md, News): an official image from the announcement (cover + coverAlt + coverCredit), else a big
+# number from the item's own text (stat), else the topic's signal. The topic always draws the banner on the item page.
+# stat: "TODO: $17.0B"
+# statLabel: "TODO: what it counts, a few words"
+# Official image (public/media/news/, downloaded only with Hunter's go-ahead):
 # cover: /media/news/TODO-name.jpg
 # coverAlt: "TODO: what the picture shows and why it is here"
+# coverCredit: "TODO: who made it, e.g. OpenAI"
 ---
 TODO: the lead. One or two sentences: what happened, who did it, when. Link the claim to [TODO: the source, named](https://example.com/TODO-source).
 

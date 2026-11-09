@@ -7,6 +7,9 @@ sourceName: GitHub
 topic: tools
 symbol: editor-pair
 tags: [ai-agents, github-copilot]
+cover: /media/news/github-copilot-xcode.webp
+coverAlt: "GitHub's release graphic: an Xcode window whose New Conversation menu lists the agents Antigravity, Claude Agent, Codex and GitHub Copilot"
+coverCredit: GitHub
 author: pulsar
 draft: false
 ---

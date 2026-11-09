@@ -49,6 +49,10 @@ export interface NewsCardData extends CardBase {
   topic?: NewsTopic;
   /** An object made for this item, shown instead of the topic's. */
   symbol?: string;
+  /** Who made the cover (an official image): "Image: <name>" on the card. */
+  coverCredit?: string;
+  /** Without a cover, the card's big number and what it counts. */
+  stat?: { value: string; label: string };
 }
 
 export interface BlogCardData extends CardBase {
