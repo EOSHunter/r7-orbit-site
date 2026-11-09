@@ -3,6 +3,14 @@
 // geometry: the same for every item of a topic except what the item's address (the seed) varies, so no two items match.
 // Pure and deterministic: unit-tested in news-signal.vitest.ts.
 
+let signalCount = 0;
+/** A number for each news picture drawn, so the ids of its gradients stay unique when one item is shown twice on a page (a
+ *  related card and the older/newer link, the feed and a list block). */
+export function nextSignalNumber(): number {
+  signalCount += 1;
+  return signalCount;
+}
+
 export const NEWS_TOPICS = {
   models: 'New models',
   tools: 'Tools and things to try',

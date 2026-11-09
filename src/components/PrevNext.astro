@@ -1,35 +1,41 @@
 ---
+// The older and newer post of the same kind, each with the square of its card's picture, its title and its date.
 import Icon from './Icon.astro';
-import { postUrl } from '../lib/content';
-import type { CollectionName } from '../lib/content';
-import { plainTitle } from '../lib/text';
-
-interface Neighbour {
-  collection: CollectionName;
-  id: string;
-  data: { title: string };
-}
+import PostThumb from './PostThumb.astro';
+import type { SitePost } from '../lib/content-queries';
+import { toCard } from '../lib/post-cards';
+import { isoDate, longDate, plainTitle } from '../lib/text';
 
 interface Props {
-  newer?: Neighbour;
-  older?: Neighbour;
+  newer?: SitePost;
+  older?: SitePost;
 }
 
 const { newer, older } = Astro.props;
+const olderCard = older ? await toCard(older) : undefined;
+const newerCard = newer ? await toCard(newer) : undefined;
 ---
 
-{(newer || older) && (
+{(olderCard || newerCard) && (
   <nav class="post-nav" aria-label="Previous and next post">
-    {older ? (
-      <a class="prev" href={postUrl(older)} rel="prev">
-        <span class="label-row"><Icon name="arrow" class="flip" />Older</span>
-        <span class="title">{plainTitle(older.data.title)}</span>
+    {olderCard ? (
+      <a class="prev" href={olderCard.href} rel="prev">
+        <PostThumb card={olderCard} />
+        <span class="post-nav-text">
+          <span class="label-row"><Icon name="arrow" class="flip" />Older</span>
+          <span class="title">{plainTitle(olderCard.title)}</span>
+          <time class="post-nav-date" datetime={isoDate(olderCard.date)}>{longDate(olderCard.date)}</time>
+        </span>
       </a>
     ) : <span />}
-    {newer && (
-      <a class="next" href={postUrl(newer)} rel="next">
-        <span class="label-row">Newer<Icon name="arrow" /></span>
-        <span class="title">{plainTitle(newer.data.title)}</span>
+    {newerCard && (
+      <a class="next" href={newerCard.href} rel="next">
+        <PostThumb card={newerCard} />
+        <span class="post-nav-text">
+          <span class="label-row">Newer<Icon name="arrow" /></span>
+          <span class="title">{plainTitle(newerCard.title)}</span>
+          <time class="post-nav-date" datetime={isoDate(newerCard.date)}>{longDate(newerCard.date)}</time>
+        </span>
       </a>
     )}
   </nav>

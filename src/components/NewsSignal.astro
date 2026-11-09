@@ -7,7 +7,7 @@
 // authored/news-symbols): every item has its own picture, so the topic's object is only the first item's default.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { NEWS_TOPICS, beamPath, signal, type NewsTopic, type NewsVariant } from '../lib/news-signal';
+import { NEWS_TOPICS, beamPath, nextSignalNumber, signal, type NewsTopic, type NewsVariant } from '../lib/news-signal';
 
 interface Props {
   topic: NewsTopic;
@@ -24,7 +24,7 @@ const href = symbol ? `/media/news/symbols/${symbol}.webp` : `/media/news/topics
 if (symbol && !existsSync(join(process.cwd(), 'public', href)))
   throw new Error(`NewsSignal: no picture for symbol "${symbol}" (expected public${href}, made in R7 Orbit Studio's authored/news-symbols)`);
 const s = signal(seed, variant);
-const gid = `ns-${variant}-${topic}-${seed.replace(/[^a-z0-9]/gi, '')}`.slice(0, 60);
+const gid = `${`ns-${variant}-${topic}-${seed.replace(/[^a-z0-9]/gi, '')}`.slice(0, 60)}-${nextSignalNumber()}`;
 ---
 
 <svg

@@ -24,6 +24,7 @@ const SHOWS = {
   lead: 'p.art-lead',
   text: '.prose p',
   quote: 'figure.art-quote',
+  post: 'figure.post-card',
   pullquote: 'aside.art-pullquote',
   callout: '.art-callout',
   code: '.codeblock.art-code',
@@ -189,7 +190,8 @@ for (const d of definitions) {
     const { sections } = parseFrontmatter(saved).frontmatter;
     const parsed = sectionsSchema.safeParse(sections);
     expect(parsed.success ? '' : JSON.stringify(parsed.error.issues), 'the saved page is valid').toBe('');
-    const block = sections.at(-1);
+    // YAML reads an unquoted 2026-11-04 as a Date; the schema's day fields turn it back into that text, so compare it as text.
+    const block = Object.fromEntries(Object.entries(sections.at(-1)).map(([k, v]) => [k, v instanceof Date ? v.toISOString().slice(0, 10) : v]));
     expect(block).toMatchObject({ type: d.id, ...expected(describeShape(d.schema.shape), d.example) });
     // Pictures went to the pages' own folder, named by the editor.
     const files = seen.calls.find((c) => c.method === 'POST' && c.path.endsWith('/git/trees'))?.body.tree.map((t) => t.path) ?? [];

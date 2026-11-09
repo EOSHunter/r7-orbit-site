@@ -378,15 +378,24 @@ a.chip.link { min-height: 28px; padding-inline: var(--s-3); }
 }
 @keyframes reading-progress { to { transform: scaleX(1); } }
 
-/* Previous / next */
-.post-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
-.post-nav a { display: grid; gap: var(--s-2); padding: var(--s-5); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-lg); color: var(--text); transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease); }
-/* Same hover as .card, so the related cards and the previous/next links read as one family */
-.post-nav a:hover { border-color: var(--line-strong); background: var(--surface-2); box-shadow: var(--shadow-raise); transform: translateY(-2px); color: var(--text); }
+/* Previous / next: the square of each post's card picture beside its label, title and date. No box: a hairline above,
+   and the picture's edge and the title turn brass on hover. Newer mirrors Older. */
+.post-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5) var(--s-6); padding-top: var(--s-5); border-top: var(--bw) solid var(--line); }
+.post-nav a { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--s-4); color: var(--text); text-decoration: none; }
+.post-nav .next { grid-template-columns: minmax(0, 1fr) auto; text-align: right; }
+.post-nav .next .post-thumb { order: 2; }
+.post-nav-text { display: grid; gap: var(--s-1); min-width: 0; }
+.post-nav .next .post-nav-text { justify-items: end; }
+.post-thumb { width: calc(var(--s-8) + var(--s-5)); aspect-ratio: 1; border-radius: var(--r-md); overflow: hidden; box-shadow: 0 0 0 var(--bw) var(--line); transition: box-shadow var(--dur) var(--ease); }
+.post-thumb .card-media { aspect-ratio: auto; height: 100%; border: 0; }
+.post-thumb { --mark-size: 34%; }
 .post-nav .label-row { display: inline-flex; align-items: center; gap: var(--s-2); font: var(--fs-2xs) var(--font-ui); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-3); }
-.post-nav .title { font: var(--fw-medium) var(--fs-xl)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); }
-.post-nav .next { justify-items: end; text-align: right; }
-@media (min-width: 640px) { .post-nav { grid-template-columns: 1fr 1fr; } }
+.post-nav .title { font: var(--fw-medium) var(--fs-lg)/var(--lh-snug) var(--font-display); letter-spacing: var(--tracking-tight); text-wrap: balance; transition: color var(--dur) var(--ease); }
+.post-nav-date { font: var(--fs-xs) var(--font-mono); color: var(--text-3); }
+.post-nav a:hover .post-thumb, .post-nav a:focus-visible .post-thumb { box-shadow: 0 0 0 var(--bw) var(--line-brass); }
+.post-nav a:hover .title, .post-nav a:focus-visible .title { color: var(--brass-bright); }
+@media (min-width: 720px) { .post-nav { grid-template-columns: 1fr 1fr; } .post-thumb { width: calc(var(--s-9) + var(--s-2)); } }
+@media (prefers-reduced-motion: reduce) { .post-thumb, .post-nav .title { transition: none; } }
 
 /* ------------------------------------------------------------------------------------------------- Split layouts */
 /* Main column + a side panel (vlog, project, repo) */

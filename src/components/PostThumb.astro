@@ -1,0 +1,28 @@
+---
+// The picture a post's card shows, as a small square: the cover or featured image, a news item's own picture (its symbol or
+// topic, NewsSignal), or the plate. Decorative: the link it sits in names the post.
+import CardMedia from './CardMedia.astro';
+import NewsSignal from './NewsSignal.astro';
+import type { CardData } from '../lib/cards';
+
+interface Props {
+  card: CardData;
+}
+
+const { card } = Astro.props;
+// No hover clip in a thumbnail: the still is enough at this size.
+const cover = 'cover' in card && card.cover ? { ...card.cover, motion: undefined } : undefined;
+const news = card.kind === 'news' && !cover && card.topic ? card : undefined;
+---
+
+<div class="post-thumb" aria-hidden="true">
+  {
+    news?.topic ? (
+      <div class="card-media">
+        <NewsSignal topic={news.topic} symbol={news.symbol} seed={news.href} />
+      </div>
+    ) : (
+      <CardMedia cover={cover} />
+    )
+  }
+</div>

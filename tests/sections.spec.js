@@ -20,6 +20,7 @@ const PRESENT = {
   lead: 'p.art-lead',
   text: '.prose > p',
   quote: 'figure.art-quote',
+  post: 'figure.post-card',
   pullquote: 'aside.art-pullquote',
   callout: '.art-callout',
   code: '.codeblock.art-code pre.code',
