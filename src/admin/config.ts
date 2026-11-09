@@ -427,6 +427,13 @@ const newsFields: CmsField[] = [
     options: Object.entries(NEWS_TOPICS).map(([value, label]) => ({ label, value })),
     hint: 'The kind of news. It picks the picture on the card and at the top of the item (the topic\'s brass symbol in pulse rings), unless a cover picture is set.',
   }),
+  field({
+    name: 'symbol',
+    label: 'Symbol',
+    widget: 'string',
+    required: false,
+    hint: 'The name of an object made for this item in R7 Orbit Studio (public/media/news/symbols/). Every item needs its own picture: set this whenever another item already uses the topic\'s symbol.',
+  }),
   tags,
   cover,
   coverAlt,

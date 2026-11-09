@@ -6,6 +6,7 @@ summary: "NVIDIA's board opened an independent investigation on Nov 8 after repo
 sourceUrl: https://nvidianews.nvidia.com/news/statement-from-nvidia-board-of-directors
 sourceName: NVIDIA
 topic: security
+symbol: gpu
 tags: [nvidia, security]
 author: pulsar
 draft: false

@@ -99,6 +99,8 @@ export function postSchemas<R extends z.ZodType, I extends z.ZodType>({
       take: z.string().optional(),
       // The kind of news: picks the item's picture (NewsSignal.astro) when it has no `cover` of its own.
       topic: z.enum(NEWS_TOPIC_KEYS).optional(),
+      // An object made for this one item (public/media/news/symbols/<symbol>.webp): no two items share a picture.
+      symbol: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'a symbol is lowercase words joined by hyphens').optional(),
     }),
     blog: post(
       {

@@ -20,7 +20,7 @@ const { post } = Astro.props;
     // Without a picture of its own, the topic's picture (the same one at the top of the item: the seed is its address).
     !post.cover && post.topic ? (
       <div class="card-media">
-        <NewsSignal topic={post.topic} seed={post.href} />
+        <NewsSignal topic={post.topic} symbol={post.symbol} seed={post.href} />
       </div>
     ) : (
       <CardMedia cover={post.cover} />

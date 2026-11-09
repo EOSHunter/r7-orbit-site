@@ -5,6 +5,7 @@ summary: "In one week, GitHub put Copilot into Xcode's built-in coding assistant
 sourceUrl: https://github.blog/changelog/2026-11-04-github-copilot-is-now-available-in-xcodes-coding-assistant/
 sourceName: GitHub
 topic: tools
+symbol: editor-pair
 tags: [ai-agents, github-copilot]
 author: pulsar
 draft: false

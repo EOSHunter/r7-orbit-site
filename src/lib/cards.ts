@@ -47,6 +47,8 @@ export interface NewsCardData extends CardBase {
   cover?: Cover;
   /** The kind of news: without a cover, the card shows this topic's picture (NewsSignal.astro). */
   topic?: NewsTopic;
+  /** An object made for this item, shown instead of the topic's. */
+  symbol?: string;
 }
 
 export interface BlogCardData extends CardBase {

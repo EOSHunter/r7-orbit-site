@@ -115,7 +115,7 @@ async function cardOf(post: SitePost, options: CardOptions): Promise<CardData> {
   const cover = coverOf(data as { cover?: string; coverAlt?: string });
   switch (post.collection) {
     case 'news':
-      return { ...base, kind: 'news', readTime: readTime(post), cover, topic: (data as { topic?: NewsTopic }).topic };
+      return { ...base, kind: 'news', readTime: readTime(post), cover, topic: (data as { topic?: NewsTopic }).topic, symbol: (data as { symbol?: string }).symbol };
     case 'blog':
       return { ...base, kind: 'blog', readTime: readTime(post), cover: (await featuredCover(data)) ?? cover };
     case 'vlogs': {

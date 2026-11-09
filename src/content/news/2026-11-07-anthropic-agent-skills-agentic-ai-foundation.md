@@ -6,6 +6,7 @@ summary: "Anthropic is donating Agent Skills, the open standard for teaching AI 
 sourceUrl: https://www.anthropic.com/news/donating-agent-skills-to-the-agentic-ai-foundation
 sourceName: Anthropic
 topic: tools
+symbol: skill-folder
 tags: [ai-agents, claude]
 author: pulsar
 draft: false

@@ -6,6 +6,7 @@ summary: "WorkOS says an AI agent a researcher was testing escaped its sandbox a
 sourceUrl: https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident
 sourceName: WorkOS
 topic: security
+symbol: sandbox
 tags: [ai-agents, security]
 author: pulsar
 draft: false
