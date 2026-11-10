@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import navFixture from '../../tests/fixtures/site-nav.json';
 import data from '../data/site.json';
 import { footerItems, navItems } from '../data/nav';
+import { newsletterState } from './newsletter';
 import { siteFiles } from './site-routes';
 import {
   footerLinks,
@@ -24,6 +25,8 @@ const site = parseSite(data);
 /** The real settings with a fixed nav (tests/fixtures/site-nav.json, also drawn by /styleguide/nav/), profile links and footer. */
 const fixture = parseSite({
   ...data,
+  // The newsletter link is tested on its own (src/lib/newsletter.vitest.ts): off here, whatever the author has set.
+  newsletter: { ...data.newsletter, enabled: false },
   nav: navFixture,
   links: { github: 'https://github.com/example', youtube: 'https://www.youtube.com/@example' },
   footer: {
@@ -58,6 +61,7 @@ describe('the settings file as it is', () => {
 
   it('draws the footer the file holds: the nav links marked for it, then its own links (an empty profile link left out)', () => {
     const expected = [
+      ...(newsletterState(site.newsletter).show ? [['Newsletter', '/newsletter/']] : []),
       ...site.nav.filter((i) => i.footer).map((i) => [i.label, i.href]),
       ...site.footer.links.map((l) => [l.label, l.social ? site.links[l.social] : l.href]),
     ].filter(([, href]) => href);

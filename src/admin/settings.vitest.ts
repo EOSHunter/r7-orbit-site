@@ -54,7 +54,16 @@ describe('the Site settings collection', () => {
     const inForm = paths(fields);
     expect(inFile.filter((k) => !inForm.includes(k)).sort()).toEqual(['url']);
     // And no field the schema does not know (it is strict, so it would fail the build).
-    const known = new Set([...keys(site), 'nav.footer', 'nav.icon', 'footer.links.href', 'footer.links.social']);
+    // A list's item fields are known even while the list is empty (the author may remove every footer link).
+    const known = new Set([
+      ...keys(site),
+      'nav.footer',
+      'nav.icon',
+      'footer.links.label',
+      'footer.links.icon',
+      'footer.links.href',
+      'footer.links.social',
+    ]);
     expect(inForm.filter((p) => !known.has(p))).toEqual([]);
   });
 

@@ -42,9 +42,8 @@ describe('the newsletter switch', () => {
     expect(off).toMatchObject({ newsletterConnected: false, newsletterProvider: '' });
   });
 
-  it('ships off, and the settings file parses', () => {
+  it('the settings file parses (the newsletter itself is on or off, as the author sets it in /admin)', () => {
     expect(siteSchema.safeParse(site).success).toBe(true);
-    expect(newsletterState(site.newsletter).show).toBe(false);
   });
 });
 
@@ -52,7 +51,8 @@ describe('the footer', () => {
   const settings = siteSchema.parse(site);
 
   it('puts Newsletter first in Follow while it is on, and leaves it out while it is off', () => {
-    expect(footerLinks(settings).map((l) => l.label)).not.toContain('Newsletter');
+    const off = footerLinks({ ...settings, newsletter: { ...settings.newsletter, enabled: false } });
+    expect(off.map((l) => l.label)).not.toContain('Newsletter');
     const on = footerLinks({ ...settings, newsletter: { ...settings.newsletter, enabled: true, username: 'r7orbit' } });
     expect(on[0]).toEqual({ label: 'Newsletter', href: '/newsletter/', icon: 'mail', external: false });
   });

@@ -1,0 +1,62 @@
+# The weekly newsletter: when an issue file is pushed (the weekly Mercury routine pushes one to its own branch each Sunday), turn
+# it into a Buttondown **draft**. Nothing is ever sent from here: Hunter reads the draft in Buttondown and presses Send.
+# docs/NEWSLETTER.md, "Every week". Needs the repository secret BUTTONDOWN_API_KEY (a Buttondown key; draft permission is enough).
+#
+# Only issues added by this push are sent, and the script skips an issue whose subject Buttondown already has, so merging the
+# branch into main later makes no second draft. Run it by hand from the Actions tab with a file path to resend one.
+name: Newsletter draft
+
+on:
+  push:
+    paths:
+      - 'newsletter/issues/*.md'
+  workflow_dispatch:
+    inputs:
+      file:
+        description: 'Issue file, e.g. newsletter/issues/2026-11-15.md'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: newsletter-draft
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    name: Buttondown draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Find the issues this push added
+        id: files
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          INPUT_FILE: ${{ github.event.inputs.file }}
+        run: |
+          if [ -n "$INPUT_FILE" ]; then
+            files="$INPUT_FILE"
+          else
+            # A new branch has no "before": compare with main instead.
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              BEFORE=$(git merge-base origin/main "$AFTER")
+            fi
+            files=$(git diff --name-only --diff-filter=A "$BEFORE" "$AFTER" -- 'newsletter/issues/*.md' | tr '\n' ' ')
+          fi
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+          echo "Issues: ${files:-none}"
+      - name: Make the Buttondown draft
+        if: steps.files.outputs.files != ''
+        env:
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+        run: node scripts/newsletter-draft.mjs ${{ steps.files.outputs.files }}

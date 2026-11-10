@@ -1,3 +1,4 @@
+import { newsletterState } from './newsletter';
 import { readFileSync } from 'node:fs';
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { describe, expect, it } from 'vitest';
@@ -38,11 +39,12 @@ const read = (name: string) => {
 const textsOf = (data: { sections: Section[] }) => data.sections.map((s) => (s as { text?: string }).text ?? '');
 
 describe('settings tokens', () => {
-  it('reads the settings from site.json; the newsletter is never connected (there is none)', () => {
+  it('reads the settings from site.json; the newsletter is connected exactly when Site settings turn it on', () => {
+    const on = newsletterState(site.newsletter).show;
     expect(pageSettingsOf(site)).toMatchObject({
       siteName: site.name,
-      newsletterProvider: '',
-      newsletterConnected: false,
+      newsletterProvider: on ? 'Buttondown' : '',
+      newsletterConnected: on,
     });
   });
 

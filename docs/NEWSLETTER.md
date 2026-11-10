@@ -10,7 +10,7 @@ It is **off** until you turn it on. While it is off, no page shows a form, `/new
 - **Where the form is, once it is on:** a small form under the footer line on every page, and the big form on `/newsletter/` (its words are **Pages > Newsletter page** in `/admin`; the form's words are **Site settings > Newsletter**). The footer's Follow column gets a **Newsletter** link first.
 - **Privacy.** The Privacy page's `{if newsletter connected}` paragraphs switch on by themselves and name Buttondown.
 - **Past issues** are Buttondown's archive page, `https://buttondown.com/<username>/archive/`, linked under the big form.
-- **Writing an issue.** Mercury writes each issue as a Markdown file in `newsletter/issues/<send date>.md` from the week's posts (`npm run newsletter:week`), Parallax fact-checks it, you read it and send it from Buttondown. Mercury never sends anything and never sees the subscriber list. Guide: `.claude/skills/add-content/agents/mercury.md`; template: `newsletter/TEMPLATE.md`.
+- **Writing an issue.** Every Sunday a scheduled Claude routine (`newsletter/ROUTINE.md`) has Mercury write the issue as a Markdown file in `newsletter/issues/<date>.md` from the week's posts (`npm run newsletter:week`), Parallax fact-checks it, and the routine pushes it to its own branch. A GitHub Action (`.github/workflows/newsletter-draft.yml`) then makes it a **draft** in Buttondown. You read it there and press Send. Mercury never sends anything and never sees the subscriber list. Guide: `.claude/skills/add-content/agents/mercury.md`; template: `newsletter/TEMPLATE.md`.
 
 ## Set it up (about 20 minutes)
 
@@ -82,15 +82,20 @@ So issues come from an address at r7orbit.io instead of Buttondown's. In Buttond
 
 ## Every week
 
-1. Ask an agent: "Mercury, write this week's newsletter." (It follows `agents/mercury.md`: lists the week's posts with `npm run newsletter:week`, writes `newsletter/issues/<date>.md`, has Parallax check it.) Give it a line or two for **What's next** if you have something; otherwise that section is left out.
-2. Read the file. Change anything.
-3. In Buttondown, start a new email: the `subject` from the file's front matter as the subject, and everything below the front matter as the body (Buttondown takes Markdown).
-4. Send it, or schedule it. Set `status: sent YYYY-MM-DD` in the file so the next issue starts the day after.
+Automatic, from 2026-11-10:
 
-Buttondown can also build an email from an RSS feed automatically; this site has no feed, and an issue Mercury writes reads better than a list of links.
+1. **Sunday, 5pm New York time:** the Claude routine "R7 Orbit weekly newsletter" (claude.ai/code/routines) follows `newsletter/ROUTINE.md`. It lists what went up in the last 7 days, has **Mercury** write the issue and **Parallax** check every line and link against the posts, and pushes the file on a branch `claude/newsletter-<date>`. A week with nothing published gets no issue.
+2. **A minute later:** the GitHub Action **Newsletter draft** makes it a **draft** in Buttondown (Emails > Drafts), with the subject and preview line from the file. It never sends. It only drafts an issue Parallax passed; one that failed stays on its branch, and the routine's report on claude.ai says what is open.
+3. **You:** open the draft in Buttondown, read it, add a line for **What's next** if you have one, and press **Send** (or schedule it for Monday morning).
+
+What it needs, once: a Buttondown API key in GitHub. In Buttondown, **Settings > API**, make a key (draft permission is enough; it never needs to send). In GitHub, **EOSHunter/r7-orbit-site > Settings > Secrets and variables > Actions > New repository secret**, name `BUTTONDOWN_API_KEY`, paste the key. The key is never in the repository or seen by the routine.
+
+By hand, any time: ask "Mercury, write this week's newsletter" in a session (the `orbit-team` skill), or resend an issue as a draft from GitHub's **Actions > Newsletter draft > Run workflow** with its file path. To stop the automation, pause the routine on claude.ai.
+
+Buttondown can also build an email from an RSS feed (a paid add-on); this site has no feed, and an issue Mercury writes reads better than a list of links.
 
 ## For developers
 
-- Settings: `newsletter` in `src/data/site.json` (schema `newsletterSchema`, `src/lib/newsletter.ts`; admin fields `src/admin/settings.ts`). On only with `enabled` **and** a username (`newsletterState`). The username is public; no Buttondown API key is used or stored anywhere.
+- Settings: `newsletter` in `src/data/site.json` (schema `newsletterSchema`, `src/lib/newsletter.ts`; admin fields `src/admin/settings.ts`). On only with `enabled` **and** a username (`newsletterState`). The username is public. The only Buttondown API key is the GitHub secret `BUTTONDOWN_API_KEY`, used by `scripts/newsletter-draft.mjs` (pure part `src/lib/newsletter-draft.mjs`, tested) to make drafts.
 - `NEWSLETTER_PREVIEW=1 npm run build` turns it on with a sample username, to look at the form and page locally (the build stops if it is set on Cloudflare Pages). Check `/newsletter/` with `EXTRA_ROUTES="/newsletter/" npx playwright test a11y smoke budgets` after that build (from PowerShell; Git Bash rewrites the path).
 - The footer's Read and Site columns come from the nav (`footerColumns`, `src/lib/site-settings.ts`); Follow is `footerLinks` (Newsletter first while it is on).
