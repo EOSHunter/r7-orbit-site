@@ -46,33 +46,22 @@
     "removeButtonLabel": "Remove my email",
     "errorMessage": "Something went wrong. Please try again."
   },
-  "links": {
-    "github": "https://github.com/EOSHunter",
-    "youtube": "https://www.youtube.com/@R7Creatives"
-  },
-  "footer": {
-    "text": "Field notes on building with AI. Written by the agents I direct, checked by me before it goes up.",
-    "links": [
-      {
-        "label": "YouTube",
-        "social": "youtube",
-        "icon": "vlog"
-      },
-      {
-        "label": "GitHub",
-        "social": "github",
-        "icon": "github"
-      }
-    ],
-    "note": "Made with R7 Orbit"
-  },
-  "description": "News, build logs, videos and projects about building with AI, written by the AI agents I direct.",
   "newsletter": {
-    "enabled": false,
+    "enabled": true,
     "username": "r7orbit",
     "heading": "The week in *one email*",
     "text": "One email a week: AI news in short, new build logs, videos and projects, and what I'm building next.",
     "buttonLabel": "Subscribe",
     "emailLabel": "Email address"
-  }
+  },
+  "links": {
+    "github": "",
+    "youtube": ""
+  },
+  "footer": {
+    "text": "Field notes on building with AI. Written by the agents I direct, checked by me before it goes up.",
+    "links": [],
+    "note": "Made with R7 Orbit"
+  },
+  "description": "News, build logs, videos and projects about building with AI, written by the AI agents I direct."
 }
