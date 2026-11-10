@@ -69,7 +69,7 @@
   "description": "News, build logs, videos and projects about building with AI, written by the AI agents I direct.",
   "newsletter": {
     "enabled": false,
-    "username": "",
+    "username": "r7orbit",
     "heading": "The week in *one email*",
     "text": "Once a week, Mercury, my newsletter agent, sends what went up here: the news in short, new posts and videos, and what I'm working on next. Unsubscribe any time.",
     "buttonLabel": "Subscribe",
