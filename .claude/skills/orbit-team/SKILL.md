@@ -7,6 +7,8 @@ description: Hands writing and image work for r7orbit.io to the right Orbit agen
 
 The agents on the About page are real subagents in `.claude/agents/<slug>.md`. This skill is the dispatcher: it decides who does a piece, starts that agent with the Agent tool (`subagent_type: "<slug>"`), and always ends with Parallax checking the work in a separate subagent that never saw the writer's reasoning. You (the main session) are the orchestrator. You do not write the piece yourself and you do not fact-check it yourself.
 
+If `<slug>` is not in your Agent tool's list (the session started in a folder without `.claude/agents/`, such as a scheduled task that works in a worktree), use `subagent_type: "general-purpose"` and begin the prompt with: "You are <Name>. Read `<repo>/.claude/agents/<slug>.md` and follow it as your instructions. Its paths are relative to `<repo>`: use full paths, and `cd <repo>` before any command." For Parallax, add: "Never edit, write or create a file."
+
 The steps of making a page (inputs, front matter, files, verify, report) stay in the `add-content` skill; load it too when the piece is a site page. The team is `docs/TEAM.md`.
 
 ## 1. Pick the agent
@@ -73,6 +75,8 @@ For a site page, run `add-content` step 4 yourself (one heavy job at a time on H
 4. What Hunter must do: approve the draft, supply a missing picture or source, answer the writer's questions, decide the `unverifiable` rows.
 
 Nothing goes live from here. Every piece stays `draft: true` (a newsletter issue `status: draft`, then `ready` after Parallax passes) until Hunter publishes or sends it. No pushing, no merging, no sending.
+
+The one exception: a brief or scheduled task from Hunter that sets another approval route, such as a pull request whose merge is his approval (the daily news task), is followed as written, with `draft: false` and a pushed branch if it says so. It never extends to merging or pushing to `main`.
 
 ## Rules that hold for every agent
 
