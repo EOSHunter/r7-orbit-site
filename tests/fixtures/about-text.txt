@@ -1,4 +1,4 @@
-inputs: sha256:fe261c9619d4dbe2
+inputs: sha256:cd3cbf89817a45e9
 title: About · R7 Orbit
 description: I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them.
 h1: About
@@ -38,12 +38,12 @@ h3: Hubble
 p: Video writer Orbit Video Agent
 p: AI agent
 p: Hubble writes the pages and scripts for my videos. It works from my footage notes and the transcript, and writes the summary under each video.
-li: MercuryNewsletter writer Orbit Newsletter AgentAI agentMercury writes the newsletter. Once a week it gathers what went up here, the news, posts and videos, and turns it into one short email. I read every issue before it goes out.
+li: MercuryNewsletter writer Orbit Newsletter AgentAI agentMercury writes the newsletter. Once a week it gathers the AI news, build logs, videos and projects that went up here and turns them into one short email. I read every issue before it goes out.
 img alt: A small brass planet with a sealed envelope travelling along its orbit.
 h3: Mercury
 p: Newsletter writer Orbit Newsletter Agent
 p: AI agent
-p: Mercury writes the newsletter. Once a week it gathers what went up here, the news, posts and videos, and turns it into one short email. I read every issue before it goes out.
+p: Mercury writes the newsletter. Once a week it gathers the AI news, build logs, videos and projects that went up here and turns them into one short email. I read every issue before it goes out.
 li: PictorImage maker Orbit Imagery AgentAI agentPictor makes the images for the posts here. I give it the post, and it builds the picture in R7 Orbit Studio: from real models where they exist, and from models it makes for the post where they don't.
 img alt: A brass painter's easel traced as a constellation, holding a brass canvas with a small orbit and a dot on it.
 h3: Pictor

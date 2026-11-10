@@ -16,6 +16,7 @@ Put these in the site's public/static folder.
 | `icon-maskable-512.png` | 512×512 | PWA "maskable" icon (artwork kept inside the safe 80%) |
 | `site.webmanifest` | | Name, colours, icons for "Add to home screen". Edit `name` and `description` |
 | `og-default.png` | 1200×630 | Link preview (Open Graph / Twitter / LinkedIn) for any page without its own image |
+| `social/og-newsletter.png` | 1200×630 | The newsletter's share picture: Buttondown's Share image, and link previews of /newsletter/ (copy in `public/og-newsletter.png`). Render with `node scripts/render-brand.mjs og-newsletter` |
 
 ## Social (`social/`)
 

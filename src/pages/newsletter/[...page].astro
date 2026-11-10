@@ -30,7 +30,12 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout title={headTitleFor(title, seoTitle)} description={description}>
+<BaseLayout
+  title={headTitleFor(title, seoTitle)}
+  description={description}
+  image="/og-newsletter.png"
+  imageAlt="R7 Orbit: The week in one email. AI news in short, new build logs, videos and projects, and what I'm building next."
+>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')} />
   <div class="container wide">
     <header class="page-head">

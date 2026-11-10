@@ -1,0 +1,213 @@
+/* R7 Orbit on Buttondown's web pages (archive, subscribe page, issue pages).
+   Paste into Buttondown: Settings > Web > Add-ons > Custom CSS. Theme: Modern. Dark mode: off (this is the one theme).
+   Colours, type and radii are the site's tokens (src/styles/design-system/tokens.css): obsidian, ivory, one brass accent.
+   Buttondown's own theme is built on CSS variables, so most of the work is setting those. */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+
+:root,
+:root.dark,
+html[data-theme] {
+  /* type */
+  --font-accent: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-brand: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-prose: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  /* colour: --bg, --surface-1, --surface-3, --text, --text-2, --text-3, --brass */
+  --color-background: #09090a;
+  --color-background-card: #0f0f11;
+  --color-background-offset: #1b1b1f;
+  --color-foreground: #ece6d8;
+  --color-foreground-offset: #a39e92;
+  --color-foreground-offset-2: #827e75;
+  --color-accent: #c9a96a;
+  --color-action: #c9a96a;
+  /* the same values for Buttondown's dark variants, so nothing flips back to its grey-blue */
+  --color-background-dark: #09090a;
+  --color-background-card-dark: #0f0f11;
+  --color-background-offset-dark: #1b1b1f;
+  --color-foreground-dark: #ece6d8;
+  --color-foreground-offset-dark: #a39e92;
+  --color-foreground-offset-2-dark: #827e75;
+  --color-accent-dark: #c9a96a;
+  --color-action-dark: #c9a96a;
+  --color-featured: #c9a96a;
+  --color-featured-border: rgb(201 169 106 / 0.42);
+  --color-featured-icon: #c9a96a;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #09090a;
+  color: #ece6d8;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Headlines in Cormorant Garamond, sentence case, regular weight (the site's display type). */
+h1,
+h2,
+h3,
+.newsletter-name,
+.email-detail__subject,
+.email-list h3 {
+  font-family: 'Cormorant Garamond', 'Times New Roman', serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em;
+  color: #ece6d8;
+}
+
+h1 em,
+h2 em,
+.newsletter-name em {
+  font-style: italic;
+  color: #e3c98f;
+}
+
+.newsletter-name {
+  font-size: 48px;
+  line-height: 1.05;
+}
+
+.newsletter-description {
+  color: #a39e92 !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 400 !important;
+}
+
+/* The wordmark in the header: spaced capitals, like the site's. */
+.header-brand-name {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #a39e92;
+}
+
+/* Running text: 17px / 1.7, measure under 68 characters. */
+.email-body,
+.email-body p,
+.email-body li {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #ece6d8;
+}
+
+a {
+  color: #e3c98f;
+  text-decoration-color: rgb(201 169 106 / 0.42);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: #e3c98f;
+  text-decoration-color: #e3c98f;
+}
+
+/* Buttons: brass fill, ink text, small radius, no pill. */
+.button,
+.archive__button,
+.archive__subscribe-form-button,
+.header-navigation-link--subscribe,
+.portal-btn--primary,
+button[type='submit'] {
+  background-color: #c9a96a !important;
+  border: 1px solid #c9a96a !important;
+  color: #14110a !important;
+  border-radius: 4px !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.button:hover,
+.archive__button:hover,
+.archive__subscribe-form-button:hover,
+.header-navigation-link--subscribe:hover,
+.portal-btn--primary:hover,
+button[type='submit']:hover {
+  background-color: #e3c98f !important;
+  border-color: #e3c98f !important;
+}
+
+/* Text fields: surface-1, hairline edge, brass edge on focus. */
+input[type='email'],
+input[type='text'],
+input[type='search'],
+textarea,
+select {
+  background-color: #0f0f11 !important;
+  color: #ece6d8 !important;
+  border: 1px solid rgb(236 228 210 / 0.16) !important;
+  border-radius: 4px !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgb(201 169 106 / 0.42) !important;
+  box-shadow: 0 0 0 3px rgb(201 169 106 / 0.18) !important;
+  outline: none;
+}
+
+::placeholder {
+  color: #827e75 !important;
+}
+
+/* Cards and panels: one step up in tone, hairline edge, no heavy shadow. */
+.card,
+.modal-content,
+.subscribe-modal-content,
+.login-modal-content,
+.archive-search-modal-content {
+  background-color: #0f0f11 !important;
+  border: 1px solid rgb(236 228 210 / 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+hr,
+.footer {
+  border-color: rgb(236 228 210 / 0.08) !important;
+}
+
+.footer,
+.footer a {
+  color: #827e75;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 12px;
+}
+
+blockquote {
+  border-left: 1px solid #c9a96a;
+  color: #a39e92;
+  background: transparent;
+}
+
+code,
+pre {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  background-color: #151518;
+  color: #ece6d8;
+  border-radius: 8px;
+}
+
+::selection {
+  background: rgb(201 169 106 / 0.3);
+  color: #ece6d8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

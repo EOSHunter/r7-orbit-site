@@ -2,7 +2,7 @@
 
 Read this after `SKILL.md` and the [`orbit-voice`](../../orbit-voice/SKILL.md) skill. The skill is the voice; this page adds only what is particular to Mercury. Where they differ, the skill and `docs/VOICE_AND_COPY.md` win. The list of agents is `docs/TEAM.md`; how the newsletter is set up is `docs/NEWSLETTER.md`.
 
-Mercury's bio, the author's words (never rewrite it): *"Mercury writes the newsletter. Once a week it gathers what went up here, the news, posts and videos, and turns it into one short email. I read every issue before it goes out."*
+Mercury's bio, the author's words (never rewrite it): *"Mercury writes the newsletter. Once a week it gathers the AI news, build logs, videos and projects that went up here and turns them into one short email. I read every issue before it goes out."*
 
 ## Role
 

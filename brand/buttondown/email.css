@@ -1,0 +1,103 @@
+/* R7 Orbit in the newsletter emails.
+   Paste into Buttondown: Settings > Email > Add-ons > Custom CSS. Template: Modern. Accent colour: #c9a96a.
+   Email apps are stricter than browsers: some drop web fonts (the stacks fall back to Georgia and Segoe UI / Helvetica), and
+   Gmail and Outlook can recolour a dark email in their own dark mode. Send yourself a test (Emails > a draft > Send test) and
+   look at it in Gmail on the web, on a phone, and in Outlook before the first real issue. */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Inter:wght@400;500&display=swap');
+
+:root {
+  color-scheme: dark;
+  supported-color-schemes: dark;
+}
+
+body,
+.email-body,
+.email-wrapper,
+.email-content {
+  background-color: #09090a !important;
+  color: #ece6d8 !important;
+  font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif !important;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+p,
+li {
+  color: #ece6d8;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
+  font-weight: 400 !important;
+  color: #ece6d8 !important;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: 34px;
+}
+
+h2 {
+  font-size: 26px;
+  margin-top: 32px;
+}
+
+h1 em,
+h2 em {
+  font-style: italic;
+  color: #e3c98f;
+}
+
+a {
+  color: #e3c98f !important;
+  text-decoration: underline;
+  text-decoration-color: rgb(201 169 106 / 0.42);
+}
+
+strong {
+  color: #ece6d8;
+  font-weight: 600;
+}
+
+/* Buttons Buttondown draws (for example "Read online"): brass fill, ink text, small radius. */
+.button,
+a.button {
+  background-color: #c9a96a !important;
+  color: #14110a !important;
+  border-radius: 4px !important;
+  text-decoration: none !important;
+  font-weight: 500;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #1b1b1f;
+}
+
+blockquote {
+  border-left: 1px solid #c9a96a;
+  margin-left: 0;
+  padding-left: 16px;
+  color: #a39e92;
+}
+
+code,
+pre {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  background-color: #151518;
+  color: #ece6d8;
+  border-radius: 8px;
+}
+
+/* The footer Buttondown adds (unsubscribe link, mailing address): small and dim, never hidden. */
+.footer,
+.footer p,
+.footer a {
+  color: #827e75 !important;
+  font-size: 12px;
+  line-height: 1.6;
+}

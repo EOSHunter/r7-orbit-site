@@ -130,6 +130,7 @@ html.menu-open { overflow: hidden; }
 
 /* The newsletter sign-up (NewsletterForm.astro): the email box grows, the button keeps its width; they stack on a narrow screen. */
 .newsletter { display: grid; gap: var(--s-3); }
+.newsletter .newsletter-text { margin: 0; max-width: 40ch; color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-ui); }
 .newsletter .newsletter-title { margin: 0; color: var(--text); font-size: var(--fs-sm); font-weight: 500; }
 .newsletter-form { margin: 0; }
 /* The label sits over the row; in the row the box takes the room the button leaves and both share the button's height. */

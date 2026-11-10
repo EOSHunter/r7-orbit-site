@@ -19,15 +19,42 @@ It is **off** until you turn it on. While it is off, no page shows a form, `/new
 1. Sign up at buttondown.com. The **username** you pick is your newsletter's address (`buttondown.com/<username>`) and is printed in the site's form, so pick something like `r7orbit`.
 2. In Buttondown's settings, set:
    - **Newsletter name:** R7 Orbit (or what you like).
-   - **Description:** one line on what it is (the one on `/newsletter/` works: "Everything that went up here in a week, in one short email.").
-   - **Sender name:** how the From line reads, for example "R7 Orbit" or "Hunter Newton".
+   - **Description:** the line under "The words" below, with "from R7 Orbit" (Buttondown's pages are not the site, so "here" would point at Buttondown).
+   - **Sender name** (Settings > Email > Author name): how the From line reads in an inbox. "Mercury at R7 Orbit" keeps the agent's credit and says where it comes from; "R7 Orbit" alone is the most recognisable.
    - **Double opt-in (confirmation email): on.** It is on by default; leave it on. The site and the Privacy page both say readers confirm first.
    - **Mailing address.** Email law in the US (CAN-SPAM) and elsewhere requires a postal address in every marketing email's footer, and Buttondown asks for one. A P.O. box or a mail service works if you'd rather not use your home address. It appears in emails only, never on the site.
-3. **Welcome email** (sent after a reader confirms). A draft for you to change; nothing here is sent until you paste it:
+3. **Welcome email** (sent after a reader confirms; Settings > Subscribing). Paste this, or change it first:
 
-   > Thanks for signing up. Once a week you'll get one email with everything that went up on R7 Orbit: the news in short, new posts and videos, and what I'm working on next. Mercury, my newsletter agent, puts each issue together and I read every one before it goes out. If it stops being useful, the unsubscribe link is at the bottom of every email.
+   > Thanks for signing up to the R7 Orbit newsletter. Once a week you'll get one email: AI news in short, new build logs, videos and projects, and what I'm building next. Mercury, my newsletter agent, puts each issue together, and I read every one before it goes out. If it stops being useful, the unsubscribe link is at the bottom of every email.
 
 4. **Cost** (buttondown.com/pricing, checked 2026-11-10): free for the first 100 subscribers, and the free plan includes sending from your own domain (step 2) and the hosted archive. Past 100 subscribers it is paid, priced by list size. Extras such as analytics, RSS-to-email or automations are separate monthly add-ons; this setup needs none of them. Paying for it is your call ([`CLAUDE.md`](../CLAUDE.md), "Ask the author before").
+
+### The words
+
+One line describes the newsletter everywhere, in the site's own nouns (its description says "news, build logs, videos and projects"):
+
+| Where | Words |
+| --- | --- |
+| Site settings > Newsletter > Heading (footer form, `/newsletter/` title) | The week in *one email* |
+| Site settings > Newsletter > Text (under the footer form's title) | One email a week: AI news in short, new build logs, videos and projects, and what I'm building next. |
+| `/newsletter/` lead and description (Pages > Newsletter page) | The same line |
+| Buttondown > Settings > General > Description | One email a week from R7 Orbit: AI news in short, new build logs, videos and projects, and what I'm building next. |
+| Buttondown > Settings > General > Newsletter name | R7 Orbit |
+| Share image (`brand/social/og-newsletter.png`) | The weekly newsletter / The week in *one email.* / the same line / r7orbit.io/newsletter |
+| Welcome email | Step 1 above |
+| Mercury's bio (`src/content/authors/mercury.json`) | "...gathers the AI news, build logs, videos and projects that went up here..." |
+
+Change the line in all of them at once, or not at all.
+
+### The look on Buttondown
+
+Buttondown's archive, subscribe page and emails start in its own light theme with a blue button. The R7 Orbit versions:
+
+- **Settings > General > Branding:** **Icon** `brand/icon-512.png` (alt text "R7 Orbit logo"); **Share image** `brand/social/og-newsletter.png` (1200 × 630; source `brand/source/og-newsletter.html`, re-render with `node scripts/render-brand.mjs og-newsletter`). **Social links:** your YouTube and GitHub, the same as the site's footer.
+- **Settings > Web > Styling:** Theme **Modern**, Accent colour **#c9a96a**, Background **#09090a**, Dark mode **off** (obsidian is the only theme). Then **Add-ons > Custom CSS: on**, and paste all of `brand/buttondown/web.css`. It sets Buttondown's colour and font variables to the site's tokens, loads Cormorant Garamond, Inter and JetBrains Mono, and makes every button brass with ink text. (Previewed on buttondown.com/r7orbit before it was written down: obsidian page, brass button, Cormorant name.)
+- **Settings > Email:** Accent colour **#c9a96a**, Template **Modern**, **Add-ons > Custom CSS: on**, and paste all of `brand/buttondown/email.css`. Email apps are stricter than browsers: send yourself a test before the first issue and look at it in Gmail, on a phone and in Outlook.
+- **Settings > Email > Tracking:** leave **Email clicks** and **Email opens** off, and turn **UTM information** off. The site promises no tracking (Privacy page); these would add it to the emails.
+- **Settings > Web > Add-ons > Redirect** (optional): send visitors from Buttondown's subscribe page to https://r7orbit.io/newsletter/, so people sign up on the site. Leave the archive where it is (the site links to it).
 
 ### 2. Optional: send from your own domain
 

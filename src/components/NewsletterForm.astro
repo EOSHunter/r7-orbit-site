@@ -23,9 +23,12 @@ const plain = titleParts(words.heading)
 {newsletter.show && (
   <div class="newsletter" data-variant={variant}>
     {variant === 'footer' && (
-      <p class="newsletter-title" id={`${id}-title`}>
-        {plain}
-      </p>
+      <>
+        <p class="newsletter-title" id={`${id}-title`}>
+          {plain}
+        </p>
+        <p class="newsletter-text">{words.text}</p>
+      </>
     )}
     <form
       class="newsletter-form"
