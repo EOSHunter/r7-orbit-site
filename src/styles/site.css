@@ -900,11 +900,6 @@ html.js .search-kinds { display: none; }
 .news-hero figcaption { margin-top: var(--s-2); font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
 .news-hero figcaption a { color: inherit; }
 .news-banner { aspect-ratio: 4 / 1; margin-bottom: var(--s-6); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 0 0 var(--bw) var(--line); }
-/* A news item with a big number and no cover opens with that number, as on its card. */
-.news-stat-hero { margin-bottom: var(--s-6); border-radius: var(--r-md); overflow: hidden; box-shadow: 0 0 0 var(--bw) var(--line); }
-.news-stat-hero .news-stat { padding: var(--s-5) var(--s-6); }
-.news-stat-hero .news-stat-value { font-size: var(--fs-5xl); }
-.news-stat-hero .news-stat-label { max-width: 32ch; font-size: var(--fs-md); }
 
 
 /* ------------------------------------------------------------------------------------------------- News cards and the news desk */

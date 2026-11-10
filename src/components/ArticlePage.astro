@@ -7,7 +7,6 @@ import ArticleHero from './ArticleHero.astro';
 import ArticleJsonLd from './ArticleJsonLd.astro';
 import CardMedia from './CardMedia.astro';
 import NewsSignal from './NewsSignal.astro';
-import NewsStat from './NewsStat.astro';
 import AuthorByline from './AuthorByline.astro';
 import Icon from './Icon.astro';
 import PreviewBadge from './PreviewBadge.astro';
@@ -26,7 +25,7 @@ import { getAuthorMap } from '../lib/authors-queries';
 import { adjacentPosts, readTime, relatedPosts, seriesFor } from '../lib/content';
 import type { SitePost } from '../lib/content-queries';
 import { imageCreditHref, imageCreditName } from '../lib/image-credit';
-import { NEWS_TOPIC_KICKERS, type NewsTopic } from '../lib/news-signal';
+import type { NewsTopic } from '../lib/news-signal';
 import { motionOf } from '../lib/post-cards';
 import { hasSections, sectionsHeadings } from '../lib/sections-to-content';
 import { absoluteUrl, isoDate, longDate, plainTitle, titleParts } from '../lib/text';
@@ -87,14 +86,13 @@ const toc = kind === 'blog' && (data as { toc?: boolean }).toc !== false && (
 const series = kind === 'blog' ? seriesFor(post, sameKind as SitePost<'blog'>[]) : undefined;
 const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
 const related = relatedPosts(post, everything);
-const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string; topic?: NewsTopic; symbol?: string; cover?: string; stat?: string; statLabel?: string }) : undefined;
+const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string; topic?: NewsTopic; symbol?: string; cover?: string }) : undefined;
 // A news item opens with the same picture as its card: its cover (an official image, a screenshot of the source document or a
 // Studio scene), credited and linked: to the agent's page when an agent made it (Pictor), otherwise to the source. Without a
-// cover, its big number (`stat`, as on its card); without either, the topic's picture as a slim banner.
+// cover, the topic's picture as a slim banner.
 const newsCredit = news ? (data as { coverCredit?: string }).coverCredit : undefined;
 const newsHero = news && cover ? { ...cover, srcset: await publicSrcset(cover.src) } : undefined;
-const newsStat = news && !newsHero && news.stat && news.statLabel ? { value: news.stat, label: news.statLabel } : undefined;
-const newsBanner = news?.topic && !newsHero && !newsStat ? news.topic : undefined;
+const newsBanner = news?.topic && !newsHero ? news.topic : undefined;
 
 const authorMap = await getAuthorMap();
 const author = authorMap.get(authorSlugOf(post))!;
@@ -218,12 +216,6 @@ const zoomLink = fullPicture && featured
               </figcaption>
             )}
           </figure>
-        )}
-
-        {newsStat && (
-          <div class="card-media news-stat-media news-stat-hero">
-            <NewsStat stat={newsStat} kicker={news?.topic ? NEWS_TOPIC_KICKERS[news.topic] : undefined} />
-          </div>
         )}
 
         {newsBanner && (

@@ -7,8 +7,9 @@ sourceUrl: https://www.anthropic.com/claude-fable-and-mythos-5-2
 sourceName: Anthropic
 topic: models
 tags: [anthropic, claude, ai-agents]
-stat: "$8"
-statLabel: per million input tokens, down from $10
+cover: /media/news/claude-fable-mythos-5-2.webp
+coverAlt: "The words Claude Fable 5.2 and Mythos 5.2 above a bright sunrise on the curved edge of a dark planet"
+coverCredit: Anthropic
 author: pulsar
 draft: false
 ---
