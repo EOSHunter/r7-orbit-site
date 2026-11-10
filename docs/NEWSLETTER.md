@@ -84,13 +84,13 @@ So issues come from an address at r7orbit.io instead of Buttondown's. In Buttond
 
 Automatic, from 2026-11-10:
 
-1. **Sunday, 5pm New York time:** the Claude routine "R7 Orbit weekly newsletter" (claude.ai/code/routines) follows `newsletter/ROUTINE.md`. It lists what went up in the last 7 days, has **Mercury** write the issue and **Parallax** check every line and link against the posts, and pushes the file on a branch `claude/newsletter-<date>`. A week with nothing published gets no issue.
+1. **Sunday, 5pm:** the scheduled task "R7 Orbit weekly newsletter" in the Claude desktop app on Hunter's PC follows `newsletter/ROUTINE.md` (it runs while the app is open; if the app is closed at 5pm, it runs the next time the app opens). It works in a throwaway git worktree, so the main checkout is never touched. It lists what went up in the last 7 days, has **Mercury** write the issue and **Parallax** check every line and link against the posts, and pushes the file on a branch `claude/newsletter-<date>`. A week with nothing published gets no issue.
 2. **A minute later:** the GitHub Action **Newsletter draft** makes it a **draft** in Buttondown (Emails > Drafts), with the subject and preview line from the file. It never sends. It only drafts an issue Parallax passed; one that failed stays on its branch, and the routine's report on claude.ai says what is open.
 3. **You:** open the draft in Buttondown, read it, add a line for **What's next** if you have one, and press **Send** (or schedule it for Monday morning).
 
 What it needs, once: a Buttondown API key in GitHub. In Buttondown, **Settings > API**, make a key (draft permission is enough; it never needs to send). In GitHub, **EOSHunter/r7-orbit-site > Settings > Secrets and variables > Actions > New repository secret**, name `BUTTONDOWN_API_KEY`, paste the key. The key is never in the repository or seen by the routine.
 
-By hand, any time: ask "Mercury, write this week's newsletter" in a session (the `orbit-team` skill), or resend an issue as a draft from GitHub's **Actions > Newsletter draft > Run workflow** with its file path. To stop the automation, pause the routine on claude.ai.
+By hand, any time: ask "Mercury, write this week's newsletter" in a session (the `orbit-team` skill), or resend an issue as a draft from GitHub's **Actions > Newsletter draft > Run workflow** with its file path. To stop the automation, turn the task off in the desktop app (Scheduled). A cloud version of the same routine exists on claude.ai, paused (cloud runs need cloud credits).
 
 Buttondown can also build an email from an RSS feed (a paid add-on); this site has no feed, and an issue Mercury writes reads better than a list of links.
 
