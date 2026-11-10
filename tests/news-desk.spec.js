@@ -76,3 +76,19 @@ test('a news item opens with the same picture as its card, credited, and no bann
     await expect(page.locator(`.prose img[src="${card.src}"]`), card.href).toHaveCount(0);
   }
 });
+
+test('a news item whose card shows its big number opens with that number, and no banner', async ({ page }) => {
+  await page.goto('/news/');
+  const cards = await page.locator('main a.card[href^="/news/"]').evaluateAll((all) =>
+    all
+      .map((c) => ({ href: c.getAttribute('href'), stat: c.querySelector('.news-stat-value')?.textContent?.trim() ?? '' }))
+      .filter((c) => c.stat),
+  );
+  expect(cards.length, 'a published item with a big number and no cover').toBeGreaterThan(0);
+  for (const card of cards) {
+    await page.goto(card.href);
+    await expect(page.locator('.news-stat-hero .news-stat-value'), card.href).toHaveText(card.stat);
+    await expect(page.locator('.news-banner'), card.href).toHaveCount(0);
+    await expect(page.locator('figure.news-hero'), card.href).toHaveCount(0);
+  }
+});
