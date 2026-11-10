@@ -59,6 +59,8 @@ const total = cards.length;
 // a handful of cards. They appear from this many; the kind and author switches, and the count, show at any length.
 const FULL_TOOLBAR = 12;
 const full = total >= FULL_TOOLBAR;
+// The Filters panel holds the sort, the authors and the tags; it exists when one of them does.
+const panel = full || authors.length > 1;
 ---
 
 {total === 0 ? (
@@ -75,29 +77,34 @@ const full = total >= FULL_TOOLBAR;
     data-base={pageUrl(base, 1)}
   >
     <div class="toolbar" role="group" aria-label={`Filter and sort ${what}`}>
-      {full && (
-        <div class="toolbar-row">
-          <form class="search" role="search" aria-label={`Search ${what}`}>
-            <Icon name="search" />
-            <label class="visually-hidden" for="archive-search">Search {what}</label>
-            <input
-              class="input"
-              id="archive-search"
-              type="search"
-              name="q"
-              placeholder={`Search ${what}`}
-              autocomplete="off"
-              data-search
-            />
-          </form>
-          <div class="seg" role="group" aria-label="Sort" data-sort>
-            <button class="on" type="button" data-value="newest" aria-pressed="true">Newest</button>
-            <button type="button" data-value="oldest" aria-pressed="false">Oldest</button>
-          </div>
+      {(full || panel) && (
+        <div class="toolbar-row toolbar-top">
+          {full && (
+            <form class="search" role="search" aria-label={`Search ${what}`}>
+              <Icon name="search" />
+              <label class="visually-hidden" for="archive-search">Search {what}</label>
+              <input
+                class="input"
+                id="archive-search"
+                type="search"
+                name="q"
+                placeholder={`Search ${what}`}
+                autocomplete="off"
+                data-search
+              />
+            </form>
+          )}
+          {panel && (
+            <button class="btn filter-toggle" type="button" aria-expanded="false" aria-controls="archive-filters" data-filters-toggle>
+              <Icon name="filter" />
+              Filters
+              <span class="filter-badge" data-filters-badge hidden></span>
+            </button>
+          )}
         </div>
       )}
       {kinds.length > 1 && (
-        <div class="toolbar-row">
+        <div class="toolbar-row toolbar-kinds">
           <span class="eyebrow" id="kinds-label">Kind</span>
           <div class="seg" role="group" aria-labelledby="kinds-label" data-filter="kind">
             <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
@@ -109,32 +116,52 @@ const full = total >= FULL_TOOLBAR;
           </div>
         </div>
       )}
-      {authors.length > 1 && (
-        <div class="toolbar-row">
-          <span class="eyebrow" id="authors-label">By author</span>
-          <div class="seg" role="group" aria-labelledby="authors-label" data-filter="author">
-            <button class="on" type="button" data-value="all" aria-pressed="true">All</button>
-            {authors.map((a) => (
-              <button type="button" data-value={a.slug} aria-pressed="false">
-                {a.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {full && tags.length > 0 && (
-        <div class="toolbar-row">
-          <span class="eyebrow" id="tags-label">Tags</span>
-          <div class="tag-list" role="group" aria-labelledby="tags-label" data-tags-filter>
-            {tags.map((tag) => (
-              <button type="button" class="chip" data-tag={tag} aria-pressed="false">
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       <p class="t-meta toolbar-count" data-count aria-live="polite">{countLabel(total, nounOne, noun)}</p>
+      {panel && (
+        // Sort, author and tags: out of the way until asked for (a phone would otherwise open on a screen of switches). What is
+        // picked here shows as removable chips under the toolbar while the panel is closed.
+        <div class="filter-panel" id="archive-filters" data-filters-panel hidden>
+          {full && (
+            <div class="filter-group">
+              <span class="eyebrow" id="sort-label">Sort</span>
+              <div class="seg" role="group" aria-labelledby="sort-label" data-sort>
+                <button class="on" type="button" data-value="newest" aria-pressed="true">Newest</button>
+                <button type="button" data-value="oldest" aria-pressed="false">Oldest</button>
+              </div>
+            </div>
+          )}
+          {authors.length > 1 && (
+            <div class="filter-group">
+              <span class="eyebrow" id="authors-label">By author</span>
+              <div class="tag-list" role="group" aria-labelledby="authors-label" data-filter="author">
+                <button class="chip on" type="button" data-value="all" aria-pressed="true">All</button>
+                {authors.map((a) => (
+                  <button class="chip" type="button" data-value={a.slug} aria-pressed="false">
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {full && tags.length > 0 && (
+            <div class="filter-group">
+              <span class="eyebrow" id="tags-label">Tags</span>
+              <div class="tag-list" role="group" aria-labelledby="tags-label" data-tags-filter>
+                {tags.map((tag) => (
+                  <button type="button" class="chip" data-tag={tag} aria-pressed="false">
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div class="filter-panel-foot">
+            <button class="btn quiet sm" type="button" data-clear>Clear all</button>
+            <button class="btn sm" type="button" data-filters-done>Done</button>
+          </div>
+        </div>
+      )}
+      <div class="filter-active" data-filters-active hidden></div>
     </div>
 
     <h2 class="visually-hidden">{what[0]?.toUpperCase()}{what.slice(1)}</h2>
@@ -183,6 +210,12 @@ const full = total >= FULL_TOOLBAR;
     const count = root.querySelector<HTMLElement>('[data-count]');
     const empty = root.querySelector<HTMLElement>('[data-empty]');
     const hideWhenFiltered = [...root.querySelectorAll<HTMLElement>('[data-hide-filtered]')];
+    const toggle = root.querySelector<HTMLButtonElement>('[data-filters-toggle]');
+    const panel = root.querySelector<HTMLElement>('[data-filters-panel]');
+    const badge = root.querySelector<HTMLElement>('[data-filters-badge]');
+    const active = root.querySelector<HTMLElement>('[data-filters-active]');
+    const done = root.querySelector<HTMLButtonElement>('[data-filters-done]');
+    const authorName = new Map(authorBtns.map((b) => [b.dataset.value ?? '', b.textContent?.trim() ?? '']));
 
     const meta = new WeakMap<HTMLElement, Meta>();
     const onThisPage = new Set<HTMLElement>();
@@ -275,6 +308,8 @@ const full = total >= FULL_TOOLBAR;
             : `${total} ${total === 1 ? nounOne : noun}`;
       }
       if (empty) empty.hidden = shown !== 0;
+      if (done) done.textContent = `Show ${shown} ${shown === 1 ? nounOne : noun}`;
+      renderPicked();
       for (const el of hideWhenFiltered) el.hidden = filtered;
 
       press(sortBtns, (b) => (b.dataset.value ?? 'newest') === state.sort);
@@ -283,6 +318,64 @@ const full = total >= FULL_TOOLBAR;
       press(tagBtns, (b) => state.tags.includes((b.dataset.tag ?? '').toLowerCase()));
       writeUrl();
     }
+
+    // What is picked inside the Filters panel (sort, author, tags), as chips that remove it: seen without opening the panel.
+    function picked(): { key: string; label: string }[] {
+      const out: { key: string; label: string }[] = [];
+      if (state.sort !== 'newest') out.push({ key: 'sort', label: 'Oldest first' });
+      if (state.author !== 'all') out.push({ key: 'author', label: authorName.get(state.author) ?? state.author });
+      for (const t of state.tags) out.push({ key: `tag:${t}`, label: t });
+      return out;
+    }
+
+    function renderPicked(): void {
+      const list = picked();
+      if (badge) {
+        badge.hidden = list.length === 0;
+        badge.textContent = String(list.length);
+      }
+      toggle?.setAttribute('aria-label', list.length ? `Filters, ${list.length} on` : 'Filters');
+      if (!active) return;
+      active.hidden = list.length === 0 || !panel?.hidden;
+      active.replaceChildren(
+        ...list.map(({ key, label }) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'chip on';
+          b.dataset.remove = key;
+          b.setAttribute('aria-label', `Remove filter: ${label}`);
+          b.append(label);
+          b.insertAdjacentHTML('beforeend', '<svg class="ico sm" aria-hidden="true"><use href="#i-close"></use></svg>');
+          return b;
+        }),
+      );
+    }
+
+    function setPanel(open: boolean, focus = false): void {
+      if (!panel || !toggle) return;
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.classList.toggle('on', open);
+      renderPicked();
+      if (open && focus) panel.querySelector<HTMLElement>('button')?.focus();
+      if (!open && focus) toggle.focus();
+    }
+
+    toggle?.addEventListener('click', () => setPanel(panel?.hidden === true));
+    done?.addEventListener('click', () => setPanel(false, true));
+    panel?.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setPanel(false, true);
+    });
+    active?.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLButtonElement>('button[data-remove]');
+      const key = b?.dataset.remove;
+      if (!key) return;
+      if (key === 'sort') state.sort = 'newest';
+      else if (key === 'author') state.author = 'all';
+      else if (key.startsWith('tag:')) state.tags = state.tags.filter((t) => t !== key.slice(4));
+      render();
+      (active.querySelector<HTMLElement>('button') ?? toggle)?.focus();
+    });
 
     search?.addEventListener('input', () => {
       state.q = search.value;
