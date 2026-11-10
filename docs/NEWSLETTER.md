@@ -23,7 +23,7 @@ It is **off** until you turn it on. While it is off, no page shows a form, `/new
    - **Sender name** (Settings > Email > Author name): how the From line reads in an inbox. "Mercury at R7 Orbit" keeps the agent's credit and says where it comes from; "R7 Orbit" alone is the most recognisable.
    - **Double opt-in (confirmation email): on.** It is on by default; leave it on. The site and the Privacy page both say readers confirm first.
    - **Mailing address.** Email law in the US (CAN-SPAM) and elsewhere requires a postal address in every marketing email's footer, and Buttondown asks for one. A P.O. box or a mail service works if you'd rather not use your home address. It appears in emails only, never on the site.
-3. **Welcome email** (sent after a reader confirms; Settings > Subscribing). Paste this, or change it first:
+3. **Welcome email** (sent after a reader confirms; on in Settings > Subscribing). Changing its words needs Buttondown's **Standard** plan; on the free plan Buttondown sends its own short welcome. The text to use once you upgrade:
 
    > Thanks for signing up to the R7 Orbit newsletter. Once a week you'll get one email: AI news in short, new build logs, videos and projects, and what I'm building next. Mercury, my newsletter agent, puts each issue together, and I read every one before it goes out. If it stops being useful, the unsubscribe link is at the bottom of every email.
 
@@ -48,13 +48,18 @@ Change the line in all of them at once, or not at all.
 
 ### The look on Buttondown
 
-Buttondown's archive, subscribe page and emails start in its own light theme with a blue button. The R7 Orbit versions:
+Buttondown's archive, subscribe page and emails start in its own light theme with a blue button. What is set (2026-11-10, free plan):
 
-- **Settings > General > Branding:** **Icon** `brand/icon-512.png` (alt text "R7 Orbit logo"); **Share image** `brand/social/og-newsletter.png` (1200 × 630; source `brand/source/og-newsletter.html`, re-render with `node scripts/render-brand.mjs og-newsletter`). **Social links:** your YouTube and GitHub, the same as the site's footer.
-- **Settings > Web > Styling:** Theme **Modern**, Accent colour **#c9a96a**, Background **#09090a**, Dark mode **off** (obsidian is the only theme). Then **Add-ons > Custom CSS: on**, and paste all of `brand/buttondown/web.css`. It sets Buttondown's colour and font variables to the site's tokens, loads Cormorant Garamond, Inter and JetBrains Mono, and makes every button brass with ink text. (Previewed on buttondown.com/r7orbit before it was written down: obsidian page, brass button, Cormorant name.)
-- **Settings > Email:** Accent colour **#c9a96a**, Template **Modern**, **Add-ons > Custom CSS: on**, and paste all of `brand/buttondown/email.css`. Email apps are stricter than browsers: send yourself a test before the first issue and look at it in Gmail, on a phone and in Outlook.
-- **Settings > Email > Tracking:** leave **Email clicks** and **Email opens** off, and turn **UTM information** off. The site promises no tracking (Privacy page); these would add it to the emails.
-- **Settings > Web > Add-ons > Redirect** (optional): send visitors from Buttondown's subscribe page to https://r7orbit.io/newsletter/, so people sign up on the site. Leave the archive where it is (the site links to it).
+- **Settings > General:** name **R7 Orbit**, description (see "The words"), **Icon** the R7 Orbit icon (alt text "R7 Orbit logo"). **Share image:** upload `brand/social/og-newsletter.png` (1200 × 630; source `brand/source/og-newsletter.html`, re-render with `node scripts/render-brand.mjs og-newsletter`). **Social links:** your YouTube and GitHub, the same as the site's footer.
+- **Settings > Web > Styling:** Theme **Modern**; Accent **#c9a96a** (brass) on both the Light and the Dark tab of the picker; Background **#09090a** (obsidian) on both tabs; Body font **Figtree** (the closest to Inter in Buttondown's list, which has no Inter); Accent font **EB Garamond** (the closest to Cormorant Garamond; it is used for the name, headings, nav and buttons); **Dark mode on** (without it Buttondown keeps dark grey text, unreadable on obsidian).
+- **Settings > Email:** Accent **#c9a96a**, Template **Modern**. **Email clicks** and **Email opens** off, **UTM information** off: the site promises no tracking (Privacy page).
+- **Mailing address:** filled in (Settings > Email > Sender).
+
+What the free plan cannot do, and what it costs to fix:
+
+- **Button text is white on brass**, which is hard to read (about 2:1; the site uses dark ink on brass). Fonts are close but not the brand's. Buttondown's **Basic** plan unlocks **Custom CSS** for the web pages and the emails: paste `brand/buttondown/web.css` (Settings > Web > Add-ons > Custom CSS) and `brand/buttondown/email.css` (Settings > Email > Add-ons > Custom CSS). They set ink-on-brass buttons and load Cormorant Garamond, Inter and JetBrains Mono (checked on buttondown.com/r7orbit by injecting web.css into the page without saving it).
+- **The welcome email's words** need the **Standard** plan (step 3).
+- Optional, any plan: **Settings > Web > Add-ons > Redirect** sends visitors from Buttondown's subscribe page to https://r7orbit.io/newsletter/, so people sign up on the site.
 
 ### 2. Optional: send from your own domain
 

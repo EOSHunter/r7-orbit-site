@@ -1,5 +1,5 @@
 /* R7 Orbit in the newsletter emails.
-   Paste into Buttondown: Settings > Email > Add-ons > Custom CSS. Template: Modern. Accent colour: #c9a96a.
+   Needs Buttondown's Basic plan or higher (Custom CSS is not on the free plan). Paste into Buttondown: Settings > Email > Add-ons > Custom CSS. Template: Modern. Accent colour: #c9a96a.
    Email apps are stricter than browsers: some drop web fonts (the stacks fall back to Georgia and Segoe UI / Helvetica), and
    Gmail and Outlook can recolour a dark email in their own dark mode. Send yourself a test (Emails > a draft > Send test) and
    look at it in Gmail on the web, on a phone, and in Outlook before the first real issue. */
