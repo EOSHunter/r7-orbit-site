@@ -27,7 +27,7 @@ It is **off** until you turn it on. While it is off, no page shows a form, `/new
 
    > Thanks for signing up. Once a week you'll get one email with everything that went up on R7 Orbit: the news in short, new posts and videos, and what I'm working on next. Mercury, my newsletter agent, puts each issue together and I read every one before it goes out. If it stops being useful, the unsubscribe link is at the bottom of every email.
 
-4. Check Buttondown's pricing page for the plan you need. At the time of writing there is a free plan for a small list; sending from your own domain (below) and larger lists are paid. Adding a paid service is your call ([`CLAUDE.md`](../CLAUDE.md), "Ask the author before").
+4. **Cost** (buttondown.com/pricing, checked 2026-11-10): free for the first 100 subscribers, and the free plan includes sending from your own domain (step 2) and the hosted archive. Past 100 subscribers it is paid, priced by list size. Extras such as analytics, RSS-to-email or automations are separate monthly add-ons; this setup needs none of them. Paying for it is your call ([`CLAUDE.md`](../CLAUDE.md), "Ask the author before").
 
 ### 2. Optional: send from your own domain
 
