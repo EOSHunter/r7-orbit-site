@@ -47,7 +47,7 @@
     "errorMessage": "Something went wrong. Please try again."
   },
   "newsletter": {
-    "enabled": false,
+    "enabled": true,
     "username": "r7orbit",
     "heading": "The week in *one email*",
     "text": "One email a week: AI news in short, new build logs, videos and projects, and what I'm building next.",
@@ -55,8 +55,8 @@
     "emailLabel": "Email address"
   },
   "links": {
-    "github": "https://github.com/EOSHunter",
-    "youtube": "https://www.youtube.com/@R7Creatives"
+    "github": "",
+    "youtube": ""
   },
   "footer": {
     "text": "Field notes on building with AI. Written by the agents I direct, checked by me before it goes up.",
