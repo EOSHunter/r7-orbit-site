@@ -225,11 +225,13 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 .feed-count { margin: 0 0 var(--s-4); }
 
 /* ------------------------------------------------------------------------------------------ Archive: the toolbar */
-/* One row: the switches side by side and the count at the end. The search box and the tag chips take a line of their own. */
+/* The search box and the Filters button share the first line; the kind switch and the count share the next. Sort, author and
+   tags sit in the Filters panel (closed until asked for); what is picked there shows as removable chips while it is closed. */
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-6); padding-block: var(--s-3); margin-bottom: var(--s-5); border-block: var(--bw) solid var(--line); }
 .toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); flex: 0 1 auto; min-width: 0; max-width: 100%; }
-.toolbar-row:has(> .search), .toolbar-row:has(> .tag-list) { flex: 1 1 100%; }
-.toolbar .eyebrow { flex: none; }
+.toolbar-top { flex: 1 1 100%; flex-wrap: nowrap; }
+.toolbar-kinds { flex-wrap: nowrap; }
+.toolbar .eyebrow { flex: none; margin: 0; }
 .search { position: relative; display: block; flex: 1 1 16rem; min-width: 0; margin: 0; }
 .search .ico { position: absolute; inset-block: 0; margin-block: auto; left: var(--s-3); color: var(--text-3); pointer-events: none; }
 .search .input { padding-left: calc(var(--s-3) + var(--s-2) + 15px); }
@@ -238,6 +240,21 @@ a.card:hover .card-foot .ico { transform: translateX(2px); color: var(--brass-br
 button.chip { background: transparent; cursor: pointer; }
 .tag-list .chip { min-height: 28px; padding-inline: var(--s-3); }
 .toolbar-count { margin: 0 0 0 auto; }
+.filter-toggle { flex: none; height: 40px; padding-inline: var(--s-4); }
+.filter-toggle.on { border-color: var(--line-brass); color: var(--brass-bright); }
+.filter-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-full); background: var(--brass); color: var(--on-brass); font: var(--fs-2xs)/18px var(--font-mono); text-align: center; }
+.filter-panel { flex: 1 1 100%; display: grid; gap: var(--s-5); padding: var(--s-4); background: var(--surface-1); border: var(--bw) solid var(--line); border-radius: var(--r-md); }
+.filter-group { display: grid; justify-items: start; gap: var(--s-2); min-width: 0; max-width: 100%; }
+.filter-panel-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--s-2); padding-top: var(--s-4); border-top: var(--bw) solid var(--line); }
+.filter-active { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.filter-active .chip { min-height: 28px; padding-inline: var(--s-3); gap: var(--s-1); }
+.filter-panel[hidden], .filter-active[hidden], .filter-badge[hidden] { display: none; }
+/* A phone gives the kind switch the whole line: its label stays for screen readers only. */
+@media (max-width: 479px) {
+  .toolbar-kinds { flex: 1 1 100%; }
+  .toolbar-kinds .eyebrow { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .toolbar-kinds .seg button { padding-inline: var(--s-3); }
+}
 
 .empty { display: grid; justify-items: start; gap: var(--s-4); padding: var(--s-7) var(--s-6); border: var(--bw) dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface-1); }
 .empty h2 { font-size: var(--fs-2xl); }

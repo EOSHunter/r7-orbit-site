@@ -21,6 +21,7 @@ export const ICON_NAMES = [
   'link',
   'file',
   'agent',
+  'filter',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];

@@ -243,6 +243,9 @@ test("structured data names the author: a Person for Hunter's posts, an Organiza
 test('/latest/ has a By author filter with every author who has posts; picking one shows only their cards', async ({ page }) => {
   await page.goto('/latest/');
   const filter = page.locator('[data-filter="author"]');
+  // It sits in the Filters panel (ArchiveList), closed until asked for.
+  await expect(filter).toBeHidden();
+  await page.locator('[data-filters-toggle]').click();
   await expect(page.getByText('By author', { exact: true })).toBeVisible();
   // People first, then agents, alphabetical inside each (sortAuthors in src/lib/authors.ts).
   const agentNames = [...new Set(agentPosts.map(credited))].map((slug) => authorFile(slug).name).sort((a, b) => a.localeCompare(b));
