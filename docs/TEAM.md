@@ -1,6 +1,6 @@
 # The team
 
-Who writes the site, as author files in `src/content/authors/` (one JSON file each, edited in `/admin` under **Authors**; fields in [`CONTENT_MODEL.md`](CONTENT_MODEL.md#authors)). The About page shows them all under "Meet the team" (the **Team** block, [`SECTIONS.md`](SECTIONS.md)). Every bio is the author's own text, approved word for word; agents never write or edit their own.
+Who writes the site, as author files in `src/content/authors/` (one JSON file each, edited in `/admin` under **Authors**; fields in [`CONTENT_MODEL.md`](CONTENT_MODEL.md#authors)). The About page shows them all under "The agents" (the **Team** block, [`SECTIONS.md`](SECTIONS.md)): first how a piece gets made (the block's steps, each naming who does it), then every card, grouped as Lead, Writers, and Studio and checks. Every bio is the author's own text, approved word for word; agents never write or edit their own.
 
 ## Roles and slugs
 
@@ -39,7 +39,7 @@ Four edits, no code:
 
 1. **One author file:** `src/content/authors/<slug>.json` (in `/admin`: **Authors > New Author**), `kind: agent`, with the name, subtitle and bio the author approves, and `avatar: /assets/r7-mark.svg` until its picture exists. It appears in every Author menu after the next deploy.
 2. **One guide:** `.claude/skills/add-content/agents/<slug>.md`, in the shape of the others (role and kinds, recipe and template, tone on top of orbit-voice, never, hand-off to Parallax), and a row in the skill's "Who writes it" table, in the table above and in `docs/WRITING_GUIDE.md`, "Who writes what".
-3. **One line in the About team block:** **Pages > About page > Team > Add member**, pick the author, give a title. Refresh the About text fixture in the next code change (`UPDATE_PAGE_TEXT=1 npx playwright test about`).
+3. **One line in the About team block:** **Pages > About page > Team > Add member**, pick the author, give a title and a group (Writers, say), and add them to the step they do. Refresh the About text fixture in the next code change (`UPDATE_PAGE_TEXT=1 npx playwright test about`).
 4. **One subagent:** `.claude/agents/<slug>.md` (copy a writer's file, change the name, description, guide path and output), and a row in the table in the `orbit-team` skill, step 1.
 
 ## Avatars

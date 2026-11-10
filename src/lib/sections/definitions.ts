@@ -795,36 +795,69 @@ const author = defineBlock(
   },
 );
 
-// The people and agents who make the site (the About page's "Meet the team"), as cards read from the authors list: the bio is the
-// author file's (a person's from site.json), so it is written once; `title` and the optional `blurb` are this page's own words.
+// The people and agents who make the site (the About page's "The agents"), as cards read from the authors list: the bio is the
+// author file's (a person's from site.json), so it is written once; `title`, `group` and the optional `blurb` are this page's own
+// words. The optional `steps` draw how a piece gets made above the cards: each step names who does it, linking to their card.
+const authorField = (hint: string) =>
+  pattern({ label: 'Author', pattern: SLUG_PATTERN, message: SLUG_MESSAGE, source: 'authors', hint });
+
 const team = defineBlock(
   'team',
   {
     label: 'Team',
     group: 'From the site',
     description:
-      'People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent\'s subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). One column on a phone, two or three on a wide screen.',
+      'People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent\'s subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). Members that share a group sit under its name. Optional steps above the cards show how a piece gets made, each naming who does it. One column on a phone, two or three on a wide screen.',
     summary: 'Team',
     placement: 'wide',
     example: {
+      stepsHeading: 'How a piece gets made',
+      steps: [
+        { label: 'Brief', people: [{ author: 'hunter-newton' }, { author: 'r7' }], note: 'I write the brief; R7 hands it on.' },
+        { label: 'Write', people: [{ author: 'r7' }] },
+      ],
       members: [
-        { author: 'hunter-newton', title: 'Director' },
-        { author: 'r7', title: 'Lead agent', blurb: 'A shorter line typed in the block, shown instead of the bio.' },
+        { author: 'hunter-newton', title: 'Director', group: 'People' },
+        { author: 'r7', title: 'Lead agent', group: 'Agents', blurb: 'A shorter line typed in the block, shown instead of the bio.' },
       ],
     },
     previewNote: 'Each avatar is drawn as initials; the page shows the author\'s picture.',
   },
   {
+    stepsHeading: text({
+      label: 'Steps heading',
+      optional: true,
+      max: 60,
+      hint: 'Over the steps, e.g. How a piece gets made. Used only when there are steps.',
+    }),
+    steps: list(
+      {
+        label: text({ label: 'Step', max: 24, hint: 'One or two words, e.g. Brief, Write, Check.' }),
+        people: list(
+          { author: authorField('Who does this step. Their name links to their card, or to their page when they have no card.') },
+          { label: 'Who', hint: 'One or more people or agents.', max: 8, summary: '{{fields.author}}', itemLabel: 'person' },
+        ),
+        note: text({ label: 'Note', optional: true, max: 120, hint: 'Optional. One short line on what happens in this step.' }),
+      },
+      {
+        label: 'Steps',
+        hint: 'Optional. How a piece gets made, in order, shown above the cards. Leave empty for cards only.',
+        min: 0,
+        max: 8,
+        summary: '{{fields.label}}',
+        itemLabel: 'step',
+      },
+    ),
     members: list(
       {
-        author: pattern({
-          label: 'Author',
-          pattern: SLUG_PATTERN,
-          message: SLUG_MESSAGE,
-          source: 'authors',
-          hint: 'Who this card is. The name, picture, subtitle and bio come from the Authors list.',
-        }),
+        author: authorField('Who this card is. The name, picture, subtitle and bio come from the Authors list.'),
         title: text({ label: 'Title', max: 40, hint: 'Their role on this page, e.g. Director, Lead agent, News writer.' }),
+        group: text({
+          label: 'Group',
+          optional: true,
+          max: 40,
+          hint: 'Optional. Members next to each other with the same group sit under its name, e.g. Lead, Writers. Leave every group empty for one grid.',
+        }),
         blurb: text({
           label: 'Short bio',
           widget: 'text',

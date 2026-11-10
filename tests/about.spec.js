@@ -83,11 +83,13 @@ test('the team cards follow about.md: name, title, subtitle, bio, avatar and a l
   const block = teamBlock();
   test.skip(!block, 'about.md has no Team block');
   await page.goto('/about/');
-  const cards = page.locator('[data-team] > li');
+  const cards = page.locator('[data-team] [data-team-member]');
   await expect(cards).toHaveCount(block.members.length);
-  // Names are h3 under a section heading, h2 when the Team block has none above it (the page never skips a level).
+  // Names are h3 under a section heading, h2 when the Team block has none above it (the page never skips a level), and one
+  // level lower again when the block draws headings of its own (a steps heading, or group names).
   const sections = pageCopy('about').sections;
-  const level = headingBefore(sections, sections.findIndex((b) => b.type === 'team')) ? 3 : 2;
+  const headed = (block.steps?.length && block.stepsHeading?.trim()) || block.members.some((m) => m.group?.trim());
+  const level = (headingBefore(sections, sections.findIndex((b) => b.type === 'team')) ? 3 : 2) + (headed ? 1 : 0);
   for (const [i, member] of block.members.entries()) {
     const file = authorFile(member.author);
     const person = file.kind === 'person';
@@ -119,7 +121,7 @@ test('About leads with Hunter Newton, then the agents: R7, Pulsar, Orion, Kepler
   await expect(lead.getByRole('heading', { level: 2, name: site.author.name })).toBeVisible();
   await expect(lead.locator('img')).toHaveAttribute('src', /hunter-newton/);
   await expect(page.getByRole('heading', { level: 2, name: 'The agents' })).toBeVisible();
-  const slugs = await page.locator('[data-team] > li').evaluateAll((els) => els.map((e) => e.dataset.teamMember));
+  const slugs = await page.locator('[data-team] [data-team-member]').evaluateAll((els) => els.map((e) => e.dataset.teamMember));
   expect(slugs).toEqual(['r7', 'pulsar', 'orion', 'kepler', 'hubble', 'mercury', 'pictor', 'parallax']);
 });
 
@@ -137,7 +139,7 @@ test('the team is one column on a phone and two or three on a wide screen, under
   test.skip(!teamBlock(), 'about.md has no Team block');
   // The most cards side by side in one row (a last row of two wider cards, 3 + 3 + 2, is still a three-column grid).
   const columns = () =>
-    page.locator('[data-team] > li').evaluateAll((els) => {
+    page.locator('[data-team] [data-team-member]').evaluateAll((els) => {
       const rows = new Map();
       for (const e of els) {
         const top = Math.round(e.getBoundingClientRect().top);

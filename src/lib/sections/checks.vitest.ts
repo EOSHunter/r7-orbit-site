@@ -59,6 +59,17 @@ describe('teamProblems', () => {
       'member 3: "r7" is already on the team; each author has one card.',
     ]);
   });
+
+  it('checks the names in each step: a real author, once per step (the same author may do several steps)', () => {
+    const members = [{ author: 'r7' }];
+    const ok = { members, steps: [{ people: [{ author: 'hunter-newton' }, { author: 'r7' }] }, { people: [{ author: 'hunter-newton' }] }] };
+    expect(teamProblems(ok, known)).toEqual([]);
+    const bad = { members, steps: [{ people: [{ author: 'r7' }] }, { people: [{ author: 'ghost' }, { author: 'r7' }, { author: 'r7' }] }] };
+    expect(teamProblems(bad, known)).toEqual([
+      'step 2, person 1: there is no author "ghost". Authors are: hunter-newton, r7.',
+      'step 2, person 3: "r7" is already in this step.',
+    ]);
+  });
 });
 
 describe('the frame-src rule for a game', () => {

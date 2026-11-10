@@ -2,12 +2,15 @@
 // The Team block: one card per person or agent, in the order the page lists them. Avatar, name (a link to their page), the title
 // the page gives them with an agent's subtitle, an "AI agent" label for an agent (not "AI-written": this is not a post), and the bio
 // from the authors list, so the words exist once; a `blurb` typed in the block replaces the bio on this card only.
+// Members next to each other with the same `group` sit under its name, each group its own grid (so a lead alone is one wide card).
+// Optional `steps` come first: how a piece gets made, in order, each naming who does it with a link to their card (or their page).
 import AgentChip from '../AgentChip.astro';
 import AuthorAvatar from '../AuthorAvatar.astro';
 import { getAuthorMap } from '../../lib/authors-queries';
 import { isAgent } from '../../lib/authors';
 import { teamProblems } from '../../lib/sections/checks';
 import { loadKnown } from '../../lib/sections/known';
+import { stepHref, teamCardId, teamGroups, teamLevels } from '../../lib/sections/team';
 import type { BlockContext } from './context';
 import type { SectionOf } from '../../lib/sections';
 
@@ -21,36 +24,88 @@ const problems = teamProblems(block, await loadKnown());
 if (problems.length) throw new Error(`${ctx.where}: ${problems.join(' ')}`);
 const authors = await getAuthorMap();
 const members = block.members.map((m) => ({ ...m, author: authors.get(m.author)! }));
-// Names are h3 under a section heading, h2 when the block comes first (About, with the page title as its only heading above).
-const Name = ctx.afterHeading ? 'h3' : 'h2';
+const onTeam = new Set(block.members.map((m) => m.author));
+const steps = block.steps.map((s) => ({ ...s, people: s.people.map((p) => authors.get(p.author)!) }));
+const stepsHeading = block.stepsHeading?.trim() ?? '';
+// Headings never skip a level: the steps and group names sit one under the section heading above the block (h3), or are h2 when
+// the block comes first; card names are one below them once any of them is drawn. A run with no group name after a named one
+// keeps the lower level, so its names still sit under a heading of the block.
+const groups = teamGroups(members);
+let headed = steps.length > 0 && !!stepsHeading;
+const levels = teamLevels(ctx.afterHeading, true);
+const Section = `h${levels.section}` as 'h2' | 'h3';
+const drawn = groups.map((group) => {
+  headed ||= !!group.name;
+  return { ...group, Name: `h${teamLevels(ctx.afterHeading, headed).name}` as 'h2' | 'h3' | 'h4' };
+});
 ---
 
-<ul class="grid-cards team-grid" role="list" data-team>
+<div class="team" data-team>
   {
-    members.map(({ author, title, blurb }) => (
-      <li class="card team-card" data-team-member={author.slug}>
-        <div class="card-body">
-          <div class="team-card-head">
-            <AuthorAvatar author={author} large lazy />
-            <div class="team-card-id">
-              <Name class="card-title team-name">
-                <a class="author-name" href={author.path}>{author.name}</a>
-              </Name>
-              <p class="team-role">
-                <span>{title}</span>
-                {author.subtitle && ' '}
-                {author.subtitle && <span class="author-sub">{author.subtitle}</span>}
-              </p>
-              {isAgent(author) && (
-                <p class="team-label">
-                  <AgentChip label="agent" />
-                </p>
-              )}
-            </div>
-          </div>
-          <p class="team-bio">{blurb?.trim() || author.bio}</p>
-        </div>
-      </li>
+    steps.length > 0 && (
+      <div class="team-steps">
+        {stepsHeading && <Section class="eyebrow team-heading" id="team-steps-heading">{stepsHeading}</Section>}
+        <ol
+          class="team-flow"
+          role="list"
+          aria-labelledby={stepsHeading ? 'team-steps-heading' : undefined}
+          aria-label={stepsHeading ? undefined : 'Steps'}
+        >
+          {steps.map((step, i) => (
+            <li class="team-step">
+              <span class="team-step-n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <p class="team-step-label">{step.label}</p>
+              {step.note && <p class="team-step-note">{step.note}</p>}
+              <ul class="team-step-who" role="list">
+                {step.people.map((who) => (
+                  <li>
+                    <a href={stepHref(who.slug, onTeam, who.path)}>
+                      <AuthorAvatar author={who} lazy />
+                      <span>{who.name}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </div>
+    )
+  }
+  {
+    drawn.map(({ name, members: run, Name }) => (
+      <div class="team-group">
+        {name && <Section class="eyebrow team-heading">{name}</Section>}
+        <ul class="grid-cards team-grid" role="list">
+          {run.map(({ author, title, blurb }) => (
+            <li class="card team-card" id={teamCardId(author.slug)} data-team-member={author.slug}>
+              <div class="card-body">
+                <div class="team-card-head">
+                  <AuthorAvatar author={author} large lazy />
+                  <div class="team-card-id">
+                    <Name class="card-title team-name">
+                      <a class="author-name" href={author.path}>
+                        {author.name}
+                      </a>
+                    </Name>
+                    <p class="team-role">
+                      <span>{title}</span>
+                      {author.subtitle && ' '}
+                      {author.subtitle && <span class="author-sub">{author.subtitle}</span>}
+                    </p>
+                    {isAgent(author) && (
+                      <p class="team-label">
+                        <AgentChip label="agent" />
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <p class="team-bio">{blurb?.trim() || author.bio}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     ))
   }
-</ul>
+</div>

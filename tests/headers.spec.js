@@ -234,9 +234,11 @@ test('saving an About change works under the admin CSP: a new image block, two s
 
   // Re-order: fold the new block to one line, then drag it up above the first block by its handle (the editor has no keyboard
   // way to do this). A tall block is hard to drop: the editor picks the nearest block by its centre.
-  // Every block has a handle, and so does each row of a list inside one (the Team block's members): the new block's is the last.
+  // Every block has a handle, and so does each row of a list inside one (the Team block's members, its steps and the people in
+  // each step): the new block's is the last.
   const { frontmatter: about } = parseFrontmatter(ABOUT_MD);
-  const rows = about.sections.reduce((n, s) => n + (s.members?.length ?? 0), 0);
+  const stepRows = (steps = []) => steps.reduce((n, step) => n + 1 + (step.people?.length ?? 0), 0);
+  const rows = about.sections.reduce((n, s) => n + (s.members?.length ?? 0) + stepRows(s.steps), 0);
   const handles = page.locator('[aria-roledescription="sortable"]');
   await handles.last().locator('xpath=preceding-sibling::button[1]').click();
   await expect(handles).toHaveCount(about.sections.length + 1 + rows);

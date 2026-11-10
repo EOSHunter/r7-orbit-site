@@ -724,25 +724,44 @@ sections:
 
 #### Team (`team`)
 
-People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent's subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). One column on a phone, two or three on a wide screen.
+People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent's subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). Members that share a group sit under its name. Optional steps above the cards show how a piece gets made, each naming who does it. One column on a phone, two or three on a wide screen.
 
 Sits: In a row of its own, the width of the page. It ends a picture-beside-text row. In the editor preview: Each avatar is drawn as initials; the page shows the author's picture.
 
 | Field | Box | Required | Notes |
 | --- | --- | --- | --- |
+| `stepsHeading` | One line | no | Over the steps, e.g. How a piece gets made. Used only when there are steps. At most 60 characters. |
+| `steps` | List of rows (0 to 8) | no | Optional. How a piece gets made, in order, shown above the cards. Leave empty for cards only. |
+| `steps[].label` | One line | yes | One or two words, e.g. Brief, Write, Check. At most 24 characters. |
+| `steps[].people` | List of rows (1 to 8) | yes | One or more people or agents. |
+| `steps[].people[].author` | Menu of the authors | yes | Who does this step. Their name links to their card, or to their page when they have no card. |
+| `steps[].note` | One line | no | Optional. One short line on what happens in this step. At most 120 characters. |
 | `members` | List of rows (1 to 24) | yes | One card per person or agent, in order. |
 | `members[].author` | Menu of the authors | yes | Who this card is. The name, picture, subtitle and bio come from the Authors list. |
 | `members[].title` | One line | yes | Their role on this page, e.g. Director, Lead agent, News writer. At most 40 characters. |
+| `members[].group` | One line | no | Optional. Members next to each other with the same group sit under its name, e.g. Lead, Writers. Leave every group empty for one grid. At most 40 characters. |
 | `members[].blurb` | Several lines | no | Optional. Shown instead of the bio from the Authors list. Leave empty to show that bio. At most 300 characters. |
 
 ```yaml
 sections:
   - type: team
+    stepsHeading: How a piece gets made
+    steps:
+      - label: Brief
+        people:
+          - author: hunter-newton
+          - author: r7
+        note: "I write the brief; R7 hands it on."
+      - label: Write
+        people:
+          - author: r7
     members:
       - author: hunter-newton
         title: Director
+        group: People
       - author: r7
         title: Lead agent
+        group: Agents
         blurb: A shorter line typed in the block, shown instead of the bio.
 ```
 

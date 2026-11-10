@@ -74,15 +74,31 @@ export function onceProblems(types: readonly unknown[]): { index: number; messag
   return problems;
 }
 
-/** Each card of a Team block must name an author who exists, once. Members are counted from 1, as the editor shows them. */
-export function teamProblems(block: { members: readonly { author: string }[] }, known: Known): string[] {
+/**
+ * Each card of a Team block must name an author who exists, once, and so must each name in a step (a step may name the same
+ * author as another step). Members and steps are counted from 1, as the editor shows them.
+ */
+export function teamProblems(
+  block: { members: readonly { author: string }[]; steps?: readonly { people: readonly { author: string }[] }[] },
+  known: Known,
+): string[] {
   const problems: string[] = [];
   const seen = new Set<string>();
+  const missing = (where: string, author: string) => `${where}: there is no author "${author}". Authors are: ${list(known.authors)}.`;
   block.members.forEach(({ author }, index) => {
     const where = `member ${index + 1}`;
-    if (!known.authors.includes(author)) problems.push(`${where}: there is no author "${author}". Authors are: ${list(known.authors)}.`);
+    if (!known.authors.includes(author)) problems.push(missing(where, author));
     else if (seen.has(author)) problems.push(`${where}: "${author}" is already on the team; each author has one card.`);
     seen.add(author);
+  });
+  (block.steps ?? []).forEach(({ people }, index) => {
+    const named = new Set<string>();
+    people.forEach(({ author }, at) => {
+      const where = `step ${index + 1}, person ${at + 1}`;
+      if (!known.authors.includes(author)) problems.push(missing(where, author));
+      else if (named.has(author)) problems.push(`${where}: "${author}" is already in this step.`);
+      named.add(author);
+    });
   });
   return problems;
 }

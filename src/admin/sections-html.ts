@@ -19,6 +19,7 @@ import {
   type SectionType,
 } from '../lib/sections';
 import { onceProblems } from '../lib/sections/checks';
+import { teamGroups, teamLevels } from '../lib/sections/team';
 import { headingBefore, sectionsHeadings } from '../lib/sections-to-content';
 import { titleParts } from '../lib/text';
 import {
@@ -312,31 +313,59 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
   },
   // TeamBlock.astro's cards, with initials for the avatars (the pictures are files of the built site).
   team: (d, env) => {
-    // The page's rule (TeamBlock.astro): h3 under a section heading, h2 when nothing comes before.
+    // The page's rules (TeamBlock.astro, src/lib/sections/team.ts): steps first, then each group under its name; headings one
+    // under the section heading above the block (or h2 with none), card names one under those once any is drawn.
     const at = env.sections.indexOf(d);
-    const h = at > 0 && headingBefore(env.sections, at) ? 'h3' : 'h2';
-    const cards = (Array.isArray(d.members) ? d.members : []).map((m) => {
+    const afterHeading = at > 0 && headingBefore(env.sections, at);
+    const section = `h${teamLevels(afterHeading, true).section}`;
+    const initialsOf = (name: string) =>
+      name
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? '')
+        .join('');
+    const steps = Array.isArray(d.steps) ? d.steps : [];
+    const stepsHeading = (d.stepsHeading ?? '').trim();
+    let headed = steps.length > 0 && !!stepsHeading;
+    const stepHtml = steps.map((s, i) => {
+      const people = (Array.isArray(s.people) ? s.people : []).map((p) => {
+        const who = env.authors.find((a) => a.slug === p.author);
+        if (!who) return `<li>${p.author ? `No author "${escapeHtml(p.author)}".` : 'Choose an author.'}</li>`;
+        return `<li><a href="#"><span class="avatar initials" aria-hidden="true"><span>${escapeHtml(initialsOf(who.name))}</span></span><span>${escapeHtml(who.name)}</span></a></li>`;
+      });
+      const note = s.note?.trim() ? `<p class="team-step-note">${escapeHtml(s.note)}</p>` : '';
+      return (
+        `<li class="team-step"><span class="team-step-n" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>` +
+        `<p class="team-step-label">${escapeHtml(s.label ?? '')}</p>${note}<ul class="team-step-who" role="list">${people.join('')}</ul></li>`
+      );
+    });
+    const stepsBlock = steps.length
+      ? `<div class="team-steps">${stepsHeading ? `<${section} class="eyebrow team-heading">${escapeHtml(stepsHeading)}</${section}>` : ''}` +
+        `<ol class="team-flow" role="list">${stepHtml.join('')}</ol></div>`
+      : '';
+    const card = (m: (typeof d.members)[number], h: string) => {
       const who = env.authors.find((a) => a.slug === m.author);
       if (!who) {
         const missing = m.author ? `No author "${escapeHtml(m.author)}".` : 'Choose an author.';
         return `<li class="card team-card"><div class="card-body"><p class="team-bio">${missing}</p></div></li>`;
       }
-      const initials = who.name
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((w) => w[0]?.toUpperCase() ?? '')
-        .join('');
       const sub = who.subtitle ? `<span class="author-sub">${escapeHtml(who.subtitle)}</span>` : '';
       const label = who.agent ? `<p class="team-label"><span class="chip ai-agent">${icon('agent')}AI agent</span></p>` : '';
       return (
         `<li class="card team-card"><div class="card-body"><div class="team-card-head">` +
-        `<span class="avatar initials lg" aria-hidden="true"><span>${escapeHtml(initials)}</span></span>` +
+        `<span class="avatar initials lg" aria-hidden="true"><span>${escapeHtml(initialsOf(who.name))}</span></span>` +
         `<div class="team-card-id"><${h} class="card-title team-name"><a class="author-name" href="#">${escapeHtml(who.name)}</a></${h}>` +
         `<p class="team-role"><span>${escapeHtml(m.title ?? '')}</span>${sub ? ` ${sub}` : ''}</p>${label}</div></div>` +
         `<p class="team-bio">${escapeHtml(m.blurb?.trim() || who.bio)}</p></div></li>`
       );
+    };
+    const groups = teamGroups(Array.isArray(d.members) ? d.members : []).map(({ name, members }) => {
+      headed ||= !!name;
+      const h = `h${teamLevels(afterHeading, headed).name}`;
+      const head = name ? `<${section} class="eyebrow team-heading">${escapeHtml(name)}</${section}>` : '';
+      return `<div class="team-group">${head}<ul class="grid-cards team-grid" role="list">${members.map((m) => card(m, h)).join('')}</ul></div>`;
     });
-    return `<ul class="grid-cards team-grid" role="list">${cards.join('')}</ul>`;
+    return `<div class="team">${stepsBlock}${groups.join('')}</div>`;
   },
 };
 

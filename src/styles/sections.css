@@ -60,5 +60,35 @@
 .team-card-id p { margin: 0; }
 .team-name { overflow-wrap: anywhere; }
 .team-role { display: grid; gap: var(--s-1); color: var(--text-2); font-size: var(--fs-sm); }
-.team-bio { margin: 0; color: var(--text-2); font-size: var(--fs-md); line-height: 1.55; }
-.sections > .sec-row:has(> .prose > :is(h2, h3):only-child):has(+ .sec-row > .team-grid) { padding-bottom: 0; }
+.team-bio { margin: 0; max-width: 68ch; color: var(--text-2); font-size: var(--fs-md); line-height: 1.55; }
+.sections > .sec-row:has(> .prose > :is(h2, h3):only-child):has(+ .sec-row > .team) { padding-bottom: 0; }
+
+/* The block's parts: the steps, then each group under its name. A group name is a small label with a hairline to the edge. */
+.team { display: grid; gap: var(--s-8); }
+.team-group, .team-steps { display: grid; gap: var(--s-5); }
+.team-heading { display: flex; align-items: center; gap: var(--s-4); }
+.team-heading::after { content: ''; flex: 1; border-top: var(--bw) solid var(--line); }
+
+/* The steps: a list down the page on a phone, a line with a brass point per step on a wider screen (three to a row, then one row). */
+.team-flow { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-5); }
+.team-step { position: relative; display: grid; grid-template-columns: var(--s-6) minmax(0, 1fr); column-gap: var(--s-3); row-gap: var(--s-2); align-content: start; }
+.team-step > :not(.team-step-n) { grid-column: 2; }
+.team-step-n { grid-row: 1 / span 3; font: var(--fs-xs) / 1.9 var(--font-mono); color: var(--brass); }
+.team-step-label { margin: 0; font-weight: var(--fw-medium); color: var(--text); }
+.team-step-who { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); }
+.team-step-who a { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--text-2); font-size: var(--fs-sm); text-decoration: none; }
+.team-step-who a:hover span { color: var(--text); text-decoration: underline; }
+.team-step-note { margin: 0; color: var(--text-3); font-size: var(--fs-sm); line-height: 1.5; }
+@media (min-width: 640px) {
+  .team-flow { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--s-4); row-gap: var(--s-6); }
+  .team-step { grid-template-columns: minmax(0, 1fr); padding-top: var(--s-4); border-top: var(--bw) solid var(--line-strong); }
+  .team-step > :not(.team-step-n) { grid-column: 1; }
+  .team-step-n { grid-row: auto; }
+  .team-step::before { content: ''; position: absolute; top: calc(var(--s-1) * -1); left: 0; width: var(--s-2); height: var(--s-2); border-radius: var(--r-full); background: var(--brass); }
+  .team-step-who { flex-direction: column; }
+  /* Number, label, note and names share rows across the steps, so the notes and names start level whatever their length. */
+  .team-step { grid-row: span 4; grid-template-rows: subgrid; }
+}
+@media (min-width: 1000px) {
+  .team-flow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+}
