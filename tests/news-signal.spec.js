@@ -28,8 +28,8 @@ test('a news item with a topic opens with the same picture as a banner, above th
   expect(Math.round(b.width / b.height)).toBe(4);
 });
 
-// No two news items share a picture (the author's rule, 2026-11-08): the object on each published item's banner is unique, and
-// so is every cover. Read from dist/, so it covers every item the build publishes.
+// No two news items share a picture (the author's rule, 2026-11-08): each published item's cover, or its banner's object when it
+// has no cover, is unique. Read from dist/, so it covers every item the build publishes.
 test('no two published news items show the same picture', () => {
   const dir = fileURLToPath(new URL('../dist/news/', import.meta.url));
   test.skip(!existsSync(dir), 'no build');
@@ -38,10 +38,12 @@ test('no two published news items show the same picture', () => {
     const file = join(dir, d.name, 'index.html');
     if (!d.isDirectory() || !existsSync(file)) continue;
     const html = readFileSync(file, 'utf8');
-    const banner = html.match(/<div class="news-banner">[\s\S]*?<image href="([^"]+)"/)?.[1];
-    if (!banner) continue;
-    expect(seen.get(banner), `/news/${d.name}/ reuses ${banner} (also on ${seen.get(banner)}): give it its own symbol`).toBeUndefined();
-    seen.set(banner, `/news/${d.name}/`);
+    // The picture the item opens with: its cover (figure.news-hero, the same as its card) or, without one, its banner's object.
+    const picture =
+      html.match(/<figure class="news-hero"><img src="([^"]+)"/)?.[1] ?? html.match(/<div class="news-banner">[\s\S]*?<image href="([^"]+)"/)?.[1];
+    if (!picture) continue;
+    expect(seen.get(picture), `/news/${d.name}/ reuses ${picture} (also on ${seen.get(picture)}): give it its own picture`).toBeUndefined();
+    seen.set(picture, `/news/${d.name}/`);
   }
   expect(seen.size).toBeGreaterThan(0);
 });

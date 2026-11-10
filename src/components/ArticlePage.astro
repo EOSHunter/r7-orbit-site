@@ -33,6 +33,7 @@ import { headTitleFor } from '../lib/seo';
 import { sourceForKind } from '../lib/waitlist';
 import { waitlist } from '../lib/waitlist-queries';
 import { getImage } from 'astro:assets';
+import { publicSrcset } from '../lib/media-srcset';
 import { render } from 'astro:content';
 import ImageZoom from './ImageZoom.astro';
 import '../styles/markdown.css';
@@ -68,7 +69,8 @@ const label = kind === 'news' ? 'News' : 'Blog';
 const minutes = readTime(post);
 const base = (Astro.site ?? new URL(site.url)).href;
 const url = absoluteUrl(Astro.url.pathname, base);
-// The cover: the card's picture and the og:image, never drawn on the page itself.
+// The cover: the card's picture and the og:image. A blog post never draws it on the page (its featured image does that job);
+// a news item draws it at the top, the same picture as its card (newsHero below).
 const cover = data.cover ? { src: data.cover, alt: data.coverAlt ?? '' } : undefined;
 // Blog only: an optional hero image behind the headline. It is also the og:image (a blog post has no separate cover; one left in
 // an older post's file is used only when there is no featured image).
@@ -85,12 +87,16 @@ const series = kind === 'blog' ? seriesFor(post, sameKind as SitePost<'blog'>[])
 const { newer, older } = adjacentPosts(post, sameKind as SitePost[]);
 const related = relatedPosts(post, everything);
 const news = kind === 'news' ? (data as unknown as { sourceUrl: string; sourceName: string; take?: string; topic?: NewsTopic; symbol?: string; cover?: string }) : undefined;
-// A news item with a topic opens with the topic's picture as a slim banner (its card may show an official image or a big number
-// instead: the banner keeps the item page in the site's own look).
-const newsBanner = news?.topic;
+// A news item opens with the same picture as its card: its cover (an official image, a screenshot of the source document or a
+// Studio scene), credited and linked: to the agent's page when an agent made it (Pictor), otherwise to the source. Without a
+// cover, the topic's picture as a slim banner.
+const newsCredit = news ? (data as { coverCredit?: string }).coverCredit : undefined;
+const newsHero = news && cover ? { ...cover, srcset: await publicSrcset(cover.src) } : undefined;
+const newsBanner = news?.topic && !newsHero ? news.topic : undefined;
 
 const authorMap = await getAuthorMap();
 const author = authorMap.get(authorSlugOf(post))!;
+const newsCreditHref = newsCredit ? ([...authorMap.values()].find((a) => a.name === newsCredit)?.path ?? news?.sourceUrl) : undefined;
 const assist = assistNote(data.aiAssist, author);
 const showWaitlist = data.waitlist && waitlist.show;
 // "Image by" the site's owner by default, not the post's author (who may be an agent).
@@ -185,8 +191,8 @@ const zoomLink = fullPicture && featured
     </header>
   </ArticleHero>
 
-  <!-- The cover is the card's picture and the og:image, not drawn on the page: the page's picture is the featured image behind
-       the headline (docs/CONTENT_MODEL.md, `cover`). -->
+  <!-- A blog post's cover is not drawn on the page (its picture is the featured image behind the headline); a news item's is,
+       at the top of the column (newsHero), the same picture as its card (docs/CONTENT_MODEL.md, `cover`). -->
   <div class="container">
     <div class="post-layout">
       <div class="post-main">
@@ -200,6 +206,17 @@ const zoomLink = fullPicture && featured
           </div>
         )}
         {toc && <TableOfContents headings={headings} variant="inline" />}
+
+        {newsHero && (
+          <figure class="news-hero">
+            <img src={newsHero.src} srcset={newsHero.srcset} sizes="(min-width: 900px) 720px, 92vw" alt={newsHero.alt} width="1600" height="900" fetchpriority="high" />
+            {newsCredit && (
+              <figcaption>
+                Image: <a href={newsCreditHref} rel={newsCreditHref?.startsWith('http') ? 'noopener' : undefined}>{newsCredit}</a>
+              </figcaption>
+            )}
+          </figure>
+        )}
 
         {newsBanner && (
           <div class="news-banner">

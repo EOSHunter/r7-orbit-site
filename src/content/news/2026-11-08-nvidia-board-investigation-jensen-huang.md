@@ -22,9 +22,6 @@ NVIDIA's board said on Nov 8, 2026 that it is starting an independent investigat
 
 ## What happened
 
-![NVIDIA's newsroom page with the Statement From NVIDIA Board of Directors, dated November 8, 2026, and its six short paragraphs](/media/news/nvidia-board-statement.webp)
-*The board's statement as NVIDIA published it.*
-Screenshot: [NVIDIA](https://nvidianews.nvidia.com/news/statement-from-nvidia-board-of-directors)
 
 CNBC reports that, according to The New York Times and the Financial Times, U.S. intelligence agencies have expressed concerns that a businesswoman, Alice Huang, has been passing information to Beijing ([CNBC](https://www.cnbc.com/2026/11/08/nvidia-jensen-huang-investigation-china-spy.html)). CNBC describes her as affiliated with "a cloud company and an Nvidia customer called Megaspeed," and says Megaspeed has been accused of helping restricted Chinese companies acquire NVIDIA AI chips ([CNBC](https://www.cnbc.com/2026/11/08/nvidia-jensen-huang-investigation-china-spy.html)). TechCrunch describes her as a former executive at Megaspeed, which it calls a Singapore-based chip company ([TechCrunch](https://techcrunch.com/2026/11/08/nvidia-says-its-investigating-ceo-jensen-huangs-relationship-with-possible-chinese-spy/)).
 

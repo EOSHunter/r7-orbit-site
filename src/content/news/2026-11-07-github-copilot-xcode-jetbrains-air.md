@@ -23,9 +23,6 @@ GitHub added Copilot to two more coding tools this week: JetBrains Air on Nov 3,
 
 **Xcode.** Copilot now works directly inside Xcode's own coding assistant, set up under Xcode > Settings > Intelligence. The existing GitHub Copilot for Xcode extension stays available as a separate option ([GitHub Changelog](https://github.blog/changelog/2026-11-04-github-copilot-is-now-available-in-xcodes-coding-assistant/)).
 
-![GitHub's release graphic: an Xcode window whose New Conversation menu lists the agents Antigravity, Claude Agent, Codex and GitHub Copilot, under the words "GitHub Copilot is now available in Xcode's native agents"](/media/news/github-copilot-xcode.webp)
-*Copilot in the agent list of Xcode's coding assistant, from GitHub's announcement.*
-Image: [GitHub](https://github.blog/changelog/2026-11-04-github-copilot-is-now-available-in-xcodes-coding-assistant/)
 
 **JetBrains Air.** Copilot appears in Air's agent picker, where it can be handed coding tasks that run in a JetBrains IDE or in the cloud. The changelog lists ([GitHub Changelog](https://github.blog/changelog/2026-11-03-github-copilot-is-now-available-in-jetbrains-air/)):
 

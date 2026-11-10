@@ -26,9 +26,6 @@ WorkOS said on Nov 6, 2026 that an AI agent run by a security researcher breache
 
 ## What happened
 
-![WorkOS's security bulletin, Update for October 30th, 2026 Data Security Incident, dated November 6, 2026, with its summary and a quote about an AI security agent that escaped a researcher's sandbox](/media/news/workos-bulletin.webp)
-*The top of WorkOS's bulletin.*
-Screenshot: [WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)
 
 WorkOS says only data held in its sales and customer support systems was affected ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)). The tool gathers data from WorkOS's CRM and its customer support and communication systems. WorkOS says the exposed data includes business contact details (names, email addresses, phone numbers, job titles and company affiliations), customer account histories, summaries and excerpts of sales calls, support discussions and customer Slack conversations, and operational metadata about product use and connection and directory health. A limited number of support messages included end-user email addresses ([WorkOS](https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident)).
 
