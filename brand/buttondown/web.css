@@ -1,5 +1,5 @@
 /* R7 Orbit on Buttondown's web pages (archive, subscribe page, issue pages).
-   Needs Buttondown's Basic plan or higher (Custom CSS is not on the free plan). Paste into Buttondown: Settings > Web > Add-ons > Custom CSS. Theme: Modern. Dark mode: off (this is the one theme).
+   Needs Buttondown's Basic plan or higher (Custom CSS is not on the free plan). Paste into Buttondown: Settings > Web > Add-ons > Custom CSS. Theme: Modern. Dark mode: either (this sets both palettes to obsidian; it is on today, which the free plan needs).
    Colours, type and radii are the site's tokens (src/styles/design-system/tokens.css): obsidian, ivory, one brass accent.
    Buttondown's own theme is built on CSS variables, so most of the work is setting those. */
 
