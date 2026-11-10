@@ -11,6 +11,7 @@ import { ICON_NAMES } from '../components/icons';
 import { IMAGE_LIBRARY } from '../lib/media-rules.mjs';
 import { HTTPS_PATTERN, SITE_PATH_PATTERN, SOCIAL_KEYS, siteLinkIssues, siteLinkProblems, type SiteFiles, type SiteSettings } from '../lib/site-settings';
 import { SITE_KEY_PATTERN, WAITLIST_KEY_MISSING, waitlistKeyMissing } from '../lib/waitlist';
+import { USERNAME_PATTERN } from '../lib/newsletter';
 
 const field = (f: Record<string, unknown>) => f as unknown as CmsField;
 
@@ -136,12 +137,20 @@ const settingsFields: CmsField[] = [
     collapsed: true,
     fields: [
       field({
+        name: 'text',
+        label: 'Footer line',
+        widget: 'text',
+        required: false,
+        pattern: ['^$|^\\S[^\\n]{0,179}$', 'Empty, or one line of 180 characters at most'],
+        hint: 'The line under the mark in the footer. Empty: the site description.',
+      }),
+      field({
         name: 'links',
         label: 'Footer links',
         label_singular: 'Footer link',
         widget: 'list',
         summary: '{{fields.label}}',
-        hint: 'After the header links marked "Also in the footer", in this order.',
+        hint: 'The Follow column: Newsletter first (while the newsletter is on), then the header links marked "Also in the footer", then these, in this order.',
         fields: [
           field({ name: 'label', label: 'Label', widget: 'string', pattern: LABEL }),
           iconField(true, ''),
@@ -240,12 +249,41 @@ const settingsFields: CmsField[] = [
       ),
     ],
   }),
+  field({
+    name: 'newsletter',
+    label: 'Newsletter',
+    widget: 'object',
+    collapsed: true,
+    hint: 'The weekly newsletter, sent from Buttondown (docs/NEWSLETTER.md). Nothing shows anywhere until "Enabled" is ticked AND the username is filled in: then the footer gets a sign-up form and a Newsletter link, /newsletter/ exists, and the Privacy page names Buttondown.',
+    fields: [
+      field({
+        name: 'enabled',
+        label: 'Enabled',
+        widget: 'boolean',
+        required: false,
+        default: false,
+        hint: 'Off: no form anywhere, /newsletter/ does not exist. Turn it on once the Buttondown newsletter exists and you have read the Privacy page.',
+      }),
+      field({
+        name: 'username',
+        label: 'Buttondown username',
+        widget: 'string',
+        required: false,
+        pattern: [`^$|${USERNAME_PATTERN.source}`, 'Empty, or your Buttondown username (letters, digits, - and _)'],
+        hint: "The part after buttondown.com/ in your newsletter's address. Public: it is printed in every page's form.",
+      }),
+      waitlistWords('heading', 'Heading', 80, 'Over the small form in the footer. Put one phrase in *asterisks* (the asterisks are dropped there).'),
+      waitlistWords('text', 'Text', 300, 'One or two sentences on what the newsletter is.', 'text'),
+      waitlistWords('buttonLabel', 'Button', 40, 'The button that sends the address, on every newsletter form.'),
+      waitlistWords('emailLabel', 'Email box label', 40, 'The label of the box the address is typed into.'),
+    ],
+  }),
 ];
 
 export const settingsCollection = {
   name: 'settings',
   label: 'Site settings',
-  description: 'The site name, your details, profile links, navigation, footer and waitlist: used on every page.',
+  description: 'The site name, your details, profile links, navigation, footer, waitlist and newsletter: used on every page.',
   delete: false,
   // Pictures chosen here go to public/media/site/, written as /media/site/x.jpg (docs/IMAGES.md).
   media_folder: '/public/media/site',
@@ -280,7 +318,7 @@ export function siteLinksError(data: unknown, files?: SiteFiles): { type: 'CUSTO
   const list = (value: unknown) => (Array.isArray(value) ? (value as object[]) : []);
   const site = {
     nav: list(d.nav).map((item) => ({ label: '', href: '', ...item })),
-    footer: { links: list(d.footer?.links).map((link) => ({ label: '', ...link })), note: '' },
+    footer: { text: '', links: list(d.footer?.links).map((link) => ({ label: '', ...link })), note: '' },
     links: (d.links ?? {}) as SiteSettings['links'],
   } as Pick<SiteSettings, 'nav' | 'footer' | 'links'>;
   const issues = siteLinkIssues(site).map((i) => i.message);

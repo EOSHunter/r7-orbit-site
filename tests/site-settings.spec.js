@@ -192,7 +192,9 @@ test('the Site settings editor will not save nav or footer links the build would
   await page.setViewportSize({ width: 1280, height: 1800 });
   const seen = await openAdmin(page, { signedIn: true });
   const first = SETTINGS.footer.links.find((l) => l.href) ?? { label: 'Meridian', icon: 'link', href: 'https://r7meridian.app/' };
-  const doubled = { ...SETTINGS, footer: { ...SETTINGS.footer, links: [...SETTINGS.footer.links, { ...first, label: 'Twice' }] } };
+  // The settings may hold only profile links (2026-11-10): then the sample address goes in twice.
+  const extra = SETTINGS.footer.links.includes(first) ? [{ ...first, label: 'Twice' }] : [first, { ...first, label: 'Twice' }];
+  const doubled = { ...SETTINGS, footer: { ...SETTINGS.footer, links: [...SETTINGS.footer.links, ...extra] } };
   expect(siteSchema.safeParse(doubled).success, 'the build refuses this file').toBe(false);
   // Registered after openAdmin's handler, so it answers first: the settings file the editor opens has the doubled link.
   const text = JSON.stringify(doubled, null, 2);

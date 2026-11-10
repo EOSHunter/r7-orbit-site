@@ -105,11 +105,13 @@ html.menu-open { overflow: hidden; }
 }
 
 /* ---------------------------------------------------------------------------------------------------- Footer */
-.footer-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-7) var(--s-6); padding-top: var(--s-4); }
-.footer-brand { display: grid; gap: var(--s-4); justify-items: start; }
+.footer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-7) var(--s-6); padding-top: var(--s-4); }
+.footer-brand { display: grid; gap: var(--s-4); justify-items: start; align-content: start; }
+.footer-brand, .footer-legal { grid-column: 1 / -1; }
 .footer-brand .wordmark img { height: 28px; }
-.footer-brand p { margin: 0; max-width: 36ch; color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-ui); }
-/* The two link columns (Pages, Elsewhere). Styled by place, not class: tests/site-chrome.js reads <nav aria-label="Footer"> as is. */
+.footer-brand p { margin: 0; max-width: 40ch; color: var(--text-2); font-size: var(--fs-md); line-height: var(--lh-ui); }
+.footer-brand .newsletter { width: 100%; max-width: 26rem; padding-top: var(--s-2); }
+/* The three link columns (Read, Site, Follow). Styled by place, not class: tests/site-chrome.js reads <nav aria-label="Footer"> as is. */
 .footer-grid > nav { display: grid; gap: var(--s-4); align-content: start; }
 .footer-pages, .footer-links { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
 .footer-pages a, .footer-links a { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--text-2); }
@@ -119,13 +121,25 @@ html.menu-open { overflow: hidden; }
 .footer-legal a:hover { color: var(--brass-bright); }
 .footer-legal > :last-child:not(:nth-child(2)) { margin-left: auto; }
 @media (min-width: 640px) {
-  .footer-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .footer-brand, .footer-legal { grid-column: 1 / -1; }
+  .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (min-width: 900px) {
-  .footer-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
-  .footer-brand { grid-column: auto; }
+@media (min-width: 960px) {
+  .footer-grid { grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)); }
+  .footer-brand { grid-column: auto; padding-right: var(--s-6); }
 }
+
+/* The newsletter sign-up (NewsletterForm.astro): the email box grows, the button keeps its width; they stack on a narrow screen. */
+.newsletter { display: grid; gap: var(--s-3); }
+.newsletter .newsletter-title { margin: 0; color: var(--text); font-size: var(--fs-sm); font-weight: 500; }
+.newsletter-form { margin: 0; }
+/* The label sits over the row; in the row the box takes the room the button leaves and both share the button's height. */
+.newsletter .field { grid-template-columns: minmax(0, 1fr); }
+.newsletter-row { display: flex; align-items: stretch; gap: var(--s-3); }
+.newsletter-row .input { flex: 1 1 0; width: auto; min-width: 0; height: auto; }
+.newsletter-row .btn { flex: 0 0 auto; }
+/* /newsletter/: the form under the lead, no wider than the lead's measure. */
+.newsletter-page { display: grid; gap: var(--s-3); max-width: 40rem; padding-bottom: var(--s-7); }
+.newsletter-page .t-meta { margin: 0; }
 
 /* ---------------------------------------------------------------------------------------- Sections and headings */
 .section { padding-block: var(--s-8); }

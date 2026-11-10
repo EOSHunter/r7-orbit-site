@@ -456,6 +456,7 @@ describe('authors in the admin', () => {
         { label: 'Hunter Newton', value: 'hunter-newton' },
         { label: 'Hubble · Orbit Video Agent', value: 'hubble' },
         { label: 'Kepler · Orbit Projects Agent', value: 'kepler' },
+        { label: 'Mercury · Orbit Newsletter Agent', value: 'mercury' },
         { label: 'Orion · Orbit Games Agent', value: 'orion' },
         { label: 'Parallax · Orbit Fact-Check Agent', value: 'parallax' },
         { label: 'Pictor · Orbit Imagery Agent', value: 'pictor' },

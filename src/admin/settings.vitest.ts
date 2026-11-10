@@ -64,7 +64,16 @@ describe('the Site settings collection', () => {
     for (const secret of [CMS_REPO, CMS_AUTH_URL, 'token', 'secret', 'CF_DEPLOY_HOOK'])
       expect(text).not.toContain(secret);
     expect(paths(fields)).not.toContain('url');
-    expect(paths(fields).filter((p) => p.startsWith('newsletter'))).toEqual([]);
+    // The newsletter group holds the public Buttondown username only: no API key (2026-11-10).
+    expect(paths(fields).filter((p) => p.startsWith('newsletter'))).toEqual([
+      'newsletter',
+      'newsletter.enabled',
+      'newsletter.username',
+      'newsletter.heading',
+      'newsletter.text',
+      'newsletter.buttonLabel',
+      'newsletter.emailLabel',
+    ]);
   });
 
   it('marks optional exactly what the schema lets be empty', () => {
@@ -81,7 +90,10 @@ describe('the Site settings collection', () => {
         'nav.icon',
         'footer.links.href',
         'footer.links.social',
+        'footer.text',
         'footer.note',
+        'newsletter.enabled',
+        'newsletter.username',
         'waitlist.enabled',
         'waitlist.turnstileSiteKey',
       ].sort(),
@@ -114,8 +126,8 @@ describe('the Site settings collection', () => {
   });
 
   it('has no email field and offers only GitHub and YouTube as profile links', () => {
-    // The waitlist's `emailLabel` is the label of the box readers type their own address into, not an address.
-    expect(paths(fields).filter((p) => /email|mail/i.test(p))).toEqual(['waitlist.emailLabel']);
+    // The waitlist's and the newsletter's `emailLabel` are the label of the box readers type their own address into, not an address.
+    expect(paths(fields).filter((p) => /email|mail/i.test(p))).toEqual(['waitlist.emailLabel', 'newsletter.emailLabel']);
     expect(named(named(fields, 'links').fields!, 'github')).toBeTruthy();
     expect(named(fields, 'links').fields!.map((f) => f.name)).toEqual(['github', 'youtube']);
     const social = named(named(named(fields, 'footer').fields!, 'links').fields!, 'social');

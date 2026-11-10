@@ -3,6 +3,7 @@
 // the file is missing or lacks a field its page needs (site-pages.ts). Build time only.
 import { getEntry, type CollectionEntry } from 'astro:content';
 import { site } from '../data/site';
+import { newsletterSettings } from './newsletter-queries';
 import { fillValue, pageSettingsOf } from './page-copy';
 import { pageProblems, sitePage, type SitePage } from './site-pages';
 
@@ -21,7 +22,7 @@ export async function loadSitePage(id: string): Promise<LoadedPage> {
   if (!entry) throw new Error(`src/content/pages/${id}.md is missing: ${page.path} is built from it (docs/CONTENT_MODEL.md, "Pages").`);
   const problems = pageProblems(page, entry.data as unknown as Record<string, unknown>);
   if (problems.length) throw new Error(problems.join('\n'));
-  const data = fillValue(entry.data, pageSettingsOf(site), `${id}.md`) as PageData;
+  const data = fillValue(entry.data, pageSettingsOf({ ...site, newsletter: newsletterSettings }), `${id}.md`) as PageData;
   return { ...page, data, text: (field) => data[field] ?? '' };
 }
 

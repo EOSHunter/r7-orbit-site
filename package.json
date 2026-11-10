@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "cms": "node scripts/cms.mjs",
     "waitlist:export": "node scripts/waitlist-export.mjs",
+    "newsletter:week": "node scripts/newsletter-week.mjs",
     "format": "prettier --write .",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node --test \"src/**/*.test.ts\" && vitest run",

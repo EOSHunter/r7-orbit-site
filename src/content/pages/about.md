@@ -36,6 +36,8 @@ sections:
         title: Projects writer
       - author: hubble
         title: Video writer
+      - author: mercury
+        title: Newsletter writer
       - author: pictor
         title: Image maker
       - author: parallax

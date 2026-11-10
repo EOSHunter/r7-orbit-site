@@ -98,6 +98,17 @@ const framedPageFiles = [
     }),
   },
   {
+    name: 'newsletter',
+    label: 'Newsletter page',
+    file: 'src/content/pages/newsletter.md',
+    fields: framedPageFields({
+      title: 'The big heading of /newsletter/.',
+      seoTitle: 'The name in browser tabs and search results, e.g. Newsletter.',
+      sections:
+        'Where the blocks go: a Lead paragraph at the top sits under the heading, above the sign-up form; the rest follows the form, one column of text. The form and its words are in Site settings > Newsletter. The page exists only while the newsletter is on. Write {newsletter.provider} to print the service\'s name.',
+    }),
+  },
+  {
     name: 'search',
     label: 'Search page',
     file: 'src/content/pages/search.md',

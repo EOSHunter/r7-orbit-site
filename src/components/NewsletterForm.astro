@@ -1,0 +1,61 @@
+---
+// The newsletter sign-up: an email box and a button that post the address to Buttondown (src/lib/newsletter.ts). A plain HTML
+// form: no script, nothing loads from Buttondown until the button is pressed, and it works with JavaScript off. Buttondown then
+// shows its own page asking the reader to confirm by email. Drawn only while the newsletter is on (src/lib/newsletter-queries.ts).
+import { site } from '../data/site';
+import { newsletter } from '../lib/newsletter-queries';
+import { titleParts } from '../lib/text';
+
+interface Props {
+  /** Names the ids: two forms on a page need different ones. */
+  id: string;
+  /** `page`: the big form on /newsletter/ (the page has the heading). `footer`: the heading as a short line, a smaller form. */
+  variant: 'page' | 'footer';
+}
+
+const { id, variant } = Astro.props;
+const words = site.newsletter;
+const plain = titleParts(words.heading)
+  .map((part) => part.text)
+  .join('');
+---
+
+{newsletter.show && (
+  <div class="newsletter" data-variant={variant}>
+    {variant === 'footer' && (
+      <p class="newsletter-title" id={`${id}-title`}>
+        {plain}
+      </p>
+    )}
+    <form
+      class="newsletter-form"
+      method="post"
+      action={newsletter.action}
+      aria-labelledby={variant === 'footer' ? `${id}-title` : undefined}
+    >
+      <div class="field">
+        <label class={variant === 'footer' ? 'visually-hidden' : undefined} for={`${id}-email`}>
+          {words.emailLabel}
+        </label>
+        <div class="newsletter-row">
+          <input
+            class="input"
+            id={`${id}-email`}
+            type="email"
+            name="email"
+            autocomplete="email"
+            inputmode="email"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="254"
+            required
+          />
+          <button class={variant === 'page' ? 'btn solid lg' : 'btn solid'} type="submit">
+            {words.buttonLabel}
+          </button>
+        </div>
+      </div>
+      <input type="hidden" name="embed" value="1" />
+    </form>
+  </div>
+)}

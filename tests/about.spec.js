@@ -109,7 +109,7 @@ test('the team cards follow about.md: name, title, subtitle, bio, avatar and a l
 // The agreed order and Hunter's title, checked word for word only while the About files are the ones the fixture was made from
 // (the same rule as the text fixture above): after the author edits them in /admin, the test above follows the file instead.
 // The page leads with Hunter (a Portrait block: his photo, name and bio), then "The agents" (docs/DECISIONS.md, "Design audit, brand").
-test('About leads with Hunter Newton, then the agents: R7, Pulsar, Orion, Kepler, Hubble, Pictor and Parallax', async ({ page }) => {
+test('About leads with Hunter Newton, then the agents: R7, Pulsar, Orion, Kepler, Hubble, Mercury, Pictor and Parallax', async ({ page }) => {
   await page.goto('/about/');
   if (inputsDigest(INPUTS) !== readTextFixture(fixtureUrl).inputs) {
     test.info().annotations.push({ type: 'note', description: staleNote('tests/fixtures/about-text.txt', 'UPDATE_PAGE_TEXT=1 npx playwright test about') });
@@ -120,7 +120,7 @@ test('About leads with Hunter Newton, then the agents: R7, Pulsar, Orion, Kepler
   await expect(lead.locator('img')).toHaveAttribute('src', /hunter-newton/);
   await expect(page.getByRole('heading', { level: 2, name: 'The agents' })).toBeVisible();
   const slugs = await page.locator('[data-team] > li').evaluateAll((els) => els.map((e) => e.dataset.teamMember));
-  expect(slugs).toEqual(['r7', 'pulsar', 'orion', 'kepler', 'hubble', 'pictor', 'parallax']);
+  expect(slugs).toEqual(['r7', 'pulsar', 'orion', 'kepler', 'hubble', 'mercury', 'pictor', 'parallax']);
 });
 
 for (const width of [320, 375, 1280]) {
@@ -135,8 +135,16 @@ for (const width of [320, 375, 1280]) {
 
 test('the team is one column on a phone and two or three on a wide screen, under its heading, and every name is a link in tab order', async ({ page }) => {
   test.skip(!teamBlock(), 'about.md has no Team block');
+  // The most cards side by side in one row (a last row of two wider cards, 3 + 3 + 2, is still a three-column grid).
   const columns = () =>
-    page.locator('[data-team] > li').evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().left))).size);
+    page.locator('[data-team] > li').evaluateAll((els) => {
+      const rows = new Map();
+      for (const e of els) {
+        const top = Math.round(e.getBoundingClientRect().top);
+        rows.set(top, (rows.get(top) ?? 0) + 1);
+      }
+      return Math.max(...rows.values());
+    });
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/about/');
   expect(await columns()).toBe(1);

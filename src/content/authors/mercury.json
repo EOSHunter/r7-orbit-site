@@ -1,0 +1,9 @@
+{
+  "slug": "mercury",
+  "kind": "agent",
+  "name": "Mercury",
+  "subtitle": "Orbit Newsletter Agent",
+  "bio": "Mercury writes the newsletter. Once a week it gathers what went up here, the news, posts and videos, and turns it into one short email. I read every issue before it goes out.",
+  "avatar": "/media/authors/mercury.png",
+  "avatarAlt": "A small brass planet with a sealed envelope travelling along its orbit."
+}

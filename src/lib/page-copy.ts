@@ -5,9 +5,9 @@
 // - Settings tokens. `{site.name}`, `{site.tagline}`, `{site.description}`, `{author.name}` and
 //   `{newsletter.provider}` in any text are replaced with the values of src/data/site.json, so changing the name in the settings changes the privacy page. An unknown `{x.y}` stops the
 //   build, so a typo never reaches the page as braces.
-// - The newsletter switch, kept only so the Privacy page (whose words are the author's to change) still builds: there is no newsletter
-//   (docs/DECISIONS.md), so it is never connected. `{if newsletter connected}` hides a block, `{if newsletter not connected}` shows it, and
-//   `{newsletter.provider}` is empty. Remove this with the Privacy page's newsletter paragraphs.
+// - The newsletter switch. `{if newsletter connected}` shows a block only while the newsletter is on (Site settings > Newsletter:
+//   Enabled, with a Buttondown username; src/lib/newsletter.ts), `{if newsletter not connected}` only while it is not, and
+//   `{newsletter.provider}` prints the service's name (Buttondown) while it is on, nothing while it is off.
 // - The waitlist switch. `{if waitlist on}` shows a block only while the live site shows the waitlist (Site settings > Waitlist:
 //   on, with a site key), `{if waitlist off}` only while it does not: so the Privacy page can say what happens to the addresses
 //   from the day the form appears, and not before. The wording is the author's.
@@ -15,6 +15,7 @@
 //   page (the functions below say how).
 //
 // Pure, and used by both the pages (build time) and the admin preview (browser).
+import { NEWSLETTER_PROVIDER, newsletterState } from './newsletter';
 import { SECTION_LABELS, type Section } from './sections';
 
 /** The site settings a page's text can print. */
@@ -36,6 +37,7 @@ interface SiteLike {
   description: string;
   author?: { name?: string };
   waitlist?: { enabled?: boolean; turnstileSiteKey?: string };
+  newsletter?: { enabled: boolean; username: string };
 }
 
 /** The settings from src/data/site.json (`site` from src/data/site.ts, or the JSON itself in the admin). */
@@ -45,8 +47,8 @@ export function pageSettingsOf(site: SiteLike): PageSettings {
     siteTagline: site.tagline,
     siteDescription: site.description,
     authorName: site.author?.name ?? '',
-    newsletterProvider: '',
-    newsletterConnected: false,
+    newsletterProvider: newsletterState(site.newsletter).show ? NEWSLETTER_PROVIDER : '',
+    newsletterConnected: newsletterState(site.newsletter).show,
     waitlistOn: Boolean(site.waitlist?.enabled && site.waitlist.turnstileSiteKey?.trim()),
   };
 }

@@ -14,9 +14,9 @@ const sectionsOf = (file: Field) => fieldsOf(file).find((f) => f.name === 'secti
 
 describe('the fixed-frame pages in the Pages collection', () => {
   it('come after About, one entry per page file, each written to the file the site reads', () => {
-    // About first, then the home page and the listing pages (site-page-files.ts), then these four.
-    expect(files.map((f) => f.name)).toEqual(['about', ...SITE_PAGES.map((p) => p.admin.name), 'privacy', '404', 'ascent', 'search']);
-    expect(FRAMED_PAGES).toEqual(['privacy', '404', 'ascent', 'search']);
+    // About first, then the home page and the listing pages (site-page-files.ts), then these five.
+    expect(files.map((f) => f.name)).toEqual(['about', ...SITE_PAGES.map((p) => p.admin.name), 'privacy', '404', 'ascent', 'newsletter', 'search']);
+    expect(FRAMED_PAGES).toEqual(['privacy', '404', 'ascent', 'newsletter', 'search']);
     for (const name of FRAMED_PAGES) {
       expect(named(name)).toMatchObject({
         file: `src/content/pages/${name}.md`,

@@ -1,26 +1,26 @@
 ---
-// The site's footer: the mark and the site's line, a column of the site's pages (the header's nav), a column of links
-// elsewhere, and a last row with the year, Privacy and the footer note. docs/DECISIONS.md, "Design audit, brand".
+// The site's footer: the mark, the footer line and (while the newsletter is on) a small sign-up form; three columns of links (Read:
+// the archives; Site: the other pages; Follow: the newsletter and the links elsewhere); and a last row with the year and the
+// author's name, Privacy and the footer note. docs/DECISIONS.md, "Footer, 2026-11-10".
 import Icon from './Icon.astro';
-import { footerItems, navItems, type FooterLink } from '../data/nav';
+import NewsletterForm from './NewsletterForm.astro';
+import { footerItems, navItems, type FooterLink, type NavItem } from '../data/nav';
 import { site } from '../data/site';
+import { footerColumns } from '../lib/site-settings';
 
 interface Props {
   /** The links to draw. Default: the ones in the site settings. Only the styleguide fixture passes others. */
   links?: FooterLink[];
+  /** The nav the Read and Site columns come from. Default: the site settings'. Only the styleguide fixture passes another. */
+  nav?: NavItem[];
 }
 
-// The nav items marked "show in footer", then the footer links (site.json, Site settings in /admin). A link to a profile that
-// is empty in the settings is already left out (footerLinks in src/lib/site-settings.ts).
-const { links = footerItems } = Astro.props;
+// Follow: Newsletter while it is on, the nav items marked "show in footer", then the footer links (site.json, Site settings in
+// /admin). A link to a profile that is empty in the settings is already left out (footerLinks in src/lib/site-settings.ts).
+const { links = footerItems, nav = navItems } = Astro.props;
 const year = new Date().getFullYear();
-// The Pages column: the header's nav, and Apps (the header reaches it through its Play button, not a nav link), before About.
-const about = navItems.findIndex((item) => item.href === '/about/');
-const pages = navItems.some((item) => item.href === '/apps/')
-  ? navItems
-  : about < 0
-    ? [...navItems, { label: 'Apps', href: '/apps/' }]
-    : [...navItems.slice(0, about), { label: 'Apps', href: '/apps/' }, ...navItems.slice(about)];
+// Read and Site come from the header's nav, so renaming a nav link renames it here too (footerColumns).
+const columns = footerColumns(nav);
 ---
 
 <footer class="site-footer">
@@ -31,14 +31,27 @@ const pages = navItems.some((item) => item.href === '/apps/')
           <img src="/assets/r7-mark.svg" alt="" width="32" height="28" />
           {site.name}
         </a>
-        <p>{site.description}</p>
+        <p>{site.footer.text || site.description}</p>
+        <NewsletterForm id="footer-newsletter" variant="footer" />
       </div>
-      <nav aria-label="Pages">
+      <nav aria-label="Read">
         <p class="eyebrow" aria-hidden="true">
-          Pages
+          Read
         </p>
         <ul class="footer-pages">
-          {pages.map((item) => (
+          {columns.read.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <nav aria-label="Site">
+        <p class="eyebrow" aria-hidden="true">
+          Site
+        </p>
+        <ul class="footer-pages">
+          {columns.site.map((item) => (
             <li>
               <a href={item.href}>{item.label}</a>
             </li>
@@ -47,7 +60,7 @@ const pages = navItems.some((item) => item.href === '/apps/')
       </nav>
       <nav aria-label="Footer">
         <p class="eyebrow" aria-hidden="true">
-          Elsewhere
+          Follow
         </p>
         <ul class="footer-links">
           {links.map((link) => (
@@ -61,7 +74,7 @@ const pages = navItems.some((item) => item.href === '/apps/')
         </ul>
       </nav>
       <p class="footer-legal">
-        <span>&copy; {year}</span>
+        <span>&copy; {year} {site.author.name}</span>
         <a href="/privacy/">Privacy</a>
         {site.footer.note && <span>{site.footer.note}</span>}
       </p>

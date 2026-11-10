@@ -21,9 +21,9 @@ sections:
   - type: text
     text: |-
       {if newsletter connected}
-      If you subscribe, your email address is sent to **{newsletter.provider}**, the service that stores the list and sends the emails. I use it to tell you when something new is published, and for nothing else. That is the only time the form contacts anyone: the request is made when you press Subscribe, not when the page loads.
+      If you subscribe, your email address is sent to **{newsletter.provider}**, the service that stores the list and sends the emails. I use it to send the weekly newsletter, and for nothing else. That is the only time the form contacts anyone: the request is made when you press Subscribe, not when the page loads.
 
-      Every email has an unsubscribe link. Using it removes you from the list. You can also write to me and I'll remove you by hand.
+      You get one email first, to confirm you meant to sign up; until you confirm, nothing else is sent. Every email has an unsubscribe link. Using it removes you from the list.
   - type: text
     text: |-
       {if newsletter not connected}
@@ -48,5 +48,5 @@ sections:
   - type: text
     text: Like any website, whatever serves these pages can see the address and browser details of each request. I don't use those logs to follow anyone.
   - type: text
-    text: Last updated Oct 3, 2026.
+    text: Last updated Nov 10, 2026.
 ---

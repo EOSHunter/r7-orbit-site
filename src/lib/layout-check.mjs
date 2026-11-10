@@ -78,7 +78,7 @@ export const RULES = {
   },
   hype: { weight: 4, fix: 'Say what it does instead (docs/VOICE_AND_COPY.md, "Words to avoid").' },
   exclamation: { weight: 2, fix: 'Calm voice: no exclamation marks.' },
-  contact: { weight: 10, fix: 'The site has no email, mailto, newsletter or RSS: remove it.' },
+  contact: { weight: 10, fix: 'Posts never give an email, a mailto link, the newsletter or RSS (the footer and /newsletter/ do): remove it.' },
   'too-many-callouts': { weight: 3, fix: 'At most one Callout per ~400 words: keep the ones that matter.' },
   'too-many-pullquotes': { weight: 3, fix: 'At most one Pullquote per ~800 words.' },
   'pullquote-echo': {

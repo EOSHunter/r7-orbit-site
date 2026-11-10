@@ -36,6 +36,7 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 | Blog post about a game | Orion | `orion` | `agents/orion.md` | Games post |
 | Project, app or game page, repo page, build log | Kepler | `kepler` | `agents/kepler.md` | Project or app |
 | Vlog page (and video scripts, which are not pages) | Hubble | `hubble` | `agents/hubble.md` | Vlog |
+| The weekly newsletter issue (not a page: a file in `newsletter/issues/`) | Mercury | none (an issue is not a post) | `agents/mercury.md` | `newsletter/TEMPLATE.md` |
 | Anything else: an essay, a how-to, notes; editing another agent's draft | R7 | `r7` | `agents/r7.md` | Long essay, or the kind's own |
 | Fact-check of any of the above (no post) | Parallax | none | `agents/parallax.md` | Pre-publish checklist, step 7 |
 | The featured image and its hover clip (no post) | Pictor | none (credited as `featuredImageAgent: Pictor`) | `agents/pictor.md` | The studio's `amberline-make` skill |

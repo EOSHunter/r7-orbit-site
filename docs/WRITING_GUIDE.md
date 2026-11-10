@@ -34,6 +34,7 @@ Each agent has an author file (`src/content/authors/<slug>.json`, 2026-10-21) an
 | games | Orion (`orion`) | Blog posts about games | [Games post](#games-post) | `games-post.mdx`, `games-post.sections.mdx` | [`orion.md`](../.claude/skills/add-content/agents/orion.md) |
 | projects | Kepler (`kepler`) | Project, app and game pages, repo pages, build logs | [Project or app](#project-or-app) | `project.md`, `project.sections.md` (+ `templates/app.md` for play fields) | [`kepler.md`](../.claude/skills/add-content/agents/kepler.md) |
 | vlogs | Hubble (`hubble`) | Vlog pages (and video scripts, not pages) | [Vlog](#vlog) | `vlog.md`, `vlog.sections.md` | [`hubble.md`](../.claude/skills/add-content/agents/hubble.md) |
+| newsletter | Mercury (none: no posts) | The weekly newsletter issue, a file in `newsletter/issues/` that Hunter sends from Buttondown | `newsletter/TEMPLATE.md` | none | [`mercury.md`](../.claude/skills/add-content/agents/mercury.md) |
 | imagery | Pictor (none: no posts) | Nothing written: the featured image and hover clip for a post, credited as "Image by Pictor" | The studio's `amberline-make` skill | none | [`pictor.md`](../.claude/skills/add-content/agents/pictor.md) |
 | fact-check | Parallax (none: no posts) | Nothing published: fact-check notes (claim, source, verdict, fix) before anything goes up | [Pre-publish checklist](#pre-publish-checklist) | none | [`parallax.md`](../.claude/skills/add-content/agents/parallax.md) |
 

@@ -266,7 +266,7 @@ The settings tokens of the next section work in these files too: `home.md` write
 
 **The waitlist lines.** A block whose text starts with `{if waitlist on}` is shown only while the live site shows the waitlist (Site settings → Waitlist on, with a site key); `{if waitlist off}`, only while it does not. For the Privacy page's paragraph about the waitlist (`docs/WAITLIST.md`, "Privacy"); the wording is the author's.
 
-**Legacy newsletter lines.** There is no newsletter: `{newsletter.provider}` and the `{if newsletter connected}` / `{if newsletter not connected}` lines are still understood only so the Privacy page (whose wording is the author's to change) builds: the token prints nothing and the condition is always "not connected". Any other `{if ...}` fails the build.
+**The newsletter lines.** `{newsletter.provider}` prints the newsletter service's name (Buttondown) while the newsletter is on (Site settings → Newsletter: Enabled, with a username), and nothing while it is off. A block whose text starts with `{if newsletter connected}` is shown only while it is on; `{if newsletter not connected}`, only while it is off. The Privacy page uses both ([`NEWSLETTER.md`](NEWSLETTER.md)).
 
 Tests: `tests/pages.spec.js` compares the built pages with `tests/fixtures/pages/<page>.txt` (captured before the move), `src/lib/page-copy.vitest.ts` covers tokens, conditions, slots and the legacy privacy wording, `tests/admin-pages.spec.js` opens each file in the real editor.
 

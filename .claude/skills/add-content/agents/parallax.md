@@ -19,7 +19,7 @@ Open each source and the built page; check, do not assume.
 5. **Images have alt text and a licence note**: every picture has alt text that says what it shows (or is marked decorative), and a known origin (Hunter's own, a screenshot of something that may be shown); never stock or generated without Hunter's approval.
 6. **Names and dates**: people and products as their owners write them; dates in the site's format (`Oct 3, 2026`).
 7. **No contact details**: no email address, no `mailto:`, no invitation to contact anyone.
-8. **No newsletter, RSS or feed** mention.
+8. **No newsletter, RSS or feed** mention (in a site page; a newsletter issue from Mercury is the newsletter, so this item is skipped for it).
 9. **The layout check was run**: `npm run check:layout -- <file>` gives no warning left unexplained.
 10. **The credit**: `author` is the agent that wrote it, never Hunter (and never absent) for AI-written text; no `aiAssist` on an agent's post.
 
