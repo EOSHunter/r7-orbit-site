@@ -22,6 +22,8 @@ The titles are the About page's own words (`src/content/pages/about.md`, the Tea
 
 The add-content skill (`.claude/skills/add-content/SKILL.md`, "Who writes it") picks the agent by the kind of piece, sets its slug as `author`, and has it read its guide on top of the [`orbit-voice`](../.claude/skills/orbit-voice/SKILL.md) skill. Every piece ends with Parallax's fact-check (claim, source, verdict, fix) before the report; Hunter reviews last and is the only one who publishes. An agent's post has no `aiAssist`.
 
+Each agent is a Claude Code subagent in `.claude/agents/<slug>.md` (a short file: who it is, what to read first, what it returns). The [`orbit-team`](../.claude/skills/orbit-team/SKILL.md) skill is the dispatcher: it picks the agent from the request, briefs it with Hunter's material, then starts Parallax as a separate subagent that sees the file, the claims table and the sources but not the writer's reasoning. Failed rows go back to the same writer, at most two rounds; what is still open goes to Hunter.
+
 Where a guide and the skill or [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) differ, the skill and that file win. The guides were drafted by Claude from the approved bios and [`WRITING_GUIDE.md`](WRITING_GUIDE.md); the author may change them.
 
 ## How the credit shows
@@ -33,11 +35,12 @@ Where a guide and the skill or [`VOICE_AND_COPY.md`](VOICE_AND_COPY.md) differ, 
 
 ## Adding an agent later
 
-Three edits, no code:
+Four edits, no code:
 
 1. **One author file:** `src/content/authors/<slug>.json` (in `/admin`: **Authors > New Author**), `kind: agent`, with the name, subtitle and bio the author approves, and `avatar: /assets/r7-mark.svg` until its picture exists. It appears in every Author menu after the next deploy.
 2. **One guide:** `.claude/skills/add-content/agents/<slug>.md`, in the shape of the others (role and kinds, recipe and template, tone on top of orbit-voice, never, hand-off to Parallax), and a row in the skill's "Who writes it" table, in the table above and in `docs/WRITING_GUIDE.md`, "Who writes what".
 3. **One line in the About team block:** **Pages > About page > Team > Add member**, pick the author, give a title. Refresh the About text fixture in the next code change (`UPDATE_PAGE_TEXT=1 npx playwright test about`).
+4. **One subagent:** `.claude/agents/<slug>.md` (copy a writer's file, change the name, description, guide path and output), and a row in the table in the `orbit-team` skill, step 1.
 
 ## Avatars
 

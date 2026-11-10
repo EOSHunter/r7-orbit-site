@@ -43,6 +43,8 @@ Ask for what is missing (one message, a short list), confirm what is given. Full
 
 Leave `aiAssist` out of an agent's post. The full team is `docs/TEAM.md`.
 
+Each agent is also a subagent (`.claude/agents/<slug>.md`). Run the piece through the **`orbit-team`** skill: it starts the writing agent as its own subagent and then Parallax as a separate one, so the fact-check is not the writer checking itself. This skill stays the steps those agents follow.
+
 ## 2. Choose the recipe and the format
 
 Pick the recipe for the piece in `docs/WRITING_GUIDE.md` ("Layout recipes": news, games post, project or app, vlog, long essay) and start from its file in `templates/layouts/`, in the form the guide's "What each kind can use" allows: MDX components are drawn on **blog posts only**; news, vlogs and projects are Markdown or `sections`. Body is **either** Markdown/MDX **or** a `sections` list **never both** (the build stops, naming the file; an empty `sections: []` counts as none).
@@ -86,7 +88,7 @@ In order, stop and fix at the first failure; never delete or loosen a test, fiel
 4. axe passes on the page (the e2e run covers every page in `dist/`; add `EXTRA_ROUTES="/blog/<slug>/"` if needed).
 5. Screenshots at 375px and 1280px of the new page (console open, no errors, no horizontal scroll). Save them outside `src/content/` and do not commit them unless asked.
 6. Lighthouse alone on the new route if it has a hero (`featuredImage`), a big cover, a poster or a game or app: `npm run build && LIGHTHOUSE_ROUTES="/blog/<slug>/" npm run test:lighthouse` (`LIGHTHOUSE_PORT=4397` if 4398 is busy). Thresholds are in `CLAUDE.md`.
-7. **Parallax fact-check, before you report.** Hand Parallax the file and its claims table (`agents/parallax.md`; `docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7), fix each `fail` it returns, and put its pass/fail line in the report. Skip it only if the author said so; say so in the report.
+7. **Parallax fact-check, before you report.** Parallax runs as its own subagent (`subagent_type: "parallax"`, the `orbit-team` skill, step 4). Hand Parallax the file and its claims table (`agents/parallax.md`; `docs/WRITING_GUIDE.md`, "Pre-publish checklist", step 7), fix each `fail` it returns, and put its pass/fail line in the report. Skip it only if the author said so; say so in the report.
 
 A test that fails may not be yours: remove your post, rebuild and rerun just that spec. If it still fails, it was already failing; report it by name and do not touch it. If you could not run something, say exactly that. Never claim a check passed that you did not run.
 
