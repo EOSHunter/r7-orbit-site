@@ -29,7 +29,7 @@ Each agent has an author file (`src/content/authors/<slug>.json`, 2026-10-21) an
 
 | Role | Agent (`author`) | Writes | Recipe | Template (in `.claude/skills/add-content/templates/layouts/`) | Voice guide |
 | --- | --- | --- | --- | --- | --- |
-| lead | R7 (`r7`) | General pieces (essays, how-tos, notes); edits the others' drafts | [Long essay](#long-essay), or the kind's own | `essay.mdx`, `essay.sections.mdx` | [`r7.md`](../.claude/skills/add-content/agents/r7.md) |
+| lead | Orbit (`r7`) | General pieces (essays, how-tos, notes); edits the others' drafts | [Long essay](#long-essay), or the kind's own | `essay.mdx`, `essay.sections.mdx` | [`r7.md`](../.claude/skills/add-content/agents/r7.md) |
 | news | Pulsar (`pulsar`) | `/news/` items | [News](#news) | `news.md`, `news.sections.md` | [`pulsar.md`](../.claude/skills/add-content/agents/pulsar.md) |
 | games | Orion (`orion`) | Blog posts about games | [Games post](#games-post) | `games-post.mdx`, `games-post.sections.mdx` | [`orion.md`](../.claude/skills/add-content/agents/orion.md) |
 | projects | Kepler (`kepler`) | Project, app and game pages, repo pages, build logs | [Project or app](#project-or-app) | `project.md`, `project.sections.md` (+ `templates/app.md` for play fields) | [`kepler.md`](../.claude/skills/add-content/agents/kepler.md) |
@@ -443,7 +443,7 @@ The warn callout is visible in the editor's preview, so the author sees what is 
 - **Quotes are verbatim** and attributed; a quote you cannot find in its source is cut.
 - **Numbers are recomputed** where they can be (totals, percentages, durations). State the unit and the date.
 - **Uncertain claims** are either cut or kept with the doubt said in the text ("the notes do not give a number"); every one you keep goes in the report's "Claims to check".
-- **Credit:** an AI-written piece is credited to the writing agent that wrote it, through `author`: your own slug (`pulsar`, `orion`, `kepler`, `hubble`; `r7` for R7 or a writer with no author file). Never `hunter-newton` (and never an absent `author`, which means Hunter). The byline and the AI-written label appear automatically; never write them or a bio. There is no footer note. Never create an author file.
+- **Credit:** an AI-written piece is credited to the writing agent that wrote it, through `author`: your own slug (`pulsar`, `orion`, `kepler`, `hubble`; `r7` for Orbit or a writer with no author file). Never `hunter-newton` (and never an absent `author`, which means Hunter). The byline and the AI-written label appear automatically; never write them or a bio. There is no footer note. Never create an author file.
 - **The author's own writing** keeps his name (no `author` line). `aiAssist: edited` or `drafted` only on his posts and only when he asks for the line; never on an agent's post (the byline and its label are the disclosure).
 - **Nothing goes up unreviewed.** `draft: true` until the author says it goes live.
 - **The site forbids:** any email address, `mailto:` link, newsletter, RSS or feed mention, and social profiles other than GitHub and YouTube.

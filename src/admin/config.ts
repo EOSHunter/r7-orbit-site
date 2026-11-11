@@ -237,7 +237,7 @@ const author = field({
   options: authorOptions,
   default: DEFAULT_AUTHOR,
   required: false,
-  hint: 'Who the post is credited to. Hunter Newton unless an AI agent wrote it: then pick R7. Never credit an AI-written post to Hunter.',
+  hint: 'Who the post is credited to. Hunter Newton unless an AI agent wrote it: then pick the agent that wrote it. Never credit an AI-written post to Hunter.',
 });
 const canonicalUrl = urlField(
   'canonicalUrl',

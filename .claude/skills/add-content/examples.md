@@ -4,7 +4,7 @@ Placeholders only. Every value marked `SAMPLE` is made up for this page: replace
 
 ## A blog post, written as Markdown (`src/content/blog/sample-short-post.mdx`)
 
-An AI-written piece from sources the author supplied: credited to R7, with the claims linked and the cover left out because no picture was given.
+An AI-written piece from sources the author supplied: credited to Orbit, with the claims linked and the cover left out because no picture was given.
 
 ```mdx
 ---

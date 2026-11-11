@@ -74,7 +74,7 @@ Describe what the image *shows and why it's there*, in a sentence. "Screenshot o
 
 ## AI-assisted writing
 
-AI-written pieces are credited to the agent that wrote it (its own author: R7, Pulsar, Orion, Kepler or Hubble; `docs/TEAM.md`), never to Hunter. If the author uses AI to draft or edit a piece the author writes, the house rule is: **the author has read it, checked every claim and code sample, and stands behind it.** If disclosure is on (see `DECISIONS.md`), use one quiet line under the byline: *"Drafted with AI, edited and checked by me."* Never publish unreviewed AI output, never invent quotes, sources or benchmarks, never present a model's claim as tested unless it was.
+AI-written pieces are credited to the agent that wrote it (its own author: Orbit, Pulsar, Orion, Kepler or Hubble; `docs/TEAM.md`), never to Hunter. If the author uses AI to draft or edit a piece the author writes, the house rule is: **the author has read it, checked every claim and code sample, and stands behind it.** If disclosure is on (see `DECISIONS.md`), use one quiet line under the byline: *"Drafted with AI, edited and checked by me."* Never publish unreviewed AI output, never invent quotes, sources or benchmarks, never present a model's claim as tested unless it was.
 
 An agent's byline carries its name, its subtitle and an **AI-written** label (icon and words, no colour of its own). The byline and the label are the disclosure for an agent's post, so the "How this was made" line (`aiAssist`) is not shown there as well. There is no footer note on an AI-written post (removed 2026-10-21, `DECISIONS.md`). An agent's name, subtitle and bio are the author's text, in `src/content/authors/`: never write them yourself.
 

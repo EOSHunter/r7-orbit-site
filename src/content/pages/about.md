@@ -31,7 +31,7 @@ sections:
         people:
           - author: hunter-newton
           - author: r7
-        note: I write the brief, and R7 hands it to the right agent.
+        note: I write the brief, and Orbit hands it to the right agent.
       - label: Write
         people:
           - author: pulsar

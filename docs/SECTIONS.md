@@ -751,7 +751,7 @@ sections:
         people:
           - author: hunter-newton
           - author: r7
-        note: "I write the brief; R7 hands it on."
+        note: "I write the brief; Orbit hands it on."
       - label: Write
         people:
           - author: r7

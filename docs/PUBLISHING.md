@@ -9,7 +9,7 @@ For the author. Adding pictures is section 6 and editing the About page (and wha
 3. Fill in the form. The required fields are marked. These are the ones that most often go wrong:
    - **Title**: up to 90 characters. **Summary**: one or two sentences, up to 180 characters.
    - **Browser title** (optional): a shorter title for browser tabs and search results, up to 49 characters. Use it when the title would push the page title past 60 characters; the page itself keeps the full title.
-   - **Author**: who the post is credited to. It starts as **Hunter Newton**. If an AI agent wrote the piece, pick that agent instead (for example **R7 · Orbit AI Agent** or **Pulsar · Orbit News Agent**): the byline then shows its name and an "AI-written" label under the title. Never credit an AI-written piece to Hunter. Authors are the files in the **Authors** list; a new one appears in this menu after the site is next deployed.
+   - **Author**: who the post is credited to. It starts as **Hunter Newton**. If an AI agent wrote the piece, pick that agent instead (for example **Orbit · Orbit Lead Agent** or **Pulsar · Orbit News Agent**): the byline then shows its name and an "AI-written" label under the title. Never credit an AI-written piece to Hunter. Authors are the files in the **Authors** list; a new one appears in this menu after the site is next deployed.
    - **Date**: the day the post goes live (see step 6).
    - **Tags**: lowercase words joined with hyphens (`ai-agents`), at most six.
 4. **Featured image and alt text** (blog posts). Choose your own wide image (16:9, at least 1600px across), then fill in **Featured image alt text**: a plain sentence saying what the picture shows. The build stops without alt text. The same applies to a **Cover image** and its **Cover image alt text**. Use no stock photos. Every step for pictures is in [section 6, Adding images](#6-adding-images).
@@ -262,9 +262,9 @@ The skill picks the agent by the kind of piece and credits it in the byline (the
 | A blog post about a game | Orion | `orion` |
 | A project, app, game or repo page, or a build log | Kepler | `kepler` |
 | A vlog page (or a script for a video) | Hubble | `hubble` |
-| Anything else (an essay, a how-to), or an edit of another agent's draft | R7 | `r7` |
+| Anything else (an essay, a how-to), or an edit of another agent's draft | Orbit | `r7` |
 
-Parallax then fact-checks the piece (every claim against its source, quotes, numbers, links, alt text) and its report ends with `Parallax: pass` or the fixes still open. To have a different agent write a piece, say so in the request ("have R7 write this news item"). In `/admin` you can change the **Author** menu yourself, but never to your own name for a piece an agent wrote.
+Parallax then fact-checks the piece (every claim against its source, quotes, numbers, links, alt text) and its report ends with `Parallax: pass` or the fixes still open. To have a different agent write a piece, say so in the request ("have Orbit write this news item"). In `/admin` you can change the **Author** menu yourself, but never to your own name for a piece an agent wrote.
 
 ## 11. Editing the home page and listing pages
 

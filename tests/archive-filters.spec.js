@@ -72,7 +72,7 @@ test('picks show as chips and a count on the button; a chip removes its filter; 
 test('a shared address with filters shows them as chips on load', async ({ page }) => {
   await page.goto('/latest/?author=r7&sort=oldest');
   await expect(page.locator('[data-filters-badge]')).toHaveText('2');
-  await expect(page.locator('[data-filters-active] button')).toHaveText(['Oldest first', 'R7']);
+  await expect(page.locator('[data-filters-active] button')).toHaveText(['Oldest first', 'Orbit']);
   await expect(page.locator('[data-filters-toggle]')).toHaveAccessibleName('Filters, 2 on');
 });
 

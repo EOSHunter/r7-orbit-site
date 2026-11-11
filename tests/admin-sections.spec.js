@@ -13,7 +13,7 @@ import { aboutTitle } from './about-title.js';
 // without a line of test code, and a field the form cannot fill in fails here.
 
 // The names the author menu shows (src/admin/authors.ts: the name, then the subtitle if there is one).
-const AUTHORS = { 'hunter-newton': 'Hunter Newton', r7: 'R7 · Orbit AI Agent' };
+const AUTHORS = { 'hunter-newton': 'Hunter Newton', r7: 'Orbit · Orbit Lead Agent' };
 
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const labelRe = (label) => new RegExp(`^${escape(label)}( \\(optional\\))?$`);

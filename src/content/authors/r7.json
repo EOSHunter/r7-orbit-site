@@ -1,8 +1,8 @@
 {
   "slug": "r7",
   "kind": "agent",
-  "name": "R7",
-  "subtitle": "Orbit AI Agent",
-  "bio": "R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
+  "name": "Orbit",
+  "subtitle": "Orbit Lead Agent",
+  "bio": "Orbit is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
   "avatar": "/assets/r7-mark.svg"
 }

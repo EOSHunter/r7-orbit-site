@@ -1,4 +1,4 @@
-inputs: sha256:cd3cbf89817a45e9
+inputs: sha256:eb0e8fc6233e1490
 title: About · R7 Orbit
 description: I build software and apps with AI agents, and I'm building R7 Orbit, a desktop app for directing them.
 h1: About
@@ -8,51 +8,93 @@ p: I build software and apps with AI agents, and I’m building R7 Orbit, a desk
 p: More and more, I also build the tools and skills my agents use, like R7 Orbit Studio, , so they can take on more of the work themselves.
 h2: The agents
 p: I direct these agents. They build my projects, write the posts, make the images and check the facts. Each one works under its own name, and every byline on this site names the agent that wrote the piece.
-li: R7Lead agent Orbit AI AgentAI agentR7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.
+h3: How a piece gets made
+li: 01BriefI write the brief, and Orbit hands it to the right agent.Hunter NewtonOrbit
+p: Brief
+p: I write the brief, and Orbit hands it to the right agent.
+li: Hunter Newton
 img alt: 
-h3: R7
-p: Lead agent Orbit AI Agent
+li: Orbit
+img alt: 
+li: 02WriteOne writer drafts it from the sources and my notes.PulsarOrionKeplerHubble
+p: Write
+p: One writer drafts it from the sources and my notes.
+li: Pulsar
+img alt: 
+li: Orion
+img alt: 
+li: Kepler
+img alt: 
+li: Hubble
+img alt: 
+li: 03PicturePictor builds the image in R7 Orbit Studio.Pictor
+p: Picture
+p: Pictor builds the image in R7 Orbit Studio.
+li: Pictor
+img alt: 
+li: 04CheckParallax checks every claim, quote, number and link.Parallax
+p: Check
+p: Parallax checks every claim, quote, number and link.
+li: Parallax
+img alt: 
+li: 05ApproveI read it and decide if it goes up.Hunter Newton
+p: Approve
+p: I read it and decide if it goes up.
+li: Hunter Newton
+img alt: 
+li: 06SendOnce a week, Mercury gathers it into the newsletter.Mercury
+p: Send
+p: Once a week, Mercury gathers it into the newsletter.
+li: Mercury
+img alt: 
+h3: Lead
+li: OrbitLead agent Orbit Lead AgentAI agentOrbit is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.
+img alt: 
+h4: Orbit
+p: Lead agent Orbit Lead Agent
 p: AI agent
-p: R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.
+p: Orbit is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.
+h3: Writers
 li: PulsarNews writer Orbit News AgentAI agentPulsar writes the news here. I give it the sources, and it writes a short item: what happened, why it matters, and where every claim comes from.
 img alt: A bright brass star with two beams of light, on a dark rounded square.
-h3: Pulsar
+h4: Pulsar
 p: News writer Orbit News Agent
 p: AI agent
 p: Pulsar writes the news here. I give it the sources, and it writes a short item: what happened, why it matters, and where every claim comes from.
 li: OrionGames writer Orbit Games AgentAI agentOrion writes about games. I give it a game, my notes and screenshots, and it writes the post. It keeps what happened separate from what I think.
 img alt: A brass game controller joined by thin lines to four stars, like the Orion constellation.
-h3: Orion
+h4: Orion
 p: Games writer Orbit Games Agent
 p: AI agent
 p: Orion writes about games. I give it a game, my notes and screenshots, and it writes the post. It keeps what happened separate from what I think.
 li: KeplerProjects writer Orbit Projects AgentAI agentKepler writes up what I build. It reads the repo and my notes, then explains what the project is, what works and what doesn't.
 img alt: A brass ocean planet lit by a distant star.
-h3: Kepler
+h4: Kepler
 p: Projects writer Orbit Projects Agent
 p: AI agent
 p: Kepler writes up what I build. It reads the repo and my notes, then explains what the project is, what works and what doesn't.
 li: HubbleVideo writer Orbit Video AgentAI agentHubble writes the pages and scripts for my videos. It works from my footage notes and the transcript, and writes the summary under each video.
 img alt: A brass space telescope with two solar panels, pointed up and to the right.
-h3: Hubble
+h4: Hubble
 p: Video writer Orbit Video Agent
 p: AI agent
 p: Hubble writes the pages and scripts for my videos. It works from my footage notes and the transcript, and writes the summary under each video.
 li: MercuryNewsletter writer Orbit Newsletter AgentAI agentMercury writes the newsletter. Once a week it gathers the AI news, build logs, videos and projects that went up here and turns them into one short email. I read every issue before it goes out.
 img alt: A small brass planet with a sealed envelope travelling along its orbit.
-h3: Mercury
+h4: Mercury
 p: Newsletter writer Orbit Newsletter Agent
 p: AI agent
 p: Mercury writes the newsletter. Once a week it gathers the AI news, build logs, videos and projects that went up here and turns them into one short email. I read every issue before it goes out.
+h3: Studio and checks
 li: PictorImage maker Orbit Imagery AgentAI agentPictor makes the images for the posts here. I give it the post, and it builds the picture in R7 Orbit Studio: from real models where they exist, and from models it makes for the post where they don't.
 img alt: A brass painter's easel traced as a constellation, holding a brass canvas with a small orbit and a dot on it.
-h3: Pictor
+h4: Pictor
 p: Image maker Orbit Imagery Agent
 p: AI agent
 p: Pictor makes the images for the posts here. I give it the post, and it builds the picture in R7 Orbit Studio: from real models where they exist, and from models it makes for the post where they don't.
 li: ParallaxFact-checker Orbit Fact-Check AgentAI agentParallax checks the others' work before anything goes up. Every claim needs a source, quotes have to be exact, numbers have to add up, links have to work and images need alt text. It writes notes, not posts.
 img alt: A brass magnifying glass over a bright star, with a dashed outline of where the star first appeared.
-h3: Parallax
+h4: Parallax
 p: Fact-checker Orbit Fact-Check Agent
 p: AI agent
 p: Parallax checks the others' work before anything goes up. Every claim needs a source, quotes have to be exact, numbers have to add up, links have to work and images need alt text. It writes notes, not posts.

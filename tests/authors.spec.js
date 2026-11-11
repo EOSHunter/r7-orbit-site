@@ -54,15 +54,15 @@ test('every post names an author that exists, and the sample content has one of 
 test('R7 page: avatar, name, subtitle, bio, the AI-written label, and a plain statement that it is an AI agent', async ({ page }) => {
   await page.goto('/authors/r7/');
   const head = page.locator('[data-author-page="r7"]');
-  await expect(head.getByRole('heading', { level: 1, name: 'R7' })).toBeVisible();
-  await expect(head.getByText('Orbit AI Agent')).toBeVisible();
+  await expect(head.getByRole('heading', { level: 1, name: 'Orbit' })).toBeVisible();
+  await expect(head.getByText('Orbit Lead Agent')).toBeVisible();
   await expect(head.locator('.chip.ai-written')).toHaveText('AI-written');
   await expect(head.locator('.avatar img')).toHaveAttribute('src', '/assets/r7-mark.svg');
   await expect(head.locator('.t-lead')).toHaveText(authorFile('r7').bio);
   await expect(head.locator('.t-lead')).toContainText('AI agent');
   await expect(head.locator('.t-lead')).toContainText("It's not a person");
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
-  await expect(page).toHaveTitle('R7 · R7 Orbit');
+  await expect(page).toHaveTitle('Orbit · R7 Orbit');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${site.url}/authors/r7/`);
   await expect(page.locator('meta[property="og:url"], meta[property="og:title"]').first()).toBeAttached();
 });
@@ -103,8 +103,8 @@ test('author pages are ProfilePages: a Person for Hunter Newton, an Organization
   ld = await jsonLd(page);
   expect(ld.find((d) => d['@type'] === 'ProfilePage').mainEntity).toMatchObject({
     '@type': 'Organization',
-    name: 'R7',
-    description: 'Orbit AI Agent',
+    name: 'Orbit',
+    description: 'Orbit Lead Agent',
     url: `${site.url}/authors/r7/`,
   });
 });
@@ -254,8 +254,8 @@ test('/latest/ has a By author filter with every author who has posts; picking o
   const total = postPaths.length;
   await expect(visible()).toHaveCount(firstPage);
 
-  await filter.getByRole('button', { name: 'R7' }).click();
-  await expect(filter.getByRole('button', { name: 'R7' })).toHaveAttribute('aria-pressed', 'true');
+  await filter.getByRole('button', { name: 'Orbit' }).click();
+  await expect(filter.getByRole('button', { name: 'Orbit' })).toHaveAttribute('aria-pressed', 'true');
   await expect(visible()).toHaveCount(r7Posts.length);
   expect(await visible().evaluateAll((els) => els.map((e) => e.dataset.author))).toEqual(Array(r7Posts.length).fill('r7'));
   await expect(page.locator('[data-count]')).toHaveText(`${r7Posts.length} of ${total} posts`);
@@ -272,7 +272,7 @@ test('/latest/ has a By author filter with every author who has posts; picking o
 
 test('the filter is read from the address, and works together with the kind filter', async ({ page }) => {
   await page.goto('/latest/?author=r7');
-  await expect(page.locator('[data-filter="author"] button[aria-pressed="true"]')).toHaveText('R7');
+  await expect(page.locator('[data-filter="author"] button[aria-pressed="true"]')).toHaveText('Orbit');
   await expect(page.locator('[data-items] [data-item]:not([hidden])')).toHaveCount(r7Posts.length);
 
   await page.goto('/latest/?author=r7&kind=vlog');
@@ -300,7 +300,7 @@ test('a tag page shared by both authors has the filter too, and hides the kinds 
   test.skip(!shared, 'no tag is shared by two authors in the current content');
   await page.goto(`/tags/${shared}/`);
   const filter = page.locator('[data-filter="author"]');
-  await filter.getByRole('button', { name: 'R7' }).click();
+  await filter.getByRole('button', { name: 'Orbit' }).click();
   const cards = page.locator('[data-item]:not([hidden])');
   expect(await cards.evaluateAll((els) => els.map((e) => e.dataset.author))).not.toEqual([]);
   expect(new Set(await cards.evaluateAll((els) => els.map((e) => e.dataset.author)))).toEqual(new Set(['r7']));

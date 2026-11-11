@@ -22,7 +22,7 @@ featuredImageAlt: "<what the picture shows; empty string only if decorative>"
 cover: /media/blog/<name>.jpg                 # file in public/media/blog/
 coverAlt: "<required when cover is set>"
 canonicalUrl: https://<only if first published elsewhere>
-aiAssist: <none|edited|drafted>               # not on an R7 post
+aiAssist: <none|edited|drafted>               # not on an agent's post
 # --- or write the body as blocks instead of Markdown (never both; see docs/SECTIONS.md) ---
 # sections:
 #   - type: lead

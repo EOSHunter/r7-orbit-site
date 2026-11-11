@@ -27,7 +27,7 @@ The steps of making a page (inputs, front matter, files, verify, report) stay in
 Tie-breaks:
 
 - A game's own page (play button, status) is Kepler's; a post _about_ playing or building it is Orion's.
-- A build story about a tool or app that is not a game is Kepler (build log on the project) or R7 (a long essay). Ask Hunter which he wants if he did not say.
+- A build story about a tool or app that is not a game is Kepler (build log on the project) or Orbit (a long essay). Ask Hunter which he wants if he did not say.
 - Hunter naming an agent wins over the table.
 - One request can need several agents: a launch can be Kepler (the page) + Orion (the post) + Pictor (the image). Start the writers in parallel in one message when they do not depend on each other; Pictor needs the finished post, so it goes after its writer.
 

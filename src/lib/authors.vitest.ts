@@ -54,7 +54,7 @@ const post = (collection: CollectionName, id: string, author?: string): Post => 
 describe('the authors', () => {
   it('are a person, Hunter Newton, and an agent, R7', () => {
     expect(hunter).toMatchObject({ slug: 'hunter-newton', kind: 'person', name: 'Hunter Newton', path: '/authors/hunter-newton/' });
-    expect(r7).toMatchObject({ slug: 'r7', kind: 'agent', name: 'R7', subtitle: 'Orbit AI Agent', path: '/authors/r7/' });
+    expect(r7).toMatchObject({ slug: 'r7', kind: 'agent', name: 'Orbit', subtitle: 'Orbit Lead Agent', path: '/authors/r7/' });
     expect(DEFAULT_AUTHOR).toBe('hunter-newton');
     expect(authorPath('r7')).toBe('/authors/r7/');
   });
@@ -67,9 +67,9 @@ describe('the authors', () => {
     expect(hunter.avatar).toBe(site.author.photo);
   });
 
-  it("give R7 the author's own bio, exactly, and the R7 mark as its avatar", () => {
+  it("give Orbit (slug r7) the author's own bio, exactly, and the R7 mark as its avatar", () => {
     expect(r7.bio).toBe(
-      "R7 is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
+      "Orbit is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
     );
     expect(r7.avatar).toBe('/assets/r7-mark.svg');
     expect(read('../../public/assets/r7-mark.svg')).toContain('<svg');
@@ -193,8 +193,8 @@ describe('structured data', () => {
   it('is an Organization for an agent, with its subtitle as the description and its page as the url', () => {
     expect(authorLd(r7, base, ['https://www.youtube.com/@R7Creatives'])).toEqual({
       '@type': 'Organization',
-      name: 'R7',
-      description: 'Orbit AI Agent',
+      name: 'Orbit',
+      description: 'Orbit Lead Agent',
       url: 'https://r7orbit.io/authors/r7/',
     });
   });
@@ -207,7 +207,7 @@ describe('structured data', () => {
     });
     expect(authorProfilePageLd(r7, base)).toMatchObject({
       '@type': 'ProfilePage',
-      mainEntity: { '@type': 'Organization', name: 'R7', description: 'Orbit AI Agent' },
+      mainEntity: { '@type': 'Organization', name: 'Orbit', description: 'Orbit Lead Agent' },
     });
   });
 });

@@ -457,11 +457,11 @@ describe('authors in the admin', () => {
         { label: 'Hubble · Orbit Video Agent', value: 'hubble' },
         { label: 'Kepler · Orbit Projects Agent', value: 'kepler' },
         { label: 'Mercury · Orbit Newsletter Agent', value: 'mercury' },
+        { label: 'Orbit · Orbit Lead Agent', value: 'r7' },
         { label: 'Orion · Orbit Games Agent', value: 'orion' },
         { label: 'Parallax · Orbit Fact-Check Agent', value: 'parallax' },
         { label: 'Pictor · Orbit Imagery Agent', value: 'pictor' },
         { label: 'Pulsar · Orbit News Agent', value: 'pulsar' },
-        { label: 'R7 · Orbit AI Agent', value: 'r7' },
       ]);
       expect(shapes[c.name].author.safeParse(undefined).success, c.name).toBe(true);
       expect(shapes[c.name].author.safeParse('r7').success, c.name).toBe(true);

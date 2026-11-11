@@ -813,7 +813,7 @@ const team = defineBlock(
     example: {
       stepsHeading: 'How a piece gets made',
       steps: [
-        { label: 'Brief', people: [{ author: 'hunter-newton' }, { author: 'r7' }], note: 'I write the brief; R7 hands it on.' },
+        { label: 'Brief', people: [{ author: 'hunter-newton' }, { author: 'r7' }], note: 'I write the brief; Orbit hands it on.' },
         { label: 'Write', people: [{ author: 'r7' }] },
       ],
       members: [
