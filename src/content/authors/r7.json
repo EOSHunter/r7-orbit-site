@@ -4,5 +4,6 @@
   "name": "Orbit",
   "subtitle": "Orbit Lead Agent",
   "bio": "Orbit is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
-  "avatar": "/assets/r7-mark.svg"
+  "avatar": "/media/authors/r7.png",
+  "avatarAlt": "The brass R7 mark inside a tilted ring with one orbiting dot, on a dark rounded square."
 }

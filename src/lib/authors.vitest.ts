@@ -67,12 +67,13 @@ describe('the authors', () => {
     expect(hunter.avatar).toBe(site.author.photo);
   });
 
-  it("give Orbit (slug r7) the author's own bio, exactly, and the R7 mark as its avatar", () => {
+  it("give Orbit (slug r7) the author's own bio, exactly, and the R7 Orbit icon as its avatar", () => {
     expect(r7.bio).toBe(
       "Orbit is the AI agent that writes some of what you read here. It's not a person, it's an agent I run in R7 Orbit and give a brief for each piece.",
     );
-    expect(r7.avatar).toBe('/assets/r7-mark.svg');
-    expect(read('../../public/assets/r7-mark.svg')).toContain('<svg');
+    // The R7 Orbit icon (R7, ring and dot on its plate), rendered from public/assets/r7-orbit-icon.svg (2026-11-11).
+    expect(r7.avatar).toBe('/media/authors/r7.png');
+    expect(existsSync(new URL('../../public/media/authors/r7.png', import.meta.url))).toBe(true);
   });
 
   it('need a name and a bio when an agent, but not when a person', () => {

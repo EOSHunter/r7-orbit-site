@@ -57,7 +57,7 @@ test('R7 page: avatar, name, subtitle, bio, the AI-written label, and a plain st
   await expect(head.getByRole('heading', { level: 1, name: 'Orbit' })).toBeVisible();
   await expect(head.getByText('Orbit Lead Agent')).toBeVisible();
   await expect(head.locator('.chip.ai-written')).toHaveText('AI-written');
-  await expect(head.locator('.avatar img')).toHaveAttribute('src', '/assets/r7-mark.svg');
+  await expect(head.locator('.avatar img')).toHaveAttribute('src', '/media/authors/r7.png');
   await expect(head.locator('.t-lead')).toHaveText(authorFile('r7').bio);
   await expect(head.locator('.t-lead')).toContainText('AI agent');
   await expect(head.locator('.t-lead')).toContainText("It's not a person");
