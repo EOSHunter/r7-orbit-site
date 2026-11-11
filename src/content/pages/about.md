@@ -14,7 +14,7 @@ sections:
       I build software and apps with AI agents, and I’m building [R7 Orbit](https://r7orbit.io/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/), a desktop app for directing them. I’m a product designer, and most of what I design is AI-assisted tools, workflows and interactive experiences. I like taking a messy process and turning it into something structured and easy to use, which means a mix of product thinking, interaction design, prototyping, automation and visual design. 
 
 
-      More and more, I also build the tools and skills my agents use, like [R7 Orbit Studio, ](https://r7orbit.io/blog/how-an-ai-agent-makes-on-brand-imagery-with-r7-orbit-studio/), so they can take on more of the work themselves.
+      More and more, I also build the tools and skills my agents use, like [R7 Orbit Studio](https://r7orbit.io/blog/how-an-ai-agent-makes-on-brand-imagery-with-r7-orbit-studio/), so they can take on more of the work themselves.
   - type: divider
     style: rule
   - type: heading
