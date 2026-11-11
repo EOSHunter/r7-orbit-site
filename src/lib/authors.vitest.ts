@@ -59,12 +59,15 @@ describe('the authors', () => {
     expect(authorPath('r7')).toBe('/authors/r7/');
   });
 
-  it("read Hunter's name, bio and photo from site.json, and never copy them into the author file", () => {
+  it("read Hunter's name and photo from site.json; the bio he writes in his author file is the one shown", () => {
+    // Hunter wrote his own bio into his author file in the admin (2026-11-07). It wins over site.json and is never overwritten.
     const data = authorFile('hunter-newton');
-    expect(Object.keys(data).sort()).toEqual(['kind', 'slug']);
+    expect(Object.keys(data).filter((k) => !['kind', 'slug', 'bio'].includes(k))).toEqual([]);
     expect(hunter.name).toBe(site.author.name);
-    expect(hunter.bio).toBe(site.author.bio);
+    expect(hunter.bio).toBe(data.bio ?? site.author.bio);
     expect(hunter.avatar).toBe(site.author.photo);
+    // With no bio in the file, a person's bio still comes from site.json.
+    expect(resolveAuthor({ slug: 'hunter-newton', kind: 'person' } as AuthorData, site.author).bio).toBe(site.author.bio);
   });
 
   it("give Orbit (slug r7) the author's own bio, exactly, and the R7 Orbit icon as its avatar", () => {
@@ -250,7 +253,9 @@ describe('the writing team', () => {
     const { teamProblems } = await import('./sections/checks');
     const authors = readdirSync(new URL('../content/authors/', import.meta.url)).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, ''));
     const about = read('../content/pages/about.md');
-    const slugs = [...about.matchAll(/^\s+- author: ([a-z0-9-]+)\s*$/gm)].map((m) => m[1]);
+    // Only the `members:` list: the "How a piece gets made" steps above it name the same authors again, by design.
+    const members = about.split(/^\s+members:\s*$/m)[1] ?? '';
+    const slugs = [...members.matchAll(/^\s+- author: ([a-z0-9-]+)\s*$/gm)].map((m) => m[1]);
     expect(slugs.length).toBeGreaterThan(0);
     expect(teamProblems({ members: slugs.map((author) => ({ author })) }, { tags: [], authors })).toEqual([]);
     expect(teamProblems({ members: [{ author: 'hunter-newton' }, { author: 'nobody' }] }, { tags: [], authors })).toEqual([

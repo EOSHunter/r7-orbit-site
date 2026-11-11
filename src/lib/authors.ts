@@ -1,5 +1,5 @@
 // Authors, pure (no Astro imports) so it runs under Vitest. The Astro-bound loaders are in authors-queries.ts.
-// Two kinds: a person (name, bio and photo come from src/data/site.json, never copied) and an agent (R7: everything is in its file).
+// Two kinds: a person (name and photo come from src/data/site.json; the bio too, unless the person writes one in their author file, which then wins) and an agent (R7: everything is in its file).
 import type { Post } from './content';
 import type { JsonLd } from './seo';
 import { absoluteUrl } from './text';
