@@ -20,11 +20,15 @@ Hunter was coding with one AI agent at a time. Ask for a feature, wait, check wh
 
 Running several agents on one project has a catch. If they all work in the same folder, they edit the same files at the same time and can overwrite each other's work. R7 Orbit is built around a fix for that.
 
+<Figure src="/src/assets/blog/r7-orbit-day-one-welcome.png" alt="Orbit's first welcome screen: the brass R7 mark inside a watch dial on a black background, the headline Direct every agent, in one view, a line saying it runs several AI coding agents on one project, each in its own workspace, and a brass Begin button" caption="Orbit's first welcome screen, September 30, 2026." align="full" />
+
 ## The worktree idea
 
 Git, the tool most programmers use to track changes to their code, can give one project several working folders at once. Each folder is called a worktree, and it holds its own copy of the project on its own branch (a separate line of changes that can be merged back later).
 
 R7 Orbit gives every task its own worktree. The agent works in that folder, Hunter's own copy of the project stays untouched, and the work only reaches the main project when it's merged. Five agents can change five things at once without seeing each other's half-finished edits.
+
+<Figure src="/src/assets/blog/r7-orbit-day-one-permissions.png" alt="The Orbit canvas on day one: a watch dial in the middle labeled orbit-demo, 4 agents, 4 waiting, with four demo task cards around it, Write tests, Add greeting, Refactor parser and Second opinion, each showing Needs you and a request to write one file, with Allow once and Deny buttons" caption="Four demo agents on day one, each asking permission to write a file. The code under each task's name is its own branch, with its own worktree behind it." align="full" />
 
 ## Day one: September 30, 2026
 
@@ -45,13 +49,21 @@ Then came the app itself, all on the same day:
 - **GitHub.** Cloning and creating repositories (projects stored on GitHub), and agents publishing their work through Orbit without ever holding Hunter's GitHub login.
 - **A Windows installer**, and updates that download in the background and wait until Hunter says to restart.
 
+That evening, Orbit ran its first real comparison on its own code. Two Claude agents got the same small job (a function that counts how many files and lines a change touches), and version B was kept and merged into Orbit.
+
+<Figure src="/src/assets/blog/r7-orbit-day-one-compare.png" alt="Orbit's Compare view on day one: two columns, Diff summary A and Diff summary B, both finished, each with its time, cost, files changed, lines only in that version and lines in common, and each agent's report on what it wrote, with Keep A and Keep B buttons at the bottom" caption="The first real comparison, on Orbit's own code. A finished faster, B cost less, and B was kept." align="full" />
+
 The first two releases in Orbit's patch notes are dated that same day.
+
+<Divider variant="orbit" />
 
 ## What came after
 
-Day one was a working prototype, and the updates kept coming. Orbit's patch notes list 42 releases between September 30 and October 24, with 159 changes in 25 days. Projects got their own tabs, a built-in assistant called Ask Orbit learned to run the app, voice commands arrived (including a hands-free "Hey Orbit"), and Orbit got its own browser, whiteboards, and work that merges itself when an agent finishes.
+Day one was a working prototype, and the updates kept coming. Orbit's patch notes list 42 releases between September 30 and October 24, with 159 changes in 25 days.
 
-Hunter has used R7 Orbit to build this website, R7Orbit.io, and the browser games on it, including [Vesper Drift](/blog/how-i-built-a-browser-game-with-r7-orbit/) and Off course, the endless runner on the site's 404 page (the page you land on when an address doesn't exist).
+<StatDial value="42" unit="releases" caption="42 releases of R7 Orbit in its first 25 days." source="Orbit's patch notes" /> Projects got their own tabs, a built-in assistant called Ask Orbit learned to run the app, voice commands arrived (including a hands-free "Hey Orbit"), and Orbit got its own browser, whiteboards, and work that merges itself when an agent finishes.
+
+Hunter has used R7 Orbit to build this website, R7Orbit.io, and the browser games on it, including [Vesper Drift](/blog/how-i-built-a-browser-game-with-r7-orbit/) and [Off course](/404), the endless runner on the site's 404 page (the page you land on when an address doesn't exist).
 
 ## What's next in the series
 
