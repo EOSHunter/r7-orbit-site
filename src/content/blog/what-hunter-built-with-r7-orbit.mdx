@@ -1,0 +1,64 @@
+---
+title: "What Hunter built *with R7 Orbit*"
+seoTitle: "What Hunter built with R7 Orbit"
+date: 2026-11-12
+summary: "This website and four browser games, built by AI agents working in R7 Orbit under Hunter's direction, and what the project history shows about how."
+tags: [r7-orbit, ai-agents, games]
+author: kepler
+series: "R7 Orbit"
+seriesOrder: 4
+draft: true
+waitlist: true
+featuredImage: ../../assets/blog/what-hunter-built-with-r7-orbit-studio.jpg
+featuredImageAlt: "A brass line drawing of a tower crane lifting a block, with the block's swing path round the tower drawn as an orbit line and a dot just past the block, and a dashed arc on the ground. The crane is a model made for this post"
+coverMotion: /media/motion/what-hunter-built-with-r7-orbit/hover.mp4
+featuredImageBy: agent
+featuredImageAgent: Pictor
+---
+<Paragraph lead>
+R7 Orbit isn't public yet, but Hunter has been building with it since its first week. The site you're reading and the four games on it were built by AI agents running in Orbit. This fourth post in the series covers what they built and what the project history shows about how. The earlier parts cover [why Orbit exists](/blog/why-r7-orbit-exists/), [how it keeps Hunter in charge](/blog/how-r7-orbit-keeps-hunter-in-charge/) and [talking to it](/blog/talking-to-r7-orbit/).
+</Paragraph>
+
+## This website
+
+Every task in Orbit works on its own branch, named after the task, like `orbit/scaffold-and-layout`. When the work is merged, that name stays in the project's history, so the history of this site doubles as a list of what Orbit's agents did.
+
+The site started inside Orbit on October 3, 2026. That first day, agents set up the project and its page layout, then built the blog and news pages, project and repo pages, search, feeds for RSS readers and search engines, and a quality pass over every page.
+
+<StatDial value="13" unit="tasks" caption="13 Orbit tasks built the first version of this site on October 3, 2026." source="the site's project history" />
+
+<Figure src="/src/assets/blog/r7-orbit-built-site-home.jpg" alt="The R7 Orbit website's home page: the headline I build software with AI agents, a line saying R7 Orbit is the desktop app Hunter is building to direct them, and a brass line drawing of projects on an orbit ring round the R7 mark" caption="R7Orbit.io's home page today." align="full" />
+
+The next few days filled in the rest:
+
+- **October 4:** an editor at `/admin`, so Hunter can write and publish posts from a browser, a library of building blocks for articles, and publishing to Cloudflare, the service that hosts the site.
+- **October 5:** pages for playable projects, a games hub and the first game's project page.
+- **October 10:** the waitlist sign-up for R7 Orbit itself.
+- **October 21:** the team of agent authors, starting with Orion, so each post says which agent wrote it.
+
+## The games
+
+Hunter built each of these in Orbit too, as projects of their own.
+
+<ImageRow images={[{"src":"/src/assets/blog/r7-orbit-built-vesper.jpg","alt":"Vesper Drift's title screen: the words Vesper Drift in pale blue over a purple space background, a small planet icon in an orbit ring above, the line Grow from a drifting pebble into a black hole. Absorb what is smaller; avoid what is larger, and Initiate drift and Settings buttons","caption":"Vesper Drift, October 5."},{"src":"/src/assets/blog/r7-orbit-built-royale.jpg","alt":"Orbit Royale's main menu: the Orbit Royale logo and a menu of Play, Training and Settings on the left, beside a view of a colony town with tall buildings, roads and hills under a stormy sky","caption":"Orbit Royale, October 21."}]} caption="Screenshots of the live games, taken for this post." />
+
+- **[Vesper Drift](/blog/how-i-built-a-browser-game-with-r7-orbit/)** was the first. You start as a pebble drifting in space and grow, one absorbed body at a time, into a black hole. It went up on October 5, two days after the site began.
+- **[Orbit Royale](/blog/i-built-a-browser-battle-royale-game-with-opus-5-5/)** is a first-person sci-fi shooter: you and 59 bots drop onto Ringfall, an island colony under huge planetary rings, and the last one standing wins. It took ten days. Orbit tasks also set up its own address, royale.r7orbit.io, its share image and a way for players to report problems.
+
+<ImageRow images={[{"src":"/src/assets/blog/r7-orbit-built-ascent.jpg","alt":"R7: Ascent in play: a small ivory robot with a battery pack seen from behind on a wooden workshop floor, with books, a red mug and a tall dark tower ahead, the height 0 m and a timer at the top","caption":"R7: Ascent, the start of the climb."},{"src":"/src/assets/blog/r7-orbit-built-runner.jpg","alt":"Off course in play: a six-wheeled ivory rover drives down a dark three-lane track through a tunnel of brass rings toward a block marked 404, past glowing brass orbs, a ringed planet and drifting rocks, with the distance 00083 m in the corner","caption":"Off course, on the 404 page."}]} caption="Screenshots of the live games, taken for this post." />
+
+- **[R7: Ascent](/blog/how-ai-agents-built-r7-ascent/)** is a 3D climbing game. A small robot climbs from a workshop floor to a brass ring in orbit, with no checkpoints unless you turn on assist mode. It went from a planning chat to five zones in three days.
+- **[Off course](/404)** is the endless runner on the site's 404 page, the page you land on when an address doesn't exist. A small rover drives down a track through a tunnel of brass rings, dodging blocks marked 404.
+
+Off course shows how a game grows one task at a time. Over October 23 and 24, six Orbit tasks built it in order:
+
+1. A playable prototype with plain placeholder shapes.
+2. The rover, modeled in Blender (a free 3D modeling program), and the camera behind it.
+3. The world around the track, and the scene you see before you press play.
+4. The glow, twinkling stars, comets and a spinning planet.
+5. Holding to crouch, speed that rises over the first three minutes, and test bots that play the game by themselves to check the courses can be cleared.
+6. Putting it on the 404 page.
+
+## What's next in the series
+
+The next post looks back at how Orbit itself grew: 42 releases in its first 25 days, and what went wrong along the way.
