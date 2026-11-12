@@ -1,0 +1,70 @@
+---
+title: "What R7 Orbit's agents can reach *beyond the code*"
+seoTitle: "R7 Orbit's agent tools, beyond the code"
+date: 2026-11-12
+summary: "Connectors, Blender, a browser tab of their own, the rest of the PC, skills and pictures: what R7 Orbit's agents can use besides code, and what each asks first."
+tags: [r7-orbit, ai-agents]
+author: kepler
+series: "R7 Orbit"
+seriesOrder: 7
+draft: true
+waitlist: true
+featuredImage: ../../assets/blog/r7-orbit-agent-tools-studio.jpg
+featuredImageAlt: "A brass line drawing of an open toolbox with a carry handle and a hammer, a screwdriver and a wrench standing up out of it, inside one tilted orbit line carrying six dots. The toolbox is a model made for this post"
+coverMotion: /media/motion/r7-orbit-agent-tools/hover.mp4
+featuredImageBy: agent
+featuredImageAgent: Pictor
+---
+<Paragraph lead>
+For its first three weeks, an agent in R7 Orbit worked on code: reading it, changing it, running commands. Around October 23, 2026, agents got a set of tools that reach further: connections to other services, Blender for 3D work, their own browser tab, the rest of the PC, a library of skills, and pictures. This seventh post in the series covers what each one does and what it asks before it does it.
+</Paragraph>
+
+## One rule for every tool
+
+Every one of these tools reaches the agent through Orbit, so Claude and Codex agents get the same ones, and they follow the same rule. When an agent wants to use a tool, the question shows up on its card, the same way a command does ([part 2](/blog/how-r7-orbit-keeps-hunter-in-charge/) covers those questions). Hunter can say Always allow for tools he trusts.
+
+## Connectors
+
+MCP, the Model Context Protocol, is a standard way for an AI model to talk to another program or service: a project tracker, a design tool, a database. A program that offers its tools this way is called an MCP server, and Orbit calls one a connector once it's added.
+
+The first version, on October 23, took a server's setup pasted from its instructions. Orbit tested it straight away and listed its tools. The same day, connectors started working for Codex tasks, Ask Orbit and agents in terminals too, and a project could be limited to just the connectors it needs.
+
+Later that day the page became a directory, so the common ones need no setup at all. Discover lists 26 connectors by category. For services run by their makers, pressing + opens the service's own sign-in page in Hunter's browser, and when he comes back the connector is added and tested. Orbit keeps the sign-in encrypted and renews it by itself. Each of those sign-ins was tried for real in October: Orbit registered itself with the service and reached its sign-in page.
+
+<Figure src="/src/assets/blog/r7-orbit-tools-connectors.png" alt="Orbit's Connectors page, Discover tab: a Projects and tasks group with four connectors and a Design group with four more, each a card with a coloured letter tile, the service's name, the words Sign in, a one-line description and a plus button" caption="Part of the Discover tab: services that sign in with one press of +." align="full" />
+
+Some services aren't there, and searching for one says why. Some only let apps they've approved or registered in advance sign in, and others run their servers only for Claude's own apps. One design service turned out to be in the first group, so it came off the one-click list on October 24.
+
+<Figure src="/src/assets/blog/r7-orbit-tools-not-offered.png" alt="The Connectors search box with the word Slack typed in. Below it, a line in brass says this service has an MCP server, but it only lets apps that registered with it in advance sign in, so Orbit cannot connect to it yet. Below that, a note says a connector runs on this computer with your permissions or is a service Orbit sends requests to, so only add ones you trust" caption="Searching for a service Orbit can't offer explains why, and the page reminds you to add only connectors you trust." align="full" />
+
+<StatDial value="26" unit="connectors" caption="26 connectors in Orbit's directory when it arrived on October 23, 2026." source="Orbit's patch notes" />
+
+## Blender
+
+Blender is a free 3D modeling program. When a task needs 3D work, an agent can build a scene in a Blender file inside its task folder, render it, and look at the render to check its own work, all without opening Blender's window. The first script in a task asks Hunter first, because a script can do anything. In Orbit's own test, a Claude task built and rendered a scene in 14 seconds.
+
+## A browser tab of its own
+
+An agent can now use websites too. Each agent gets its own tab in Orbit's browser, next to the canvas, so Hunter can watch it read pages, click and type. Pages on his own computer just work, and each website asks once per task. The agent browses without Hunter's sign-ins, can't download anything, and refuses to type into password, card or one-time-code fields.
+
+## The rest of the PC
+
+When Hunter asks for it, an agent can see the screen and click and type in another program on his Windows PC. It asks before it looks at the screen and again before each program. While it has control, a bar stays on top of everything, and Ctrl+Alt+Esc stops it all at once.
+
+## Skills
+
+A skill is a folder of written instructions, sometimes with scripts, that teaches Claude to do something a particular way: a house style, a checklist, the steps for a tool. Hunter adds one once in Settings, and every Claude task in every project can use it.
+
+<Figure src="/src/assets/blog/r7-orbit-tools-skills.png" alt="Orbit's Skills page: a paragraph explaining that skills teach Claude how to do something your way, that a skill is a folder with a SKILL.md, and that skills you add start switched off, then the buttons Add a skill folder and Add a .zip or SKILL.md" caption="The Skills page. New skills start switched off so they can be read first." align="full" />
+
+New skills start switched off, so Hunter can read what's inside before any agent follows it. Skills he already has in Claude Code can be brought in from the same page.
+
+## Pictures
+
+Claude tasks can make pictures too. When a task needs an icon, a texture or an illustration, Claude asks for one and gets a real image saved in the project, made by OpenAI's image model through Hunter's Codex connection. Each takes about half a minute, Claude looks at the result and can try again, and a task can make up to ten.
+
+Since October 24, the pictures agents look at show up in their conversations as well: a page they screenshotted, a render, a file they opened. The test for that was simple. A Claude task and a Codex task each looked at a plain orange picture, it showed in both chats, and Ask Orbit, sent the same picture, answered "Orange".
+
+## What's next in the series
+
+The next post is about the canvas: the hub with its orbiting dot, the cards, sections and the rest of what Hunter sees while the agents work.
