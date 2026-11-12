@@ -1,0 +1,78 @@
+---
+title: "42 releases in 25 days, and *what broke* along the way"
+seoTitle: "R7 Orbit: 42 releases in 25 days"
+date: 2026-11-12
+summary: "How fast R7 Orbit grew from its first release on September 30 to 0.24.1 on October 24, how updates reach Hunter, and the mistakes that changed how it works."
+tags: [r7-orbit, ai-agents]
+author: kepler
+series: "R7 Orbit"
+seriesOrder: 5
+draft: true
+waitlist: true
+featuredImage: ../../assets/blog/r7-orbit-42-releases-in-25-days-studio.jpg
+featuredImageAlt: "A brass line drawing of three meshing gears, large, medium and small, inside one tilted orbit line with a dot riding it. The gears are a model made for this post"
+coverMotion: /media/motion/r7-orbit-42-releases-in-25-days/hover.mp4
+featuredImageBy: agent
+featuredImageAgent: Pictor
+---
+import PatchNotesPanel from '../../components/PatchNotesPanel.astro';
+
+<Paragraph lead>
+R7 Orbit's patch notes list 42 releases between September 30 and October 24, 2026, with 159 changes in 25 days. This fifth post in the series looks at that pace, how an update reaches Hunter's computer, and the mistakes along the way, each with what changed because of it. The earlier parts cover [why Orbit exists](/blog/why-r7-orbit-exists/), [how it keeps Hunter in charge](/blog/how-r7-orbit-keeps-hunter-in-charge/), [talking to it](/blog/talking-to-r7-orbit/) and [what Hunter built with it](/blog/what-hunter-built-with-r7-orbit/).
+</Paragraph>
+
+## The pace
+
+Most days with a release had two or three. Two days had far more: October 1 had nine releases and October 23 had ten.
+
+> [!CHART] Orbit releases per week
+> - **Sep 28 to Oct 4: 18 releases**
+> - Oct 5 to 11: 10 releases
+> - Oct 12 to 18: 0 releases
+> - Oct 19 to 25: 14 releases
+>
+> Source: Orbit's patch notes
+
+October 1, the app's second day, brought voice commands, several projects open at once, Ask Orbit, natural read-aloud voices and real terminals. October 23 had the most: agents gained connections to other programs and services, Blender for 3D work, their own browser tab, control of other programs on the PC with Hunter's approval, a skills library, and picture making. A feedback button for bug reports shipped the same day.
+
+There were no releases between October 10 and October 21, which is the empty week in the chart.
+
+## How an update reaches Hunter
+
+An update is a new version of the app. Orbit checks for one in the background and downloads it, then shows a quiet Update ready notice in the top bar. Nothing restarts until Hunter says so, and if agents are working, Orbit warns him that restarting will stop them.
+
+Before the first release went out, Claude built a test for this: it installs a throwaway copy of Orbit, updates it twice from a local copy of the update feed, and removes it again.
+
+<Figure src="/src/assets/blog/r7-orbit-growth-patch-notes.png" alt="Orbit's About window on the Patch notes tab: a list of versions on the left from 0.15.1 (installed) down to 0.14.1, each with its date, and on the right Version 0.15.1, October 9, 2026, 3 new and 2 improvements, starting with Say a whole message to Orbit" caption="The Patch notes tab, from a test copy of version 0.15.1." align="right" size="md" />
+
+Since October 9, the notes themselves are easier to read. Each version's changes are sorted into new, better and fixed, each with a short headline, and a Patch notes tab keeps every version back to the first. After an update, a What's new button takes Hunter straight to the notes for the version he now has.
+
+<Divider variant="orbit" />
+
+## What went wrong
+
+Shipping that often meant some mistakes shipped too. These are the ones that changed how Orbit works.
+
+**Costs counted ten times over.** Claude reports what a conversation has cost so far as a running total. Orbit added that total again with every message, so a task with ten messages was counted about ten times. Since October 4, Orbit counts only what each message added. The first time the fixed version started, it recalculated the past, kept a copy of the old numbers, and showed what the Usage page said before and after.
+
+<Figure src="/src/assets/blog/r7-orbit-growth-usage.png" alt="Orbit's Usage page set to 30 days: $1.27 estimated over 19 runs, with input, output, not split, cached read and cached written token counts, a bar chart of the last 14 days, and costs by source: Claude tasks $1.11, Ask Orbit agent $0.16 and Codex tasks 375k tokens" caption="The Usage page in the demo copy of Orbit, after the fix, splitting each cost into the kinds of tokens behind it." align="full" />
+
+**A drive filling up.** Every task works in its own copy of the project, and each copy used to get its own full set of installed packages, the code libraries a project depends on. A busy project could fill a drive with tens of gigabytes. On October 5, Orbit started removing a finished task's folder after a wait (and making it again from the branch if needed), letting new task folders share the project's packages instead of copying them, and warning when space runs low. Under 1 GB free, it won't start an agent at all, because the agent would fail halfway.
+
+<Figure src="/src/assets/blog/r7-orbit-growth-storage.png" alt="Orbit's Storage page: 147 GB free of 1847 GB on this drive, this project's task folders at 133 KB, four finished task folders no longer needed with a Free up space button, and switches for Clean up by itself, Wait after finishing 30 minutes, Share installed dependencies, and Warn me when space is low under 10 GB" caption="The Storage page in the demo copy of Orbit." align="full" />
+
+**Codex agents that couldn't touch a file.** For a while, a Codex task would answer that its tools were disabled and change nothing. Orbit had left out, and switched off, the part of Codex that runs its file and command tools. Since October 10 it's included again, and Codex asks before using it, the same as before.
+
+**Claude Code taking Orbit's own copy of Claude.** Claude Code started in one of Orbit's terminals could update itself and replace the copy of Claude that Orbit uses, which left Orbit saying Hunter wasn't signed in. Since October 1, Orbit switches that self-update off for every agent, and puts the file back if it's ever moved.
+
+**A half-written save.** Closing Orbit at exactly the wrong moment could leave a project's file half written. Since October 4, every save writes a whole file and keeps a backup, a damaged file is set aside and the backup used instead, and closing Orbit waits for saves to finish.
+
+## Every release, in Orbit's own words
+
+These are the patch notes as they appeared in Orbit, all 42 releases, newest first. The box scrolls on its own, so the rest of this page stays put.
+
+<PatchNotesPanel />
+
+## Where it stands
+
+The most recent release is 0.24.1, from October 24: connector cards that fold to one line, clearer sign-in for connectors, and a fix for Orbit's taskbar icon turning into a blank page after an update.

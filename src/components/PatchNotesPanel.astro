@@ -1,0 +1,152 @@
+---
+// Every R7 Orbit release, newest first, in a panel that scrolls on its own so the post stays readable around it.
+// Used by the series post src/content/blog/r7-orbit-42-releases-in-25-days.mdx (imported there; not a global article
+// component). The "as of" line is the newest release in the data, so it moves when the data does.
+// The scrolling area is focusable and labelled, so it can be scrolled from the keyboard (axe: scrollable-region-focusable).
+import data from '../data/r7-orbit-patch-notes.json';
+import { changeCount, releaseId, summarise, type PatchNotes } from '../lib/patch-notes';
+import { isoDate, longDate } from '../lib/text';
+
+const notes = data as PatchNotes;
+const summary = summarise(notes);
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+---
+
+<section class="patch-notes" aria-labelledby="patch-notes-asof">
+  <header class="patch-notes-head">
+    <p class="patch-notes-eyebrow">R7 Orbit patch notes</p>
+    <p class="patch-notes-asof" id="patch-notes-asof">
+      As of <time datetime={isoDate(summary.latest.date)}>{longDate(summary.latest.date)}</time>, version{' '}
+      {summary.latest.version}
+    </p>
+    <p class="patch-notes-meta">
+      {plural(summary.releases, 'release', 'releases')} · {plural(summary.changes, 'change', 'changes')} · newest first,
+      scroll for older
+    </p>
+  </header>
+  <div class="patch-notes-scroll" tabindex="0" role="region" aria-label="R7 Orbit patch notes, newest first">
+    {notes.releases.map((r) => (
+      <article class="patch-release" id={releaseId(r.version)}>
+        <h3 class="patch-release-title">
+          <span class="patch-release-version">{r.version}</span>
+          <time class="patch-release-date" datetime={isoDate(r.date)}>
+            {longDate(r.date)}
+          </time>
+          <span class="patch-release-count">{plural(changeCount(r), 'change', 'changes')}</span>
+        </h3>
+        {r.sections.map((s) => (
+          <>
+            {s.heading && <h4 class="patch-section">{s.heading}</h4>}
+            <ul class="patch-items">
+              {s.items.map((it) => (
+                <li>
+                  {it.title && <strong>{it.title}</strong>} {it.body}
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </article>
+    ))}
+  </div>
+  <p class="patch-notes-source">Source: {notes.source}.</p>
+</section>
+
+<style>
+  .patch-notes {
+    margin-block: var(--s-7);
+    border: var(--bw) solid var(--line-strong);
+    border-radius: var(--r-lg);
+    background: var(--surface-1);
+    overflow: hidden;
+  }
+  .patch-notes-head {
+    padding: var(--s-5) var(--s-5) var(--s-4);
+    border-bottom: var(--bw) solid var(--line);
+  }
+  .patch-notes-head p {
+    margin: 0;
+  }
+  .patch-notes-eyebrow {
+    font: var(--fw-medium) var(--fs-xs) / var(--lh-ui) var(--font-ui);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .patch-notes-head .patch-notes-asof {
+    margin-top: var(--s-2);
+    font: var(--fw-regular) var(--fs-xl) / var(--lh-snug) var(--font-display);
+    color: var(--text);
+  }
+  .patch-notes-head .patch-notes-meta {
+    margin-top: var(--s-1);
+    font: var(--fw-regular) var(--fs-xs) / var(--lh-ui) var(--font-mono);
+    color: var(--text-3);
+  }
+  .patch-notes-scroll {
+    max-height: min(55vh, 40rem);
+    overflow-y: auto;
+    padding: 0 var(--s-5);
+  }
+  .patch-notes-scroll:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: calc(-1 * var(--focus-offset) - var(--bw));
+  }
+  .patch-release {
+    padding-block: var(--s-5);
+    border-bottom: var(--bw) solid var(--line);
+  }
+  .patch-release:last-child {
+    border-bottom: 0;
+  }
+  .patch-release-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-1) var(--s-3);
+    margin: 0;
+    font: var(--fw-medium) var(--fs-md) / var(--lh-ui) var(--font-ui);
+  }
+  .patch-release-version {
+    font-family: var(--font-mono);
+    color: var(--brass);
+  }
+  .patch-release-date,
+  .patch-release-count {
+    font: var(--fw-regular) var(--fs-xs) / var(--lh-ui) var(--font-mono);
+    color: var(--text-3);
+  }
+  .patch-section {
+    margin: var(--s-4) 0 0;
+    font: var(--fw-medium) var(--fs-2xs) / var(--lh-ui) var(--font-ui);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .patch-items {
+    margin: var(--s-2) 0 0;
+    padding-left: var(--s-5);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-2);
+  }
+  .patch-items li + li {
+    margin-top: var(--s-2);
+  }
+  .patch-items strong {
+    color: var(--text);
+    font-weight: var(--fw-semibold);
+  }
+  .patch-notes-source {
+    margin: 0;
+    padding: var(--s-3) var(--s-5);
+    border-top: var(--bw) solid var(--line);
+    font: var(--fw-regular) var(--fs-2xs) / var(--lh-ui) var(--font-mono);
+    color: var(--text-3);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .patch-notes-scroll {
+      scroll-behavior: smooth;
+    }
+  }
+</style>
