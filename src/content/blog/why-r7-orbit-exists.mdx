@@ -1,0 +1,58 @@
+---
+title: "Why R7 Orbit exists, and *what day one built*"
+seoTitle: "Why R7 Orbit exists, and what day one built"
+date: 2026-11-12
+summary: "Why Hunter wanted several AI coding agents working at once instead of one, the git idea that makes it safe, and the working prototype Claude built on September 30, 2026."
+tags: [r7-orbit, ai-agents]
+author: kepler
+series: "R7 Orbit"
+seriesOrder: 1
+draft: true
+waitlist: true
+---
+<Paragraph lead>
+R7 Orbit is a Windows desktop app for running several AI coding agents on one project at the same time. Claude, Anthropic's AI coding agent, built it under Hunter's direction, starting September 30, 2026. It isn't public yet. I read the app's code, docs and patch notes to write this series, and this first post covers why it exists and what the first day produced. For a tour of what it does today, start with [So you've got an AI that writes code. Cool. What if you had ten?](/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/)
+</Paragraph>
+
+## Why it exists
+
+Hunter was coding with one AI agent at a time. Ask for a feature, wait, check what it did, ask for the next one. He got tired of building one feature at a time when he could have several agents going at once and speed up the whole process.
+
+Running several agents on one project has a catch. If they all work in the same folder, they edit the same files at the same time and can overwrite each other's work. R7 Orbit is built around a fix for that.
+
+## The worktree idea
+
+Git, the tool most programmers use to track changes to their code, can give one project several working folders at once. Each folder is called a worktree, and it holds its own copy of the project on its own branch (a separate line of changes that can be merged back later).
+
+R7 Orbit gives every task its own worktree. The agent works in that folder, Hunter's own copy of the project stays untouched, and the work only reaches the main project when it's merged. Five agents can change five things at once without seeing each other's half-finished edits.
+
+## Day one: September 30, 2026
+
+The first thing Claude built was a spike, a quick experiment to prove the risky parts work before anyone spends time on screens. The spike checked that:
+
+- two tasks could run at once in separate worktrees, with the main folder untouched
+- one task could be stopped while the other kept going
+- finished work merged back cleanly, and a merge that clashed was refused without leaving anything half-applied
+
+Those checks ran first with a stand-in agent that follows a script, then with a real Claude run.
+
+Then came the app itself, all on the same day:
+
+- **A canvas of cards.** Each task is a card with its real status, permission questions show up on the card, and a review panel shows every changed line before a merge.
+- **The look.** Obsidian black, ivory text and one brass accent, styled like a luxury watch. The project sat in the middle as a watch dial, with the agents as cards you drag around it.
+- **Compare.** One prompt goes to two agents in two worktrees, and you keep the better result.
+- **Claude and Codex.** Sign-in for Claude, and support for Codex, OpenAI's coding agent.
+- **GitHub.** Cloning and creating repositories (projects stored on GitHub), and agents publishing their work through Orbit without ever holding Hunter's GitHub login.
+- **A Windows installer**, and updates that download in the background and wait until Hunter says to restart.
+
+The first two releases in Orbit's patch notes are dated that same day.
+
+## What came after
+
+Day one was a working prototype, and the updates kept coming. Orbit's patch notes list 42 releases between September 30 and October 24, with 159 changes in 25 days. Projects got their own tabs, a built-in assistant called Ask Orbit learned to run the app, voice commands arrived (including a hands-free "Hey Orbit"), and Orbit got its own browser, whiteboards, and work that merges itself when an agent finishes.
+
+Hunter has used R7 Orbit to build this website, R7Orbit.io, and the browser games on it, including [Vesper Drift](/blog/how-i-built-a-browser-game-with-r7-orbit/) and Off course, the endless runner on the site's 404 page (the page you land on when an address doesn't exist).
+
+## What's next in the series
+
+The next post covers how Orbit keeps Hunter in charge: the permission questions on each card, what an agent may do without asking, and why agents never hold his GitHub login.
