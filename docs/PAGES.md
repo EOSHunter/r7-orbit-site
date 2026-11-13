@@ -42,7 +42,7 @@ The home page, `/latest/`, the five archives, `/apps/` and `/tags/` take their w
 
 | Page | File | What the file holds |
 |---|---|---|
-| `/` | `home.md` | The hero (headline = the page's `h1`, eyebrow, lead, up to two buttons), the meta description, and the rows below the hero as blocks (`sections`): Pinned post, Latest feed, Latest posts (Projects), Apps row, Latest posts (Repos) |
+| `/` | `home.md` | The hero (headline = the page's `h1`, eyebrow, lead, up to two buttons), the meta description, and the rows below the hero as blocks (`sections`): What I'm building, News desk, Spotlight (R7 Orbit), Apps row, Series shelf, Pinned post, Latest feed, Team (the crew), Site numbers, Latest posts (Repos), Newsletter sign-up |
 | `/latest/`, `/news/`, `/blog/`, `/vlogs/`, `/projects/`, `/repos/` | `latest.md`, `news.md`, … | `h1`, browser title (`seoTitle`, today the kind's name), description, lead, the empty state (heading and text), blocks above and below the list (`introSections`, `outroSections`, empty today) |
 | `/apps/` | `apps.md` | As an archive, plus the empty state's button and the "More apps coming" card (eyebrow, heading, text). The lead is interim (see "Apps" below) |
 | `/tags/` | `tags.md` | As an archive. "Used once" stays in code |
@@ -53,9 +53,21 @@ The browser title of the home page is still `{site name} · {tagline}` from `src
 
 **Purpose:** In five seconds, say what this is and show what's newest.
 
-Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each data row is a block of the shared library (`SECTIONS.md`): Pinned post (`pinned`), Latest feed (`feed`, one per page; its anchor is `#latest`), Latest posts with a section frame (`latest`, Projects newest first, Repos by last push), Apps row (`apps`).
+Everything below the hero is a list of blocks in `home.md`, in the order below; the author can re-order, remove or add rows. Each row is a block of the shared library (`SECTIONS.md`). Since 2026-11-13 the order is:
 
-1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, one button ("Start with the latest", solid), and the waitlist form when `home.md` has `waitlist: true` and the waitlist is on (see "Waitlist"). The animated orbit on the right (≥ 900px), above the text on small screens, smaller.
+1. **What I'm building** (`building`): a tile per thing being made (R7 Orbit, R7 Home, R7 Orbit Studio, the browser games), each with a status and a link. Typed in the block: some have no project page.
+2. **News desk** (`news-desk`).
+3. **Spotlight** (`spotlight`): R7 Orbit, coming soon. Words, four points and a screenshot of the canvas (`public/media/home/r7-orbit-canvas.png`), a button to part 1 of the series, and the waitlist form while the waitlist is on (`waitlist: true` on the block). The hero's own form is off (`waitlist: false` in `home.md`), so the page asks once.
+4. **Apps row** (`apps`).
+5. **Series shelf** (`series`): R7 Orbit and R7 Home side by side, each with part 1's picture and its first five parts in order.
+6. **Pinned post** (`pinned`), then the **Latest feed** (`feed`, "From the build log": blog, vlogs, projects; its anchor is `#latest`).
+7. **Team** (`team`, `section: true`, steps only): how a piece gets made, each name linking to its author page, and "Meet the agents" to /about/.
+8. **Site numbers** (`counts`): apps, build logs, news stories and AI agents, counted when the site is built.
+9. **Latest posts** (`latest`, Repos by last push; hidden while there are none), then the **Newsletter sign-up** (`newsletter-signup`, shown while the newsletter is on).
+
+The list below is the original plan, kept for the hero's rules.
+
+1. **Hero:** eyebrow (tagline), display headline with one italic-brass phrase, lead sentence, up to two buttons (today "Read the news" and "Play a game"), and the waitlist form when `home.md` has `waitlist: true` and the waitlist is on (see "Waitlist"; off since 2026-11-13, the Spotlight row carries it). The launch picture on the right (≥ 900px).
 2. **Pinned:** the one `featured: true` post as a large horizontal card (media left, text right; stacked on mobile). Hidden if none.
 3. **Latest:** `.seg` filter (All · News · Blogs · Vlogs · Projects · Repos), then the 8 newest across kinds in the card grid; the newest has `.fresh`. "See everything" link to `/archive` (or the `All` archive).
 4. **Projects strip:** 3 newest projects (card with status mark). "All projects →".
@@ -186,7 +198,7 @@ Words: `src/content/pages/404.md` (**Pages > Page not found (404)**): the headin
 
 A waitlist for access to R7 Orbit (the author's desktop app). **Off until the author turns it on** (Site settings → Waitlist, with a Turnstile site key; setup in `WAITLIST.md`). While off, no page carries any of its markup, CSS or script, and `/waitlist/remove/` is not built (it is the 404 page), so the site is exactly what it was.
 
-- **Where:** the home hero (`waitlist: true` in `home.md`, variant `hero`: the email box and button on one row, wrapping on phones), and a ruled band after the body of any post with `waitlist: true` (variant `band`: heading, sentence, form), before related posts and previous/next, on blog and news posts (`ArticlePage`), vlogs, projects and repos; and anywhere the `waitlist` block is placed (`SECTIONS.md`). Sources: `hero`, `blog` (blog and news), `vlog`, `other` (projects, repos, or a block set to Other). The author's guide is `WAITLIST.md`.
+- **Where:** the home hero (`waitlist: true` in `home.md`, variant `hero`: the email box and button on one row, wrapping on phones), and a ruled band after the body of any post with `waitlist: true` (variant `band`: heading, sentence, form), before related posts and previous/next, on blog and news posts (`ArticlePage`), vlogs, projects and repos; anywhere the `waitlist` block is placed, and in a Spotlight block with "Waitlist form" on (the hero's one-row variant, under its words; the home page's R7 Orbit row) (`SECTIONS.md`). Sources: `hero`, `blog` (blog and news), `vlog`, `other` (projects, repos, or a block set to Other). The author's guide is `WAITLIST.md`.
 - **The form** (`src/components/WaitlistForm.astro` + `waitlist/WaitlistFields.astro`, behaviour `src/scripts/waitlist.js`, styles `src/styles/waitlist.css` printed inline only on a page that draws a form): a labelled email box (no placeholder), the button, a hidden honeypot box (`company`), a status line (`role="status"`), the noscript sentence, and a small link to `/waitlist/remove/`. Every word is Site settings'. Targets are 44px; the status line and the link share a row that is always 44px tall, so a message appearing shifts nothing.
 - **Turnstile:** loaded from `challenges.cloudflare.com` only when the reader focuses, touches or points at the form, or scrolls with it near (never with the page, so LCP, TBT and CLS are untouched; the home form, on screen at load, waits for a scroll too). Each form renders an `interaction-only` widget: invisible, unless Cloudflare needs the reader to tick it, and then it floats over the page in a panel (`--shadow-float`) instead of pushing content down. A token is used once; the widget resets after every answer. `public/_headers` lets `/projects/*` frame it.
 - **Sending:** `fetch` POST to `/api/waitlist` (form-encoded: `email`, `source`, `company`, `cf-turnstile-response`). The button is `aria-disabled` while it waits (focus stays). Success is said only when the answer is `{ ok: true }`, and the box is cleared; a 400 shows the server's message; anything else, the settings' error message. Without JavaScript the form is hidden and the noscript sentence shown (Turnstile cannot run).

@@ -47,6 +47,12 @@ const PRESENT = {
   team: 'ul.team-grid li.team-card .team-name a',
   // Only while the waitlist is on (tests/waitlist.spec.js covers the form itself).
   waitlist: 'section.waitlist-band [data-waitlist]',
+  spotlight: 'section.spotlight .spotlight-points li',
+  building: 'ul.building-grid a.building-tile',
+  series: '.series-shelf .series-parts a',
+  counts: 'section.counts .counts-n',
+  // Only while the newsletter is on in Site settings (it is).
+  'newsletter-signup': 'section.newsletter-band form.newsletter-form',
 };
 
 const YT_PAGE = '<!doctype html><title>Video</title><p>video</p>';

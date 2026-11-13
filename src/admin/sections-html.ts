@@ -170,6 +170,16 @@ const sectionBandHtml = (head: string, body: string, ruled = true) =>
   `<section class="section${ruled ? ' ruled' : ''}"><div class="container wide">${head}${body}</div></section>`;
 
 /** What a block that is made from the posts will show, in words, where the page has its cards. */
+/** The words of a status and of a counted number, for the previews (the page draws the status mark; the number is counted). */
+const STATUS_WORD: Record<string, string> = { building: 'Building', shipped: 'Shipped', paused: 'Paused', idea: 'Idea' };
+const COUNT_WORD: Record<string, string> = {
+  apps: 'published apps and games',
+  logs: 'blog posts and vlogs',
+  news: 'news items',
+  agents: 'AI agents',
+  series: 'series',
+};
+
 const standIn = (what: string, when: string) => `<div class="empty"><p>${escapeHtml(what)}</p><p class="t-meta">${escapeHtml(when)}</p></div>`;
 
 const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => string } = {
@@ -311,12 +321,58 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
     const chip = who.agent ? `<span class="chip ai-written">${icon('agent')}AI-written</span>` : '';
     return `<aside class="author-note author-box"><span class="avatar initials" aria-hidden="true"><span>${escapeHtml(initials)}</span></span><div class="author-note-body"><p class="author-note-head"><a class="author-name" href="#">${escapeHtml(who.name)}</a>${who.subtitle ? `<span class="author-sub">${escapeHtml(who.subtitle)}</span>` : ''}${chip}</p><p>${escapeHtml(who.bio)}</p></div></aside>`;
   },
+  // SpotlightBlock.astro: the words, the points and the picture; the waitlist form is a labelled placeholder (Site settings').
+  spotlight: (d, env) => {
+    const eyebrow = d.eyebrow ? `<p class="eyebrow brass">${escapeHtml(d.eyebrow)}</p>` : '';
+    const text = d.text ? `<div class="spotlight-text">${markdownHtml(d.text)}</div>` : '';
+    const points = d.points?.length ? `<ul class="spotlight-points" role="list">${d.points.map((p) => `<li>${escapeHtml(p.text ?? '')}</li>`).join('')}</ul>` : '';
+    const form = d.waitlist
+      ? `<p class="admin-preview-note" data-spotlight-waitlist>The waitlist form goes here (counted as ${escapeHtml(d.source ?? 'other')}), while the waitlist is on in Site settings > Waitlist.</p>`
+      : '';
+    const button = d.buttonLabel && d.buttonUrl
+      ? `<p class="spotlight-actions"><a class="${d.waitlist ? 'more-link' : 'btn solid lg'}" href="${attr(safeLink(d.buttonUrl))}">${escapeHtml(d.buttonLabel)}${d.waitlist ? icon('arrow') : ''}</a></p>`
+      : '';
+    const picture = d.image
+      ? `<figure class="spotlight-picture">${pictureHtml(d.image, d.decorative ? '' : d.alt, env.resolve)}</figure>`
+      : '';
+    return `<section class="section ruled spotlight"><div class="container wide"><div class="spotlight-grid${d.image ? ' has-picture' : ''}"><div class="spotlight-words">${eyebrow}<h2 class="section-title">${headingText(d.heading ?? '')}</h2>${text}${points}${form}${button}</div>${picture}</div></div></section>`;
+  },
+  // BuildingBlock.astro: the tiles, with the status as a word (the page draws the mark beside it).
+  building: (d) =>
+    sectionBandHtml(
+      sectionHeadHtml(d),
+      `<ul class="building-grid" role="list">${(d.items ?? [])
+        .map(
+          (i) =>
+            `<li><a class="building-tile" href="${attr(safeLink(i.url ?? ''))}"><span class="status"><span>${escapeHtml(STATUS_WORD[i.status] ?? '')}</span></span><h3 class="building-title">${escapeHtml(i.title ?? '')}</h3><p class="building-text">${escapeHtml(i.text ?? '')}</p></a></li>`,
+        )
+        .join('')}</ul>`,
+    ),
+  series: (d) =>
+    sectionBandHtml(
+      sectionHeadHtml(d),
+      standIn(
+        `Series shelf: ${(d.series ?? []).map((s) => s.name).filter(Boolean).join(', ') || 'no series chosen'}, side by side, each listing its first ${d.count} parts in order.`,
+        'Read from the posts’ Series fields when the site is built. The build stops on a series no post has.',
+      ),
+    ),
+  counts: (d) =>
+    `<section class="section ruled counts"><div class="container wide">${d.eyebrow ? `<h2 class="eyebrow">${escapeHtml(d.eyebrow)}</h2>` : ''}<dl class="counts-row">${(d.items ?? [])
+      .map((i) => `<div class="counts-item"><dt class="counts-label">${escapeHtml(i.label ?? '')}</dt><dd class="counts-n">#</dd></div>`)
+      .join('')}</dl>${standIn('Site numbers: each is counted when the site is built.', (d.items ?? []).map((i) => COUNT_WORD[i.count] ?? '').join(' · '))}</div></section>`,
+  // A labelled placeholder: the words and the form are Site settings', and the site shows them only while the newsletter is on.
+  'newsletter-signup': (d) =>
+    `<section class="section ruled" data-newsletter-placeholder><div class="container wide">${d.eyebrow ? `<p class="eyebrow brass">${escapeHtml(d.eyebrow)}</p>` : ''}${standIn(
+      'Newsletter sign-up: the heading, sentence, email box and button from Site settings > Newsletter.',
+      'Shown on the site only while the newsletter is on in Site settings > Newsletter; otherwise this block draws nothing.',
+    )}</div></section>`,
   // TeamBlock.astro's cards, with initials for the avatars (the pictures are files of the built site).
   team: (d, env) => {
     // The page's rules (TeamBlock.astro, src/lib/sections/team.ts): steps first, then each group under its name; headings one
     // under the section heading above the block (or h2 with none), card names one under those once any is drawn.
     const at = env.sections.indexOf(d);
-    const afterHeading = at > 0 && headingBefore(env.sections, at);
+    const framed = d.section === true;
+    const afterHeading = (at > 0 && headingBefore(env.sections, at)) || (framed && !!d.heading);
     const section = `h${teamLevels(afterHeading, true).section}`;
     const initialsOf = (name: string) =>
       name
@@ -365,7 +421,8 @@ const PREVIEW: { [K in SectionType]: (d: SectionOf<K>, env: PreviewEnv) => strin
       const head = name ? `<${section} class="eyebrow team-heading">${escapeHtml(name)}</${section}>` : '';
       return `<div class="team-group">${head}<ul class="grid-cards team-grid" role="list">${members.map((m) => card(m, h)).join('')}</ul></div>`;
     });
-    return `<div class="team">${stepsBlock}${groups.join('')}</div>`;
+    const team = `<div class="team">${stepsBlock}${groups.join('')}</div>`;
+    return framed ? sectionBandHtml(sectionHeadHtml(d), team) : team;
   },
 };
 

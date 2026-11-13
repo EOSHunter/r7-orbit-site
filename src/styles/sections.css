@@ -92,3 +92,78 @@
 @media (min-width: 1000px) {
   .team-flow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 }
+
+/* ---- Spotlight (SpotlightBlock.astro): words and points beside a picture; the picture above the words on a phone. ---------- */
+.spotlight-grid { display: grid; gap: var(--s-6); align-items: center; }
+.spotlight-words { display: grid; gap: var(--s-4); justify-items: start; min-width: 0; }
+.spotlight-words > * { margin: 0; }
+.spotlight-text { max-width: 52ch; color: var(--text-2); }
+.spotlight-text p { margin: 0 0 var(--s-3); }
+.spotlight-text p:last-child { margin-bottom: 0; }
+.spotlight-points { display: grid; gap: var(--s-2); padding: 0; list-style: none; }
+.spotlight-points li { position: relative; padding-left: var(--s-5); color: var(--text); line-height: var(--lh-ui); }
+.spotlight-points li::before { content: ''; position: absolute; left: var(--s-1); top: calc(0.5lh - var(--s-1)); width: var(--s-2); height: var(--s-2); border-radius: var(--r-full); background: var(--brass); }
+.spotlight-actions { padding-top: var(--s-1); }
+.spotlight .waitlist { width: 100%; max-width: 32rem; margin-top: var(--s-2); }
+.spotlight-picture { order: -1; margin: 0; overflow: hidden; border-radius: var(--r-lg); background: var(--surface-1); box-shadow: 0 0 0 var(--bw) var(--line); }
+.spotlight-picture img { display: block; width: 100%; height: auto; }
+@media (min-width: 900px) {
+  .spotlight-grid.has-picture { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--s-8); }
+  .spotlight-picture { order: 0; }
+}
+
+/* ---- What I'm building (BuildingBlock.astro): one linked tile per thing, as many a row as fit (one on the narrowest phones). -- */
+.building-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: var(--s-3); margin: 0; padding: 0; list-style: none; }
+.building-tile {
+  display: grid; grid-template-rows: auto auto 1fr auto; gap: var(--s-2); height: 100%; padding: var(--s-4) var(--s-4) var(--s-3);
+  border-radius: var(--r-md); background: var(--surface-1); box-shadow: 0 0 0 var(--bw) var(--line); color: var(--text); text-decoration: none;
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.building-tile .status { font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-2); }
+.building-title { margin: var(--s-1) 0 0; font: var(--fw-medium) var(--fs-xl) / var(--lh-tight) var(--font-display); }
+.building-text { margin: 0; color: var(--text-2); font-size: var(--fs-sm); line-height: var(--lh-ui); }
+.building-go { justify-self: end; color: var(--brass-bright); transition: transform var(--dur) var(--ease); }
+.building-tile:hover, .building-tile:focus-visible { background: var(--surface-2); box-shadow: 0 0 0 var(--bw) var(--line-brass); }
+.building-tile:hover .building-go, .building-tile:focus-visible .building-go { transform: translateX(var(--s-1)); }
+
+/* ---- Series shelf (SeriesBlock.astro): a column per series, side by side from 760px. -------------------------------------- */
+.series-shelf { display: grid; gap: var(--s-7); }
+@media (min-width: 760px) { .series-shelf:not([data-count='1']) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-7) var(--s-6); } }
+@media (min-width: 1000px) { .series-shelf[data-count='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.series-col { display: grid; gap: var(--s-4); align-content: start; min-width: 0; }
+.series-cover { overflow: hidden; border-radius: var(--r-md); box-shadow: 0 0 0 var(--bw) var(--line); }
+.series-cover .card-media { border: 0; }
+.series-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s-1) var(--s-3); }
+.series-name { margin: 0; font: var(--fw-medium) var(--fs-2xl) / var(--lh-tight) var(--font-display); }
+.series-name a { color: var(--text); text-decoration: none; }
+.series-name a:hover, .series-name a:focus-visible { color: var(--brass-bright); }
+.series-total { margin: 0; font: var(--fs-2xs) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-3); }
+.series-parts { margin: 0; padding: 0; list-style: none; border-bottom: var(--bw) solid var(--line); }
+.series-parts li { border-top: var(--bw) solid var(--line); }
+.series-parts a { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-3); align-items: baseline; padding: var(--s-3) 0; color: var(--text); text-decoration: none; }
+.series-n { font: var(--fs-xs) var(--font-mono); color: var(--brass-bright); }
+.series-title { line-height: var(--lh-ui); transition: color var(--dur) var(--ease); }
+.series-parts a:hover .series-title, .series-parts a:focus-visible .series-title { color: var(--brass-bright); }
+.series-more { justify-self: start; }
+
+/* ---- Site numbers (CountsBlock.astro): big serif numbers over small mono labels, with a brass hairline before each. ---------- */
+.section.counts { padding-block: var(--s-7); }
+.counts .eyebrow { margin: 0 0 var(--s-5); }
+.counts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)); gap: var(--s-5) var(--s-4); margin: 0; }
+.counts-item { display: flex; flex-direction: column-reverse; gap: var(--s-2); padding-left: var(--s-4); border-left: var(--bw) solid var(--line-brass); }
+.counts-n { margin: 0; font: var(--fw-regular) var(--fs-3xl) / var(--lh-tight) var(--font-display); color: var(--text); font-variant-numeric: lining-nums; }
+.counts-label { font: var(--fs-2xs) / var(--lh-ui) var(--font-mono); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-2); }
+@media (min-width: 900px) { .counts-n { font-size: var(--fs-4xl); } }
+
+/* ---- Newsletter sign-up (NewsletterSignupBlock.astro): the words beside the form, on a raised panel. ------------------------- */
+.newsletter-band-grid { display: grid; gap: var(--s-5); align-items: center; padding: var(--s-5); border-radius: var(--r-xl); background: var(--surface-1); box-shadow: 0 0 0 var(--bw) var(--line); }
+.newsletter-band-words { display: grid; gap: var(--s-3); justify-items: start; min-width: 0; }
+.newsletter-band-words > * { margin: 0; }
+.newsletter-band-text { max-width: 46ch; color: var(--text-2); }
+@media (min-width: 900px) {
+  .newsletter-band-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: var(--s-8); padding: var(--s-7) var(--s-8); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .building-tile, .building-go, .series-title { transition: none; }
+  .building-tile:hover .building-go, .building-tile:focus-visible .building-go { transform: none; }
+}

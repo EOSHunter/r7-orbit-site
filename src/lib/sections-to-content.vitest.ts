@@ -47,6 +47,11 @@ const EXPECTED: Record<SectionType, { text: string[] }> = {
   author: { text: [] },
   team: { text: ['Director', 'Lead agent', 'A shorter line typed in the block, shown instead of the bio.'] },
   waitlist: { text: [] },
+  spotlight: { text: ['A spotlight on one thing', 'A sentence or two on what it is and why it matters.', 'A short point', 'Another short point'] },
+  building: { text: ['A desktop app', 'One line on what it is.', 'A game', 'One line on what it is.'] },
+  series: { text: [] },
+  counts: { text: [] },
+  'newsletter-signup': { text: [] },
 };
 
 describe('sections-to-content: every block', () => {

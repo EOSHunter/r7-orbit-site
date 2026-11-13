@@ -4,8 +4,12 @@
 // from the authors list, so the words exist once; a `blurb` typed in the block replaces the bio on this card only.
 // Members next to each other with the same `group` sit under its name, each group its own grid (so a lead alone is one wide card).
 // Optional `steps` come first: how a piece gets made, in order, each naming who does it with a link to their card (or their page).
+// With no members, the steps stand alone and every name links to its author page (the home page's crew row). `section: true` puts
+// the block in a section of its own with a heading row (SectionBand), as the home page's other rows.
 import AgentChip from '../AgentChip.astro';
 import AuthorAvatar from '../AuthorAvatar.astro';
+import Passthrough from './Passthrough.astro';
+import SectionBand from './SectionBand.astro';
 import { getAuthorMap } from '../../lib/authors-queries';
 import { isAgent } from '../../lib/authors';
 import { teamProblems } from '../../lib/sections/checks';
@@ -31,15 +35,31 @@ const stepsHeading = block.stepsHeading?.trim() ?? '';
 // the block comes first; card names are one below them once any of them is drawn. A run with no group name after a named one
 // keeps the lower level, so its names still sit under a heading of the block.
 const groups = teamGroups(members);
+// In its own section with a heading, that heading is the one the block's headings sit under.
+const framed = block.section;
+const Frame = framed ? SectionBand : Passthrough;
+const frame = framed
+  ? {
+      headingId: `sec-${ctx.index + 1}-h`,
+      eyebrow: block.eyebrow || undefined,
+      heading: block.heading || undefined,
+      moreLabel: block.moreLabel || undefined,
+      moreUrl: block.moreUrl || undefined,
+      ruled: true,
+      'data-team-section': true,
+    }
+  : {};
+const afterHeading = ctx.afterHeading || (framed && !!block.heading);
 let headed = steps.length > 0 && !!stepsHeading;
-const levels = teamLevels(ctx.afterHeading, true);
+const levels = teamLevels(afterHeading, true);
 const Section = `h${levels.section}` as 'h2' | 'h3';
 const drawn = groups.map((group) => {
   headed ||= !!group.name;
-  return { ...group, Name: `h${teamLevels(ctx.afterHeading, headed).name}` as 'h2' | 'h3' | 'h4' };
+  return { ...group, Name: `h${teamLevels(afterHeading, headed).name}` as 'h2' | 'h3' | 'h4' };
 });
 ---
 
+<Frame {...frame as { headingId: string }}>
 <div class="team" data-team>
   {
     steps.length > 0 && (
@@ -109,3 +129,4 @@ const drawn = groups.map((group) => {
     ))
   }
 </div>
+</Frame>

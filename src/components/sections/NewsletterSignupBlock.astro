@@ -1,0 +1,46 @@
+---
+// The Newsletter sign-up block (docs/SECTIONS.md, `newsletter-signup`): the newsletter's heading and sentence from Site settings >
+// Newsletter beside its email form (NewsletterForm, the /newsletter/ page's variant: a plain form, no script, nothing loaded from
+// Buttondown until the button is pressed), in a ruled band. Draws nothing while the newsletter is off.
+import Icon from '../Icon.astro';
+import NewsletterForm from '../NewsletterForm.astro';
+import { site } from '../../data/site';
+import { newsletter } from '../../lib/newsletter-queries';
+import { titleParts } from '../../lib/text';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'newsletter-signup'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const id = `newsletter-sec-${ctx.index + 1}`;
+const words = site.newsletter;
+---
+
+{
+  newsletter.show && (
+    <section class="section ruled newsletter-band" aria-labelledby={`${id}-h`} data-newsletter-band>
+      <div class="container wide">
+        <div class="newsletter-band-grid">
+          <div class="newsletter-band-words">
+            {block.eyebrow && <p class="eyebrow brass">{block.eyebrow}</p>}
+            <h2 class="section-title" id={`${id}-h`}>
+              {titleParts(words.heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}
+            </h2>
+            <p class="newsletter-band-text">{words.text}</p>
+            {block.moreLabel && block.moreUrl && (
+              <a class="more-link" href={block.moreUrl}>
+                {block.moreLabel}
+                <Icon name="arrow" />
+              </a>
+            )}
+          </div>
+          <NewsletterForm {id} variant="page" />
+        </div>
+      </div>
+    </section>
+  )
+}

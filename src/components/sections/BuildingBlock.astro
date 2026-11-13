@@ -1,0 +1,44 @@
+---
+// The "What I'm building" block (docs/SECTIONS.md, `building`): a section of its own with one tile per thing being made, typed in
+// the block (some have no project page). Each tile is one link: the status (the project pages' marks, StatusMark), the name, a
+// line, and an arrow. Two tiles a row on a phone, up to four on a wide screen (site sections.css).
+import Icon from '../Icon.astro';
+import StatusMark from '../StatusMark.astro';
+import SectionBand from './SectionBand.astro';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'building'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+// The tiles' names sit under the section heading (h3), or are h2 when the block has none and nothing above it is a heading.
+const Name = block.heading || ctx.afterHeading ? 'h3' : 'h2';
+---
+
+<SectionBand
+  headingId={`sec-${ctx.index + 1}-h`}
+  eyebrow={block.eyebrow || undefined}
+  heading={block.heading || undefined}
+  moreLabel={block.moreLabel || undefined}
+  moreUrl={block.moreUrl || undefined}
+  ruled
+  data-building
+>
+  <ul class="building-grid" role="list">
+    {
+      block.items.map((item) => (
+        <li>
+          <a class="building-tile" href={item.url}>
+            <StatusMark status={item.status} />
+            <Name class="building-title">{item.title}</Name>
+            <p class="building-text">{item.text}</p>
+            <Icon name="arrow" class="building-go" />
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</SectionBand>

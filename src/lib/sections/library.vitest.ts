@@ -20,6 +20,7 @@ describe('the block library', () => {
       [
         'heading', 'lead', 'text', 'image', 'image-row', 'gallery', 'portrait', 'columns', 'callout', 'quote', 'post', 'pullquote', 'code', 'video',
         'game', 'toc', 'divider', 'button', 'links', 'stats', 'latest', 'author', 'spacer', 'feed', 'news-desk', 'pinned', 'apps', 'waitlist', 'team',
+        'spotlight', 'building', 'series', 'counts', 'newsletter-signup',
       ].sort(),
     );
   });

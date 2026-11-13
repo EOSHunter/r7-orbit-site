@@ -40,9 +40,19 @@ export interface Known {
   tags: readonly string[];
   /** Every author slug. */
   authors: readonly string[];
+  /** Every series name a blog post (draft or scheduled included) carries. Left out where no block needs it. */
+  series?: readonly string[];
 }
 
 const list = (items: readonly string[]) => (items.length ? items.join(', ') : '(none yet)');
+
+/** Every series a Series shelf names must be carried by some blog post (drafts and scheduled posts count). */
+export function seriesProblems(block: { series: readonly { name: string }[] }, known: Known): string[] {
+  const names = known.series ?? [];
+  return block.series
+    .filter((s) => !names.includes(s.name))
+    .map((s) => `no post is in the series "${s.name}". Series in use: ${list(names)}.`);
+}
 
 /** The tag and author of a Latest posts block must exist. (An unknown kind is refused by the schema.) */
 export function latestProblems(block: { kinds: readonly string[]; tag?: string; author?: string }, known: Known): string[] {

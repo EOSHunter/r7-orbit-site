@@ -500,6 +500,78 @@ sections:
     size: md
 ```
 
+#### Spotlight (`spotlight`)
+
+A section of its own that calls out one thing: an eyebrow, a heading, a paragraph and up to five short points beside a picture, then a button. With "Waitlist form" on, the waitlist form for R7 Orbit sits under the words while the waitlist is on in Site settings. Picture beside the words from 900px, above them on a phone.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The waitlist form is a labelled placeholder here: it shows on the site only while the waitlist is on in Site settings.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `heading` | One line | yes | Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `text` | Markdown editor | no | Optional. Paragraphs, **bold**, *italic*, links and lists. Leave a blank line between paragraphs. |
+| `points` | List of rows (0 to 5) | no | Optional. Up to five short lines, each with a brass mark. |
+| `points[].text` | One line | yes | One short line, e.g. "Every task in its own copy of the project". At most 120 characters. |
+| `image` | Picture: choose or upload | no | Optional. Beside the words: a screenshot or your own picture, not stock. |
+| `alt` | One line | no | Needed unless the image is decorative (the preview warns you, and the build stops without it). Describe the picture in one plain sentence, for someone who cannot see it. |
+| `decorative` | Switch | no | Turn on only if the picture is purely ornamental and says nothing. Then alt text is left empty. Default `false`. |
+| `buttonLabel` | One line | no | Optional. Shown only with an address too. At most 40 characters. |
+| `buttonUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
+| `waitlist` | Switch | no | On: the waitlist form for R7 Orbit under the words, while the waitlist is on in Site settings > Waitlist (its words are set there). The button then sits beside it as a quieter link. Default `false`. |
+| `source` | Menu | no | Stored with each address left in this form. Choices: `hero`, `blog`, `vlog`, `other`. Default `other`. |
+
+```yaml
+sections:
+  - type: spotlight
+    eyebrow: Coming soon
+    heading: "A *spotlight* on one thing"
+    text: A sentence or two on what it is and why it matters.
+    points:
+      - text: A short point
+      - text: Another short point
+    image: /media/home/r7-orbit-canvas.png
+    alt: "The R7 Orbit canvas: task cards for several agents around the project hub"
+    buttonLabel: Read more
+    buttonUrl: /about/
+    waitlist: true
+    source: other
+```
+
+#### What I'm building (`building`)
+
+A section of its own with a row of tiles, one per thing being made: its name, a status (Building, Shipped, Paused or Idea, with the same marks as the project pages), one line and a link. Two tiles a row on a phone, up to four on a wide screen.
+
+Sits: A full-width section with its own spacing, in a row of its own.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `heading` | One line | no | Optional. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `items` | List of rows (1 to 8) | yes | One tile per thing, in order. |
+| `items[].title` | One line | yes | e.g. R7 Orbit. At most 60 characters. |
+| `items[].status` | Menu | no | Choices: `building`, `shipped`, `paused`, `idea`. Default `building`. |
+| `items[].text` | One line | yes | One short line on what it is. At most 140 characters. |
+| `items[].url` | One line (checked) | yes | https://… for another site, or /about/ for a page on this site. The whole tile links there. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All projects". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
+
+```yaml
+sections:
+  - type: building
+    eyebrow: Now
+    heading: "What I'm *building*"
+    items:
+      - title: A desktop app
+        status: building
+        text: One line on what it is.
+        url: /about/
+      - title: A game
+        status: shipped
+        text: One line on what it is.
+        url: /apps/
+```
+
 ### Links and buttons
 
 #### Links list (`links`)
@@ -664,6 +736,33 @@ sections:
     moreUrl: /news/
 ```
 
+#### Series shelf (`series`)
+
+Up to three series side by side, each a column: the first part's picture, the series name and how many parts it has, then its parts in order, numbered, as links. Read from the posts' Series fields when the site is built; drafts and future-dated parts are left out. One column on a phone.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The parts are read from the posts when the site is built, so the preview shows a stand-in.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `heading` | One line | yes | e.g. Read a series. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `series` | List of rows (1 to 3) | yes | One to three series, side by side. |
+| `series[].name` | One line | yes | Exactly as the posts write it in their Series field, e.g. R7 Orbit. The build stops if no post has it. At most 60 characters. |
+| `series[].url` | One line (checked) | no | Optional. Where "All parts" goes, e.g. /tags/r7-orbit/. Empty: to part 1. https://… for another site, or /about/ for a page on this site. |
+| `count` | Number | no | How many parts each column lists, from part 1. The rest are counted in "All parts". Default `5`. 2 to 12. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "All posts". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
+
+```yaml
+sections:
+  - type: series
+    eyebrow: Read in order
+    heading: "The *series*"
+    series:
+      - name: R7 Orbit
+    count: 5
+```
+
 #### Pinned post (`pinned`)
 
 The post marked Featured (the newest, if several are), as a large card. Left out when no post is featured, or when only one post is published (the latest posts already show it).
@@ -726,7 +825,7 @@ sections:
 
 People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent's subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). Members that share a group sit under its name. Optional steps above the cards show how a piece gets made, each naming who does it. One column on a phone, two or three on a wide screen.
 
-Sits: In a row of its own, the width of the page. It ends a picture-beside-text row. In the editor preview: Each avatar is drawn as initials; the page shows the author's picture.
+Sits: In a row of its own, the width of the page; a full-width section with its own spacing when "A section of its own" is on. In the editor preview: Each avatar is drawn as initials; the page shows the author's picture.
 
 | Field | Box | Required | Notes |
 | --- | --- | --- | --- |
@@ -736,11 +835,16 @@ Sits: In a row of its own, the width of the page. It ends a picture-beside-text 
 | `steps[].people` | List of rows (1 to 8) | yes | One or more people or agents. |
 | `steps[].people[].author` | Menu of the authors | yes | Who does this step. Their name links to their card, or to their page when they have no card. |
 | `steps[].note` | One line | no | Optional. One short line on what happens in this step. At most 120 characters. |
-| `members` | List of rows (1 to 24) | yes | One card per person or agent, in order. |
+| `members` | List of rows (0 to 24) | no | One card per person or agent, in order. May be left empty when there are steps: the steps alone, with each name linking to its author page (the home page's crew row). |
 | `members[].author` | Menu of the authors | yes | Who this card is. The name, picture, subtitle and bio come from the Authors list. |
 | `members[].title` | One line | yes | Their role on this page, e.g. Director, Lead agent, News writer. At most 40 characters. |
 | `members[].group` | One line | no | Optional. Members next to each other with the same group sit under its name, e.g. Lead, Writers. Leave every group empty for one grid. At most 40 characters. |
 | `members[].blurb` | Several lines | no | Optional. Shown instead of the bio from the Authors list. Leave empty to show that bio. At most 300 characters. |
+| `section` | Switch | no | On: a full-width section with a rule above and a heading row (the eyebrow, heading and link below), as on the home page. Off: a row in the page. Default `false`. |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `heading` | One line | no | Optional, shown when "A section of its own" is on. Put one phrase in *asterisks* for the italic brass accent. At most 80 characters. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "Meet the team". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
 
 ```yaml
 sections:
@@ -765,6 +869,29 @@ sections:
         blurb: A shorter line typed in the block, shown instead of the bio.
 ```
 
+#### Site numbers (`counts`)
+
+A ruled row of big numbers counted from the site when it is built, each with its label: published apps and games, blog posts and vlogs, news items, AI agents in the authors list, series. Nothing is typed by hand, so the numbers are always true.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The numbers are counted when the site is built, so the preview shows what each one counts.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `items` | List of rows (2 to 5) | yes | Two to five numbers, in order. |
+| `items[].count` | Menu | no | Choices: `apps`, `logs`, `news`, `agents`, `series`. Default `apps`. |
+| `items[].label` | One line | yes | The words under the number, e.g. games you can play. At most 40 characters. |
+
+```yaml
+sections:
+  - type: counts
+    items:
+      - count: apps
+        label: games and apps to play
+      - count: logs
+        label: build logs and videos
+```
+
 #### Waitlist form (`waitlist`)
 
 The waitlist for R7 Orbit: the heading, sentence and email form from Site settings > Waitlist, in a ruled band. Shown only while the waitlist is on there; otherwise the block draws nothing.
@@ -779,6 +906,26 @@ Sits: A full-width section with its own spacing, in a row of its own. In the edi
 sections:
   - type: waitlist
     source: other
+```
+
+#### Newsletter sign-up (`newsletter-signup`)
+
+The newsletter: the heading, sentence and email form from Site settings > Newsletter, in a ruled band, with a link to the newsletter page. Shown only while the newsletter is on there; otherwise the block draws nothing.
+
+Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The form and its words come from Site settings, so the preview shows a labelled placeholder.
+
+| Field | Box | Required | Notes |
+| --- | --- | --- | --- |
+| `eyebrow` | One line | no | Optional. A small line above the heading, e.g. "Open source". At most 60 characters. |
+| `moreLabel` | One line | no | Optional. A link at the end of the heading row, e.g. "What you get". It shows only when both its text and its address are filled in. At most 40 characters. |
+| `moreUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
+
+```yaml
+sections:
+  - type: newsletter-signup
+    eyebrow: Newsletter
+    moreLabel: What you get
+    moreUrl: /newsletter/
 ```
 
 <!-- catalogue:end -->

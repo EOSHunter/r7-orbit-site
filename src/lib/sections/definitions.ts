@@ -562,6 +562,92 @@ const spacer = defineBlock(
   },
 );
 
+// A full-width section that calls out one thing (R7 Orbit, coming soon, on the home page): words and a few points beside a
+// picture, with a button and, while the waitlist is on, the waitlist form. SpotlightBlock.astro.
+const spotlight = defineBlock(
+  'spotlight',
+  {
+    label: 'Spotlight',
+    group: 'Layout',
+    description:
+      'A section of its own that calls out one thing: an eyebrow, a heading, a paragraph and up to five short points beside a picture, then a button. With "Waitlist form" on, the waitlist form for R7 Orbit sits under the words while the waitlist is on in Site settings. Picture beside the words from 900px, above them on a phone.',
+    summary: 'Spotlight: {{fields.heading}}',
+    placement: 'band',
+    example: {
+      eyebrow: 'Coming soon',
+      heading: 'A *spotlight* on one thing',
+      text: 'A sentence or two on what it is and why it matters.',
+      points: [{ text: 'A short point' }, { text: 'Another short point' }],
+      image: '/media/home/r7-orbit-canvas.png',
+      alt: 'The R7 Orbit canvas: task cards for several agents around the project hub',
+      buttonLabel: 'Read more',
+      buttonUrl: '/about/',
+      waitlist: true,
+      source: 'other',
+    },
+    previewNote: 'The waitlist form is a labelled placeholder here: it shows on the site only while the waitlist is on in Site settings.',
+  },
+  {
+    eyebrow: eyebrowField(),
+    heading: text({ label: 'Heading', max: 80, hint: 'Put one phrase in *asterisks* for the italic brass accent.' }),
+    text: text({ label: 'Text', widget: 'markdown', optional: true, max: 600, hint: `Optional. ${MARKDOWN_HINT}` }),
+    points: list(
+      { text: text({ label: 'Point', max: 120, hint: 'One short line, e.g. "Every task in its own copy of the project".' }) },
+      { label: 'Points', hint: 'Optional. Up to five short lines, each with a brass mark.', min: 0, max: 5, summary: '{{fields.text}}', itemLabel: 'point' },
+    ),
+    image: image('Picture', 'Optional. Beside the words: a screenshot or your own picture, not stock.', true),
+    ...pictureAlt('the picture'),
+    buttonLabel: text({ label: 'Button text', optional: true, max: 40, hint: 'Optional. Shown only with an address too.' }),
+    buttonUrl: link('Button address', ADDRESS_HINT, true),
+    waitlist: flag('Waitlist form', 'On: the waitlist form for R7 Orbit under the words, while the waitlist is on in Site settings > Waitlist (its words are set there). The button then sits beside it as a quieter link.'),
+    source: choice(WAITLIST_SOURCES, { hero: 'Hero', blog: 'Blog', vlog: 'Vlog', other: 'Other' }, {
+      label: 'Waitlist: counted as',
+      fallback: 'other',
+      hint: 'Stored with each address left in this form.',
+    }),
+  },
+  (data, ctx) => {
+    if (data.image) needsAlt(data, ctx);
+  },
+);
+
+// What the author is building, as a row of tiles: a name, a status (the projects' marks), a line and a link. Typed in the block,
+// not read from the posts: some of these have no project page. BuildingBlock.astro.
+export const BUILDING_STATUSES = ['building', 'shipped', 'paused', 'idea'] as const;
+const building = defineBlock(
+  'building',
+  {
+    label: 'What I\'m building',
+    group: 'Layout',
+    description:
+      'A section of its own with a row of tiles, one per thing being made: its name, a status (Building, Shipped, Paused or Idea, with the same marks as the project pages), one line and a link. Two tiles a row on a phone, up to four on a wide screen.',
+    summary: 'What I\'m building: {{fields.heading}}',
+    placement: 'band',
+    example: {
+      eyebrow: 'Now',
+      heading: 'What I\'m *building*',
+      items: [
+        { title: 'A desktop app', status: 'building', text: 'One line on what it is.', url: '/about/' },
+        { title: 'A game', status: 'shipped', text: 'One line on what it is.', url: '/apps/' },
+      ],
+    },
+  },
+  {
+    eyebrow: eyebrowField(),
+    heading: text({ label: 'Heading', optional: true, max: 80, hint: 'Optional. Put one phrase in *asterisks* for the italic brass accent.' }),
+    items: list(
+      {
+        title: text({ label: 'Name', max: 60, hint: 'e.g. R7 Orbit.' }),
+        status: choice(BUILDING_STATUSES, { building: 'Building', shipped: 'Shipped', paused: 'Paused', idea: 'Idea' }, { label: 'Status' }),
+        text: text({ label: 'Line', max: 140, hint: 'One short line on what it is.' }),
+        url: link('Address', `${ADDRESS_HINT} The whole tile links there.`),
+      },
+      { label: 'Tiles', hint: 'One tile per thing, in order.', max: 8, summary: '{{fields.title}}', itemLabel: 'tile' },
+    ),
+    ...moreFields('All projects'),
+  },
+);
+
 // ---- Links and buttons --------------------------------------------------------------------------------------------------
 
 const links = defineBlock(
@@ -808,8 +894,9 @@ const team = defineBlock(
     group: 'From the site',
     description:
       'People and AI agents as a grid of cards: avatar, name (a link to their page), the title given here, an agent\'s subtitle and an "AI agent" label, and the bio from the authors list (or a short text typed here instead). Members that share a group sit under its name. Optional steps above the cards show how a piece gets made, each naming who does it. One column on a phone, two or three on a wide screen.',
-    summary: 'Team',
-    placement: 'wide',
+    summary: 'Team {{fields.heading}}',
+    placement: (d) => (d.section ? 'band' : 'wide'),
+    placementNote: 'In a row of its own, the width of the page; a full-width section with its own spacing when "A section of its own" is on.',
     example: {
       stepsHeading: 'How a piece gets made',
       steps: [
@@ -866,8 +953,24 @@ const team = defineBlock(
           hint: 'Optional. Shown instead of the bio from the Authors list. Leave empty to show that bio.',
         }),
       },
-      { label: 'Members', hint: 'One card per person or agent, in order.', max: 24, summary: '{{fields.author}} · {{fields.title}}', itemLabel: 'member' },
+      {
+        label: 'Members',
+        hint: 'One card per person or agent, in order. May be left empty when there are steps: the steps alone, with each name linking to its author page (the home page\'s crew row).',
+        min: 0,
+        max: 24,
+        summary: '{{fields.author}} · {{fields.title}}',
+        itemLabel: 'member',
+      },
     ),
+    // A switch, not a menu: a Team block saved before it existed has no value, and the editor would refuse to save a menu left empty.
+    section: flag('A section of its own', 'On: a full-width section with a rule above and a heading row (the eyebrow, heading and link below), as on the home page. Off: a row in the page.'),
+    eyebrow: eyebrowField(),
+    heading: text({ label: 'Heading', optional: true, max: 80, hint: 'Optional, shown when "A section of its own" is on. Put one phrase in *asterisks* for the italic brass accent.' }),
+    ...moreFields('Meet the team'),
+  },
+  (data, ctx) => {
+    if (data.steps.length === 0 && data.members.length === 0)
+      ctx.addIssue({ code: 'custom', path: ['members'], message: 'a Team block needs at least one step or one member' });
   },
 );
 
@@ -914,6 +1017,96 @@ const waitlist = defineBlock(
   },
 );
 
+// The posts of one or more series (a post's `series` and `seriesOrder`), each as a column: part 1's picture, the series name, how
+// many parts, and the parts in order, numbered, each a link. SeriesBlock.astro; the build stops on a series no post has.
+const series = defineBlock(
+  'series',
+  {
+    label: 'Series shelf',
+    group: 'From the site',
+    description:
+      'Up to three series side by side, each a column: the first part\'s picture, the series name and how many parts it has, then its parts in order, numbered, as links. Read from the posts\' Series fields when the site is built; drafts and future-dated parts are left out. One column on a phone.',
+    summary: 'Series shelf: {{fields.heading}}',
+    placement: 'band',
+    example: { eyebrow: 'Read in order', heading: 'The *series*', series: [{ name: 'R7 Orbit' }], count: 5 },
+    previewNote: 'The parts are read from the posts when the site is built, so the preview shows a stand-in.',
+  },
+  {
+    eyebrow: eyebrowField(),
+    heading: text({ label: 'Heading', max: 80, hint: 'e.g. Read a series. Put one phrase in *asterisks* for the italic brass accent.' }),
+    series: list(
+      {
+        name: text({ label: 'Series', max: 60, hint: 'Exactly as the posts write it in their Series field, e.g. R7 Orbit. The build stops if no post has it.' }),
+        url: link('Link address', `Optional. Where "All parts" goes, e.g. /tags/r7-orbit/. Empty: to part 1. ${ADDRESS_HINT}`, true),
+      },
+      { label: 'Series', hint: 'One to three series, side by side.', max: 3, summary: '{{fields.name}}', itemLabel: 'series' },
+    ),
+    count: count({ label: 'Parts listed', min: 2, max: 12, fallback: 5, hint: 'How many parts each column lists, from part 1. The rest are counted in "All parts".' }),
+    ...moreFields('All posts'),
+  },
+);
+
+// Numbers counted from the site when it is built (never typed), each with the author's label: apps, build logs, news, agents.
+// CountsBlock.astro; src/lib/site-counts.ts says what each one counts.
+export const COUNT_SOURCES = ['apps', 'logs', 'news', 'agents', 'series'] as const;
+const counts = defineBlock(
+  'counts',
+  {
+    label: 'Site numbers',
+    group: 'From the site',
+    description:
+      'A ruled row of big numbers counted from the site when it is built, each with its label: published apps and games, blog posts and vlogs, news items, AI agents in the authors list, series. Nothing is typed by hand, so the numbers are always true.',
+    summary: 'Site numbers',
+    placement: 'band',
+    example: {
+      items: [
+        { count: 'apps', label: 'games and apps to play' },
+        { count: 'logs', label: 'build logs and videos' },
+      ],
+    },
+    previewNote: 'The numbers are counted when the site is built, so the preview shows what each one counts.',
+  },
+  {
+    eyebrow: eyebrowField(),
+    items: list(
+      {
+        count: choice(
+          COUNT_SOURCES,
+          {
+            apps: 'Published apps and games',
+            logs: 'Blog posts and vlogs',
+            news: 'News items',
+            agents: 'AI agents in the authors list',
+            series: 'Series',
+          },
+          { label: 'Number' },
+        ),
+        label: text({ label: 'Label', max: 40, hint: 'The words under the number, e.g. games you can play.' }),
+      },
+      { label: 'Numbers', hint: 'Two to five numbers, in order.', min: 2, max: 5, summary: '{{fields.count}} · {{fields.label}}', itemLabel: 'number' },
+    ),
+  },
+);
+
+// The newsletter sign-up as a band (NewsletterForm.astro): the heading, sentence and form from Site settings > Newsletter. Draws nothing
+// while the newsletter is off. NewsletterSignupBlock.astro.
+const newsletterBand = defineBlock(
+  'newsletter-signup',
+  {
+    label: 'Newsletter sign-up',
+    group: 'From the site',
+    description: 'The newsletter: the heading, sentence and email form from Site settings > Newsletter, in a ruled band, with a link to the newsletter page. Shown only while the newsletter is on there; otherwise the block draws nothing.',
+    summary: 'Newsletter sign-up',
+    placement: 'band',
+    example: { eyebrow: 'Newsletter', moreLabel: 'What you get', moreUrl: '/newsletter/' },
+    previewNote: 'The form and its words come from Site settings, so the preview shows a labelled placeholder.',
+  },
+  {
+    eyebrow: eyebrowField(),
+    ...moreFields('What you get'),
+  },
+);
+
 // ---- The list -----------------------------------------------------------------------------------------------------------
 
 /** Every block, in the order of the editor's "Add section" menu (grouped, in the order of GROUPS). */
@@ -935,6 +1128,8 @@ export const definitions = [
   columns,
   divider,
   spacer,
+  spotlight,
+  building,
   links,
   button,
   toc,
@@ -942,11 +1137,14 @@ export const definitions = [
   latest,
   feed,
   newsDesk,
+  series,
   pinned,
   appsRow,
   author,
   team,
+  counts,
   waitlist,
+  newsletterBand,
 ] as const;
 
 export type Definition = (typeof definitions)[number];

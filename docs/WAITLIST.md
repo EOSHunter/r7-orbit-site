@@ -6,7 +6,7 @@ It is not a newsletter: the site sends no email to anyone, and there is no email
 
 **Where the form shows, once it is on:**
 
-- under the home page headline (the home page's **Waitlist form** switch, in **Pages > Home page**, is already on);
+- in the home page's R7 Orbit section (the **Spotlight** block with its **Waitlist form** switch on, in **Pages > Home page**; since 2026-11-13). The form under the headline is still there as a switch (**Waitlist form**, now off), so the page asks once;
 - at the end of any post with **Waitlist form at the end** ticked (every kind of post has the box; it is on for the blog post and the vlog "So you've got an AI that writes code. Cool. What if you had ten?");
 - wherever you add the **Waitlist form** block on a page built from blocks (About, or above or below a listing).
 
@@ -96,10 +96,10 @@ curl -s -X POST https://r7orbit.io/api/waitlist -H "Origin: https://r7orbit.io" 
 
 With your own address:
 
-1. **Home page**: the form is under the headline. Send your address: "You are on the list."
+1. **Home page**: the form is in the R7 Orbit section ("Coming soon"), under its points. Send your address: "You are on the list." It is counted as `other` (the block's **Waitlist: counted as**).
 2. **The blog post** `/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/`: the band is at the end, before "Related". Send a second address (or the same one: the answer is the same, and it is stored once).
 3. **The vlog** `/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/`: the same band before "Keep watching".
-4. **Check the list**: in the database's Console, `SELECT * FROM waitlist;` shows your addresses with `hero`, `blog`, `vlog`.
+4. **Check the list**: in the database's Console, `SELECT * FROM waitlist;` shows your addresses with `other` (the home page), `blog`, `vlog`.
 5. **Removal**: open `/waitlist/remove/` (or the "Remove my email" link), send one of the addresses, and check the Console again: it is gone.
 
 ## 8. See or export the list

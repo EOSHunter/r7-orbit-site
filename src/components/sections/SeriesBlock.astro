@@ -1,0 +1,88 @@
+---
+// The Series shelf (docs/SECTIONS.md, `series`): up to three series side by side, each a column with part 1's picture, the series
+// name, how many parts are out, and the first parts in order, numbered by their place in the series. Read from the blog's
+// `series` and `seriesOrder` when the site is built: drafts and future-dated parts are left out (getPosts), as everywhere else.
+// A series named here that no post carries (drafts included) stops the build; one whose parts are all still unpublished is left
+// out, and the block draws nothing while none has a part out.
+import CardMedia from '../CardMedia.astro';
+import Icon from '../Icon.astro';
+import SectionBand from './SectionBand.astro';
+import { getPosts } from '../../lib/content-queries';
+import { seriesProblems } from '../../lib/sections/checks';
+import { loadKnown } from '../../lib/sections/known';
+import { toCards } from '../../lib/post-cards';
+import { plainTitle } from '../../lib/text';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'series'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const problems = seriesProblems(block, await loadKnown());
+if (problems.length) throw new Error(`${ctx.where}: ${problems.join(' ')}`);
+
+const blog = await getPosts('blog');
+const shelves = (
+  await Promise.all(
+    block.series.map(async ({ name, url }) => {
+      const parts = blog.filter((p) => p.data.series === name).sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0));
+      if (parts.length === 0) return undefined;
+      const cards = await toCards(parts);
+      const listed = cards.slice(0, block.count).map((card, i) => ({ card, n: parts[i].data.seriesOrder ?? i + 1 }));
+      const first = cards[0];
+      return { name, url: url || first.href, total: parts.length, listed, cover: 'cover' in first ? first.cover : undefined };
+    }),
+  )
+).filter((shelf) => shelf !== undefined);
+const Name = ctx.afterHeading || block.heading ? 'h3' : 'h2';
+---
+
+{
+  shelves.length > 0 && (
+    <SectionBand
+      headingId={`sec-${ctx.index + 1}-h`}
+      eyebrow={block.eyebrow || undefined}
+      heading={block.heading}
+      moreLabel={block.moreLabel || undefined}
+      moreUrl={block.moreUrl || undefined}
+      ruled
+      data-series-shelf
+    >
+      <div class="series-shelf" data-count={shelves.length}>
+        {shelves.map((shelf) => (
+          <article class="series-col">
+            <div class="series-cover" aria-hidden="true">
+              <CardMedia cover={shelf.cover ? { ...shelf.cover, motion: undefined } : undefined} />
+            </div>
+            <div class="series-head">
+              <Name class="series-name">
+                <a href={shelf.url}>{shelf.name}</a>
+              </Name>
+              <p class="series-total">{shelf.total === 1 ? '1 part' : `${shelf.total} parts`}</p>
+            </div>
+            <ol class="series-parts" role="list">
+              {shelf.listed.map(({ card, n }) => (
+                <li>
+                  <a href={card.href}>
+                    <span class="series-n" aria-hidden="true">{String(n).padStart(2, '0')}</span>
+                    <span class="visually-hidden">Part {n}: </span>
+                    <span class="series-title">{plainTitle(card.title)}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+            {shelf.total > shelf.listed.length && (
+              <a class="more-link series-more" href={shelf.url}>
+                All {shelf.total} parts
+                <Icon name="arrow" />
+              </a>
+            )}
+          </article>
+        ))}
+      </div>
+    </SectionBand>
+  )
+}

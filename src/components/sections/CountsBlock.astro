@@ -1,0 +1,48 @@
+---
+// The Site numbers block (docs/SECTIONS.md, `counts`): a ruled row of big numbers counted when the site is built, each with the
+// label typed in the block. Nothing is typed by hand, so a number is never out of date or invented. Drafts and future-dated posts
+// are left out (getPosts, getApps), as everywhere else.
+//   apps    published apps and games (projects with a Play address, the /apps/ hub)
+//   logs    published blog posts and vlogs
+//   news    published news items
+//   agents  authors that are AI agents
+//   series  series with at least one published part
+import { getAuthors } from '../../lib/authors-queries';
+import { isAgent } from '../../lib/authors';
+import { getApps, getPosts } from '../../lib/content-queries';
+import type { COUNT_SOURCES } from '../../lib/sections/definitions';
+import type { BlockContext } from './context';
+import type { SectionOf } from '../../lib/sections';
+
+interface Props {
+  block: SectionOf<'counts'>;
+  ctx: BlockContext;
+}
+
+const { block, ctx } = Astro.props;
+const blog = await getPosts('blog');
+const numbers: Record<(typeof COUNT_SOURCES)[number], number> = {
+  apps: (await getApps()).length,
+  logs: blog.length + (await getPosts('vlogs')).length,
+  news: (await getPosts('news')).length,
+  agents: (await getAuthors()).filter(isAgent).length,
+  series: new Set(blog.map((p) => p.data.series).filter(Boolean)).size,
+};
+const id = `counts-${ctx.index + 1}`;
+---
+
+<section class="section ruled counts" aria-labelledby={block.eyebrow ? `${id}-h` : undefined} aria-label={block.eyebrow ? undefined : 'The site in numbers'}>
+  <div class="container wide">
+    {block.eyebrow && <h2 class="eyebrow" id={`${id}-h`}>{block.eyebrow}</h2>}
+    <dl class="counts-row">
+      {
+        block.items.map((item) => (
+          <div class="counts-item">
+            <dt class="counts-label">{item.label}</dt>
+            <dd class="counts-n">{numbers[item.count].toLocaleString('en-US')}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

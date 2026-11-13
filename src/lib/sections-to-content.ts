@@ -88,6 +88,12 @@ const BLOCKS: { [K in SectionType]: Projection<K> } = {
   team: { text: (d) => d.members.flatMap((m) => [m.title, m.blurb ?? '']) },
   // The waitlist's words are Site settings', not this post's.
   waitlist: nothing,
+  spotlight: { text: (d) => [headingPlainText(d.heading), markdownToText(d.text ?? ''), ...d.points.map((p) => p.text)] },
+  building: { text: (d) => d.items.flatMap((i) => [i.title, i.text]) },
+  // Made from the posts and the settings when the site is built: nothing of their own to read.
+  series: nothing,
+  counts: nothing,
+  'newsletter-signup': nothing,
 };
 
 const projectionOf = <K extends SectionType>(block: SectionOf<K>) => BLOCKS[block.type as K] as Projection<K>;

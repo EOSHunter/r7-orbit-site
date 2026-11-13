@@ -49,6 +49,11 @@ const SHOWS = {
   author: '.author-box',
   team: '.team-grid .team-card',
   waitlist: '.sec-row-band section[data-waitlist-placeholder] .empty',
+  spotlight: 'section.spotlight .spotlight-points li',
+  building: '.building-grid .building-tile',
+  series: '.sec-row-band section.section.ruled .empty',
+  counts: 'section.counts .counts-item',
+  'newsletter-signup': 'section[data-newsletter-placeholder] .empty',
 };
 
 async function openAbout(page) {

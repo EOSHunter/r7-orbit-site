@@ -31,6 +31,11 @@ import AppsBlock from './AppsBlock.astro';
 import AuthorBlock from './AuthorBlock.astro';
 import TeamBlock from './TeamBlock.astro';
 import WaitlistBlock from './WaitlistBlock.astro';
+import SpotlightBlock from './SpotlightBlock.astro';
+import BuildingBlock from './BuildingBlock.astro';
+import SeriesBlock from './SeriesBlock.astro';
+import CountsBlock from './CountsBlock.astro';
+import NewsletterSignupBlock from './NewsletterSignupBlock.astro';
 
 export const renderers: Record<SectionType, AstroComponentFactory> = {
   heading: HeadingBlock,
@@ -62,4 +67,9 @@ export const renderers: Record<SectionType, AstroComponentFactory> = {
   author: AuthorBlock,
   team: TeamBlock,
   waitlist: WaitlistBlock,
+  spotlight: SpotlightBlock,
+  building: BuildingBlock,
+  series: SeriesBlock,
+  counts: CountsBlock,
+  'newsletter-signup': NewsletterSignupBlock,
 };

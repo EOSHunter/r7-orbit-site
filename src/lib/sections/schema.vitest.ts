@@ -351,3 +351,60 @@ describe('the home page blocks', () => {
     expect(sectionSchema.parse({ type: 'apps', heading: 'Apps' })).toMatchObject({ count: 3 });
   });
 });
+
+// The home page blocks of 2026-11-13 (docs/DECISIONS.md, "The home page's new rows").
+describe('spotlight', () => {
+  it('needs a heading; the picture, points, button and waitlist are optional', () => {
+    ok({ type: 'spotlight', heading: 'H' });
+    bad({ type: 'spotlight' }, /heading/);
+  });
+  it('a picture needs alt text unless it is decorative; no picture needs none', () => {
+    bad({ type: 'spotlight', heading: 'H', ...PIC }, /alt/);
+    ok({ type: 'spotlight', heading: 'H', ...PIC, alt: 'A screenshot' });
+    ok({ type: 'spotlight', heading: 'H', ...PIC, decorative: true });
+  });
+  it('holds five points at most', () => {
+    const points = (n: number) => Array.from({ length: n }, (_, i) => ({ text: `Point ${i}` }));
+    ok({ type: 'spotlight', heading: 'H', points: points(5) });
+    bad({ type: 'spotlight', heading: 'H', points: points(6) });
+  });
+});
+
+describe('building', () => {
+  const tile = { title: 'R7 Orbit', status: 'building', text: 'A line.', url: '/about/' };
+  it('needs at least one tile, each with a known status and an address', () => {
+    ok({ type: 'building', items: [tile] });
+    bad({ type: 'building', items: [] });
+    bad({ type: 'building', items: [{ ...tile, status: 'done' }] }, /status/);
+    bad({ type: 'building', items: [{ ...tile, url: 'javascript:alert(1)' }] }, /url/);
+  });
+});
+
+describe('series, counts and newsletter-signup', () => {
+  it('a series shelf holds one to three series', () => {
+    ok({ type: 'series', heading: 'H', series: [{ name: 'R7 Orbit' }] });
+    bad({ type: 'series', heading: 'H', series: [] });
+    bad({ type: 'series', heading: 'H', series: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }] });
+  });
+  it('site numbers are two to five, each one of the counts the site can make', () => {
+    ok({ type: 'counts', items: [{ count: 'apps', label: 'apps' }, { count: 'agents', label: 'agents' }] });
+    bad({ type: 'counts', items: [{ count: 'apps', label: 'apps' }] });
+    bad({ type: 'counts', items: [{ count: 'apps', label: 'a' }, { count: 'visitors', label: 'b' }] }, /count/);
+  });
+  it('the newsletter sign-up has nothing required: its words are Site settings\'', () => {
+    ok({ type: 'newsletter-signup' });
+  });
+});
+
+describe('team: the steps alone', () => {
+  const step = { label: 'Write', people: [{ author: 'r7' }] };
+  it('may leave the members empty when there are steps, but not both', () => {
+    ok({ type: 'team', steps: [step], members: [] });
+    bad({ type: 'team', steps: [], members: [] }, /at least one step or one member/);
+  });
+  it('in its own section it may carry an eyebrow, a heading and a link', () => {
+    ok({ type: 'team', steps: [step], section: true, eyebrow: 'E', heading: 'Who makes it', moreLabel: 'Meet the agents', moreUrl: '/about/' });
+    // A block saved before the switch existed reads as a row in the page.
+    ok({ type: 'team', steps: [step] });
+  });
+});

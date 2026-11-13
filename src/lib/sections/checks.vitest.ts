@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { authorProblem, teamProblems, frameSrcOrigins, gameProblem, latestProblems, onceProblems, whereOf, type Known } from './checks';
+import { authorProblem, teamProblems, frameSrcOrigins, gameProblem, latestProblems, onceProblems, seriesProblems, whereOf, type Known } from './checks';
 import { headingsInHtml, headingsOfMarkdown, SlugBook, withHeadingIds } from './headings';
 import { prepareSections } from './prepare';
 import type { Section } from './schema';
@@ -12,6 +12,15 @@ describe('whereOf', () => {
   it('names the file and the block the way the editor counts: from 1, with the block\'s label', () => {
     expect(whereOf('about.md', 0, 'Heading')).toBe('about.md, block 1 (Heading)');
     expect(whereOf('about.md', 3, 'Latest posts')).toBe('about.md, block 4 (Latest posts)');
+  });
+});
+
+describe('seriesProblems: a Series shelf names series some post carries', () => {
+  const withSeries: Known = { ...known, series: ['R7 Home', 'R7 Orbit'] };
+  it('accepts series that exist, and names one that does not, with the series in use', () => {
+    expect(seriesProblems({ series: [{ name: 'R7 Orbit' }, { name: 'R7 Home' }] }, withSeries)).toEqual([]);
+    expect(seriesProblems({ series: [{ name: 'R7 orbit' }] }, withSeries)).toEqual(['no post is in the series "R7 orbit". Series in use: R7 Home, R7 Orbit.']);
+    expect(seriesProblems({ series: [{ name: 'X' }] }, known)).toEqual(['no post is in the series "X". Series in use: (none yet).']);
   });
 });
 
