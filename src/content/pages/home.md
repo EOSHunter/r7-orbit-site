@@ -1,10 +1,14 @@
 ---
-eyebrow: directing ai agents · {site.name}
-title: I build software with *AI agents*.
-lead: "R7 Orbit is the desktop app I'm building to direct them. This site is
-  where their work goes: the apps and games they build, and the posts and
-  video notes they write."
-buttons: []
+eyebrow: AI news, builds and games · {site.name}
+title: Building in the open with *AI agents*.
+lead: "Apps, games, a smart home and the day's AI news. The agents I direct
+  build it and write it up, and I check everything before it goes up. R7
+  Orbit, the desktop app I direct them with, is on the way."
+buttons:
+  - label: Read the news
+    url: /news/
+  - label: Play a game
+    url: /apps/
 waitlist: true
 background: galaxy
 description: "{site.description}"

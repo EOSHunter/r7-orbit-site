@@ -46,7 +46,8 @@ test('home page: opens with today\'s words, previews the hero and stand-ins for 
   const seen = await openEntry(page, 'home');
   // Today's words, read from the file the editor opens (the author edits them in /admin).
   const home = parseFrontmatter(PAGE_FILES['home.md']).frontmatter;
-  await expect(page.getByLabel('Headline')).toHaveValue(home.title, { timeout: 15_000 });
+  // Exact: the news desk block has "Headline list title" and "Headlines beside the lead" too.
+  await expect(page.getByLabel('Headline', { exact: true })).toHaveValue(home.title, { timeout: 15_000 });
   // The eyebrow as the file has it (a settings token such as {site.tagline}, or typed); the preview prints it filled in.
   await expect(page.getByLabel(/^Eyebrow/).first()).toHaveValue(home.eyebrow);
 
@@ -60,14 +61,14 @@ test('home page: opens with today\'s words, previews the hero and stand-ins for 
   await expect(preview.locator('.hero .t-lead')).toHaveText(fill(home.lead).replace(/\s+/g, ' '));
   // Every row made from the posts says so: a stand-in in its frame, and the note under it.
   await expect(preview.getByText('Pinned post: the post marked Featured, as a large card.')).toBeVisible();
-  await expect(preview.getByText(/^Latest feed: the 6 newest posts of every kind/)).toBeVisible();
+  await expect(preview.getByText(/^Latest feed: the 6 newest posts of /)).toBeVisible();
   await expect(preview.getByText(/^Latest posts: 3 most recently updated · repo/)).toBeVisible();
   await expect(preview.getByText(/^Apps row: the first 3 published apps/)).toBeVisible();
   await expect(preview.getByText(/^Preview: the home page with the site’s own styles/)).toBeVisible();
   await expect(preview.getByText('Fix before saving.')).toHaveCount(0);
 
   // The preview follows the form.
-  await page.getByLabel('Headline').fill('Plain notes on *building*.');
+  await page.getByLabel('Headline', { exact: true }).fill('Plain notes on *building*.');
   await expect(preview.locator('section.hero h1 em')).toHaveText('building');
 
   await page.getByRole('button', { name: /^save$/i }).click();
