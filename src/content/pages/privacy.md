@@ -1,15 +1,20 @@
 ---
 title: What this site knows about you
 seoTitle: Privacy
-description: What {site.name} collects about you (nothing by itself), where the newsletter form goes, and how to unsubscribe.
+description: What {site.name} collects about you (anonymous visit counts, no cookies), where the newsletter form goes, and how to unsubscribe.
 sections:
   - type: lead
-    text: Almost nothing. This page says what, and why.
+    text: Very little. This page says what, and why.
   - type: heading
     level: 2
     text: The short version
   - type: text
-    text: "This site has no analytics, no advertising, no comments and no cookies. Pages don't load anything from other companies: the fonts, icons and scripts all come from this site. I don't know who reads it or how many do."
+    text: "This site has no advertising, no comments and no cookies. It counts visits with Cloudflare Web Analytics, which comes from Cloudflare, the company that hosts the site. Apart from that, pages don't load anything from other companies: the fonts, icons and scripts all come from this site."
+  - type: heading
+    level: 2
+    text: Visit counts
+  - type: text
+    text: "To see which pages people read, each public page loads a small script from [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/). It reports the page's address, the page that linked you here, your browser, device type and country, and how fast the page loaded. It sets no cookies and saves nothing on your device, so it can't recognize you on a later visit. I see totals, such as how many visits a page got, not who made them. [Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/) covers what Cloudflare does with the data."
   - type: heading
     level: 2
     text: What stays on your device
@@ -48,5 +53,5 @@ sections:
   - type: text
     text: Like any website, whatever serves these pages can see the address and browser details of each request. I don't use those logs to follow anyone.
   - type: text
-    text: Last updated Nov 10, 2026.
+    text: Last updated Nov 16, 2026.
 ---

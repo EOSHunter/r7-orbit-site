@@ -29,7 +29,7 @@ Fill in the "Answer" column as you go. Anything blank uses the recommendation.
 | Framework | Astro | |
 | Tailwind or plain CSS? | Plain CSS from the design system | |
 | Newsletter provider | Buttondown | **Buttondown, weekly** (2026-11-10, the author's call), see section E and `docs/NEWSLETTER.md` |
-| Analytics | None at launch; add Cloudflare Web Analytics later if wanted | |
+| Analytics | None at launch; add Cloudflare Web Analytics later if wanted | **Cloudflare Web Analytics** (2026-11-16, the author's call): cookieless page views, visits, referrers, countries, devices and page speed. `BaseLayout` adds the beacon (`src/lib/analytics.ts`) only to the production build on Cloudflare Pages (`CF_PAGES_BRANCH=main`) and never to noindex pages; `/admin/` doesn't use the layout, so the editor isn't tracked and its CSP stays as it is. The dashboard site is set to manual install ("Enable with JS Snippet installation"), not automatic injection, which would put the script on every page including `/admin/` (excluding paths needs the Pro plan). No click tracking or heatmaps: those need cookies, and so a cookie banner. Disclosed on `/privacy/` |
 | Comments | None at launch | |
 | Hosting | Cloudflare Pages | **Decided:** Cloudflare Pages at `https://r7orbit.io` (production branch `main`, `npm run build` → `dist`, `NODE_VERSION=22`). Setup: `docs/DEPLOY_CLOUDFLARE.md` |
 | URL shape | `/blog/slug/` (trailing slash, kind in the path, no dates) | |

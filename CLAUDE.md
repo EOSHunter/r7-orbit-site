@@ -163,7 +163,7 @@ Node 22.12 or newer. The styleguide is at `/styleguide/` (with frame widths); it
 ## Engineering rules
 
 - **Static output.** No server runtime, no database, with one exception: the waitlist's two Pages Functions (`functions/api/`) and its D1 table, which no page needs in order to render (docs/DECISIONS.md, the waitlist). Build-time data only (GitHub stats, README) with a cache and graceful failure: the build must pass with the network off.
-- **No third-party requests on page load.** No CDNs, no Google Fonts, no analytics script unless the author chooses one in `docs/DECISIONS.md`. Video, search and the waitlist's Turnstile load only on interaction. Fonts are self-hosted woff2.
+- **No third-party requests on page load.** No CDNs, no Google Fonts, no analytics script unless the author chooses one in `docs/DECISIONS.md`. The one exception is the cookieless Cloudflare Web Analytics beacon (`src/lib/analytics.ts`), which only the production build on Cloudflare Pages adds, so local builds and tests never load it. Video, search and the waitlist's Turnstile load only on interaction. Fonts are self-hosted woff2.
 - **Progressive enhancement.** Pages read and navigate with JavaScript off (filters degrade to links; pagination is real links).
 - **Accessibility is a requirement, not a polish step.** Semantic landmarks, one `h1`, visible focus, keyboard operable, contrast from the tokens, alt text, `lang`, labels on every control. WCAG 2.2 AA.
 - **Performance budgets:** Lighthouse mobile ≥ 95 in all categories; < 50 kB gzipped JavaScript on a typical page; < 40 kB gzipped CSS.

@@ -6,6 +6,7 @@ import IconSprite from '../components/IconSprite.astro';
 import Search from '../components/Search.astro';
 import type { NavItem } from '../data/nav';
 import { site } from '../data/site';
+import { analyticsBeacon, CLOUDFLARE_BEACON_SRC } from '../lib/analytics';
 import { resolveSeo } from '../lib/seo';
 import { footerLinks } from '../lib/site-settings';
 import { checkSiteLinks } from '../lib/site-routes';
@@ -69,6 +70,7 @@ const seo = resolveSeo({
   fallbackImageAlt: site.defaultOgImageAlt,
 });
 const { canonical, imageUrl } = seo;
+const beacon = analyticsBeacon(process.env, noindex);
 ---
 
 <!doctype html>
@@ -119,6 +121,7 @@ const { canonical, imageUrl } = seo;
       crossorigin
     />
     <slot name="head" />
+    {beacon && <script is:inline defer src={CLOUDFLARE_BEACON_SRC} data-cf-beacon={beacon} />}
   </head>
   <body>
     <IconSprite />
