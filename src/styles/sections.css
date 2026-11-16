@@ -106,7 +106,7 @@
 .spotlight-actions { padding-top: var(--s-1); }
 .spotlight .waitlist { width: 100%; max-width: 32rem; margin-top: var(--s-2); }
 .spotlight-picture { order: -1; margin: 0; overflow: hidden; border-radius: var(--r-lg); background: var(--surface-1); box-shadow: 0 0 0 var(--bw) var(--line); }
-.spotlight-picture img { display: block; width: 100%; height: auto; }
+.spotlight-picture > img { display: block; width: 100%; height: auto; }
 @media (min-width: 900px) {
   .spotlight-grid.has-picture { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--s-8); }
   .spotlight-picture { order: 0; }

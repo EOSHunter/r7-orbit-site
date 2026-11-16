@@ -502,7 +502,7 @@ sections:
 
 #### Spotlight (`spotlight`)
 
-A section of its own that calls out one thing: an eyebrow, a heading, a paragraph and up to five short points beside a picture, then a button. With "Waitlist form" on, the waitlist form for R7 Orbit sits under the words while the waitlist is on in Site settings. Picture beside the words from 900px, above them on a phone.
+A section of its own that calls out one thing: an eyebrow, a heading, a paragraph and up to five short points beside a picture, then a button. With a YouTube video ID, the picture becomes the poster of a video that loads only when a visitor presses play. With "Waitlist form" on, the waitlist form for R7 Orbit sits under the words while the waitlist is on in Site settings. Picture beside the words from 900px, above them on a phone.
 
 Sits: A full-width section with its own spacing, in a row of its own. In the editor preview: The waitlist form is a labelled placeholder here: it shows on the site only while the waitlist is on in Site settings.
 
@@ -513,9 +513,12 @@ Sits: A full-width section with its own spacing, in a row of its own. In the edi
 | `text` | Markdown editor | no | Optional. Paragraphs, **bold**, *italic*, links and lists. Leave a blank line between paragraphs. |
 | `points` | List of rows (0 to 5) | no | Optional. Up to five short lines, each with a brass mark. |
 | `points[].text` | One line | yes | One short line, e.g. "Every task in its own copy of the project". At most 120 characters. |
-| `image` | Picture: choose or upload | no | Optional. Beside the words: a screenshot or your own picture, not stock. |
+| `image` | Picture: choose or upload | no | Optional. Beside the words: a screenshot or your own picture, not stock. With a video, it is the still shown before play (16:9 looks best). |
 | `alt` | One line | no | Needed unless the image is decorative (the preview warns you, and the build stops without it). Describe the picture in one plain sentence, for someone who cannot see it. |
 | `decorative` | Switch | no | Turn on only if the picture is purely ornamental and says nothing. Then alt text is left empty. Default `false`. |
+| `youtubeId` | One line (checked) | no | Optional. The 11 characters after v= in the video address, not the whole link. Shows the video in place of the picture; nothing loads from YouTube until a visitor presses play. |
+| `videoTitle` | One line | no | Optional. Names the player for screen readers: "Play video: …". Without one, the heading is used. At most 120 characters. |
+| `videoDuration` | One line (checked) | no | Optional. Minutes and seconds, e.g. 2:52, shown on the player. |
 | `buttonLabel` | One line | no | Optional. Shown only with an address too. At most 40 characters. |
 | `buttonUrl` | One line (checked) | no | https://… for another site, or /about/ for a page on this site. |
 | `waitlist` | Switch | no | On: the waitlist form for R7 Orbit under the words, while the waitlist is on in Site settings > Waitlist (its words are set there). The button then sits beside it as a quieter link. Default `false`. |

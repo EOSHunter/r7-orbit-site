@@ -15,14 +15,20 @@ test('What I\'m building: one linked tile per thing, each with a status', async 
   }
 });
 
-test('the spotlight has its words, points, a described picture and a button', async ({ page }) => {
+test('the spotlight has its words, points, a described picture or a named video, and a button', async ({ page }) => {
   await page.goto('/');
   const spot = page.locator('section[data-spotlight]');
   await expect(spot).toHaveCount(1);
   await expect(spot.locator('h2')).not.toBeEmpty();
   expect(await spot.locator('.spotlight-points li').count()).toBeGreaterThan(0);
-  const alt = await spot.locator('.spotlight-picture img').getAttribute('alt');
-  expect(alt?.length).toBeGreaterThan(20);
+  if (await spot.locator('.spotlight-video').count()) {
+    // A video: the click-to-load player, named for screen readers, with nothing from YouTube until play.
+    await expect(spot.locator('.spotlight-video [data-yt-play]')).toHaveAttribute('aria-label', /^Play video: .{3,}/);
+    await expect(spot.locator('iframe')).toHaveCount(0);
+  } else {
+    const alt = await spot.locator('.spotlight-picture img').getAttribute('alt');
+    expect(alt?.length).toBeGreaterThan(20);
+  }
   // Waitlist off in this build: the button is the solid one; on, it is a quieter link beside the form.
   const form = await spot.locator('[data-waitlist]').count();
   await expect(spot.locator('.spotlight-actions a')).toHaveClass(form ? /more-link/ : /btn solid/);

@@ -563,14 +563,15 @@ const spacer = defineBlock(
 );
 
 // A full-width section that calls out one thing (R7 Orbit, coming soon, on the home page): words and a few points beside a
-// picture, with a button and, while the waitlist is on, the waitlist form. SpotlightBlock.astro.
+// picture or a YouTube video (the click-to-load player, with the picture as its poster), with a button and, while the waitlist
+// is on, the waitlist form. SpotlightBlock.astro.
 const spotlight = defineBlock(
   'spotlight',
   {
     label: 'Spotlight',
     group: 'Layout',
     description:
-      'A section of its own that calls out one thing: an eyebrow, a heading, a paragraph and up to five short points beside a picture, then a button. With "Waitlist form" on, the waitlist form for R7 Orbit sits under the words while the waitlist is on in Site settings. Picture beside the words from 900px, above them on a phone.',
+      'A section of its own that calls out one thing: an eyebrow, a heading, a paragraph and up to five short points beside a picture, then a button. With a YouTube video ID, the picture becomes the poster of a video that loads only when a visitor presses play. With "Waitlist form" on, the waitlist form for R7 Orbit sits under the words while the waitlist is on in Site settings. Picture beside the words from 900px, above them on a phone.',
     summary: 'Spotlight: {{fields.heading}}',
     placement: 'band',
     example: {
@@ -595,8 +596,23 @@ const spotlight = defineBlock(
       { text: text({ label: 'Point', max: 120, hint: 'One short line, e.g. "Every task in its own copy of the project".' }) },
       { label: 'Points', hint: 'Optional. Up to five short lines, each with a brass mark.', min: 0, max: 5, summary: '{{fields.text}}', itemLabel: 'point' },
     ),
-    image: image('Picture', 'Optional. Beside the words: a screenshot or your own picture, not stock.', true),
+    image: image('Picture', 'Optional. Beside the words: a screenshot or your own picture, not stock. With a video, it is the still shown before play (16:9 looks best).', true),
     ...pictureAlt('the picture'),
+    youtubeId: pattern({
+      label: 'YouTube video ID',
+      optional: true,
+      pattern: YOUTUBE_ID_PATTERN,
+      message: 'a YouTube id is exactly 11 characters (letters, digits, - and _), not the whole link',
+      hint: 'Optional. The 11 characters after v= in the video address, not the whole link. Shows the video in place of the picture; nothing loads from YouTube until a visitor presses play.',
+    }),
+    videoTitle: text({ label: 'Video title', optional: true, max: 120, hint: 'Optional. Names the player for screen readers: "Play video: …". Without one, the heading is used.' }),
+    videoDuration: pattern({
+      label: 'Video length',
+      optional: true,
+      pattern: TIMESTAMP_PATTERN,
+      message: 'use m:ss or h:mm:ss, e.g. 2:52',
+      hint: 'Optional. Minutes and seconds, e.g. 2:52, shown on the player.',
+    }),
     buttonLabel: text({ label: 'Button text', optional: true, max: 40, hint: 'Optional. Shown only with an address too.' }),
     buttonUrl: link('Button address', ADDRESS_HINT, true),
     waitlist: flag('Waitlist form', 'On: the waitlist form for R7 Orbit under the words, while the waitlist is on in Site settings > Waitlist (its words are set there). The button then sits beside it as a quieter link.'),

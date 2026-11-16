@@ -54,11 +54,13 @@ sections:
       - text: Agents ask before the steps that need my OK
       - text: Give Orbit one goal and it plans which agents to send
       - text: Push to talk, or say "Hey Orbit"
-    image: /media/home/r7-orbit-canvas.png
-    alt: "The R7 Orbit canvas: a section of four finished task cards above the
-      project hub, with five more agents' cards around it, each showing the
-      agent's name, its model, its branch and a short report of what it did"
+    image: /media/vlogs/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/poster.png
+    alt: "The R7 Orbit canvas: task cards for several agents around the project
+      hub, with the Dispatch bar below and a Say Hey Orbit badge at the top"
     decorative: false
+    youtubeId: jof6-qj53Lg
+    videoTitle: R7 Orbit Showcase
+    videoDuration: "2:52"
     buttonLabel: Read how it was built
     buttonUrl: /blog/why-r7-orbit-exists/
     waitlist: true

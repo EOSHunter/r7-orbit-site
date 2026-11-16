@@ -2,10 +2,13 @@
 // The Spotlight block (docs/SECTIONS.md, `spotlight`): one thing called out in a section of its own. Eyebrow, heading, a paragraph
 // and up to five points beside a picture (above the words on a phone), then a button. With `waitlist` on and the waitlist on in
 // Site settings, the waitlist form (the hero's one-row variant) sits under the words and the button becomes a quieter link beside
-// it; with the waitlist off the block is the same section with its button, so it never shows an empty form.
+// it; with the waitlist off the block is the same section with its button, so it never shows an empty form. With `youtubeId` the
+// picture becomes the poster of the click-to-load player (YouTubeFacade), so nothing is requested from YouTube until play.
 import Icon from '../Icon.astro';
+import YouTubeFacade from '../YouTubeFacade.astro';
 import WaitlistForm from '../WaitlistForm.astro';
 import { SIZES, publicSrcset } from '../../lib/media-srcset';
+import { headingPlainText } from '../../lib/sections/headings';
 import { titleParts } from '../../lib/text';
 import { waitlist as state } from '../../lib/waitlist-queries';
 import type { BlockContext } from './context';
@@ -23,11 +26,14 @@ const srcset = block.image ? await publicSrcset(block.image) : undefined;
 const withForm = block.waitlist && state.show;
 const button = block.buttonLabel && block.buttonUrl ? { label: block.buttonLabel, url: block.buttonUrl } : undefined;
 const external = button?.url.startsWith('https://');
+const video = block.youtubeId
+  ? { id: block.youtubeId, title: block.videoTitle || headingPlainText(block.heading), duration: block.videoDuration || undefined }
+  : undefined;
 ---
 
 <section class="section ruled spotlight" aria-labelledby={`${id}-h`} data-spotlight>
   <div class="container wide">
-    <div class:list={['spotlight-grid', block.image && 'has-picture']}>
+    <div class:list={['spotlight-grid', (block.image || video) && 'has-picture']}>
       <div class="spotlight-words">
         {block.eyebrow && <p class="eyebrow brass">{block.eyebrow}</p>}
         <h2 class="section-title" id={`${id}-h`}>{titleParts(block.heading).map((part) => (part.em ? <em>{part.text}</em> : part.text))}</h2>
@@ -55,7 +61,11 @@ const external = button?.url.startsWith('https://');
         }
       </div>
       {
-        block.image && (
+        video ? (
+          <div class="spotlight-picture spotlight-video">
+            <YouTubeFacade id={video.id} title={video.title} poster={block.image || undefined} duration={video.duration} />
+          </div>
+        ) : block.image && (
           <figure class="spotlight-picture">
             <img
               src={block.image}
