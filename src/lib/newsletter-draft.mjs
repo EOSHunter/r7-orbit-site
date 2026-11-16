@@ -1,5 +1,5 @@
 // Pure part of scripts/newsletter-draft.mjs: reads a newsletter issue (newsletter/issues/<date>.md, Mercury's file) and says
-// whether it may become a Buttondown draft, and with what. No network, no file system, so it is unit-tested
+// whether it may go to Buttondown (sent, or as a draft), and with what. No network, no file system, so it is unit-tested
 // (src/lib/newsletter-draft.vitest.ts).
 import { parse } from 'yaml';
 
@@ -16,8 +16,8 @@ export function parseIssue(text) {
 }
 
 /**
- * Why the issue may not become a draft yet. Empty when it may. A draft is made only from an issue Parallax passed and the
- * routine marked ready, with a real subject and a body that is not the template's.
+ * Why the issue may not go to Buttondown yet. Empty when it may. Only an issue Parallax passed and the routine marked ready,
+ * with a real subject and a body that is not the template's, is sent (or drafted).
  * @param {{ data: Record<string, unknown>, body: string }} issue
  */
 export function issueProblems({ data, body }) {
@@ -36,7 +36,7 @@ export function issueProblems({ data, body }) {
 }
 
 /**
- * What is sent to Buttondown: always a draft, never a send. `description` is the preview line after the subject.
+ * The Buttondown email for the issue, as a draft. `description` is the preview line after the subject.
  * @param {{ data: Record<string, unknown>, body: string }} issue
  */
 export function draftPayload({ data, body }) {
@@ -47,7 +47,16 @@ export function draftPayload({ data, body }) {
 }
 
 /**
- * Whether Buttondown already has an email with this subject (so a second push of the same issue does not make a second draft).
+ * The Buttondown email for the issue, sent to every subscriber as soon as Buttondown takes it (`about_to_send`). Only call it
+ * for an issue with no `issueProblems`: the weekly routine sends without a person reading it first (Hunter's call, 2026-11-16).
+ * @param {{ data: Record<string, unknown>, body: string }} issue
+ */
+export function sendPayload(issue) {
+  return { ...draftPayload(issue), status: 'about_to_send' };
+}
+
+/**
+ * Whether Buttondown already has an email with this subject (so a second push or a rerun of the same issue never sends it twice or makes a second draft).
  * @param {{ subject?: string }[]} emails the `results` of GET /v1/emails
  * @param {string} subject
  */

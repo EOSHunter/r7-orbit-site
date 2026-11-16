@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alreadyThere, draftPayload, issueProblems, parseIssue } from './newsletter-draft.mjs';
+import { alreadyThere, draftPayload, issueProblems, parseIssue, sendPayload } from './newsletter-draft.mjs';
 
 const issue = (
   front: string,
@@ -8,7 +8,7 @@ const issue = (
 const ready =
   'subject: "Fable 5.2 costs less"\npreview: "Plus three more news items"\ncovers: "2026-11-09 to 2026-11-15"\nstatus: ready\nparallax: "pass, 0 fixes open"';
 
-describe('a newsletter issue becoming a Buttondown draft', () => {
+describe('a newsletter issue going to Buttondown', () => {
   it('reads the front matter and the body', () => {
     const { data, body } = parseIssue(issue(ready));
     expect(data).toMatchObject({ subject: 'Fable 5.2 costs less', status: 'ready' });
@@ -45,6 +45,13 @@ describe('a newsletter issue becoming a Buttondown draft', () => {
       status: 'draft',
       description: 'Plus three more news items',
     });
+  });
+
+  it('sends a ready issue at once (about_to_send) with the same subject, body and preview as its draft', () => {
+    const parsed = parseIssue(issue(ready));
+    const sent = sendPayload(parsed);
+    expect(sent.status).toBe('about_to_send');
+    expect({ ...sent, status: 'draft' }).toEqual(draftPayload(parsed));
   });
 
   it('knows an email with the same subject is already there, whatever the case', () => {

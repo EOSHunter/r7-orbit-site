@@ -1,13 +1,17 @@
-# The weekly newsletter: when an issue file is pushed (the weekly Mercury routine pushes one to its own branch each Sunday), turn
-# it into a Buttondown **draft**. Nothing is ever sent from here: Hunter reads the draft in Buttondown and presses Send.
-# docs/NEWSLETTER.md, "Every week". Needs the repository secret BUTTONDOWN_API_KEY (a Buttondown key; draft permission is enough).
+# The weekly newsletter: when the weekly Mercury routine pushes an issue to its own branch (claude/newsletter-<date>, Sundays),
+# **send it** to every Buttondown subscriber, with no one reading it first (Hunter's call, 2026-11-16). Only an issue marked
+# `status: ready` after a Parallax pass goes out; if Buttondown refuses the send, it becomes a draft and the run fails.
+# docs/NEWSLETTER.md, "Every week". Needs the repository secret BUTTONDOWN_API_KEY (a Buttondown key that may send).
 #
-# Only issues added by this push are sent, and the script skips an issue whose subject Buttondown already has, so merging the
-# branch into main later makes no second draft. Run it by hand from the Actions tab with a file path to resend one.
+# Only pushes to claude/newsletter-* branches run it, only issues added by the push are sent, and the script skips an issue
+# whose subject Buttondown already has, so nothing is sent twice. By hand: Actions > Newsletter draft > Run workflow, with a
+# file path (sends it, unless Buttondown already has it) and "draft" ticked to make only a draft.
 name: Newsletter draft
 
 on:
   push:
+    branches:
+      - 'claude/newsletter-**'
     paths:
       - 'newsletter/issues/*.md'
   workflow_dispatch:
@@ -15,6 +19,10 @@ on:
       file:
         description: 'Issue file, e.g. newsletter/issues/2026-11-15.md'
         required: true
+      draft:
+        description: 'Only make a draft (do not send)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -25,7 +33,7 @@ concurrency:
 
 jobs:
   draft:
-    name: Buttondown draft
+    name: Buttondown send
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -55,8 +63,9 @@ jobs:
           fi
           echo "files=$files" >> "$GITHUB_OUTPUT"
           echo "Issues: ${files:-none}"
-      - name: Make the Buttondown draft
+      - name: Send it with Buttondown
         if: steps.files.outputs.files != ''
         env:
           BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
-        run: node scripts/newsletter-draft.mjs ${{ steps.files.outputs.files }}
+          DRAFT_ONLY: ${{ github.event.inputs.draft == 'true' && '--draft' || '' }}
+        run: node scripts/newsletter-draft.mjs $DRAFT_ONLY ${{ steps.files.outputs.files }}

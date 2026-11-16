@@ -1,10 +1,10 @@
 ---
 # Mercury's weekly issue (.claude/skills/add-content/agents/mercury.md). Copy to newsletter/issues/<send date>.md.
-# Pushed by the weekly routine (newsletter/ROUTINE.md); a GitHub Action makes it a Buttondown draft from `subject`, `preview` and the body.
+# Pushed by the weekly routine (newsletter/ROUTINE.md); a GitHub Action sends it through Buttondown from `subject`, `preview` and the body.
 subject: "" # 60 characters at most: the week's biggest item, in plain words
 preview: "" # one line shown after the subject in the inbox: what else is inside
 covers: "YYYY-MM-DD to YYYY-MM-DD" # the range given to npm run newsletter:week
-status: draft # draft, then ready (after Parallax: only a ready issue becomes a Buttondown draft)
+status: draft # draft, then ready (after Parallax: only a ready issue is sent, to every subscriber)
 parallax: pending # Parallax's pass/fail line
 ---
 
