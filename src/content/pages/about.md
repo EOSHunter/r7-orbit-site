@@ -11,10 +11,13 @@ sections:
       ## Hunter Newton
 
 
-      I build software and apps with AI agents, and I’m building [R7 Orbit](https://r7orbit.io/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/), a desktop app for directing them. I’m a product designer, and most of what I design is AI-assisted tools, workflows and interactive experiences. I like taking a messy process and turning it into something structured and easy to use, which means a mix of product thinking, interaction design, prototyping, automation and visual design. 
+      Most of my days go to directing AI agents: writing the brief, seeing what comes back, and sending it back when it’s not right. The app I’m building to make that easier is [R7 Orbit](https://r7orbit.io/blog/so-youve-got-an-ai-that-writes-code-cool-what-if-you-had-ten/), a desktop app for running a whole team of agents at once.
 
 
-      More and more, I also build the tools and skills my agents use, like [R7 Orbit Studio](https://r7orbit.io/blog/how-an-ai-agent-makes-on-brand-imagery-with-r7-orbit-studio/), so they can take on more of the work themselves.
+      I come from product design, so I care most about how a thing feels to use. When my agents keep running into the same problem, I build them a tool for it. [R7 Orbit Studio](https://r7orbit.io/blog/how-an-ai-agent-makes-on-brand-imagery-with-r7-orbit-studio/) is one of those, and it’s how they make the images for every post here.
+
+
+      This site is where that work ends up: AI news, notes on what I’m building, and the projects themselves. The agents below write most of it, and I read every piece before it goes up.
   - type: divider
     style: rule
   - type: heading
