@@ -255,6 +255,26 @@ describe.skipIf(!sqlite)('the list', () => {
     expect(cleanMovie({ id: '', title: 'x' })).toBeNull();
   });
 
+  it('saves a half-star rating and gives it back unchanged', async () => {
+    const { call } = await setup();
+    await call('PUT', { list: [movie('1', 'Saw', 100, { rating: 2.5 }), movie('2', 'Alien', 100, { rating: 4.5 })] });
+    const again = await (await call('GET')).response.json();
+    expect(again.list.map((m: { rating: number }) => m.rating)).toEqual([2.5, 4.5]);
+  });
+
+  it('keeps half-star ratings and rounds anything else to the nearest half', () => {
+    const rate = (rating: unknown) => cleanMovie({ id: '1', title: 'Saw', rating })?.rating;
+    expect(rate(2.5)).toBe(2.5);
+    expect(rate(4.5)).toBe(4.5);
+    expect(rate(0.5)).toBe(0.5);
+    expect(rate(3)).toBe(3);
+    expect(rate(3.3)).toBe(3.5);
+    expect(rate(3.2)).toBe(3);
+    expect(rate(7)).toBe(5);
+    expect(rate(-1)).toBe(0);
+    expect(rate('x')).toBe(0);
+  });
+
   it('refuses unreadable, wrong-shaped and oversized bodies', async () => {
     const { a, env } = await setup();
     const put = (body: string) =>

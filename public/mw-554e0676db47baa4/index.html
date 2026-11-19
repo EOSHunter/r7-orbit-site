@@ -152,6 +152,7 @@ select.field{font-size:16px;padding-right:var(--s-2)}
 .star{background:none;border:0;padding:0 1px;font-size:15px;line-height:1;color:var(--text-3);cursor:pointer;transition:color 140ms var(--ease)}
 .star.on{color:var(--brass)}
 .star:hover{color:var(--brass-bright)}
+.star.half,.star.half:hover{color:transparent;background:linear-gradient(90deg,var(--brass) 50%,var(--text-3) 50%);-webkit-background-clip:text;background-clip:text}
 li.editing{display:block;background:var(--surface-2);padding:var(--s-3)}
 .edit{width:100%;min-width:0;display:flex;flex-direction:column;gap:var(--s-2)}
 .picker{display:flex;flex-direction:column;gap:var(--s-2)}
@@ -351,6 +352,7 @@ li.row .acts .btn.main{flex:1}
 @media(prefers-reduced-motion:reduce){.sheet,.sheet-scrim{animation:none}}
 .sr{font-size:18px;letter-spacing:2px;color:var(--text-3);white-space:nowrap}
 .sr .on{color:var(--brass)}
+.sr .half{color:transparent;background:linear-gradient(90deg,var(--brass) calc(50% - 1px),var(--text-3) calc(50% - 1px));-webkit-background-clip:text;background-clip:text}
 @media(max-width:820px){
   body[data-view=chat]{padding:env(safe-area-inset-top,0px) 0 0}
   body[data-view=chat] header{display:none}
@@ -981,11 +983,15 @@ li.row .gl .chip.len{font-size:12.5px;padding-inline:0}
     return out;
   }
   function filtersChanged(kind){ if(kind==='todo') filterChanged(); else render(); }
+  // Drops keys that no longer match a movie. Changes the array in place: the filter sheet's buttons hold on to these
+  // arrays, so replacing them (as .filter() did) sent every tap after the first into an array nothing read.
+  function pruneKeys(keys,counts){
+    for(var i=keys.length-1;i>=0;i--){ var k=keys[i]; if(!counts.some(function(c){return c.key===k})) keys.splice(i,1); }
+  }
 
   function renderFilter(){          // the wheel's filter row
     var host=$('filter'), t=todo(), counts=genreCounts(t), srcs=srcCounts(t);
-    selected=selected.filter(function(k){ return counts.some(function(c){return c.key===k}); });
-    srcSel=srcSel.filter(function(k){ return srcs.some(function(c){return c.key===k}); });
+    pruneKeys(selected,counts); pruneKeys(srcSel,srcs);
     host.innerHTML='';
     var showSrc=srcs.some(function(c){return c.key!=='_'});        // only once a name is on a movie
     if(!counts.length && !showSrc){
@@ -1005,8 +1011,7 @@ li.row .gl .chip.len{font-size:12.5px;padding-inline:0}
     var kind=tab==='todo'?'todo':'done', base=kind==='todo'?todo():vis().filter(function(m){return m.watched});
     var counts=genreCounts(base), srcs=srcCounts(base);
     if(kind==='done'){
-      wf.genres=wf.genres.filter(function(k){return counts.some(function(c){return c.key===k})});
-      wf.src=wf.src.filter(function(k){return srcs.some(function(c){return c.key===k})});
+      pruneKeys(wf.genres,counts); pruneKeys(wf.src,srcs);
     }
     var hasSrc=srcs.some(function(c){return c.key!=='_'});
     host.hidden = !(counts.length || hasSrc || (kind==='done' && base.length));
@@ -1213,14 +1218,30 @@ li.row .gl .chip.len{font-size:12.5px;padding-inline:0}
   var wf={mode:'all',sort:'recent',genres:[],src:[]};     // filters on the Watched tab
   function showErr(msg){ var e=$('err'); e.hidden=!msg; e.textContent=msg||''; }
   function btn(label,cls,fn){ var b=el('button',cls,label); b.type='button'; b.onclick=fn; return b; }
+  // a rating from 0 (none) to 5 in half-star steps
+  function halfStep(v){ return Math.min(5,Math.max(0,Math.round((+v||0)*2)/2)); }
   function starRow(val,onSet,label,big){
-    var wrap=el('span','stars'+(big?' big':'')); wrap.setAttribute('role','group'); wrap.setAttribute('aria-label',label||'Rating');
-    function paint(){ [].forEach.call(wrap.children,function(b,i){ b.classList.toggle('on',i<val); b.setAttribute('aria-pressed',String(i+1===val)); }); }
+    // Half stars: tap the left half of a star for n - 0.5, the right half for n; tap the same value again to clear.
+    // From the keyboard, Enter on a star gives whole stars and the arrow keys step by half a star.
+    var wrap=el('span','stars'+(big?' big':'')); wrap.setAttribute('role','group'); wrap.setAttribute('aria-label',(label||'Rating')+', arrow keys change it by half a star');
+    val=halfStep(val);
+    function paint(){ [].forEach.call(wrap.children,function(b,i){ var n=i+1, half=val===n-0.5;
+      b.classList.toggle('on',val>=n); b.classList.toggle('half',half);
+      b.setAttribute('aria-pressed',String(val===n||half)); b.setAttribute('aria-label',(half?n-0.5:n)+(n===1&&!half?' star':' stars')); }); }
+    function set(v){ val=v; paint(); onSet(val); }
     for(var i=1;i<=5;i++){ (function(n){
-      var b=el('button','star','★'); b.type='button'; b.setAttribute('aria-label',n+(n===1?' star':' stars'));
-      b.onclick=function(){ val=(val===n)?0:n; paint(); onSet(val); };
+      var b=el('button','star','★'); b.type='button';
+      b.onclick=function(e){
+        var r=b.getBoundingClientRect(), v=(e.detail>0 && r.width && e.clientX<r.left+r.width/2) ? n-0.5 : n;   // detail is 0 for a key press
+        set(val===v?0:v);
+      };
       wrap.append(b);
     })(i); }
+    wrap.addEventListener('keydown',function(e){
+      var d={ArrowRight:0.5,ArrowUp:0.5,ArrowLeft:-0.5,ArrowDown:-0.5}[e.key]; if(!d) return;
+      e.preventDefault(); var v=Math.max(0,Math.min(5,val+d)); if(v===val) return;
+      set(v); wrap.children[Math.max(0,Math.ceil(v)-1)].focus();
+    });
     paint(); return wrap;
   }
   function watchedList(){
@@ -1542,7 +1563,7 @@ li.row .gl .chip.len{font-size:12.5px;padding-inline:0}
 
   /* ---------- reviews: everything you have rated or written, newest first ---------- */
   var rvs={q:'',mode:'all',sort:'recent',all:false}, rvUI=null;
-  function staticStars(n){ var s=el('span','sr'); s.setAttribute('role','img'); s.setAttribute('aria-label',n+' out of 5 stars'); for(var i=1;i<=5;i++){ var c=el('span',i<=n?'on':null,'★'); s.append(c); } return s; }
+  function staticStars(n){ n=halfStep(n); var s=el('span','sr'); s.setAttribute('role','img'); s.setAttribute('aria-label',n+' out of 5 stars'); for(var i=1;i<=5;i++){ var c=el('span',i<=n?'on':(n===i-0.5?'half':null),'★'); s.append(c); } return s; }
   function dateText(t){ return t ? new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : ''; }
   function renderReviews(){
     var host=$('viewReviews');
@@ -1685,11 +1706,13 @@ li.row .gl .chip.len{font-size:12.5px;padding-inline:0}
 
     var cr=card('How you rate');
     if(rated.length){
-      var dist=[5,4,3,2,1].map(function(n){return {label:n+' ★',value:rated.filter(function(m){return m.rating===n}).length}});
+      // whole stars always get a row; a half-star row shows only once a movie has that rating
+      var dist=[5,4.5,4,3.5,3,2.5,2,1.5,1,0.5].map(function(n){return {label:n+' ★',value:rated.filter(function(m){return halfStep(m.rating)===n}).length}})
+        .filter(function(r){return r.value || parseFloat(r.label)%1===0});
       cr.append(bars(dist,function(r){return String(r.value)}));
       var best=gl.filter(function(s){return s.rn>=3}).map(function(s){return {label:s.name,value:s.rs/s.rn,n:s.rn}}).sort(function(a,b){return b.value-a.value}).slice(0,5);
       if(best.length){ cr.append(el('span','eyebrow','Best-rated genres (3+ rated films)')); cr.append(bars(best.map(function(b){return {label:b.label,value:b.value,n:b.n}}),function(r){return r.value.toFixed(1)+' ★ · '+r.n})); }
-    } else cr.append(el('p','lead','Give your watched movies 1 to 5 stars in the list and your ratings show up here.'));
+    } else cr.append(el('p','lead','Give your watched movies half a star to 5 stars in the list and your ratings show up here.'));
     grid.append(cr);
 
     var cf=card('Favorites');
@@ -1836,7 +1859,7 @@ li.row .gl .chip.len{font-size:12.5px;padding-inline:0}
     return {id:String(x.id||uid()).slice(0,64), title:t, watched:!!x.watched,
       genres:(Array.isArray(x.genres)?x.genres:[]).map(function(g){return gname(g)}).filter(Boolean).slice(0,12),
       runtime:Math.max(0,Math.round(+x.runtime)||0), year:Math.max(0,Math.round(+x.year)||0),
-      rating:Math.min(5,Math.max(0,Math.round(+x.rating)||0)), review:String(x.review||'').slice(0,280),
+      rating:halfStep(x.rating), review:String(x.review||'').slice(0,280),
       addedAt:+x.addedAt||Date.now(), watchedAt:+x.watchedAt||0, updatedAt:+x.updatedAt||0,
       addedBy:/^[a-z0-9_-]{1,24}$/.test(String(x.addedBy||'')) ? String(x.addedBy) : '',
       kind:x.kind==='show'?'show':'movie', season:Math.max(0,Math.min(99,Math.round(+x.season)||0)), episode:Math.max(0,Math.min(999,Math.round(+x.episode)||0)),

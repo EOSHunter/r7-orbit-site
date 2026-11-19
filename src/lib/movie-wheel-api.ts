@@ -292,7 +292,8 @@ export function cleanMovie(x: unknown): Movie | null {
     genres: (Array.isArray(m.genres) ? m.genres : []).map((g) => String(g).trim().slice(0, 24)).filter(Boolean).slice(0, 12),
     runtime: num(m.runtime, 0, 999),
     year: num(m.year, 0, 2100),
-    rating: num(m.rating, 0, 5),
+    // half stars: 0 (unrated) to 5 in steps of 0.5. The column is INTEGER, but SQLite keeps a value like 2.5 as REAL.
+    rating: Math.max(0, Math.min(5, Math.round(Number(m.rating) * 2) / 2 || 0)),
     review: String(m.review ?? '').slice(0, 280),
     addedAt: Math.max(0, Number(m.addedAt) || 0),
     watchedAt: Math.max(0, Number(m.watchedAt) || 0),
@@ -619,7 +620,7 @@ const SYSTEM = `You are R7, the movie assistant inside the owner's personal Movi
 You can see their full movie history below: what they have watched (with their own star ratings and short reviews), what is still on their to-watch list, genres, lengths and release years.
 Answer using that data. Be specific: name titles, give counts and hours, and say when something is not in the data instead of guessing.
 You may recommend films from outside the list when asked, but say they are not on the list. When you recommend from the to-watch list, use exactly the titles shown.
-Keep answers short and plain. Do not use emoji. Rating scale is 1 to 5 stars; 4 and 5 stars count as favorites.
+Keep answers short and plain. Do not use emoji. Ratings go from half a star to 5 stars in half-star steps (such as 3.5); 4 stars and up count as favorites.
 Format with simple Markdown: **bold** for movie titles and key numbers, and a numbered or bulleted list when naming several movies. No tables and no headings.
 When asked to recommend movies to add or watch, first check every title against the WATCHED and TO WATCH lists, and never suggest a movie that appears in either one.
 You can add movies to the to-watch list with the add_movies tool. Use it only when the user asks you to add movies (or to add what you just recommended). Never add movies on your own, and never add a title that is already on either list. After adding, say in one short sentence which movies you added.
