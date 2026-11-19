@@ -97,6 +97,29 @@ The Chat tab is a chat with **R7**, an assistant that knows your whole list: wha
 
 What R7 does to the list is limited to one request, `add_movies`, which the server passes on and the page carries out; the model never touches the database.
 
+## R7 Home, the household assistant
+
+R7 Home (the assistant on the Pi, in the `EOSHunter/r7-home` repository) can use the wheel by voice: pick something to watch, add a title, mark one watched (a show moves to its next episode), and save a rating and review. It calls `/api/movie-wheel/r7` (`functions/api/movie-wheel/r7.ts`, logic in `src/lib/movie-wheel-r7.ts`, tests in `src/lib/movie-wheel-r7.vitest.ts`). What it adds is marked **R7**, like the chat's additions, and phones and laptops show its changes on their next sync (within a minute).
+
+**How it signs in.** R7 Home cannot type an emailed code, so it uses a Cloudflare Access **service token** (a Client ID and a Client Secret it sends with every request). The site accepts that token only on `/api/movie-wheel/r7`, and only when its Client ID is the one in `MOVIE_WHEEL_R7_CLIENT_ID`; the people's endpoints (list, chat, posters) refuse it. The `/r7` endpoint in turn refuses a person's sign-in and any request from a browser.
+
+**What it can do** (each a POST with an `action`): `pick` (at random from the to-watch list, narrowed by genre, movie or show, and length; or R7's own choice of a title on the list), `add` (details and poster from TMDB only when TMDB has that exact title, otherwise the title alone), `watched`, `rate` (half a star to 5 stars, and a review of up to 280 characters; rating something unwatched marks it watched), and `undo` (puts back what one of its changes replaced; removes a movie R7 added within the last day). `GET` returns the list. A title is matched loosely ("the thing" finds *The Thing*); when two fit, the answer is 409 with both, so R7 asks which.
+
+**Set it up (once, about five minutes):**
+
+1. Dashboard > **Zero Trust > Access controls > Service credentials > Service Tokens > Create Service Token**. Name: `R7 Home`. Duration: `Non-expiring` (or a year, and renew it). Copy the **Client ID** and the **Client Secret** now: the secret is shown only once.
+2. **Access controls > Applications > Movie Wheel > Policies > Add a policy**. Name: `R7 Home`. Action: **Service Auth**. Include: **Service Token** > `R7 Home`. Save. (Your own `Me` policy stays as it is.)
+3. **Workers & Pages > r7-orbit-site > Settings > Variables and Secrets > Add** for Production: `MOVIE_WHEEL_R7_CLIENT_ID`, Text, the Client ID (it ends in `.access`). A variable takes effect with the next deploy: run the **Scheduled deploy** workflow on GitHub (Actions > Scheduled deploy > Run workflow), or wait for the next push.
+4. On the Pi, add the three R7 Home settings to its private settings file (`R7_ENV_FILE`), then restart R7 Home:
+
+   ```
+   MOVIE_WHEEL_URL=https://r7orbit.io
+   MOVIE_WHEEL_ACCESS_CLIENT_ID=<the Client ID>
+   MOVIE_WHEEL_ACCESS_CLIENT_SECRET=<the Client Secret>
+   ```
+
+Until step 3 is done the endpoint answers 503, and R7 Home says the Movie Wheel is not set up. To stop R7 Home using the wheel, delete the service token (or its policy) in Zero Trust.
+
 ## On a phone
 
 The page is built phone-first (it is mostly used that way).

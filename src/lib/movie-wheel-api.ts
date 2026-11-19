@@ -4,10 +4,13 @@
 //   GET  /api/movie-wheel/list   -> { list, removed, savedAt }  (list is null while nothing has ever been saved)
 //   PUT  /api/movie-wheel/list   { list, removed } -> the merged { list, removed, savedAt }
 //   POST /api/movie-wheel/chat   { messages, context } -> { reply }   (asks OpenAI; the key is a secret on the Pages project)
+//   GET and POST /api/movie-wheel/r7: R7 Home, the smart-home assistant (src/lib/movie-wheel-r7.ts)
 //
 // Who may call: only a signed-in visitor of Cloudflare Access (the page and these endpoints are one Access application). Access puts a
 // signed token in the Cf-Access-Jwt-Assertion header; it is checked here, so the endpoints stay closed even if the Access rule is
 // ever removed or its path is wrong. With no Access settings in the Pages project they answer 503 and do nothing.
+// A person signs in with their email. R7 Home signs in with a Cloudflare Access service token instead (no email in its token): that
+// token is accepted only by /api/movie-wheel/r7, and only when it is the one named in MOVIE_WHEEL_R7_CLIENT_ID.
 // Setup: docs/MOVIE_WHEEL.md.
 
 // ---- The parts of Cloudflare's runtime used here ---------------------------------------------------------------------------
@@ -42,6 +45,8 @@ export interface MovieWheelEnv {
   TMDB_TOKEN?: string;
   /** Who is who, as "email=Name" pairs separated by commas, such as "me@example.com=Hunter, mollie@example.com=Mollie". Names the people on "added by". */
   MOVIE_WHEEL_PEOPLE?: string;
+  /** The Client ID of R7 Home's Cloudflare Access service token (such as 'abc123.access'). Only that token may use /api/movie-wheel/r7. */
+  MOVIE_WHEEL_R7_CLIENT_ID?: string;
   /** Only with DEV_BYPASS_ACCESS: the email to act as when trying the endpoints on your own computer. */
   DEV_EMAIL?: string;
   /** "1" only in .dev.vars, to try the endpoints on your own computer without Access. Never set it on the live site. */
@@ -81,10 +86,10 @@ export const MESSAGES = {
   postersFull: 'The site already keeps as many uploaded posters as it allows.',
 };
 
-function json(body: unknown, status = 200): Response {
+export function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 }
-const fail = (status: number, error: string) => json({ error }, status);
+export const fail = (status: number, error: string) => json({ error }, status);
 
 // ---- Who is calling: Cloudflare Access -------------------------------------------------------------------------------------
 
@@ -124,9 +129,9 @@ async function accessKeys(host: string, doFetch: typeof fetch, now: number): Pro
   return keys;
 }
 
-/** The signed-in visitor's email (lower case, empty when the token has none) if the request carries a valid Cloudflare Access token for this
- *  application, or null when it does not. */
-export async function accessIdentity(ctx: MovieWheelContext): Promise<string | null> {
+/** The claims of a valid Cloudflare Access token for this application (a person's carries `email`; a service token's carries
+ *  `common_name`, its Client ID), or null when the request has no valid token. */
+export async function accessClaims(ctx: MovieWheelContext): Promise<Record<string, unknown> | null> {
   const { env, request } = ctx;
   const doFetch = ctx.fetch ?? fetch;
   const now = ctx.now ?? Date.now();
@@ -157,10 +162,17 @@ export async function accessIdentity(ctx: MovieWheelContext): Promise<string | n
       typeof payload.exp === 'number' &&
       payload.exp > seconds &&
       (payload.nbf === undefined || (typeof payload.nbf === 'number' && payload.nbf <= seconds + 60));
-    return valid ? String(payload.email ?? '').trim().toLowerCase() : null;
+    return valid ? payload : null;
   } catch {
     return null;
   }
+}
+
+/** The signed-in visitor's email (lower case, empty when the token has none, as a service token's) if the request carries a valid
+ *  Cloudflare Access token for this application, or null when it does not. */
+export async function accessIdentity(ctx: MovieWheelContext): Promise<string | null> {
+  const claims = await accessClaims(ctx);
+  return claims ? String(claims.email ?? '').trim().toLowerCase() : null;
 }
 
 /** True when the request carries a valid Cloudflare Access token for this application. */
@@ -208,7 +220,8 @@ async function guard(ctx: MovieWheelContext, methods: string[]): Promise<Respons
   if (env.DEV_BYPASS_ACCESS === '1') return { email: (env.DEV_EMAIL ?? 'dev@localhost').toLowerCase() };
   if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return fail(503, MESSAGES.closed);
   const email = await accessIdentity(ctx);
-  if (email === null) return fail(401, MESSAGES.signIn);
+  // A token with no email is a service token (R7 Home's): it may use only /api/movie-wheel/r7, never the people's endpoints.
+  if (!email) return fail(401, MESSAGES.signIn);
   return { email };
 }
 
@@ -307,11 +320,11 @@ export function cleanMovie(x: unknown): Movie | null {
   };
 }
 
-function database(env: MovieWheelEnv): D1Database | undefined {
+export function database(env: MovieWheelEnv): D1Database | undefined {
   return env.MOVIES_DB ?? env.WAITLIST_DB;
 }
 
-async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed: Record<string, number>; savedAt: number }> {
+export async function readAll(db: D1Database): Promise<{ list: Movie[] | null; removed: Record<string, number>; savedAt: number }> {
   const rows = (await db.prepare('SELECT * FROM movie_wheel_movies ORDER BY added_at, id').all<Row>()).results;
   const meta = (await db.prepare("SELECT value FROM movie_wheel_meta WHERE key = 'version'").all<{ value: number }>()).results;
   const savedAt = meta[0]?.value ?? 0;
@@ -360,6 +373,19 @@ const UPSERT = `INSERT INTO movie_wheel_movies
 const REMOVE = `INSERT INTO movie_wheel_movies (id, title, deleted_at) VALUES (?, '', ?)
   ON CONFLICT(id) DO UPDATE SET deleted_at = excluded.deleted_at
   WHERE excluded.deleted_at >= movie_wheel_movies.updated_at AND excluded.deleted_at > movie_wheel_movies.deleted_at`;
+
+/** Saves whole movies the way a device's PUT does (each keeps its newest edit), then counts a new version when something changed, so
+ *  every device picks the change up on its next sync. `adder` is the caller's key, used for a new movie that names no adder. */
+export async function saveMovies(db: D1Database, movies: Movie[], adder: string, removals: { id: string; at: number }[] = []): Promise<boolean> {
+  const statements = movies.map((m) =>
+    db.prepare(UPSERT).bind(m.id, m.title, m.watched ? 1 : 0, JSON.stringify(m.genres), m.runtime, m.year, m.rating, m.review, m.addedAt, m.watchedAt, m.updatedAt, m.addedBy, adder, m.poster, m.kind, m.season, m.episode, JSON.stringify(m.seasonEps)),
+  );
+  for (const r of removals) statements.push(db.prepare(REMOVE).bind(r.id, r.at));
+  const results = statements.length ? await db.batch(statements) : [];
+  const changed = results.some((r) => (r.meta?.changes ?? 0) > 0);
+  if (changed) await db.batch([db.prepare("INSERT INTO movie_wheel_meta (key, value) VALUES ('version', 1) ON CONFLICT(key) DO UPDATE SET value = value + 1")]);
+  return changed;
+}
 
 export async function handleList(ctx: MovieWheelContext): Promise<Response> {
   const who = await guard(ctx, ['GET', 'PUT']);
@@ -435,7 +461,7 @@ export interface TmdbMovie {
   seasonEps?: number[];
 }
 
-function tmdbMovie(x: unknown, kind: 'movie' | 'show' = 'movie'): TmdbMovie | null {
+export function tmdbMovie(x: unknown, kind: 'movie' | 'show' = 'movie'): TmdbMovie | null {
   if (!x || typeof x !== 'object') return null;
   const r = x as Record<string, unknown>;
   const id = Math.round(Number(r.id));
