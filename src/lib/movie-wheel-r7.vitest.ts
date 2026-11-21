@@ -70,6 +70,8 @@ async function setup(env: Partial<MovieWheelEnv> = {}) {
     const u = String(url);
     if (u === `https://${HOST}/cdn-cgi/access/certs`) return new Response(JSON.stringify({ keys: [jwk] }));
     if (u.startsWith('https://api.themoviedb.org/')) return new Response(JSON.stringify(tmdb(u)));
+    if (u === 'https://image.tmdb.org/t/p/w342/heat123.jpg') return new Response(new Uint8Array([0xff, 0xd8, 0xff, 1]), { headers: { 'Content-Type': 'image/jpeg' } });
+    if (u.startsWith('https://image.tmdb.org/')) return new Response('missing', { status: 404 });
     throw new Error(`unexpected fetch ${u}`);
   }) as unknown as typeof fetch;
   const db = database();
@@ -97,7 +99,10 @@ async function setup(env: Partial<MovieWheelEnv> = {}) {
   };
   const seed = (list: Record<string, unknown>[]) =>
     device('PUT', { list: list.map((m, i) => ({ id: `m${i}`, watched: false, genres: [], addedAt: i + 1, updatedAt: 100, ...m })), removed: {} });
-  return { r7, device, seed, sign, base, personToken, setTmdb: (f: typeof tmdb) => (tmdb = f), env: fullEnv };
+  /** A raw GET of the R7 endpoint with a query (the poster pictures), answered as a Response. */
+  const r7Get = async (query: string, token: string | null = r7Token) =>
+    handleR7({ request: request(`https://r7orbit.io/api/movie-wheel/r7?${query}`, 'GET', undefined, token), env: fullEnv, fetch: doFetch, now: NOW });
+  return { r7, r7Get, device, seed, sign, base, personToken, db, setTmdb: (f: typeof tmdb) => (tmdb = f), env: fullEnv };
 }
 
 describe.skipIf(!sqlite)('who may use the R7 endpoint', () => {
@@ -348,5 +353,72 @@ describe('matching a spoken title', () => {
     expect(findMovie([m('Halloween', 1978, true), m('Halloween', 2007)], 'halloween', undefined, (x) => !(x as { watched: boolean }).watched)).toHaveProperty('movie.year', 2007);
     expect(findMovie([m('Halloween', 1978), m('Halloween', 2007)], 'halloween')).toMatchObject({ status: 409 });
     expect(findMovie([m('Saw')], '')).toMatchObject({ status: 400 });
+  });
+});
+
+describe.skipIf(!sqlite)("the wheel on R7 Home's screen", () => {
+  const titles = (pool: { title: string }[]) => pool.map((s) => s.title).sort();
+
+  it('sends the filtered pool with a spin, always including the pick, at most 24 slices', async () => {
+    const { r7, seed } = await setup();
+    await seed([
+      { title: 'Alien', genres: ['Horror'] },
+      { title: 'Saw', genres: ['Horror'] },
+      { title: 'Heat', genres: ['Crime'] },
+      { title: 'Seen', genres: ['Horror'], watched: true },
+    ]);
+    const { data } = await r7('POST', { action: 'pick', genre: 'horror' });
+    expect(titles(data.pool)).toEqual(['Alien', 'Saw']);
+    expect(data.pool.some((s: { id: string }) => s.id === data.picked.id)).toBe(true);
+    expect(data.pool[0]).toEqual({ id: expect.any(String), title: expect.any(String), kind: 'movie' });
+
+    await seed(Array.from({ length: 40 }, (_, i) => ({ title: `Film ${i}` })));
+    for (let i = 0; i < 5; i++) {
+      const big = (await r7('POST', { action: 'pick' })).data;
+      expect(big.pool).toHaveLength(24);
+      expect(big.pool.some((s: { id: string }) => s.id === big.picked.id)).toBe(true);
+      expect(new Set(big.pool.map((s: { id: string }) => s.id)).size).toBe(24);
+    }
+  });
+
+  it("sends the to-watch list with R7's own choice, and with an add (including the new title)", async () => {
+    const { r7, seed } = await setup();
+    await seed([{ title: 'The Thing' }, { title: 'Heat' }, { title: 'Alien', watched: true }]);
+    const chosen = (await r7('POST', { action: 'pick', title: 'thing' })).data;
+    expect(titles(chosen.pool)).toEqual(['Heat', 'The Thing']);
+    const added = (await r7('POST', { action: 'add', title: 'Jaws' })).data;
+    expect(titles(added.pool)).toEqual(['Heat', 'Jaws', 'The Thing']);
+    const already = (await r7('POST', { action: 'add', title: 'heat' })).data;
+    expect(already.status).toBe('already');
+    expect(titles(already.pool)).toEqual(['Heat', 'Jaws', 'The Thing']);
+  });
+
+  it('includes the poster path in what R7 is told about a movie', async () => {
+    const { r7, seed } = await setup();
+    await seed([{ title: 'Heat', poster: '/heat123.jpg' }, { title: 'Saw' }]);
+    const { data } = await r7('GET');
+    expect(data.toWatch.find((m: { title: string }) => m.title === 'Heat').poster).toBe('/heat123.jpg');
+    expect('poster' in data.toWatch.find((m: { title: string }) => m.title === 'Saw')).toBe(false);
+  });
+
+  it('serves a TMDB poster and an uploaded one to R7 Home, and nothing else', async () => {
+    const { r7Get, db, personToken } = await setup();
+    const tmdb = await r7Get('poster=/heat123.jpg&w=w342');
+    expect(tmdb.status).toBe(200);
+    expect(tmdb.headers.get('Content-Type')).toBe('image/jpeg');
+    expect([...new Uint8Array(await tmdb.arrayBuffer())]).toEqual([0xff, 0xd8, 0xff, 1]);
+    expect((await r7Get('poster=/gone1234.jpg&w=w342')).status).toBe(404);
+
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).toString('base64');
+    await db.prepare('INSERT INTO movie_wheel_posters (token, type, data, created_at) VALUES (?, ?, ?, ?)').bind('custom-0123456789abcdef', 'image/png', png, 1).run();
+    const upload = await r7Get('poster=custom-0123456789abcdef');
+    expect(upload.status).toBe(200);
+    expect(upload.headers.get('Content-Type')).toBe('image/png');
+    expect((await r7Get('poster=custom-ffffffffffffffff')).status).toBe(404);
+
+    expect((await r7Get('poster=https://evil.example/x.jpg')).status).toBe(400);
+    expect((await r7Get('poster=/heat123.jpg&w=original')).status).toBe(400);
+    expect((await r7Get('poster=/heat123.jpg&w=w342', personToken)).status).toBe(403);
+    expect((await r7Get('poster=/heat123.jpg&w=w342', null)).status).toBe(401);
   });
 });

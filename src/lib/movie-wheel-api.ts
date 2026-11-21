@@ -607,6 +607,32 @@ function fromBase64(text: string): Uint8Array<ArrayBuffer> {
 }
 
 /**
+ * A poster picture for a caller that is already let in (R7 Home's endpoint): a TMDB path such as '/abc123.jpg' at a known size, or an
+ * uploaded picture's name ('custom-...'). Anything else is 400; a missing picture is 404.
+ */
+export async function posterPicture(ctx: MovieWheelContext, path: string, size: string): Promise<Response> {
+  const headers = (type: string) => ({ 'Content-Type': type, 'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+  if (UPLOAD_NAME.test(path)) {
+    const db = database(ctx.env);
+    if (!db) return fail(503, MESSAGES.noDatabase);
+    const row = (await db.prepare('SELECT type, data FROM movie_wheel_posters WHERE token = ?').bind(path).all<{ type: string; data: string }>()).results[0];
+    if (!row || !PICTURE_TYPES[row.type]) return fail(404, MESSAGES.badBody);
+    return new Response(fromBase64(row.data), { headers: headers(row.type) });
+  }
+  if (!TMDB_PATH.test(path) || !POSTER_SIZES.has(size)) return fail(400, MESSAGES.badBody);
+  let res: Response;
+  try {
+    res = await (ctx.fetch ?? fetch)(`https://image.tmdb.org/t/p/${size}${path}`);
+  } catch {
+    return fail(502, MESSAGES.tmdbDown);
+  }
+  if (!res.ok) return fail(res.status === 404 ? 404 : 502, MESSAGES.tmdbDown);
+  const type = res.headers.get('Content-Type') ?? '';
+  if (!type.startsWith('image/')) return fail(502, MESSAGES.tmdbDown);
+  return new Response(res.body, { headers: headers(type) });
+}
+
+/**
  * POST /api/movie-wheel/poster (the picture as the body: JPEG, PNG or WebP, under 400 KB) -> { poster: 'custom-...' }
  * GET  /api/movie-wheel/poster?id=custom-...   -> the picture, kept by the browser for a year (the name changes with every upload)
  * The page shrinks a picture before sending it, so a poster is about 30 KB.

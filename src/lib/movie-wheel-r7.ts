@@ -3,8 +3,9 @@
 // is marked as added by R7, like the chat's additions. Setup: docs/MOVIE_WHEEL.md, "R7 Home".
 //
 //   GET  -> { toWatch, watched, counts }                          the list, short enough to read aloud from
-//   POST { action: 'pick', genre?, kind?, maxMinutes?, title? } -> { picked, poolSize, how }   choose from the to-watch list (changes nothing)
-//   POST { action: 'add', title, year?, kind? }                 -> { status: 'added' | 'already', movie, before }
+//   GET  ?poster=<path>&w=<size>                                -> the poster picture (a TMDB path or an uploaded one), for R7 Home's screen
+//   POST { action: 'pick', genre?, kind?, maxMinutes?, title? } -> { picked, poolSize, how, pool }   choose from the to-watch list (changes nothing)
+//   POST { action: 'add', title, year?, kind? }                 -> { status: 'added' | 'already', movie, before, pool }
 //   POST { action: 'watched', title, year? }                    -> { status: 'watched' | 'next-episode' | 'already', movie, before }
 //   POST { action: 'rate', title, year?, rating?, review? }     -> { status: 'rated', movie, before, markedWatched }
 //   POST { action: 'undo', id, before }                         -> { status: 'undone', movie? }   puts back what a change replaced
@@ -12,6 +13,9 @@
 // A title is matched loosely (case, punctuation and a leading "The" do not matter); when several movies fit, the answer is 409 with the
 // candidates so R7 can ask which one. Every change goes through the same merge as a device's save and counts a new version, so phones and
 // laptops show it on their next sync (within a minute).
+//
+// `pool` is what R7 Home's screen draws as the wheel: up to 24 titles from the set the result came from (the filtered to-watch list for a
+// spin, the whole to-watch list otherwise), always including the result, in a shuffled order.
 
 import {
   accessClaims,
@@ -20,6 +24,7 @@ import {
   fail,
   json,
   MESSAGES,
+  posterPicture,
   readAll,
   saveMovies,
   tmdbMovie,
@@ -126,6 +131,8 @@ export interface R7Movie {
   progress?: string;
   /** The day it was marked watched, as YYYY-MM-DD. */
   watchedOn?: string;
+  /** The poster: a TMDB path such as '/abc123.jpg' or an uploaded picture's name, for GET ?poster=. Absent when there is none. */
+  poster?: string;
 }
 
 function brief(m: Movie): R7Movie {
@@ -133,6 +140,7 @@ function brief(m: Movie): R7Movie {
     id: m.id, title: m.title, year: m.year, kind: m.kind, minutes: m.runtime, genres: m.genres, watched: m.watched,
     rating: m.rating, review: m.review, addedBy: m.addedBy,
   };
+  if (m.poster) out.poster = m.poster;
   if (m.kind === 'show' && (m.season || m.episode)) out.progress = `S${m.season || 1} E${m.episode}`;
   if (m.watched && m.watchedAt) out.watchedOn = new Date(m.watchedAt).toISOString().slice(0, 10);
   return out;
@@ -206,6 +214,30 @@ function randomIndex(n: number): number {
   return crypto.getRandomValues(new Uint32Array(1))[0] % n;
 }
 
+const WHEEL_SLICES = 24;
+
+/** A slice of the wheel on R7 Home's screen. */
+export interface WheelSlice {
+  id: string;
+  title: string;
+  kind: 'movie' | 'show';
+}
+
+/** Up to 24 titles from `from` for the wheel on R7 Home's screen, always including `result`, shuffled. */
+export function wheelPool(from: Movie[], result: Movie): WheelSlice[] {
+  const others = from.filter((m) => m.id !== result.id);
+  for (let i = others.length - 1; i > 0; i--) {
+    const j = randomIndex(i + 1);
+    [others[i], others[j]] = [others[j], others[i]];
+  }
+  const chosen = [result, ...others.slice(0, WHEEL_SLICES - 1)];
+  for (let i = chosen.length - 1; i > 0; i--) {
+    const j = randomIndex(i + 1);
+    [chosen[i], chosen[j]] = [chosen[j], chosen[i]];
+  }
+  return chosen.map((m) => ({ id: m.id, title: m.title, kind: m.kind }));
+}
+
 export async function handleR7(ctx: MovieWheelContext): Promise<Response> {
   const refused = await guardR7(ctx);
   if (refused) return refused;
@@ -215,6 +247,9 @@ export async function handleR7(ctx: MovieWheelContext): Promise<Response> {
   const list = (await readAll(db)).list ?? [];
 
   if (ctx.request.method === 'GET') {
+    const params = new URL(ctx.request.url).searchParams;
+    const posterPath = params.get('poster');
+    if (posterPath !== null) return posterPicture(ctx, posterPath, params.get('w') ?? 'w342');
     const toWatch = list.filter((m) => !m.watched).sort((a, b) => b.addedAt - a.addedAt);
     const watched = list.filter((m) => m.watched).sort((a, b) => b.watchedAt - a.watchedAt);
     return json({
@@ -247,9 +282,10 @@ export async function handleR7(ctx: MovieWheelContext): Promise<Response> {
   switch (body.action) {
     case 'pick': {
       if (title) {
-        const f = findMovie(list.filter((m) => !m.watched), title, year);
+        const toWatch = list.filter((m) => !m.watched);
+        const f = findMovie(toWatch, title, year);
         if (!('movie' in f)) return notFound(f);
-        return json({ picked: brief(f.movie), poolSize: 1, how: 'chosen' });
+        return json({ picked: brief(f.movie), poolSize: 1, how: 'chosen', pool: wheelPool(toWatch, f.movie) });
       }
       const genre = normGenre(str(body.genre, 24));
       const max = Math.round(Number(body.maxMinutes)) || 0;
@@ -261,13 +297,14 @@ export async function handleR7(ctx: MovieWheelContext): Promise<Response> {
           (max <= 0 || (m.runtime > 0 && m.runtime <= max)),
       );
       if (!pool.length) return fail(404, R7_MESSAGES.nothingToPick);
-      return json({ picked: brief(pool[randomIndex(pool.length)]), poolSize: pool.length, how: 'random' });
+      const picked = pool[randomIndex(pool.length)];
+      return json({ picked: brief(picked), poolSize: pool.length, how: 'random', pool: wheelPool(pool, picked) });
     }
 
     case 'add': {
       if (!title) return fail(400, R7_MESSAGES.noTitle);
       const already = list.find((m) => normTitle(m.title) === normTitle(title) && (!year || !m.year || m.year === year));
-      if (already) return json({ status: 'already', movie: brief(already), before: null });
+      if (already) return json({ status: 'already', movie: brief(already), before: null, pool: wheelPool(list.filter((x) => !x.watched), already) });
       const found = await lookUp(ctx, title, year, kind);
       const m = cleanMovie({
         id: newId(now),
@@ -285,7 +322,7 @@ export async function handleR7(ctx: MovieWheelContext): Promise<Response> {
       });
       if (!m) return fail(400, R7_MESSAGES.noTitle);
       await saveMovies(db, [m], 'r7');
-      return json({ status: 'added', movie: brief(m), before: null, details: found ? 'tmdb' : 'title-only' });
+      return json({ status: 'added', movie: brief(m), before: null, details: found ? 'tmdb' : 'title-only', pool: wheelPool([...list.filter((x) => !x.watched), m], m) });
     }
 
     case 'watched': {
